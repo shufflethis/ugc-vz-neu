@@ -17,7 +17,7 @@ interface AirtableRecord {
   };
 }
 
-export const maxDuration = 300;
+export const maxDuration = 60; // Changed from 300 to 60 seconds for hobby plan
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
@@ -25,17 +25,17 @@ export async function POST(req: Request) {
     const { query } = await req.json();
     console.log('Search query:', query);
     
-    // Fetch creators from Airtable with timeout and proper typing
+    // Reduce timeout for Airtable fetch
     const records = await Promise.race([
       base('tblDlScXJMvZQ1XGc').select({
         view: 'viw5IA8sDIXNQ3ZQx'
       }).all(),
       new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Airtable timeout')), 10000)
+        setTimeout(() => reject(new Error('Airtable timeout')), 8000) // Reduced from 10000
       )
     ]) as AirtableRecord[];
 
-    // Process creators with shorter timeouts
+    // Reduce image fetch timeout
     const creatorsWithData = await Promise.all(records.map(async (record: AirtableRecord) => {
       try {
         const fields = record.fields;
@@ -45,10 +45,11 @@ export async function POST(req: Request) {
         const reachText = String(fields['Wie groß ist deine Reichweite pro Netzwerk? '] || '');
 
         // Set timeout for image fetching
+        // Reduced timeout for image fetching from 5000 to 3000
         const profileImage = await Promise.race([
           getProfileImage(socialLinks),
           new Promise<string>((resolve) => 
-            setTimeout(() => resolve('/placeholder.jpg'), 5000)
+            setTimeout(() => resolve('/placeholder.jpg'), 3000)
           )
         ]);
 
