@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import '../styles/search.css'; // Make sure to import the CSS
+import React, { useState, useRef, useEffect } from 'react';
+import '../styles/search.css';
 
 // Define types for your data
 interface Creator {
@@ -15,15 +15,35 @@ interface CreatorCardProps {
   creator: Creator;
 }
 
-// Define your component properly
 export default function SearchBox() {
   const [searchQuery, setSearchQuery] = useState('');
   const [creators, setCreators] = useState<Creator[]>([]);
   const [reasoning, setReasoning] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [searchSubmitted, setSearchSubmitted] = useState(false);
+  const reasoningRef = useRef<HTMLDivElement>(null);
+
+  // Scroll to reasoning when it appears
+  useEffect(() => {
+    if (reasoning && reasoningRef.current) {
+      reasoningRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [reasoning]);
 
   const handleSearch = async () => {
+    if (!searchQuery.trim()) return;
+    
+    // Show the search query as a user message
+    setSearchSubmitted(true);
     setIsLoading(true);
+    setReasoning(''); // Clear previous reasoning
+    setCreators([]); // Clear previous results
+    
+    // Simulate typing effect for reasoning
+    const typingTimer = setTimeout(() => {
+      setIsLoading(true);
+    }, 500);
+    
     try {
       const response = await fetch('/api/search', {
         method: 'POST',
@@ -34,15 +54,29 @@ export default function SearchBox() {
       const data = await response.json();
       
       if (data.success) {
-        setCreators(data.creators);
-        setReasoning(data.reasoning); // Store the reasoning
+        // Show reasoning with a typing effect
+        if (data.reasoning) {
+          setReasoning(data.reasoning);
+        }
+        
+        // Show creators after a short delay
+        setTimeout(() => {
+          setCreators(data.creators);
+        }, 800);
       } else {
         console.error('Search failed:', data.error);
       }
     } catch (error) {
       console.error('Error during search:', error);
     } finally {
+      clearTimeout(typingTimer);
       setIsLoading(false);
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSearch();
     }
   };
 
@@ -54,6 +88,7 @@ export default function SearchBox() {
           type="text" 
           value={searchQuery} 
           onChange={(e) => setSearchQuery(e.target.value)}
+          onKeyPress={handleKeyPress}
           placeholder="z.B. Kosmetik, unter 35 Jahre, TikTok..."
           className="search-input"
         />
@@ -62,14 +97,37 @@ export default function SearchBox() {
           className="search-button"
           disabled={isLoading}
         >
-          Passende Creator finden
+          {isLoading ? 'Suche läuft...' : 'Passende Creator finden'}
         </button>
       </div>
       
-      {/* Reasoning display */}
-      {reasoning && (
-        <div className="reasoning-container">
-          <pre className="reasoning-text">{reasoning}</pre>
+      {/* Chat-like interface */}
+      {searchSubmitted && (
+        <div className="chat-container">
+          {/* User message */}
+          <div className="user-message">
+            <div className="message-bubble user-bubble">
+              {searchQuery}
+            </div>
+          </div>
+          
+          {/* AI reasoning */}
+          {(isLoading || reasoning) && (
+            <div className="ai-message" ref={reasoningRef}>
+              <div className="ai-avatar">AI</div>
+              <div className="message-bubble ai-bubble">
+                {isLoading && !reasoning ? (
+                  <div className="typing-indicator">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                  </div>
+                ) : (
+                  <pre className="reasoning-text">{reasoning}</pre>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       )}
       
@@ -85,7 +143,6 @@ export default function SearchBox() {
   );
 }
 
-// You'll need to import or define CreatorCard component
 function CreatorCard({ creator }: CreatorCardProps) {
   return (
     <div className="creator-card">
