@@ -185,62 +185,38 @@ export async function getProfileImage(socialLinks: string): Promise<string> {
 
     const links = socialLinks.split('\n');
     
-    // Add timeout to axios requests
-    const axiosConfig = {
-      timeout: 4000,
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'
-      }
-    };
-
-    // Try TikTok with timeout
-    for (const link of links) {
-      if (link.toLowerCase().includes('tiktok.com')) {
+    // Add retry mechanism for failed requests
+    const fetchWithRetry = async (fn: () => Promise<string | null>, retries = 2): Promise<string | null> => {
+      for (let i = 0; i < retries; i++) {
         try {
-          const username = await extractTikTokUsername(link);
-          if (username) {
-            const profilePic = await Promise.race([
-              getTikTokProfilePic(username),
-              new Promise<string | null>((resolve) => 
-                setTimeout(() => resolve(null), 4000)
-              )
-            ]);
-            if (profilePic) return profilePic;
-          }
+          const result = await fn();
+          if (result) return result;
         } catch (error) {
-          console.error('TikTok fetch error:', error);
+          if (i === retries - 1) throw error;
+          await new Promise(resolve => setTimeout(resolve, 1000));
         }
       }
-    }
+      return null;
+    };
 
-    // Similar timeout handling for Instagram...
+    // Try TikTok first with retry
     for (const link of links) {
-      if (link.toLowerCase().includes('instagram.com')) {
-        const username = await extractInstagramUsername(link);
+      if (link.toLowerCase().includes('tiktok.com')) {
+        const username = await extractTikTokUsername(link);
         if (username) {
-          const profilePic = await getInstagramProfilePic(username);
+          const profilePic = await fetchWithRetry(() => getTikTokProfilePic(username));
           if (profilePic) return profilePic;
         }
       }
     }
 
-    // Try to find Instagram handle in text
-    const instagramMatch = socialLinks.match(/(?:instagram|ig|insta)[^@]*@?([a-zA-Z0-9._]+)/i);
-    if (instagramMatch?.[1]) {
-      const username = instagramMatch[1].trim();
-      console.log('Found Instagram username in text:', username);
-      const profilePic = await getInstagramProfilePic(username);
-      if (profilePic) return profilePic;
-    }
-
-    // Last resort: Try Google Image search with better error handling
+    // Then try Instagram with retry
     for (const link of links) {
       if (link.toLowerCase().includes('instagram.com')) {
-        const cleanLink = link.split('?')[0];
-        const googleResult = await getGoogleImageResult(cleanLink);
-        if (googleResult && await validateImageUrl(googleResult)) {
-          return googleResult;
+        const username = await extractInstagramUsername(link);
+        if (username) {
+          const profilePic = await fetchWithRetry(() => getInstagramProfilePic(username));
+          if (profilePic) return profilePic;
         }
       }
     }

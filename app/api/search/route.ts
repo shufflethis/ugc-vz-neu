@@ -20,55 +20,76 @@ interface AirtableRecord {
 export const maxDuration = 60; // Changed from 300 to 60 seconds for hobby plan
 export const dynamic = 'force-dynamic';
 
+// Add caching for Airtable results
+let cachedRecords: AirtableRecord[] | null = null;
+let lastFetch: number = 0;
+const CACHE_DURATION = 30000; // 30 seconds cache
+
 export async function POST(req: Request) {
   try {
     const { query } = await req.json();
     console.log('Search query:', query);
     
-    // Reduce timeout for Airtable fetch
-    const records = await Promise.race([
-      base('tblDlScXJMvZQ1XGc').select({
-        view: 'viw5IA8sDIXNQ3ZQx'
-      }).all(),
-      new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Airtable timeout')), 8000) // Reduced from 10000
-      )
-    ]) as AirtableRecord[];
+    // Use cached records if available and fresh
+    const now = Date.now();
+    if (!cachedRecords || now - lastFetch > CACHE_DURATION) {
+      console.log('Fetching fresh records from Airtable');
+      cachedRecords = await Promise.race([
+        base('tblDlScXJMvZQ1XGc').select({
+          view: 'viw5IA8sDIXNQ3ZQx'
+        }).all(),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Airtable timeout')), 15000)
+        )
+      ]) as AirtableRecord[];
+      lastFetch = now;
+    } else {
+      console.log('Using cached records');
+    }
 
-    // Reduce image fetch timeout
-    const creatorsWithData = await Promise.all(records.map(async (record: AirtableRecord) => {
-      try {
-        const fields = record.fields;
-        const socialLinks = String(fields['In welchem Netzwerk hast du Accounts und möchtest du aktiv sein?&nbsp; '] || '');
-        const fullName = String(fields['Wie heißt du?  (Vor- und Nachname)'] || '');
-        const firstName = fullName.split(' ')[0];
-        const reachText = String(fields['Wie groß ist deine Reichweite pro Netzwerk? '] || '');
+    // Process creators in smaller batches
+    const BATCH_SIZE = 10;
+    const results = [];
+    
+    for (let i = 0; i < cachedRecords.length; i += BATCH_SIZE) {
+      const batch = cachedRecords.slice(i, i + BATCH_SIZE);
+      const batchResults = await Promise.all(batch.map(async (record: AirtableRecord) => {
+        try {
+          const fields = record.fields;
+          const socialLinks = String(fields['In welchem Netzwerk hast du Accounts und möchtest du aktiv sein?&nbsp; '] || '');
+          const fullName = String(fields['Wie heißt du?  (Vor- und Nachname)'] || '');
+          const firstName = fullName.split(' ')[0];
+          const reachText = String(fields['Wie groß ist deine Reichweite pro Netzwerk? '] || '');
 
-        // Set timeout for image fetching
-        // Reduced timeout for image fetching from 5000 to 3000
-        const profileImage = await Promise.race([
-          getProfileImage(socialLinks),
-          new Promise<string>((resolve) => 
-            setTimeout(() => resolve('/placeholder.jpg'), 3000)
-          )
-        ]);
+          // Shorter timeout for image fetching
+          const profileImage = await Promise.race([
+            getProfileImage(socialLinks),
+            new Promise<string>((resolve) => 
+              setTimeout(() => resolve('/placeholder.jpg'), 5000)
+            )
+          ]);
 
-        return {
-          id: record.id,
-          name: firstName,
-          image: profileImage,
-          reach: reachText,
-          networks: socialLinks.split('\n').filter(Boolean),
-          priceRange: String(fields.Price || '')
-        };
-      } catch (error) {
-        console.error('Error processing creator:', error);
-        return null;
-      }
-    }));
+          return {
+            id: record.id,
+            name: firstName,
+            image: profileImage,
+            reach: reachText,
+            networks: socialLinks.split('\n').filter(Boolean),
+            priceRange: String(fields.Price || '')
+          };
+        } catch (error) {
+          console.error('Error processing creator:', error);
+          return null;
+        }
+      }));
+      
+      results.push(...batchResults);
+      
+      // Small delay between batches
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
 
-    // Filter out failed entries and sort
-    const validCreators = creatorsWithData.filter(creator => creator !== null);
+    const validCreators = results.filter(creator => creator !== null);
     
     return NextResponse.json({ 
       success: true,
