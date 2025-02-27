@@ -1,3 +1,5 @@
+import React, { useState } from 'react';
+
 // Add this to your component's state
 const [reasoning, setReasoning] = useState<string>("");
 const [isLoading, setIsLoading] = useState(false);
