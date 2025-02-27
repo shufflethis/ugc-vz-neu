@@ -33,9 +33,8 @@ export default function CreatorSearch() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    console.log('Sending search request:', prompt);
-    
     try {
+      console.log('Submitting search:', prompt);
       const res = await fetch('/api/search', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -47,10 +46,6 @@ export default function CreatorSearch() {
       
       if (!data.success) {
         throw new Error(data.message || 'Search failed');
-      }
-      
-      if (data.analysis) {
-        console.log('AI Analysis:', data.analysis);
       }
       
       setCreators(data.creators || []);
@@ -70,22 +65,12 @@ export default function CreatorSearch() {
   };
 
   const handleSubmitSelection = async () => {
-    setEmailError('');
-    
     if (selectedCreators.length === 0) return;
     if (!clientInfo.email) {
-      setEmailError('Bitte gib deine Email-Adresse an');
-      return;
-    }
-
-    // Basic email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(clientInfo.email)) {
-      setEmailError('Bitte gib eine gültige Email-Adresse an');
+      // Add error handling here
       return;
     }
     
-    setSubmitLoading(true);
     try {
       const res = await fetch('/api/submit-request', {
         method: 'POST',
@@ -102,13 +87,9 @@ export default function CreatorSearch() {
       }
       
       setShowContactForm(false);
-      setSelectedCreators([]); // Clear selection
-      setShowSuccess(true);
-      setTimeout(() => setShowSuccess(false), 5000);
+      setSelectedCreators([]);
     } catch (error) {
-      setEmailError('Ein Fehler ist aufgetreten. Bitte versuche es erneut.');
-    } finally {
-      setSubmitLoading(false);
+      console.error('Submit error:', error);
     }
   };
 
@@ -134,7 +115,7 @@ export default function CreatorSearch() {
 
       {creators.length > 0 && (
         <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {creators.map(creator => (
               <CreatorCard
                 key={creator.id}

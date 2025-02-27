@@ -1,56 +1,172 @@
 import Image from 'next/image';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { 
+  faInstagram, 
+  faTiktok, 
+  faYoutube, 
+  faFacebook, 
+  faLinkedin 
+} from '@fortawesome/free-brands-svg-icons';
+
+interface Creator {
+  id: string;
+  name: string;
+  image: string;
+  reach: string;
+  networks: string[];
+  priceRange: string;
+}
 
 interface CreatorCardProps {
-  creator: {
-    id: string;
-    name: string;
-    image: string;
-    reach: string;
-    networks: string[];
-    priceRange: string;
-  };
+  creator: Creator;
   isSelected: boolean;
   onSelect: () => void;
 }
 
 export default function CreatorCard({ creator, isSelected, onSelect }: CreatorCardProps) {
+  // Function to detect networks from text and links
+  const detectNetworks = (networks: string[]): string[] => {
+    const detectedNetworks = new Set<string>();
+    
+    networks.forEach(network => {
+      const networkLower = network.toLowerCase();
+      
+      // Check for direct links
+      if (networkLower.includes('instagram.com')) detectedNetworks.add('instagram');
+      if (networkLower.includes('tiktok.com')) detectedNetworks.add('tiktok');
+      if (networkLower.includes('youtube.com')) detectedNetworks.add('youtube');
+      if (networkLower.includes('facebook.com')) detectedNetworks.add('facebook');
+      if (networkLower.includes('linkedin.com')) detectedNetworks.add('linkedin');
+      
+      // Check for mentions
+      if (networkLower.includes('instagram')) detectedNetworks.add('instagram');
+      if (networkLower.includes('tiktok')) detectedNetworks.add('tiktok');
+      if (networkLower.includes('youtube')) detectedNetworks.add('youtube');
+      if (networkLower.includes('facebook')) detectedNetworks.add('facebook');
+      if (networkLower.includes('linkedin')) detectedNetworks.add('linkedin');
+    });
+    
+    return Array.from(detectedNetworks);
+  };
+  
+  // Get unique networks
+  const uniqueNetworks = detectNetworks(creator.networks);
+  
+  // Map network to icon
+  const getNetworkIcon = (network: string) => {
+    switch (network) {
+      case 'instagram': return faInstagram;
+      case 'tiktok': return faTiktok;
+      case 'youtube': return faYoutube;
+      case 'facebook': return faFacebook;
+      case 'linkedin': return faLinkedin;
+      default: return null;
+    }
+  };
+
+  // Parse and sum up reach values with abbreviation support
+  const calculateTotalReach = (reachText: string): number => {
+    try {
+      // Normalize text
+      const normalizedText = reachText
+        .replace(/\bIG\b/gi, 'Instagram')
+        .replace(/\bInsta\b/gi, 'Instagram')
+        .replace(/\bTT\b/gi, 'TikTok')
+        .split('erreicht')[0]; // Ignore "reached accounts" metrics
+    
+      // Extract numbers with k/K suffix or plain numbers
+      const matches = normalizedText.match(/(\d+(?:[.,]\d+)?)\s*[kKmM]?(?=\s|Follower|$|\n)/g) || [];
+      
+      let total = 0;
+      matches.forEach(num => {
+        // Clean up the number
+        let cleanNum = num.trim().toLowerCase();
+        
+        // Convert German format to standard
+        cleanNum = cleanNum.replace(/\./g, '').replace(',', '.');
+        
+        // Extract the numeric value
+        let value = parseFloat(cleanNum);
+        if (isNaN(value)) return;
+        
+        // Apply multiplier for k/K/m/M
+        if (cleanNum.endsWith('k')) {
+          value *= 1000;
+        } else if (cleanNum.endsWith('m')) {
+          value *= 1000000;
+        }
+        
+        total += value;
+      });
+    
+      return total;
+    } catch (error) {
+      console.error('Error calculating reach:', error);
+      return 0;
+    }
+  };
+
+  const formatReachDisplay = (value: number): string => {
+    if (value >= 1000000) {
+      return `${(value / 1000000).toFixed(1)}M`;
+    }
+    if (value >= 1000) {
+      return `${(value / 1000).toFixed(1)}K`;
+    }
+    return value.toString();
+  };
+
+  // In your component render:
+  <div className="text-sm text-gray-400">
+    Reichweite: {formatReachDisplay(calculateTotalReach(creator.reach))}
+  </div>
+
   return (
     <div 
       onClick={onSelect}
-      className={`
-        relative bg-gray-900/50 rounded-xl overflow-hidden cursor-pointer
-        border ${isSelected ? 'border-emerald-500' : 'border-gray-800'}
-        hover:border-gray-700 transition-all
-      `}
+      className={`bg-gray-900/30 backdrop-blur-sm rounded-2xl p-4 cursor-pointer transition-all hover:bg-gray-900/50 ${
+        isSelected ? 'ring-2 ring-emerald-500' : ''
+      }`}
     >
-      <div className="aspect-video relative">
-        <Image
-          src={creator.image || '/placeholder.jpg'}
-          alt={creator.name}
-          fill
-          className="object-cover"
-        />
-      </div>
-      <div className="p-4 space-y-2">
-        <h3 className="font-medium truncate">{creator.name}</h3>
-        <p className="text-sm text-gray-400">Reichweite: {creator.reach}</p>
-        <div className="flex flex-wrap gap-1">
-          {creator.networks.map(network => (
-            <span 
-              key={network}
-              className="text-xs px-2 py-0.5 bg-gray-800 rounded-full"
-            >
-              {network}
-            </span>
-          ))}
+      <div className="flex flex-col items-center space-y-3">
+        {/* Image section */}
+        <div className="relative w-24 h-24 rounded-full overflow-hidden border-2 border-gray-800">
+          <Image
+            src={creator.image || '/placeholder.jpg'}
+            alt={creator.name}
+            fill
+            className="object-cover"
+            sizes="96px"
+            onError={(e) => {
+              const target = e.target as HTMLImageElement;
+              target.src = '/placeholder.jpg';
+            }}
+          />
         </div>
-        <p className="text-sm font-medium text-emerald-400">{creator.priceRange}</p>
-      </div>
-      {isSelected && (
-        <div className="absolute top-2 right-2 bg-emerald-500 rounded-full p-1">
-          <CheckIcon className="w-4 h-4 text-white" />
+        <h3 className="font-medium text-lg">{creator.name}</h3>
+        
+        {/* Network icons */}
+        <div className="flex gap-3 justify-center">
+          {uniqueNetworks.map((network, i) => {
+            const icon = getNetworkIcon(network);
+            if (!icon) return null;
+            return (
+              <span key={i} className="text-xl">
+                <FontAwesomeIcon 
+                  icon={icon} 
+                  className="text-white" 
+                  size="lg"
+                />
+              </span>
+            );
+          })}
         </div>
-      )}
+        
+        {/* Reach */}
+        <div className="text-sm text-gray-400">
+          Reichweite: {calculateTotalReach(creator.reach)}
+        </div>
+      </div>
     </div>
   );
 }
