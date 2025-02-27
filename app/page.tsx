@@ -2,6 +2,9 @@ import Image from "next/image";
 import Link from 'next/link';
 import CreatorSearch from '@/components/CreatorSearch';
 
+// Make sure the search.css is imported in your main page or layout
+import './styles/search.css';
+
 export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-black to-gray-900">

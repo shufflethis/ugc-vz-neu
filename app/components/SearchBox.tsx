@@ -21,6 +21,7 @@ export default function SearchBox() {
   const [reasoning, setReasoning] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [searchSubmitted, setSearchSubmitted] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
   const reasoningRef = useRef<HTMLDivElement>(null);
 
   // Scroll to reasoning when it appears
@@ -30,6 +31,16 @@ export default function SearchBox() {
     }
   }, [reasoning]);
 
+  // Simulate typing effect for reasoning
+  useEffect(() => {
+    if (isLoading && searchSubmitted) {
+      setIsTyping(true);
+    } else {
+      setIsTyping(false);
+    }
+  }, [isLoading, searchSubmitted]);
+
+  // Enhance the typing effect to be more realistic
   const handleSearch = async () => {
     if (!searchQuery.trim()) return;
     
@@ -39,11 +50,6 @@ export default function SearchBox() {
     setReasoning(''); // Clear previous reasoning
     setCreators([]); // Clear previous results
     
-    // Simulate typing effect for reasoning
-    const typingTimer = setTimeout(() => {
-      setIsLoading(true);
-    }, 500);
-    
     try {
       const response = await fetch('/api/search', {
         method: 'POST',
@@ -52,24 +58,28 @@ export default function SearchBox() {
       });
       
       const data = await response.json();
+      console.log("API Response:", data); // Debug the response
       
       if (data.success) {
         // Show reasoning with a typing effect
         if (data.reasoning) {
+          console.log("Received reasoning:", data.reasoning); // Debug the reasoning
           setReasoning(data.reasoning);
+        } else {
+          console.warn("No reasoning data received");
         }
         
         // Show creators after a short delay
         setTimeout(() => {
-          setCreators(data.creators);
-        }, 800);
+          setCreators(data.creators || []);
+          setIsLoading(false);
+        }, 500);
       } else {
         console.error('Search failed:', data.error);
+        setIsLoading(false);
       }
     } catch (error) {
       console.error('Error during search:', error);
-    } finally {
-      clearTimeout(typingTimer);
       setIsLoading(false);
     }
   };
@@ -102,6 +112,7 @@ export default function SearchBox() {
       </div>
       
       {/* Chat-like interface */}
+      // In the return statement, modify the chat container section
       {searchSubmitted && (
         <div className="chat-container">
           {/* User message */}
@@ -112,11 +123,11 @@ export default function SearchBox() {
           </div>
           
           {/* AI reasoning */}
-          {(isLoading || reasoning) && (
+          {(isTyping || reasoning) && (
             <div className="ai-message" ref={reasoningRef}>
               <div className="ai-avatar">AI</div>
               <div className="message-bubble ai-bubble">
-                {isLoading && !reasoning ? (
+                {isTyping && !reasoning ? (
                   <div className="typing-indicator">
                     <span></span>
                     <span></span>

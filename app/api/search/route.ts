@@ -194,11 +194,12 @@ export async function POST(req: Request) {
     const finalCreators = validCreators.map(({ hasCustomImage, totalReach, gender, ...rest }) => rest);
 
     // Include reasoning in the response
+    // In your API route, make sure reasoning is being returned
     return NextResponse.json({ 
       success: true,
       creators: finalCreators,
       query: query,
-      reasoning: reasoning
+      reasoning: reasoning // Make sure this is included
     });
 
   } catch (error: any) {

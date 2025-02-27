@@ -1,38 +1,15 @@
-.reasoning-container {
-  margin: 20px auto;
-  padding: 15px;
-  background-color: #dcf8c6; /* WhatsApp-like green background */
-  border-radius: 10px;
-  max-width: 80%;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-  position: relative;
-}
-
-.reasoning-container:after {
-  content: '';
-  position: absolute;
-  top: 15px;
-  left: -10px;
-  width: 0;
-  height: 0;
-  border: 10px solid transparent;
-  border-right-color: #dcf8c6;
-  border-left: 0;
-  margin-left: -10px;
-}
-
-.search-container {
+.searchContainer {
   max-width: 900px;
   margin: 0 auto;
   padding: 20px;
 }
 
-.search-input-container {
+.searchInputContainer {
   display: flex;
   margin-bottom: 20px;
 }
 
-.search-input {
+.searchInput {
   flex: 1;
   padding: 12px 16px;
   border: 1px solid #ddd;
@@ -40,7 +17,7 @@
   font-size: 16px;
 }
 
-.search-button {
+.searchButton {
   padding: 12px 24px;
   background: linear-gradient(135deg, #4CAF50, #2E7D32);
   color: white;
@@ -51,38 +28,36 @@
   transition: all 0.3s ease;
 }
 
-.search-button:hover {
+.searchButton:hover {
   background: linear-gradient(135deg, #43A047, #1B5E20);
 }
 
-.search-button:disabled {
+.searchButton:disabled {
   background: #ccc;
   cursor: not-allowed;
 }
 
-/* Chat interface styling - iMessage style */
-.chat-container {
+/* Chat interface styling */
+.chatContainer {
   margin: 30px 0;
-  display: flex;
-  flex-direction: column;
 }
 
-.user-message, .ai-message {
+.userMessage, .aiMessage {
   display: flex;
   margin-bottom: 20px;
   position: relative;
 }
 
-.user-message {
+.userMessage {
   justify-content: flex-end;
 }
 
-.ai-message {
+.aiMessage {
   justify-content: flex-start;
 }
 
-/* Message bubbles with arrow */
-.message-bubble {
+/* Apple-style message bubbles */
+.userBubble, .aiBubble {
   padding: 12px 16px;
   border-radius: 18px;
   max-width: 80%;
@@ -91,14 +66,14 @@
 }
 
 /* User bubble - blue with right arrow */
-.user-bubble {
+.userBubble {
   background-color: #0B93F6;
   color: white;
   border-bottom-right-radius: 4px;
   margin-right: 10px;
 }
 
-.user-bubble:before {
+.userBubble:before {
   content: "";
   position: absolute;
   bottom: 0;
@@ -109,7 +84,7 @@
   border-bottom-left-radius: 16px 14px;
 }
 
-.user-bubble:after {
+.userBubble:after {
   content: "";
   position: absolute;
   bottom: 0;
@@ -121,14 +96,14 @@
 }
 
 /* AI bubble - light gray with left arrow */
-.ai-bubble {
+.aiBubble {
   background-color: #E5E5EA;
   color: #333;
   border-bottom-left-radius: 4px;
   margin-left: 10px;
 }
 
-.ai-bubble:before {
+.aiBubble:before {
   content: "";
   position: absolute;
   bottom: 0;
@@ -139,7 +114,7 @@
   border-bottom-right-radius: 16px 14px;
 }
 
-.ai-bubble:after {
+.aiBubble:after {
   content: "";
   position: absolute;
   bottom: 0;
@@ -150,30 +125,13 @@
   border-bottom-right-radius: 10px;
 }
 
-/* AI avatar styling */
-.ai-avatar {
-  width: 36px;
-  height: 36px;
-  background-color: #4CAF50;
-  color: white;
-  border-radius: 50%;
+/* Typing indicator */
+.typingIndicator {
   display: flex;
   align-items: center;
-  justify-content: center;
-  margin-right: 8px;
-  font-weight: bold;
-  font-size: 14px;
-  z-index: 2;
 }
 
-/* Typing animation */
-.typing-indicator {
-  display: flex;
-  align-items: center;
-  padding: 8px 12px;
-}
-
-.typing-indicator span {
+.typingIndicator span {
   height: 8px;
   width: 8px;
   background-color: #666;
@@ -183,11 +141,11 @@
   animation: bounce 1.4s infinite ease-in-out both;
 }
 
-.typing-indicator span:nth-child(1) {
+.typingIndicator span:nth-child(1) {
   animation-delay: -0.32s;
 }
 
-.typing-indicator span:nth-child(2) {
+.typingIndicator span:nth-child(2) {
   animation-delay: -0.16s;
 }
 
@@ -196,18 +154,7 @@
   40% { transform: scale(1); }
 }
 
-/* Animations for messages appearing */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.ai-message, .user-message {
-  animation: fadeIn 0.3s ease-out;
-}
-
-/* Reasoning text styling */
-.reasoning-text {
+.reasoningText {
   white-space: pre-wrap;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 14px;
@@ -216,38 +163,37 @@
 }
 
 /* Results grid */
-.creators-grid {
+.creatorsGrid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   gap: 20px;
   margin-top: 30px;
-  animation: fadeIn 0.5s ease-out;
 }
 
-.creator-card {
+.creatorCard {
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
   transition: transform 0.3s ease;
 }
 
-.creator-card:hover {
+.creatorCard:hover {
   transform: translateY(-5px);
 }
 
-.creator-card img {
+.creatorCard img {
   width: 100%;
   height: 200px;
   object-fit: cover;
 }
 
-.creator-card h3 {
+.creatorCard h3 {
   padding: 12px 16px;
   margin: 0;
   font-size: 18px;
 }
 
-.creator-card p {
+.creatorCard p {
   padding: 0 16px;
   margin: 8px 0;
   color: #666;
@@ -260,7 +206,7 @@
   gap: 6px;
 }
 
-.network-tag {
+.networkTag {
   background-color: #e3f2fd;
   color: #1565c0;
   padding: 4px 8px;
@@ -271,14 +217,4 @@
 .price {
   font-weight: bold;
   color: #4CAF50 !important;
-}
-
-/* Animations */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.ai-message, .user-message {
-  animation: fadeIn 0.3s ease-out;
 }
