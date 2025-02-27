@@ -1,56 +1,221 @@
 'use client';
 
 import { useState } from 'react';
+import CreatorCard from './CreatorCard';
+
+interface Creator {
+  id: string;
+  name: string;
+  image: string;
+  reach: string;
+  networks: string[];
+  priceRange: string;
+}
+
+interface ClientInfo {
+  email: string;
+  name?: string;
+  message?: string;
+}
 
 export default function CreatorSearch() {
+  const [emailError, setEmailError] = useState('');
+  const [submitLoading, setSubmitLoading] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+
   const [prompt, setPrompt] = useState('');
-  const [response, setResponse] = useState('');
+  const [creators, setCreators] = useState<Creator[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedCreators, setSelectedCreators] = useState<string[]>([]);
+  const [clientInfo, setClientInfo] = useState<ClientInfo>({ email: '' });
+  const [showContactForm, setShowContactForm] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    console.log('Sending search request:', prompt);
     
     try {
-      const res = await fetch('/api/creators?' + new URLSearchParams({
-        query: prompt
-      }));
+      const res = await fetch('/api/search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: prompt })
+      });
+      
       const data = await res.json();
-      setResponse(JSON.stringify(data, null, 2));
+      console.log('Search response:', data);
+      
+      if (!data.success) {
+        throw new Error(data.message || 'Search failed');
+      }
+      
+      if (data.analysis) {
+        console.log('AI Analysis:', data.analysis);
+      }
+      
+      setCreators(data.creators || []);
     } catch (error) {
-      setResponse('Failed to fetch creators');
+      console.error('Search error:', error);
     } finally {
       setIsLoading(false);
     }
   };
 
+  const handleCreatorSelect = (creatorId: string) => {
+    setSelectedCreators(prev => 
+      prev.includes(creatorId) 
+        ? prev.filter(id => id !== creatorId)
+        : [...prev, creatorId]
+    );
+  };
+
+  const handleSubmitSelection = async () => {
+    setEmailError('');
+    
+    if (selectedCreators.length === 0) return;
+    if (!clientInfo.email) {
+      setEmailError('Bitte gib deine Email-Adresse an');
+      return;
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(clientInfo.email)) {
+      setEmailError('Bitte gib eine gültige Email-Adresse an');
+      return;
+    }
+    
+    setSubmitLoading(true);
+    try {
+      const res = await fetch('/api/submit-request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          creatorIds: selectedCreators,
+          clientInfo 
+        })
+      });
+      
+      const data = await res.json();
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to submit');
+      }
+      
+      setShowContactForm(false);
+      setSelectedCreators([]); // Clear selection
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 5000);
+    } catch (error) {
+      setEmailError('Ein Fehler ist aufgetreten. Bitte versuche es erneut.');
+    } finally {
+      setSubmitLoading(false);
+    }
+  };
+
   return (
-    <div className="w-full">
-      <div className="bg-gray-900/50 backdrop-blur-sm rounded-xl p-4 shadow-xl border border-gray-800">
+    <div className="w-full space-y-8">
+      <div className="bg-gray-900/30 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-gray-800/50">
         <form onSubmit={handleSubmit} className="space-y-4">
           <textarea
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
-            placeholder="Beschreibe den UGC Creator, den du suchst..."
-            className="w-full h-32 p-4 bg-gray-800/50 text-white rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none resize-none"
+            placeholder="Beschreibe deine Kampagne und was für einen Creator du suchst..."
+            className="w-full h-40 p-4 bg-gray-900/50 text-white rounded-xl focus:ring-2 focus:ring-emerald-500/50 focus:outline-none resize-none border border-gray-800/50 placeholder-gray-500"
           />
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-50"
+            className="w-full py-4 bg-gradient-to-r from-emerald-600 to-blue-600 text-white rounded-xl hover:from-emerald-500 hover:to-blue-500 transition-all disabled:opacity-50 font-medium text-lg"
           >
-            {isLoading ? 'Suche...' : 'Creator finden'}
+            {isLoading ? 'Suche läuft...' : 'Passende Creator finden'}
           </button>
         </form>
-
-        {response && (
-          <div className="mt-6 p-4 bg-gray-800/50 rounded-lg border border-gray-700">
-            <pre className="text-sm text-gray-300 overflow-auto whitespace-pre-wrap">
-              {response}
-            </pre>
-          </div>
-        )}
       </div>
+
+      {creators.length > 0 && (
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+            {creators.map(creator => (
+              <CreatorCard
+                key={creator.id}
+                creator={creator}
+                isSelected={selectedCreators.includes(creator.id)}
+                onSelect={() => handleCreatorSelect(creator.id)}
+              />
+            ))}
+          </div>
+          
+          {selectedCreators.length > 0 && (
+            <div className="fixed bottom-0 left-0 right-0 bg-gray-900 border-t border-gray-800 p-4">
+              <div className="container mx-auto flex justify-between items-center">
+                <span>{selectedCreators.length} Creator ausgewählt</span>
+                <button
+                  onClick={() => setShowContactForm(true)}
+                  className="bg-emerald-600 px-6 py-2 rounded-lg hover:bg-emerald-700 transition-colors"
+                >
+                  Anfrage senden
+                </button>
+              </div>
+            </div>
+          )}
+          {showContactForm && (
+            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+              <div className="bg-gray-900 rounded-xl p-6 max-w-md w-full space-y-4">
+                <h3 className="text-xl font-semibold">Kontaktinformationen</h3>
+                <div className="space-y-1">
+                  <input
+                    type="email"
+                    placeholder="Email *"
+                    value={clientInfo.email}
+                    onChange={e => {
+                      setEmailError('');
+                      setClientInfo(prev => ({ ...prev, email: e.target.value }));
+                    }}
+                    className={`w-full p-2 bg-gray-800 rounded ${emailError ? 'border border-red-500' : ''}`}
+                  />
+                  {emailError && <p className="text-red-500 text-sm">{emailError}</p>}
+                </div>
+                <input
+                  type="text"
+                  placeholder="Name (optional)"
+                  value={clientInfo.name || ''}
+                  onChange={e => setClientInfo(prev => ({ ...prev, name: e.target.value }))}
+                  className="w-full p-2 bg-gray-800 rounded"
+                />
+                <textarea
+                  placeholder="Nachricht (optional)"
+                  value={clientInfo.message || ''}
+                  onChange={e => setClientInfo(prev => ({ ...prev, message: e.target.value }))}
+                  className="w-full p-2 bg-gray-800 rounded h-24 resize-none"
+                />
+                <div className="flex justify-end gap-3">
+                  <button
+                    onClick={() => setShowContactForm(false)}
+                    className="px-4 py-2 text-gray-400 hover:text-white"
+                    disabled={submitLoading}
+                  >
+                    Abbrechen
+                  </button>
+                  <button
+                    onClick={handleSubmitSelection}
+                    disabled={submitLoading}
+                    className="px-4 py-2 bg-emerald-600 rounded hover:bg-emerald-700 disabled:opacity-50 flex items-center gap-2"
+                  >
+                    {submitLoading ? (
+                      <>
+                        <span className="animate-spin">⏳</span>
+                        Wird gesendet...
+                      </>
+                    ) : (
+                      'Absenden'
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

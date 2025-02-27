@@ -4,40 +4,37 @@ import CreatorSearch from '@/components/CreatorSearch';
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col">
-      <main className="flex-1 flex flex-col items-center justify-start pt-12 px-4">
-        <div className="flex items-center gap-4 mb-4">
-          <Image
-            src="/ugc-vz-logo.webp"
-            alt="UGC VZ"
-            width={64}
-            height={64}
-            className="rounded-xl"
-            priority
-          />
-          <h1 className="text-4xl font-bold">UGC VZ</h1>
+    <div className="min-h-screen bg-gradient-to-b from-black to-gray-900">
+      <div className="fixed top-0 left-0 w-full border-b border-gray-800/50 backdrop-blur-sm z-50">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Image
+              src="/ugc-vz-logo.webp"
+              alt="UGC VZ"
+              width={40}
+              height={40}
+              className="rounded-lg"
+              priority
+            />
+            <span className="text-xl font-bold bg-gradient-to-r from-emerald-400 to-blue-500 text-transparent bg-clip-text">
+              UGC VZ
+            </span>
+          </div>
         </div>
-        
-        <p className="text-gray-400 mb-12">
-          Frag einfach was du brauchst für deine Kampagne.
-        </p>
+      </div>
 
-        <div className="w-full max-w-3xl">
-          <CreatorSearch />
+      <main className="container mx-auto px-4 pt-24 pb-16">
+        <div className="max-w-4xl mx-auto text-center mb-12">
+          <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-emerald-400 to-blue-500 text-transparent bg-clip-text">
+            Finde deinen perfekten UGC Creator
+          </h1>
+          <p className="text-gray-400 text-lg">
+            Beschreibe deine Kampagne und wir finden die passenden Creator für dich.
+          </p>
         </div>
+
+        <CreatorSearch />
       </main>
-
-      <footer className="py-8 text-center">
-        <nav className="flex justify-center gap-6 mb-4 text-gray-400">
-          <Link href="/" className="hover:text-white transition-colors">Home</Link>
-          <Link href="/about" className="hover:text-white transition-colors">About</Link>
-          <Link href="/faq" className="hover:text-white transition-colors">FAQ</Link>
-          <Link href="/terms" className="hover:text-white transition-colors">Terms</Link>
-          <Link href="/privacy" className="hover:text-white transition-colors">Privacy</Link>
-          <Link href="/creators" className="hover:text-white transition-colors">Creators</Link>
-        </nav>
-        <p className="text-gray-500 text-sm">Copyright © Final Master 2024.</p>
-      </footer>
     </div>
   );
 }
