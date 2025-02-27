@@ -37,7 +37,15 @@ export async function POST(req: Request) {
     const isFemaleQuery = query.toLowerCase().includes('frauen') || 
                          query.toLowerCase().includes('weiblich') ||
                          query.toLowerCase().includes('frau');
-
+    
+    // Check platform filter
+    const wantsTikTok = query.toLowerCase().includes('tiktok');
+    const wantsInstagram = query.toLowerCase().includes('instagram') || query.toLowerCase().includes('insta');
+    
+    // Check follower minimum
+    const followerMatch = query.match(/mehr als (\d+) follower/i);
+    const minFollowers = followerMatch ? parseInt(followerMatch[1]) : 0;
+    
     // Use cached records if available
     const now = Date.now();
     if (!cachedRecords || now - lastFetch > CACHE_DURATION) {
@@ -62,21 +70,47 @@ export async function POST(req: Request) {
       const batchResults = await Promise.all(batch.map(async (record: AirtableRecord) => {
         try {
           const fields = record.fields;
-          // Strict gender check from Airtable field
+          
+          // Strict gender check - case sensitive exact match
           const gender = fields['Wie ist dein Geschlecht?'];
           
-          // Skip if gender doesn't match query (exact match)
-          if ((isMaleQuery && gender !== 'Männlich') || 
-              (isFemaleQuery && gender !== 'Weiblich')) {
+          // Skip if gender doesn't match query
+          if (isFemaleQuery && gender !== 'Weiblich') {
+            return null;
+          }
+          
+          if (isMaleQuery && gender !== 'Männlich') {
             return null;
           }
 
           const socialLinks = String(fields['In welchem Netzwerk hast du Accounts und möchtest du aktiv sein?&nbsp; '] || '');
+          
+          // Check if they have the requested platform
+          const hasTikTok = socialLinks.toLowerCase().includes('tiktok');
+          const hasInstagram = socialLinks.toLowerCase().includes('instagram');
+          
+          // Skip if they don't have the requested platform
+          if (wantsTikTok && !hasTikTok) {
+            return null;
+          }
+          
+          if (wantsInstagram && !hasInstagram) {
+            return null;
+          }
+          
           const fullName = String(fields['Wie heißt du?  (Vor- und Nachname)'] || '');
           const firstName = fullName.split(' ')[0];
           const reachText = String(fields['Wie groß ist deine Reichweite pro Netzwerk? '] || '');
-          const profileImage = await getProfileImage(socialLinks);
+          
+          // Calculate total reach and platform-specific reach
           const totalReach = calculateTotalReach(reachText);
+          
+          // Skip if below minimum followers
+          if (minFollowers > 0 && totalReach < minFollowers) {
+            return null;
+          }
+          
+          const profileImage = await getProfileImage(socialLinks);
 
           return {
             id: record.id,
