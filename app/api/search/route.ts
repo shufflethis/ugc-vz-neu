@@ -26,6 +26,7 @@ let lastFetch: number = 0;
 const CACHE_DURATION = 30000; // 30 seconds cache
 
 // Fix the duplicate minFollowers declaration first
+// Fix the duplicate minFollowers declaration
 export async function POST(req: Request) {
   try {
     const { query } = await req.json();
