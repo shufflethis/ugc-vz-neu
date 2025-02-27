@@ -32,7 +32,8 @@ export default async function handler(
     }));
 
     res.status(200).json(creators);
-  } catch (error) {
+  } catch (err: unknown) {
+    console.error('Airtable API error:', err);
     res.status(500).json({ error: 'Failed to fetch creators' });
   }
 }
