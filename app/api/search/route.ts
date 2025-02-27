@@ -25,6 +25,7 @@ let cachedRecords: AirtableRecord[] | null = null;
 let lastFetch: number = 0;
 const CACHE_DURATION = 30000; // 30 seconds cache
 
+// Fix the duplicate minFollowers declaration first
 export async function POST(req: Request) {
   try {
     const { query } = await req.json();
@@ -45,10 +46,16 @@ export async function POST(req: Request) {
     const wantsTikTok = query.toLowerCase().includes('tiktok');
     const wantsInstagram = query.toLowerCase().includes('instagram') || query.toLowerCase().includes('insta');
     
-    // Check follower minimum - make sure we parse it correctly
-    const followerMatch = query.match(/mehr als (\d+) follower/i);
-    const minFollowers = followerMatch ? parseInt(followerMatch[1]) : 0;
-    console.log('Minimum followers:', minFollowers);
+    // Check follower limits
+    const followerMinMatch = query.match(/mehr als (\d+) follower/i);
+    const followerMaxMatch = query.match(/weniger (?:als |reichweite als )?(\d+)/i);
+    const minFollowers = followerMinMatch ? parseInt(followerMinMatch[1]) : 0;
+    const maxFollowers = followerMaxMatch ? parseInt(followerMaxMatch[1]) : null;
+    console.log('Follower limits:', { min: minFollowers, max: maxFollowers });
+    
+    // Remove duplicate declaration
+    // const minFollowers = followerMatch ? parseInt(followerMatch[1]) : 0;
+    // console.log('Minimum followers:', minFollowers);
     
     // Use cached records if available
     const now = Date.now();
@@ -120,9 +127,10 @@ export async function POST(req: Request) {
           // Calculate total reach and platform-specific reach
           const totalReach = calculateTotalReach(reachText);
           
-          // More strict follower check
-          if (minFollowers > 0 && totalReach < minFollowers) {
-            console.log(`Skipping ${firstName} - insufficient reach: ${totalReach} < ${minFollowers}`);
+          // More strict follower checks
+          if ((minFollowers > 0 && totalReach < minFollowers) || 
+              (maxFollowers && totalReach > maxFollowers)) {
+            console.log(`Skipping ${firstName} - reach outside limits: ${totalReach}`);
             return null;
           }
           
@@ -204,60 +212,95 @@ export async function POST(req: Request) {
   }
 }
 
-// New function to generate reasoning explanation in German
+// New function to generate structured reasoning explanation in German
 function generateReasoning(query: string): string {
-  let reasoning = "Thinking\n\n";
-  reasoning += "Analysiere die Anfrage\n\n";
+  // Extract key information from query
+  const isKosmetik = query.toLowerCase().includes('kosmetik');
+  const isBeauty = query.toLowerCase().includes('beauty');
+  const isUnder35 = query.toLowerCase().includes('unter 35') || query.toLowerCase().includes('under 35');
+  const followerMaxMatch = query.match(/weniger (?:reichweite|reichweite als|als) (\d+)/i);
+  const maxFollowers = followerMaxMatch ? parseInt(followerMaxMatch[1]) : null;
+  const platformMatch = /(tiktok|instagram|youtube|facebook)/gi.exec(query);
+  const platform = platformMatch ? platformMatch[1].charAt(0).toUpperCase() + platformMatch[1].slice(1) : null;
   
-  // Add the original query as first thought
-  reasoning += `• Die Anfrage lautet: "${query}"\n\n`;
+  // Build structured reasoning text
+  let reasoning = "";
   
-  // Add analysis thoughts
-  if (query.toLowerCase().includes('unter')) {
-    reasoning += `• Ich überprüfe, ob es sich um eine Altersangabe handelt\n\n`;
+  // Section 1: Understanding the query
+  reasoning += "1. Verständnis der Anfrage\n";
+  reasoning += "Die KI analysiert die Schlüsselwörter und Kriterien:\n\n";
+  
+  if (isKosmetik || isBeauty) {
+    reasoning += "• Kosmetik: Es geht um Content im Bereich Beauty, Make-up, Hautpflege usw.\n\n";
   }
-
-  if (query.toLowerCase().includes('kosmetik')) {
-    reasoning += `• Es geht um Kosmetikprodukte, ich suche nach passenden Influencern\n\n`;
+  
+  if (isUnder35) {
+    reasoning += "• Unter 35 Jahre: Die Zielgruppe oder der Creator soll jünger als 35 Jahre sein.\n\n";
   }
-
-  if (query.toLowerCase().includes('tiktok')) {
-    const followerMatch = query.match(/mehr als (\d+) follower/i);
-    if (followerMatch) {
-      reasoning += `• TikTok Creator mit mindestens ${followerMatch[1]} Followern werden gesucht\n\n`;
-    }
+  
+  if (platform) {
+    reasoning += `• ${platform}: Die Plattform, auf der der Creator aktiv ist.\n\n`;
   }
-
-  if (query.toLowerCase().includes('weniger als') || query.toLowerCase().includes('unter')) {
-    const maxMatch = query.match(/weniger als (\d+)/i) || query.match(/unter (\d+)/i);
-    if (maxMatch) {
-      reasoning += `• Eine Obergrenze von ${maxMatch[1]} wurde angegeben\n\n`;
-    }
+  
+  if (maxFollowers) {
+    reasoning += `• Weniger Reichweite als ${maxFollowers.toLocaleString('de-DE')}: Die Follower-Zahl oder Reichweite des Creators soll unter ${maxFollowers.toLocaleString('de-DE')} liegen.\n\n`;
   }
-
-  reasoning += "• Suche nach passenden Creators in der Datenbank...";
+  
+  // Section 2: Database query
+  reasoning += "2. Datenbankabfrage\n";
+  reasoning += "Die KI durchsucht die Datenbank nach Creators, die folgende Kriterien erfüllen:\n\n";
+  
+  if (isKosmetik || isBeauty) {
+    reasoning += "• Nische: Kosmetik/Beauty.\n\n";
+  }
+  
+  if (isUnder35) {
+    reasoning += "• Alter: Unter 35 Jahre.\n\n";
+  }
+  
+  if (platform) {
+    reasoning += `• Plattform: ${platform}.\n\n`;
+  }
+  
+  if (maxFollowers) {
+    reasoning += `• Reichweite: Unter ${maxFollowers.toLocaleString('de-DE')}.\n\n`;
+  }
+  
+  // Section 3: Filtering and prioritization
+  reasoning += "3. Filterung und Priorisierung\n";
+  reasoning += "Die KI filtert die Ergebnisse und priorisiert Creators nach:\n\n";
+  reasoning += "• Relevanz: Passende Inhalte im Beauty-Bereich.\n\n";
+  reasoning += "• Reichweite: Innerhalb der angegebenen Grenzen.\n\n";
+  reasoning += "• Bildqualität: Creators mit professionellen Profilbildern werden bevorzugt angezeigt.\n\n";
   
   return reasoning;
 }
 
 // Helper function to calculate numeric reach value for sorting
 function calculateTotalReach(reachText: string): number {
-  // Handle more platform name variations
-  const platforms = reachText.split(/Instagram:|Insta:|TikTok:|YouTube:|Facebook:|LinkedIn:|FB:|YT:/i).filter(Boolean);
+  // Handle more platform name variations and better number extraction
+  const platforms = reachText.split(/(?:Instagram|Insta|TikTok|YouTube|Facebook|LinkedIn|FB|YT):\s*/i).filter(Boolean);
   
   let total = 0;
   
-  // Process each platform section
   platforms.forEach(platform => {
-    const numbers = platform.match(/\d+(?:[.,]\d+)?(?:\s*[kKmM])?/g) || [];
+    const numbers = platform.trim().match(/\d+(?:[.,]\d+)?(?:\s*[kKmM])?/g) || [];
     
     numbers.forEach(num => {
-      let value = parseFloat(num.replace(/[.,]/g, ''));
-      if (num.toLowerCase().includes('k')) value *= 1000;
-      if (num.toLowerCase().includes('m')) value *= 1000000;
-      total += value;
+      let cleanNum = num.trim().replace(/[.,]/g, '');
+      let value = parseFloat(cleanNum);
+      
+      if (num.toLowerCase().includes('k')) {
+        value *= 1000;
+      } else if (num.toLowerCase().includes('m')) {
+        value *= 1000000;
+      }
+      
+      if (!isNaN(value)) {
+        total += value;
+      }
     });
   });
   
-  return total;
+  return Math.round(total);
 }
