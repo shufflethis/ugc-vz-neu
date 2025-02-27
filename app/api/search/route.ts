@@ -111,14 +111,24 @@ export async function POST(req: Request) {
           }
           
           const profileImage = await getProfileImage(socialLinks);
+          
+          // Use gender-specific placeholder if needed
+          let finalImage = profileImage;
+          if (profileImage.includes('placeholder.jpg')) {
+            if (gender === 'Weiblich') {
+              finalImage = '/female-placeholder.webp';
+            } else {
+              finalImage = '/placeholder.jpg';
+            }
+          }
 
           return {
             id: record.id,
             name: firstName,
-            image: profileImage,
+            image: finalImage,
             reach: reachText,
             totalReach: totalReach,
-            hasCustomImage: !profileImage.includes('placeholder.jpg'),
+            hasCustomImage: !profileImage.includes('placeholder'),
             networks: socialLinks.split('\n').filter(Boolean),
             priceRange: String(fields.Price || '')
           };
