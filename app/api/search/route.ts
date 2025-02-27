@@ -1,59 +1,18 @@
 import { NextResponse } from 'next/server';
 import Airtable from 'airtable';
-import { getProfileImage } from '@/utils/profileImage';
-import axios from 'axios';
 
-const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY })
-  .base('appOAS76TTY2MBVuf');
-
-const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
-
-// Function to detect gender from name using OpenRouter
-async function detectGenderFromName(name: string): Promise<string> {
-  try {
-    const response = await axios.post(
-      OPENROUTER_API_URL,
-      {
-        model: 'nvidia/llama-3.1-nemotron-70b-instruct:free',
-        messages: [
-          {
-            role: "system",
-            content: "You are a helpful assistant that determines the likely gender of a person based on their name. Respond with only 'männlich' or 'weiblich'."
-          },
-          {
-            role: "user",
-            content: `Is the name "${name}" typically associated with a male or female person in German-speaking countries?`
-          }
-        ],
-        temperature: 0.3,
-        max_tokens: 10
-      },
-      {
-        headers: {
-          'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
-          'HTTP-Referer': process.env.VERCEL_URL || 'http://localhost:3000',
-          'X-Title': 'UGC VZ',
-          'Content-Type': 'application/json'
-        }
-      }
-    );
-
-    const result = response.data.choices[0].message.content?.toLowerCase() || '';
-    
-    if (result.includes('männlich') || result.includes('male')) {
-      return 'männlich';
-    } else if (result.includes('weiblich') || result.includes('female')) {
-      return 'weiblich';
-    } else {
-      return 'unbekannt';
-    }
-  } catch (error) {
-    console.error('Error detecting gender:', error);
-    return 'unbekannt';
-  }
+interface AirtableRecord {
+  id: string;
+  fields: {
+    'Wie heißt du?  (Vor- und Nachname)'?: string;
+    'Wie ist dein Geschlecht?'?: string;
+    'In welchem Netzwerk hast du Accounts und möchtest du aktiv sein?&nbsp; '?: string;
+    'Wie groß ist deine Reichweite pro Netzwerk? '?: string;
+    'Price'?: string;
+  };
 }
 
-export const maxDuration = 300; // Set max duration to 300 seconds
+export const maxDuration = 300;
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
@@ -61,7 +20,7 @@ export async function POST(req: Request) {
     const { query } = await req.json();
     console.log('Search query:', query);
     
-    // Fetch creators from Airtable with timeout
+    // Fetch creators from Airtable with timeout and proper typing
     const records = await Promise.race([
       base('tblDlScXJMvZQ1XGc').select({
         view: 'viw5IA8sDIXNQ3ZQx'
@@ -69,10 +28,10 @@ export async function POST(req: Request) {
       new Promise((_, reject) => 
         setTimeout(() => reject(new Error('Airtable timeout')), 10000)
       )
-    ]);
+    ]) as AirtableRecord[];
 
     // Process creators with shorter timeouts
-    const creatorsWithData = await Promise.all(records.map(async record => {
+    const creatorsWithData = await Promise.all(records.map(async (record: AirtableRecord) => {
       try {
         const fields = record.fields;
         const socialLinks = String(fields['In welchem Netzwerk hast du Accounts und möchtest du aktiv sein?&nbsp; '] || '');
