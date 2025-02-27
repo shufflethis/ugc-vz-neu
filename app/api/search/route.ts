@@ -30,6 +30,14 @@ export async function POST(req: Request) {
     const { query } = await req.json();
     console.log('Search query:', query);
     
+    // Check gender filter
+    const isMaleQuery = query.toLowerCase().includes('männer') || 
+                       query.toLowerCase().includes('männlich') ||
+                       query.toLowerCase().includes('mann');
+    const isFemaleQuery = query.toLowerCase().includes('frauen') || 
+                         query.toLowerCase().includes('weiblich') ||
+                         query.toLowerCase().includes('frau');
+
     // Use cached records if available and fresh
     const now = Date.now();
     if (!cachedRecords || now - lastFetch > CACHE_DURATION) {
@@ -59,21 +67,25 @@ export async function POST(req: Request) {
           const socialLinks = String(fields['In welchem Netzwerk hast du Accounts und möchtest du aktiv sein?&nbsp; '] || '');
           const fullName = String(fields['Wie heißt du?  (Vor- und Nachname)'] || '');
           const firstName = fullName.split(' ')[0];
-          const reachText = String(fields['Wie groß ist deine Reichweite pro Netzwerk? '] || '');
 
-          // Shorter timeout for image fetching
-          const profileImage = await Promise.race([
-            getProfileImage(socialLinks),
-            new Promise<string>((resolve) => 
-              setTimeout(() => resolve('/placeholder.jpg'), 5000)
-            )
-          ]);
+          // Skip if gender doesn't match query
+          if ((isMaleQuery && gender !== 'männlich') || 
+              (isFemaleQuery && gender !== 'weiblich')) {
+            return null;
+          }
+
+          const socialLinks = String(fields['In welchem Netzwerk hast du Accounts und möchtest du aktiv sein?&nbsp; '] || '');
+          const reachText = String(fields['Wie groß ist deine Reichweite pro Netzwerk? '] || '');
+          const profileImage = await getProfileImage(socialLinks);
+          const totalReach = calculateTotalReach(reachText);
 
           return {
             id: record.id,
             name: firstName,
             image: profileImage,
             reach: reachText,
+            totalReach: totalReach,
+            hasCustomImage: !profileImage.includes('placeholder.jpg'),
             networks: socialLinks.split('\n').filter(Boolean),
             priceRange: String(fields.Price || '')
           };
@@ -89,11 +101,58 @@ export async function POST(req: Request) {
       await new Promise(resolve => setTimeout(resolve, 100));
     }
 
-    const validCreators = results.filter(creator => creator !== null);
-    
+    const creatorsWithData = await Promise.all(records.map(async (record: AirtableRecord) => {
+      try {
+        const fields = record.fields;
+        let gender = String(fields['Wie ist dein Geschlecht?'] || '').toLowerCase();
+        const fullName = String(fields['Wie heißt du?  (Vor- und Nachname)'] || '');
+        const firstName = fullName.split(' ')[0];
+
+        // Skip if gender doesn't match query
+        if ((isMaleQuery && gender !== 'männlich') || 
+            (isFemaleQuery && gender !== 'weiblich')) {
+          return null;
+        }
+
+        const socialLinks = String(fields['In welchem Netzwerk hast du Accounts und möchtest du aktiv sein?&nbsp; '] || '');
+        const reachText = String(fields['Wie groß ist deine Reichweite pro Netzwerk? '] || '');
+        const profileImage = await getProfileImage(socialLinks);
+        const totalReach = calculateTotalReach(reachText);
+
+        return {
+          id: record.id,
+          name: firstName,
+          image: profileImage,
+          reach: reachText,
+          totalReach: totalReach,
+          hasCustomImage: !profileImage.includes('placeholder.jpg'),
+          networks: socialLinks.split('\n').filter(Boolean),
+          priceRange: String(fields.Price || '')
+        };
+      } catch (error) {
+        console.error('Error processing creator:', error);
+        return null;
+      }
+    }));
+
+    // Filter out nulls and sort
+    const validCreators = creatorsWithData
+      .filter(creator => creator !== null)
+      .sort((a, b) => {
+        // First sort by custom image
+        if (a.hasCustomImage !== b.hasCustomImage) {
+          return a.hasCustomImage ? -1 : 1;
+        }
+        // Then by reach within each group
+        return b.totalReach - a.totalReach;
+      });
+
+    // Remove helper properties before sending
+    const finalCreators = validCreators.map(({ hasCustomImage, totalReach, ...rest }) => rest);
+
     return NextResponse.json({ 
       success: true,
-      creators: validCreators,
+      creators: finalCreators,
       query: query 
     });
 
