@@ -1,10 +1,24 @@
 import React, { useState } from 'react';
 import '../styles/search.css'; // Make sure to import the CSS
 
+// Define types for your data
+interface Creator {
+  id: string;
+  name: string;
+  image: string;
+  reach: string;
+  networks: string[];
+  priceRange: string;
+}
+
+interface CreatorCardProps {
+  creator: Creator;
+}
+
 // Define your component properly
 export default function SearchBox() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [creators, setCreators] = useState([]);
+  const [creators, setCreators] = useState<Creator[]>([]);
   const [reasoning, setReasoning] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -72,7 +86,7 @@ export default function SearchBox() {
 }
 
 // You'll need to import or define CreatorCard component
-function CreatorCard({ creator }) {
+function CreatorCard({ creator }: CreatorCardProps) {
   return (
     <div className="creator-card">
       <img src={creator.image} alt={creator.name} />
