@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server';
 import Airtable from 'airtable';
 
+// Initialize Airtable base
+const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY })
+  .base('appOAS76TTY2MBVuf');
+
 interface AirtableRecord {
   id: string;
   fields: {
