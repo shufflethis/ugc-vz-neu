@@ -30,6 +30,9 @@ export async function POST(req: Request) {
     const { query } = await req.json();
     console.log('Search query:', query);
     
+    // Generate reasoning explanation
+    const reasoning = generateReasoning(query);
+    
     // Check gender filter
     const isMaleQuery = query.toLowerCase().includes('männer') || 
                        query.toLowerCase().includes('männlich') ||
@@ -181,10 +184,12 @@ export async function POST(req: Request) {
     // Remove helper properties before sending
     const finalCreators = validCreators.map(({ hasCustomImage, totalReach, gender, ...rest }) => rest);
 
+    // Include reasoning in the response
     return NextResponse.json({ 
       success: true,
       creators: finalCreators,
-      query: query 
+      query: query,
+      reasoning: reasoning
     });
 
   } catch (error: any) {
@@ -199,10 +204,49 @@ export async function POST(req: Request) {
   }
 }
 
+// New function to generate reasoning explanation in German
+function generateReasoning(query: string): string {
+  // Extract key information from query
+  const isKosmetik = query.toLowerCase().includes('kosmetik');
+  const isBeauty = query.toLowerCase().includes('beauty');
+  const isUnder30 = query.toLowerCase().includes('unter 30') || query.toLowerCase().includes('under 30');
+  const priceMatch = query.match(/weniger als (\d+) euro/i) || query.match(/unter (\d+) euro/i);
+  const maxPrice = priceMatch ? parseInt(priceMatch[1]) : null;
+  const platformMatch = /(tiktok|instagram|youtube|facebook)/gi.exec(query);
+  const platform = platformMatch ? platformMatch[1].charAt(0).toUpperCase() + platformMatch[1].slice(1) : null;
+  const followerMatch = query.match(/mehr als (\d+) follower/i) || query.match(/(\d+)\+? follower/i);
+  const minFollowers = followerMatch ? parseInt(followerMatch[1]) : null;
+  
+  // Build reasoning text
+  let reasoning = "Ich suche nach Creators mit folgenden Kriterien:\n\n";
+  
+  if (isKosmetik || isBeauty) {
+    reasoning += "• Branche: " + (isKosmetik ? "Kosmetik" : "Beauty") + "\n";
+  }
+  
+  if (isUnder30) {
+    reasoning += "• Alter: unter 30 Jahre\n";
+  }
+  
+  if (maxPrice) {
+    reasoning += `• Budget pro Post: maximal ${maxPrice} Euro\n`;
+  }
+  
+  if (platform) {
+    reasoning += `• Plattform: ${platform}\n`;
+  }
+  
+  if (minFollowers) {
+    reasoning += `• Mindestreichweite: ${minFollowers.toLocaleString('de-DE')} Follower\n`;
+  }
+  
+  return reasoning;
+}
+
 // Helper function to calculate numeric reach value for sorting
 function calculateTotalReach(reachText: string): number {
-  // Split by platform if multiple are listed
-  const platforms = reachText.split(/Instagram:|TikTok:|YouTube:|Facebook:|LinkedIn:/i).filter(Boolean);
+  // Handle more platform name variations
+  const platforms = reachText.split(/Instagram:|Insta:|TikTok:|YouTube:|Facebook:|LinkedIn:|FB:|YT:/i).filter(Boolean);
   
   let total = 0;
   
