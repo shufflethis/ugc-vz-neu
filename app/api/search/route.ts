@@ -42,9 +42,10 @@ export async function POST(req: Request) {
     const wantsTikTok = query.toLowerCase().includes('tiktok');
     const wantsInstagram = query.toLowerCase().includes('instagram') || query.toLowerCase().includes('insta');
     
-    // Check follower minimum
+    // Check follower minimum - make sure we parse it correctly
     const followerMatch = query.match(/mehr als (\d+) follower/i);
     const minFollowers = followerMatch ? parseInt(followerMatch[1]) : 0;
+    console.log('Minimum followers:', minFollowers);
     
     // Use cached records if available
     const now = Date.now();
@@ -74,12 +75,23 @@ export async function POST(req: Request) {
           // Strict gender check - case sensitive exact match
           const gender = fields['Wie ist dein Geschlecht?'];
           
-          // Skip if gender doesn't match query
+          // Skip if gender doesn't match query - more strict check
           if (isFemaleQuery && gender !== 'Weiblich') {
+            console.log(`Skipping non-female: ${fields['Wie heißt du?  (Vor- und Nachname)']} - Gender: ${gender}`);
             return null;
           }
           
           if (isMaleQuery && gender !== 'Männlich') {
+            return null;
+          }
+          
+          // If neither male nor female is specified but we're looking for specific attributes
+          // like "kosmetik", default to female
+          if (!isMaleQuery && !isFemaleQuery && 
+              (query.toLowerCase().includes('kosmetik') || 
+               query.toLowerCase().includes('beauty')) && 
+              gender !== 'Weiblich') {
+            console.log(`Skipping non-female for beauty query: ${fields['Wie heißt du?  (Vor- und Nachname)']}`);
             return null;
           }
 
@@ -105,8 +117,9 @@ export async function POST(req: Request) {
           // Calculate total reach and platform-specific reach
           const totalReach = calculateTotalReach(reachText);
           
-          // Skip if below minimum followers
+          // More strict follower check
           if (minFollowers > 0 && totalReach < minFollowers) {
+            console.log(`Skipping ${firstName} - insufficient reach: ${totalReach} < ${minFollowers}`);
             return null;
           }
           
@@ -130,7 +143,8 @@ export async function POST(req: Request) {
             totalReach: totalReach,
             hasCustomImage: !profileImage.includes('placeholder'),
             networks: socialLinks.split('\n').filter(Boolean),
-            priceRange: String(fields.Price || '')
+            priceRange: String(fields.Price || ''),
+            gender: gender // Add gender for debugging
           };
         } catch (error) {
           console.error('Error processing creator:', error);
@@ -142,7 +156,7 @@ export async function POST(req: Request) {
       await new Promise(resolve => setTimeout(resolve, 100));
     }
 
-    // Filter out nulls and sort
+    // Filter out nulls and sort - fix sorting logic
     const validCreators = results
       .filter(creator => creator !== null)
       .sort((a, b) => {
@@ -150,12 +164,22 @@ export async function POST(req: Request) {
         if (a.hasCustomImage !== b.hasCustomImage) {
           return a.hasCustomImage ? -1 : 1;
         }
-        // Then by reach within each group
-        return b.totalReach - a.totalReach;
+        // Then by reach within each group - ensure numeric comparison
+        return (b.totalReach || 0) - (a.totalReach || 0);
       });
 
+    console.log(`Found ${validCreators.length} valid creators after filtering`);
+    
+    // Log top creators for debugging
+    if (validCreators.length > 0) {
+      console.log('Top creators:');
+      validCreators.slice(0, 5).forEach((c, i) => {
+        console.log(`${i+1}. ${c.name}: ${c.totalReach} reach, custom image: ${c.hasCustomImage}, gender: ${c.gender}`);
+      });
+    }
+
     // Remove helper properties before sending
-    const finalCreators = validCreators.map(({ hasCustomImage, totalReach, ...rest }) => rest);
+    const finalCreators = validCreators.map(({ hasCustomImage, totalReach, gender, ...rest }) => rest);
 
     return NextResponse.json({ 
       success: true,
