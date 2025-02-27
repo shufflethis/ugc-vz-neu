@@ -206,39 +206,36 @@ export async function POST(req: Request) {
 
 // New function to generate reasoning explanation in German
 function generateReasoning(query: string): string {
-  // Extract key information from query
-  const isKosmetik = query.toLowerCase().includes('kosmetik');
-  const isBeauty = query.toLowerCase().includes('beauty');
-  const isUnder30 = query.toLowerCase().includes('unter 30') || query.toLowerCase().includes('under 30');
-  const priceMatch = query.match(/weniger als (\d+) euro/i) || query.match(/unter (\d+) euro/i);
-  const maxPrice = priceMatch ? parseInt(priceMatch[1]) : null;
-  const platformMatch = /(tiktok|instagram|youtube|facebook)/gi.exec(query);
-  const platform = platformMatch ? platformMatch[1].charAt(0).toUpperCase() + platformMatch[1].slice(1) : null;
-  const followerMatch = query.match(/mehr als (\d+) follower/i) || query.match(/(\d+)\+? follower/i);
-  const minFollowers = followerMatch ? parseInt(followerMatch[1]) : null;
+  let reasoning = "Thinking\n\n";
+  reasoning += "Analysiere die Anfrage\n\n";
   
-  // Build reasoning text
-  let reasoning = "Ich suche nach Creators mit folgenden Kriterien:\n\n";
+  // Add the original query as first thought
+  reasoning += `• Die Anfrage lautet: "${query}"\n\n`;
   
-  if (isKosmetik || isBeauty) {
-    reasoning += "• Branche: " + (isKosmetik ? "Kosmetik" : "Beauty") + "\n";
+  // Add analysis thoughts
+  if (query.toLowerCase().includes('unter')) {
+    reasoning += `• Ich überprüfe, ob es sich um eine Altersangabe handelt\n\n`;
   }
-  
-  if (isUnder30) {
-    reasoning += "• Alter: unter 30 Jahre\n";
+
+  if (query.toLowerCase().includes('kosmetik')) {
+    reasoning += `• Es geht um Kosmetikprodukte, ich suche nach passenden Influencern\n\n`;
   }
-  
-  if (maxPrice) {
-    reasoning += `• Budget pro Post: maximal ${maxPrice} Euro\n`;
+
+  if (query.toLowerCase().includes('tiktok')) {
+    const followerMatch = query.match(/mehr als (\d+) follower/i);
+    if (followerMatch) {
+      reasoning += `• TikTok Creator mit mindestens ${followerMatch[1]} Followern werden gesucht\n\n`;
+    }
   }
-  
-  if (platform) {
-    reasoning += `• Plattform: ${platform}\n`;
+
+  if (query.toLowerCase().includes('weniger als') || query.toLowerCase().includes('unter')) {
+    const maxMatch = query.match(/weniger als (\d+)/i) || query.match(/unter (\d+)/i);
+    if (maxMatch) {
+      reasoning += `• Eine Obergrenze von ${maxMatch[1]} wurde angegeben\n\n`;
+    }
   }
-  
-  if (minFollowers) {
-    reasoning += `• Mindestreichweite: ${minFollowers.toLocaleString('de-DE')} Follower\n`;
-  }
+
+  reasoning += "• Suche nach passenden Creators in der Datenbank...";
   
   return reasoning;
 }
