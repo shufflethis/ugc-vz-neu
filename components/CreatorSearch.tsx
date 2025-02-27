@@ -25,27 +25,27 @@ export default function CreatorSearch() {
   };
 
   return (
-    <div className="w-full max-w-3xl mx-auto">
-      <div className="bg-gray-900 rounded-xl p-4 shadow-xl">
+    <div className="w-full">
+      <div className="bg-gray-900/50 backdrop-blur-sm rounded-xl p-4 shadow-xl border border-gray-800">
         <form onSubmit={handleSubmit} className="space-y-4">
           <textarea
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
-            placeholder="Describe what kind of creator you're looking for..."
-            className="w-full h-32 p-4 bg-gray-800 text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            placeholder="Beschreibe den UGC Creator, den du suchst..."
+            className="w-full h-32 p-4 bg-gray-800/50 text-white rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none resize-none"
           />
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+            className="w-full py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-50"
           >
-            {isLoading ? 'Searching...' : 'Find Creators'}
+            {isLoading ? 'Suche...' : 'Creator finden'}
           </button>
         </form>
 
         {response && (
-          <div className="mt-6 p-4 bg-gray-800 rounded-lg">
-            <pre className="text-sm text-gray-300 overflow-auto">
+          <div className="mt-6 p-4 bg-gray-800/50 rounded-lg border border-gray-700">
+            <pre className="text-sm text-gray-300 overflow-auto whitespace-pre-wrap">
               {response}
             </pre>
           </div>
