@@ -38,7 +38,7 @@ export async function POST(req: Request) {
                          query.toLowerCase().includes('weiblich') ||
                          query.toLowerCase().includes('frau');
 
-    // Use cached records if available and fresh
+    // Use cached records if available
     const now = Date.now();
     if (!cachedRecords || now - lastFetch > CACHE_DURATION) {
       console.log('Fetching fresh records from Airtable');
@@ -51,11 +51,9 @@ export async function POST(req: Request) {
         )
       ]) as AirtableRecord[];
       lastFetch = now;
-    } else {
-      console.log('Using cached records');
     }
 
-    // Process creators in smaller batches
+    // Process creators in batches
     const BATCH_SIZE = 10;
     const results = [];
     
@@ -64,10 +62,8 @@ export async function POST(req: Request) {
       const batchResults = await Promise.all(batch.map(async (record: AirtableRecord) => {
         try {
           const fields = record.fields;
-          const socialLinks = String(fields['In welchem Netzwerk hast du Accounts und möchtest du aktiv sein?&nbsp; '] || '');
-          const fullName = String(fields['Wie heißt du?  (Vor- und Nachname)'] || '');
-          const firstName = fullName.split(' ')[0];
-
+          const gender = String(fields['Wie ist dein Geschlecht?'] || '').toLowerCase();
+          
           // Skip if gender doesn't match query
           if ((isMaleQuery && gender !== 'männlich') || 
               (isFemaleQuery && gender !== 'weiblich')) {
@@ -75,6 +71,8 @@ export async function POST(req: Request) {
           }
 
           const socialLinks = String(fields['In welchem Netzwerk hast du Accounts und möchtest du aktiv sein?&nbsp; '] || '');
+          const fullName = String(fields['Wie heißt du?  (Vor- und Nachname)'] || '');
+          const firstName = fullName.split(' ')[0];
           const reachText = String(fields['Wie groß ist deine Reichweite pro Netzwerk? '] || '');
           const profileImage = await getProfileImage(socialLinks);
           const totalReach = calculateTotalReach(reachText);
@@ -96,47 +94,11 @@ export async function POST(req: Request) {
       }));
       
       results.push(...batchResults);
-      
-      // Small delay between batches
       await new Promise(resolve => setTimeout(resolve, 100));
     }
 
-    const creatorsWithData = await Promise.all(records.map(async (record: AirtableRecord) => {
-      try {
-        const fields = record.fields;
-        let gender = String(fields['Wie ist dein Geschlecht?'] || '').toLowerCase();
-        const fullName = String(fields['Wie heißt du?  (Vor- und Nachname)'] || '');
-        const firstName = fullName.split(' ')[0];
-
-        // Skip if gender doesn't match query
-        if ((isMaleQuery && gender !== 'männlich') || 
-            (isFemaleQuery && gender !== 'weiblich')) {
-          return null;
-        }
-
-        const socialLinks = String(fields['In welchem Netzwerk hast du Accounts und möchtest du aktiv sein?&nbsp; '] || '');
-        const reachText = String(fields['Wie groß ist deine Reichweite pro Netzwerk? '] || '');
-        const profileImage = await getProfileImage(socialLinks);
-        const totalReach = calculateTotalReach(reachText);
-
-        return {
-          id: record.id,
-          name: firstName,
-          image: profileImage,
-          reach: reachText,
-          totalReach: totalReach,
-          hasCustomImage: !profileImage.includes('placeholder.jpg'),
-          networks: socialLinks.split('\n').filter(Boolean),
-          priceRange: String(fields.Price || '')
-        };
-      } catch (error) {
-        console.error('Error processing creator:', error);
-        return null;
-      }
-    }));
-
     // Filter out nulls and sort
-    const validCreators = creatorsWithData
+    const validCreators = results
       .filter(creator => creator !== null)
       .sort((a, b) => {
         // First sort by custom image
