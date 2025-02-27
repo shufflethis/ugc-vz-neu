@@ -62,11 +62,12 @@ export async function POST(req: Request) {
       const batchResults = await Promise.all(batch.map(async (record: AirtableRecord) => {
         try {
           const fields = record.fields;
-          const gender = String(fields['Wie ist dein Geschlecht?'] || '').toLowerCase();
+          // Strict gender check from Airtable field
+          const gender = fields['Wie ist dein Geschlecht?'];
           
-          // Skip if gender doesn't match query
-          if ((isMaleQuery && gender !== 'männlich') || 
-              (isFemaleQuery && gender !== 'weiblich')) {
+          // Skip if gender doesn't match query (exact match)
+          if ((isMaleQuery && gender !== 'Männlich') || 
+              (isFemaleQuery && gender !== 'Weiblich')) {
             return null;
           }
 
