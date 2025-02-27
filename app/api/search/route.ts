@@ -201,16 +201,22 @@ export async function POST(req: Request) {
 
 // Helper function to calculate numeric reach value for sorting
 function calculateTotalReach(reachText: string): number {
-  const numbers = reachText.match(/\d+(?:[.,]\d+)?(?:\s*[kKmM])?/g) || [];
-  if (numbers.length === 0) return 0;
-
+  // Split by platform if multiple are listed
+  const platforms = reachText.split(/Instagram:|TikTok:|YouTube:|Facebook:|LinkedIn:/i).filter(Boolean);
+  
   let total = 0;
-  numbers.forEach(num => {
-    let value = parseFloat(num.replace(/[.,]/g, ''));
-    if (num.toLowerCase().includes('k')) value *= 1000;
-    if (num.toLowerCase().includes('m')) value *= 1000000;
-    total += value;
+  
+  // Process each platform section
+  platforms.forEach(platform => {
+    const numbers = platform.match(/\d+(?:[.,]\d+)?(?:\s*[kKmM])?/g) || [];
+    
+    numbers.forEach(num => {
+      let value = parseFloat(num.replace(/[.,]/g, ''));
+      if (num.toLowerCase().includes('k')) value *= 1000;
+      if (num.toLowerCase().includes('m')) value *= 1000000;
+      total += value;
+    });
   });
-
+  
   return total;
 }
