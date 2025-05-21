@@ -100,7 +100,7 @@ export default function SearchBox() {
       // Start search after longer thinking period to show all database steps
       searchTimer = setTimeout(() => {
         clearInterval(thinkingTimer);
-        setWaitingForSearch(false);
+        setWaitingForSearch(false); // This should be set to false AFTER handleSearch completes
         handleSearch();
       }, 8000);
     }
@@ -207,6 +207,7 @@ export default function SearchBox() {
     }
 
     setIsLoading(true);
+    setWaitingForSearch(false); // Ensure waitingForSearch is false when actual search starts
     setReasoning('');
     setCreators([]);
     setSelectedCreators([]); // Clear selected creators on new search
@@ -317,6 +318,7 @@ export default function SearchBox() {
       toast.error(`Fehler bei der Suche: ${error.message || 'Unbekannter Fehler'}`);
     } finally {
       setIsLoading(false);
+      setWaitingForSearch(false); // Ensure waitingForSearch is false when search completes
       console.log("Search completed");
     }
   };
