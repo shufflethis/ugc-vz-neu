@@ -173,15 +173,13 @@ export default function SearchBox() {
     }
   };
 
-  // Run the test on component mount
-  useEffect(() => {
-    // Run the test after a short delay to ensure the component is fully mounted
-    const timer = setTimeout(() => {
-      testBackendAPI();
-    }, 2000);
-
-    return () => clearTimeout(timer);
-  }, []);
+  // Disabled automatic test API call
+  // useEffect(() => {
+  //   const timer = setTimeout(() => {
+  //     testBackendAPI();
+  //   }, 2000);
+  //   return () => clearTimeout(timer);
+  // }, []);
 
   // The actual search function that gets called after countdown
   const handleSearch = async () => {
