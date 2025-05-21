@@ -181,7 +181,111 @@ export default function SearchBox() {
   //   return () => clearTimeout(timer);
   // }, []);
 
-  // Test function removed
+  // Direct API search function
+  const directSearch = async () => {
+    console.log('Performing direct search...');
+
+    // Use the current search query
+    const queryToUse = searchQuery.trim() || submittedQuery.trim();
+
+    if (!queryToUse) {
+      console.error("No query to search for!");
+      toast.error("Bitte geben Sie einen Suchbegriff ein");
+      return;
+    }
+
+    // Update UI state
+    setIsLoading(true);
+    setWaitingForSearch(false);
+    setReasoning('');
+    setCreators([]);
+    setSelectedCreators([]);
+    setSearchSubmitted(true);
+    setSubmittedQuery(queryToUse);
+
+    try {
+      console.log("Sending direct API request for query:", queryToUse);
+
+      // Create a unique request ID for debugging
+      const requestId = Date.now().toString();
+
+      // Call the search API
+      const response = await fetch('/api/search', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Request-ID': requestId,
+          'Cache-Control': 'no-cache, no-store'
+        },
+        body: JSON.stringify({
+          query: queryToUse,
+          requestId: requestId,
+          timestamp: new Date().toISOString(),
+          isTest: false
+        })
+      });
+
+      console.log("API Response Status:", response.status);
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log("API Response Data:", data);
+
+        if (data.success) {
+          const creatorCount = data.creators?.length || 0;
+          console.log(`Found ${creatorCount} creators`);
+
+          if (creatorCount > 0) {
+            setCreators(data.creators);
+          } else {
+            console.warn(`No creators found for query: "${queryToUse}"`);
+            toast.warning("Keine passenden Creator gefunden. Bitte versuchen Sie eine andere Suchanfrage.");
+          }
+        } else {
+          console.error("Search failed:", data.error);
+          toast.error(`Suche fehlgeschlagen: ${data.error || 'Unbekannter Fehler'}`);
+        }
+      } else {
+        console.error("API failed with status:", response.status);
+        toast.error(`API-Fehler: ${response.statusText}`);
+      }
+
+      // Also get reasoning
+      try {
+        const reasoningResponse = await fetch('/api/reasoning', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Request-ID': requestId,
+            'Cache-Control': 'no-cache, no-store'
+          },
+          body: JSON.stringify({
+            query: queryToUse,
+            requestId: requestId,
+            timestamp: new Date().toISOString(),
+            isTest: false
+          })
+        });
+
+        if (reasoningResponse.ok) {
+          const reasoningData = await reasoningResponse.json();
+          if (reasoningData.success) {
+            setReasoning(reasoningData.reasoning);
+          }
+        }
+      } catch (reasoningError) {
+        console.error("Error fetching reasoning:", reasoningError);
+      }
+
+    } catch (error) {
+      console.error('Error during direct search:', error);
+      toast.error(`Fehler bei der Suche: ${error.message || 'Unbekannter Fehler'}`);
+    } finally {
+      setIsLoading(false);
+      setWaitingForSearch(false);
+      console.log("Direct search completed");
+    }
+  };
 
   // The actual search function that gets called after countdown
   const handleSearch = async () => {
@@ -340,20 +444,18 @@ export default function SearchBox() {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && startSearch()}
+            onKeyPress={(e) => e.key === 'Enter' && directSearch()} {/* Changed to directSearch */}
             placeholder="z.B. Kosmetik, unter 35 Jahre, TikTok..."
             className={styles.searchInput}
-            disabled={countdownActive || waitingForSearch || isLoading}
+            disabled={isLoading} {/* Only disabled when loading */}
           />
           <button
-            onClick={startSearch}
+            onClick={directSearch} {/* Changed to directSearch */}
             className={`${styles.searchButton} ${isLoading ? styles.pulsing : ''}`}
-            disabled={countdownActive || waitingForSearch || isLoading}
+            disabled={isLoading} {/* Only disabled when loading */}
             aria-label="Search"
           >
-            {isLoading ? 'Suche läuft...' :
-             countdownActive ? countdownValue :
-             waitingForSearch ? '...' : <Search size={20} />}
+            {isLoading ? 'Suche läuft...' : <Search size={20} />}
           </button>
           <button
             onClick={toggleVoiceInput}
