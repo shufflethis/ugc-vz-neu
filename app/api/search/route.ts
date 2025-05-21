@@ -507,15 +507,15 @@ export async function POST(req: Request) {
       query: query,
       reasoning: reasoning,
       analysis: {
-        gender: queryAnalysis.gender,
-        platforms: queryAnalysis.platforms,
-        topics: queryAnalysis.topics,
+        gender: initialAnalysis.gender,
+        platforms: initialAnalysis.platforms,
+        topics: initialAnalysis.topics,
         followerRange: {
-          min: queryAnalysis.minFollowers,
-          max: queryAnalysis.maxFollowers
+          min: initialAnalysis.minFollowers,
+          max: initialAnalysis.maxFollowers
         },
-        ageRange: queryAnalysis.ageRange,
-        keywords: queryAnalysis.keywords
+        ageRange: initialAnalysis.ageRange,
+        keywords: initialAnalysis.keywords
       },
       timestamp: new Date().toISOString(),
       processingTime: Date.now() - new Date(requestId).getTime()
