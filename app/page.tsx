@@ -1,9 +1,11 @@
 import Image from "next/image";
 import Link from 'next/link';
-import CreatorSearch from '@/components/CreatorSearch';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 // Make sure the search.css is imported in your main page or layout
 import './styles/search.css';
+import SearchBox from './components/SearchBox';
 
 export default function Home() {
   return (
@@ -36,7 +38,8 @@ export default function Home() {
           </p>
         </div>
 
-        <CreatorSearch />
+        <SearchBox />
+        <ToastContainer position="top-center" autoClose={3000} hideProgressBar={false} />
       </main>
     </div>
   );

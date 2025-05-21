@@ -1,220 +1,322 @@
 .searchContainer {
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 30px; /* Increased padding */
+  background-color: #111; /* Darker background */
+  border-radius: 20px; /* More rounded corners */
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7); /* Stronger shadow */
+  max-width: 900px; /* Increased max-width */
+  margin: 40px auto; /* Increased margin */
+  border: 1px solid rgba(30, 255, 180, 0.1); /* Subtle emerald border */
 }
 
 .searchInputContainer {
   display: flex;
-  margin-bottom: 20px;
+  width: 100%;
+  margin-bottom: 30px; /* Increased margin */
+  gap: 10px; /* Gap between input and buttons */
 }
 
 .searchInput {
-  flex: 1;
-  padding: 12px 16px;
-  border: 1px solid #ddd;
-  border-radius: 8px 0 0 8px;
-  font-size: 16px;
+  flex-grow: 1;
+  padding: 15px 20px; /* Increased padding */
+  border: 1px solid #333; /* Darker border */
+  border-radius: 12px; /* More rounded corners */
+  font-size: 1.1rem; /* Larger font */
+  background-color: #222; /* Darker input background */
+  color: #eee; /* Lighter text color */
+  outline: none; /* Remove default outline */
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.searchInput:focus {
+  border-color: #1effb4; /* Emerald border on focus */
+  box-shadow: 0 0 0 3px rgba(30, 255, 180, 0.3); /* Emerald glow on focus */
 }
 
 .searchButton {
-  padding: 12px 24px;
-  background: linear-gradient(135deg, #4CAF50, #2E7D32);
+  padding: 15px 25px; /* Increased padding */
+  background: linear-gradient(45deg, #1effb4, #007bff); /* Emerald to blue gradient */
   color: white;
   border: none;
-  border-radius: 0 8px 8px 0;
+  border-radius: 12px; /* More rounded corners */
   cursor: pointer;
-  font-weight: bold;
+  font-size: 1.1rem; /* Larger font */
+  font-weight: 600;
   transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 60px; /* Ensure minimum width for better visibility */
+  position: relative; /* Ensure position relative for absolute positioning of children */
 }
 
 .searchButton:hover {
-  background: linear-gradient(135deg, #43A047, #1B5E20);
+  background: linear-gradient(45deg, #007bff, #1effb4); /* Reverse gradient on hover */
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  transform: translateY(-2px);
+}
+
+/* Styles for the microphone button when active */
+.searchButton.bg-red-500 {
+  background: linear-gradient(45deg, #ff3e3e, #ff5757); /* Red gradient for active mic */
+  box-shadow: 0 0 15px rgba(255, 62, 62, 0.5); /* Glow effect */
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 62, 62, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(255, 62, 62, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 62, 62, 0);
+  }
 }
 
 .searchButton:disabled {
-  background: #ccc;
+  background: #444; /* Darker disabled background */
   cursor: not-allowed;
+  opacity: 0.6;
+  transform: translateY(0);
+  box-shadow: none;
 }
 
-/* Chat interface styling */
+/* Pulsing animation for loading state (now handled by Tailwind CSS) */
+.pulsing {
+  /* No direct CSS animation here, controlled by Tailwind's animate-pulse-slow */
+}
+
+
 .chatContainer {
-  margin: 30px 0;
-}
-
-.userMessage, .aiMessage {
-  display: flex;
-  margin-bottom: 20px;
-  position: relative;
+  width: 100%;
+  margin-bottom: 30px; /* Increased margin */
 }
 
 .userMessage {
-  justify-content: flex-end;
-}
-
-.aiMessage {
-  justify-content: flex-start;
-}
-
-/* Apple-style message bubbles */
-.userBubble, .aiBubble {
-  padding: 12px 16px;
-  border-radius: 18px;
-  max-width: 80%;
-  position: relative;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-}
-
-/* User bubble - blue with right arrow */
-.userBubble {
-  background-color: #0B93F6;
-  color: white;
-  border-bottom-right-radius: 4px;
-  margin-right: 10px;
-}
-
-.userBubble:before {
-  content: "";
-  position: absolute;
-  bottom: 0;
-  right: -10px;
-  width: 20px;
-  height: 25px;
-  background-color: #0B93F6;
-  border-bottom-left-radius: 16px 14px;
-}
-
-.userBubble:after {
-  content: "";
-  position: absolute;
-  bottom: 0;
-  right: -26px;
-  width: 26px;
-  height: 25px;
-  background-color: #121212; /* Match your app background */
-  border-bottom-left-radius: 10px;
-}
-
-/* AI bubble - light gray with left arrow */
-.aiBubble {
-  background-color: #E5E5EA;
-  color: #333;
-  border-bottom-left-radius: 4px;
-  margin-left: 10px;
-}
-
-.aiBubble:before {
-  content: "";
-  position: absolute;
-  bottom: 0;
-  left: -10px;
-  width: 20px;
-  height: 25px;
-  background-color: #E5E5EA;
-  border-bottom-right-radius: 16px 14px;
-}
-
-.aiBubble:after {
-  content: "";
-  position: absolute;
-  bottom: 0;
-  left: -26px;
-  width: 26px;
-  height: 25px;
-  background-color: #121212; /* Match your app background */
-  border-bottom-right-radius: 10px;
-}
-
-/* Typing indicator */
-.typingIndicator {
   display: flex;
+  justify-content: flex-end;
+  margin-bottom: 15px; /* Increased margin */
+}
+
+.userBubble {
+  background-color: #1effb4; /* Emerald color for user bubble */
+  color: #111; /* Dark text for contrast */
+  padding: 12px 18px; /* Increased padding */
+  border-radius: 20px 20px 5px 20px; /* More organic shape */
+  max-width: 75%; /* Slightly wider bubble */
+  word-wrap: break-word;
+  font-weight: 500;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.loadingContainer {
+  display: flex;
+  flex-direction: column; /* Changed to column for better stacking */
   align-items: center;
+  justify-content: center;
+  gap: 16px; /* Increased gap */
+  text-align: center;
+  padding: 20px;
+  background-color: #1a1a1a; /* Darker background */
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5); /* More prominent shadow */
+  color: #e0e0e0; /* Lighter text color */
+  font-size: 1.1rem;
+  font-weight: 600;
+  border: 1px solid rgba(30, 255, 180, 0.2); /* Subtle emerald border */
 }
 
-.typingIndicator span {
-  height: 8px;
-  width: 8px;
-  background-color: #666;
+.loadingText {
+  font-weight: 600; /* Bolder text */
+  color: #e0e0e0;
+  font-size: 1.2rem;
+}
+
+.pulsingDots {
+  display: flex;
+  gap: 6px; /* Increased gap between dots */
+}
+
+.dot {
+  width: 10px; /* Larger dots */
+  height: 10px; /* Larger dots */
+  background-color: #1effb4; /* Emerald color */
   border-radius: 50%;
-  display: inline-block;
-  margin: 0 2px;
-  animation: bounce 1.4s infinite ease-in-out both;
+  animation: dot-pulse 1.4s infinite ease-in-out; /* Use tailwind animation */
 }
 
-.typingIndicator span:nth-child(1) {
-  animation-delay: -0.32s;
+.dot:nth-child(1) {
+  animation-delay: 0s;
 }
 
-.typingIndicator span:nth-child(2) {
-  animation-delay: -0.16s;
+.dot:nth-child(2) {
+  animation-delay: 0.2s;
 }
 
-@keyframes bounce {
-  0%, 80%, 100% { transform: scale(0); }
-  40% { transform: scale(1); }
+.dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+/* Countdown animation */
+@keyframes countdown {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.countdown {
+  animation: countdown 1s infinite;
+}
+
+/* Progress bar animation */
+@keyframes progress {
+  0% {
+    width: 0%;
+  }
+  20% {
+    width: 20%;
+  }
+  40% {
+    width: 45%;
+  }
+  60% {
+    width: 65%;
+  }
+  80% {
+    width: 85%;
+  }
+  100% {
+    width: 98%;
+  }
+}
+
+.animate-progress {
+  animation: progress 8s ease-in-out;
+  width: 98%;
+}
+
+/* Removed @keyframes pulse as it's now in tailwind.config.js */
+
+.reasoningContainer {
+  background-color: #1a1a1a; /* Darker background */
+  padding: 20px; /* Increased padding */
+  border-radius: 12px; /* More rounded corners */
+  margin-top: 20px; /* Increased margin */
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5); /* Prominent shadow */
+  border: 1px solid rgba(30, 255, 180, 0.2); /* Subtle emerald border */
+}
+
+.reasoningContainer h3 {
+  margin-top: 0;
+  margin-bottom: 15px; /* Increased margin */
+  color: #1effb4; /* Emerald color for heading */
+  font-size: 1.3rem; /* Larger heading */
+  font-weight: 700; /* Bolder heading */
 }
 
 .reasoningText {
   white-space: pre-wrap;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  font-size: 14px;
-  margin: 0;
-  line-height: 1.5;
+  word-wrap: break-word;
+  font-family: 'Roboto Mono', monospace; /* More modern monospace font */
+  font-size: 1rem; /* Slightly larger font */
+  color: #e0e0e0; /* Lighter text color */
+  line-height: 1.6; /* Better readability */
 }
 
-/* Results grid */
+.resultsHeader {
+  text-align: center;
+  margin-bottom: 30px; /* Increased margin */
+  color: #eee; /* Lighter text color */
+  font-size: 1.8rem; /* Larger font */
+  font-weight: 700; /* Bolder font */
+  text-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+}
+
 .creatorsGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 20px;
-  margin-top: 30px;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); /* Adjusted minmax for larger cards */
+  gap: 24px; /* Increased gap */
+  width: 100%;
 }
 
 .creatorCard {
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  transition: transform 0.3s ease;
+  background-color: #1a1a1a; /* Darker background */
+  border-radius: 16px; /* More rounded corners */
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4); /* More prominent shadow */
+  padding: 20px; /* Increased padding */
+  text-align: center;
+  cursor: pointer;
+  transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out, border-color 0.3s ease-in-out; /* Added border-color transition */
+  border: 1px solid rgba(30, 255, 180, 0.1); /* Subtle emerald border */
 }
 
 .creatorCard:hover {
-  transform: translateY(-5px);
+  transform: translateY(-8px) scale(1.02); /* More pronounced hover effect */
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6); /* Stronger shadow on hover */
+  border-color: rgba(30, 255, 180, 0.5); /* More visible border on hover */
 }
 
 .creatorCard img {
-  width: 100%;
-  height: 200px;
+  width: 100px; /* Larger image */
+  height: 100px; /* Larger image */
+  border-radius: 50%;
   object-fit: cover;
+  margin-bottom: 15px; /* Increased margin */
+  border: 3px solid #1effb4; /* Emerald border for image */
+  box-shadow: 0 0 10px rgba(30, 255, 180, 0.5); /* Glow effect */
 }
 
 .creatorCard h3 {
-  padding: 12px 16px;
-  margin: 0;
-  font-size: 18px;
+  margin: 0 0 8px 0; /* Increased margin */
+  font-size: 1.3rem; /* Larger font */
+  color: #eee; /* Lighter text color */
+  font-weight: 600;
 }
 
 .creatorCard p {
-  padding: 0 16px;
-  margin: 8px 0;
-  color: #666;
+  margin: 0 0 8px 0; /* Increased margin */
+  font-size: 1rem; /* Larger font */
+  color: #bbb; /* Lighter text color */
 }
 
 .networks {
-  padding: 0 16px 12px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
+  margin-bottom: 15px; /* Increased margin */
 }
 
 .networkTag {
-  background-color: #e3f2fd;
-  color: #1565c0;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 12px;
+  display: inline-block;
+  background-color: #333; /* Darker background */
+  color: #1effb4; /* Emerald color */
+  padding: 5px 10px; /* Increased padding */
+  border-radius: 15px; /* More rounded */
+  font-size: 0.9rem; /* Slightly larger font */
+  margin: 3px; /* Increased margin */
+  font-weight: 500;
 }
 
 .price {
   font-weight: bold;
-  color: #4CAF50 !important;
+  color: #1effb4; /* Emerald color */
+  font-size: 1.1rem; /* Larger font */
+}
+
+/* Add a style for selected cards */
+.selected {
+  border: 2px solid #1effb4; /* Emerald highlight for selected cards */
+  box-shadow: 0 0 15px rgba(30, 255, 180, 0.7); /* Stronger emerald glow */
+  transform: scale(1.03); /* Slightly larger when selected */
 }

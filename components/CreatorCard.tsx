@@ -21,9 +21,10 @@ interface CreatorCardProps {
   creator: Creator;
   isSelected: boolean;
   onSelect: () => void;
+  className?: string;
 }
 
-export default function CreatorCard({ creator, isSelected, onSelect }: CreatorCardProps) {
+export default function CreatorCard({ creator, isSelected, onSelect, className }: CreatorCardProps) {
   // Function to detect networks from text and links
   const detectNetworks = (networks: string[]): string[] => {
     const detectedNetworks = new Set<string>();
@@ -122,12 +123,12 @@ export default function CreatorCard({ creator, isSelected, onSelect }: CreatorCa
   </div>
 
   return (
-    <div 
-      onClick={onSelect}
-      className={`bg-gray-900/30 backdrop-blur-sm rounded-2xl p-4 cursor-pointer transition-all hover:bg-gray-900/50 ${
-        isSelected ? 'ring-2 ring-emerald-500' : ''
-      }`}
-    >
+      <div 
+        onClick={onSelect}
+        className={`bg-gray-900/30 backdrop-blur-sm rounded-2xl p-4 cursor-pointer transition-all hover:bg-gray-900/50 ${
+          isSelected ? 'ring-2 ring-emerald-500' : ''
+        } ${className || ''}`}
+      >
       <div className="flex flex-col items-center space-y-3">
         {/* Image section */}
         <div className="relative w-24 h-24 rounded-full overflow-hidden border-2 border-gray-800">

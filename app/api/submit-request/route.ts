@@ -2,14 +2,17 @@ import { NextResponse } from 'next/server';
 import { IncomingWebhook } from '@slack/webhook';
 import Airtable from 'airtable';
 
-const webhook = new IncomingWebhook(process.env.SLACK_WEBHOOK_URL!);
-const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY })
-  .base('appOAS76TTY2MBVuf');
-
 export async function POST(req: Request) {
   try {
     const { creatorIds, clientInfo } = await req.json();
     console.log('Selected creator IDs:', creatorIds);
+
+    // Initialize Airtable base inside the function
+    const airtableApiKey = process.env.AIRTABLE_API_KEY;
+    if (!airtableApiKey) {
+      throw new Error('AIRTABLE_API_KEY is not defined in environment variables');
+    }
+    const base = new Airtable({ apiKey: airtableApiKey }).base('appOAS76TTY2MBVuf');
 
     // Fetch full details of selected creators
     const selectedCreators = await Promise.all(
@@ -25,6 +28,12 @@ export async function POST(req: Request) {
 
     console.log('Selected creators:', selectedCreators);
 
+    const webhookUrl = process.env.SLACK_WEBHOOK_URL;
+    if (!webhookUrl) {
+      throw new Error('SLACK_WEBHOOK_URL is not defined in environment variables');
+    }
+    const webhook = new IncomingWebhook(webhookUrl);
+    
     await webhook.send({
       blocks: [
         {

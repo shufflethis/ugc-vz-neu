@@ -114,15 +114,24 @@ export default function CreatorSearch() {
       </div>
 
       {creators.length > 0 && (
-        <div className="space-y-4">
+        <div className="space-y-6">
+          {/* CTA Banner */}
+          <div className="bg-gradient-to-r from-emerald-600/20 to-blue-600/20 backdrop-blur-sm rounded-xl p-4 border border-emerald-500/30">
+            <p className="text-center text-emerald-300 font-medium">
+              Wähle die Accounts aus, die auf den ersten Blick passen – wir senden automatisch die Kontaktdaten
+            </p>
+          </div>
+          
+          {/* Creator Grid with Animation */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {creators.map(creator => (
-              <CreatorCard
-                key={creator.id}
-                creator={creator}
-                isSelected={selectedCreators.includes(creator.id)}
-                onSelect={() => handleCreatorSelect(creator.id)}
-              />
+            <CreatorCard
+              key={creator.id}
+              creator={creator}
+              isSelected={selectedCreators.includes(creator.id)}
+              onSelect={() => handleCreatorSelect(creator.id)}
+              className={isLoading ? 'animate-pulse-slow' : ''}
+            />
             ))}
           </div>
           
