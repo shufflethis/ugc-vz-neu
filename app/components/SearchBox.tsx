@@ -181,39 +181,7 @@ export default function SearchBox() {
   //   return () => clearTimeout(timer);
   // }, []);
 
-  // Function to directly test the API
-  const testAPIDirectly = async () => {
-    console.log('Testing API directly...');
-    try {
-      const response = await fetch('/api/search', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          query: 'kosmetik für männer ab 30',
-          isTest: false,
-          requestId: 'direct-test-' + Date.now(),
-          timestamp: new Date().toISOString()
-        })
-      });
-
-      console.log('API Response Status:', response.status);
-      const data = await response.json();
-      console.log('API Response Data:', data);
-
-      // Display the results
-      if (data.creators && data.creators.length > 0) {
-        setCreators(data.creators);
-        setShowResults(true);
-      } else {
-        console.log('No creators found in the response');
-      }
-
-    } catch (error) {
-      console.error('Error testing API directly:', error);
-    }
-  };
+  // Test function removed
 
   // The actual search function that gets called after countdown
   const handleSearch = async () => {
@@ -417,21 +385,7 @@ export default function SearchBox() {
             </span>
           </button>
 
-          {/* Direct test buttons */}
-          <button
-            onClick={() => handleSearch()}
-            className="ml-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
-            style={{ marginLeft: '10px' }}
-          >
-            Suche Testen
-          </button>
-          <button
-            onClick={testAPIDirectly}
-            className="ml-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
-            style={{ marginLeft: '10px' }}
-          >
-            API Direkt Testen
-          </button>
+          {/* Test buttons removed */}
         </div>
 
       {/* We don't need to display the transcript separately anymore since it's shown in the chat bubble */}
@@ -460,40 +414,58 @@ export default function SearchBox() {
       {waitingForSearch && (
         <div className="text-white text-center mt-2 bg-emerald-900/30 p-4 rounded-lg border border-emerald-500/50">
           <div className="flex flex-col items-center">
-            <div className="flex items-center mb-3">
+            <div className="flex items-center mb-3 bg-gradient-to-r from-emerald-900/50 to-blue-900/50 p-2 rounded-lg border border-emerald-500/30">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-emerald-400 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+              </svg>
               <span className="font-medium text-emerald-400 text-lg">KI durchsucht Datenbank</span>
-              <div className="ml-2 w-4 h-4 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin"></div>
+              <div className="ml-2 w-5 h-5 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin shadow-md shadow-emerald-500/20"></div>
             </div>
 
             {/* Database processing visualization */}
-            <div className="w-full max-w-md bg-black/40 p-3 rounded-lg border border-emerald-500/30 mb-3 font-mono text-sm">
+            <div className="w-full max-w-md bg-black/40 p-3 rounded-lg border border-emerald-500/30 mb-3 font-mono text-sm shadow-lg shadow-emerald-900/30 backdrop-blur-sm">
               <div className="flex items-center space-x-2 mb-2">
-                <div className="w-3 h-3 bg-emerald-500 rounded-full"></div>
-                <span className="text-emerald-300">Datenbankabfrage läuft...</span>
+                <div className="w-3 h-3 bg-emerald-500 rounded-full animate-ping opacity-75"></div>
+                <span className="text-emerald-300 font-semibold">Datenbankabfrage läuft...</span>
               </div>
 
-              <div className="text-left text-emerald-100/80 mb-2">
-                $ db.creators.find(&#123; keywords: ["{searchQuery.split(' ').join('", "')}"] &#125;)
+              <div className="text-left text-emerald-100/80 mb-2 bg-black/30 p-2 rounded-md border border-emerald-500/20 font-mono">
+                <span className="text-pink-400">$</span> <span className="text-yellow-400">db.creators</span>.<span className="text-blue-400">find</span>(&#123; <span className="text-green-400">keywords</span>: [<span className="text-orange-400">"{searchQuery.split(' ').join('", "')}"</span>] &#125;)
               </div>
 
-              <div className="flex items-center space-x-2 bg-emerald-500/20 px-3 py-2 rounded-lg border border-emerald-500/30">
-                <span className="text-emerald-200">{aiThinking}</span>
+              <div className="flex items-center space-x-2 bg-emerald-500/20 px-3 py-2 rounded-lg border border-emerald-500/30 shadow-lg shadow-emerald-500/10">
+                <span className="text-emerald-200 font-medium">{aiThinking}</span>
                 <div className="flex space-x-1">
-                  <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span>
-                  <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></span>
-                  <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></span>
+                  <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse shadow-sm shadow-emerald-300/50"></span>
+                  <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse shadow-sm shadow-emerald-300/50" style={{ animationDelay: '0.2s' }}></span>
+                  <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse shadow-sm shadow-emerald-300/50" style={{ animationDelay: '0.4s' }}></span>
                 </div>
               </div>
 
-              {/* Progress bar */}
-              <div className="w-full h-1.5 bg-gray-700 rounded-full mt-3 overflow-hidden">
-                <div className={`h-full bg-emerald-500 rounded-full ${styles['animate-progress']}`}></div>
+              {/* Enhanced Progress bar */}
+              <div className="w-full h-2 bg-gray-800 rounded-full mt-3 overflow-hidden shadow-inner shadow-black/50">
+                <div className={`h-full bg-gradient-to-r from-emerald-500 to-blue-500 rounded-full ${styles['animate-progress']}`}></div>
+              </div>
+              <div className="flex justify-between text-xs text-gray-400 mt-1">
+                <span>0%</span>
+                <span>50%</span>
+                <span>100%</span>
               </div>
             </div>
 
-            <div className="flex items-center justify-between w-full max-w-md px-2">
-              <p className="text-gray-300 text-sm">Kunde will: <span className="text-emerald-300">"{finalTranscript || searchQuery}"</span></p>
-              <p className="text-gray-300 text-sm">Durchsuche <span className="text-emerald-300">1.253</span> Profile</p>
+            <div className="flex items-center justify-between w-full max-w-md px-2 mt-3 bg-black/30 p-2 rounded-lg border border-emerald-500/20">
+              <div className="flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-emerald-400 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                </svg>
+                <p className="text-gray-300 text-sm">Kunde will: <span className="text-emerald-300 font-medium">"{finalTranscript || searchQuery}"</span></p>
+              </div>
+              <div className="flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-emerald-400 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
+                </svg>
+                <p className="text-gray-300 text-sm">Durchsuche <span className="text-emerald-300 font-medium">1.253</span> Profile</p>
+              </div>
             </div>
           </div>
         </div>
