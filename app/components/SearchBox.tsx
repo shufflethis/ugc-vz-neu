@@ -439,20 +439,20 @@ export default function SearchBox() {
   return (
     <div className={styles.searchContainer}>
       {/* Search input */}
-        <div className={styles.searchInputContainer}>
+      <div className={styles.searchInputContainer}>
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && directSearch()} {/* Changed to directSearch */}
+            onKeyPress={(e) => e.key === 'Enter' && directSearch()}
             placeholder="z.B. Kosmetik, unter 35 Jahre, TikTok..."
             className={styles.searchInput}
-            disabled={isLoading} {/* Only disabled when loading */}
+            disabled={isLoading}
           />
           <button
-            onClick={directSearch} {/* Changed to directSearch */}
+            onClick={directSearch}
             className={`${styles.searchButton} ${isLoading ? styles.pulsing : ''}`}
-            disabled={isLoading} {/* Only disabled when loading */}
+            disabled={isLoading}
             aria-label="Search"
           >
             {isLoading ? 'Suche läuft...' : <Search size={20} />}
