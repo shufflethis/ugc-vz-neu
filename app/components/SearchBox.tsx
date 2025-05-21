@@ -235,7 +235,8 @@ export default function SearchBox() {
         body: JSON.stringify({
           query: queryToUse,
           requestId: requestId,
-          timestamp: new Date().toISOString() // Add timestamp to prevent caching
+          timestamp: new Date().toISOString(), // Add timestamp to prevent caching
+          isTest: false // Explicitly set isTest to false to ensure it's not treated as a test
         })
       });
 
@@ -251,11 +252,13 @@ export default function SearchBox() {
         body: JSON.stringify({
           query: queryToUse,
           requestId: requestId,
-          timestamp: new Date().toISOString() // Add timestamp to prevent caching
+          timestamp: new Date().toISOString(), // Add timestamp to prevent caching
+          isTest: false // Explicitly set isTest to false
         })
       });
 
       // Wait for both responses
+      console.log(`[${requestId}] Waiting for API responses...`);
       const [creatorsResponse, reasoningResponse] = await Promise.all([
         creatorsPromise,
         reasoningPromise
@@ -263,6 +266,10 @@ export default function SearchBox() {
 
       console.log(`[${requestId}] Creators API response status:`, creatorsResponse.status);
       console.log(`[${requestId}] Reasoning API response status:`, reasoningResponse.status);
+
+      // Log the full response for debugging
+      const creatorsResponseText = await creatorsResponse.clone().text();
+      console.log(`[${requestId}] Creators API raw response:`, creatorsResponseText);
 
       // Process creators response first (more important)
       if (creatorsResponse.ok) {
