@@ -181,6 +181,40 @@ export default function SearchBox() {
   //   return () => clearTimeout(timer);
   // }, []);
 
+  // Function to directly test the API
+  const testAPIDirectly = async () => {
+    console.log('Testing API directly...');
+    try {
+      const response = await fetch('/api/search', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          query: 'kosmetik für männer ab 30',
+          isTest: false,
+          requestId: 'direct-test-' + Date.now(),
+          timestamp: new Date().toISOString()
+        })
+      });
+
+      console.log('API Response Status:', response.status);
+      const data = await response.json();
+      console.log('API Response Data:', data);
+
+      // Display the results
+      if (data.creators && data.creators.length > 0) {
+        setCreators(data.creators);
+        setShowResults(true);
+      } else {
+        console.log('No creators found in the response');
+      }
+
+    } catch (error) {
+      console.error('Error testing API directly:', error);
+    }
+  };
+
   // The actual search function that gets called after countdown
   const handleSearch = async () => {
     // Use either the searchQuery or the submittedQuery (from voice input)
@@ -381,6 +415,22 @@ export default function SearchBox() {
             <span className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs rounded py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none">
               {isListening ? 'Sprachaufnahme beenden' : 'Sprachsuche starten'}
             </span>
+          </button>
+
+          {/* Direct test buttons */}
+          <button
+            onClick={() => handleSearch()}
+            className="ml-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
+            style={{ marginLeft: '10px' }}
+          >
+            Suche Testen
+          </button>
+          <button
+            onClick={testAPIDirectly}
+            className="ml-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
+            style={{ marginLeft: '10px' }}
+          >
+            API Direkt Testen
           </button>
         </div>
 
