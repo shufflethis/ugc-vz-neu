@@ -100,8 +100,9 @@ export default function SearchBox() {
       // Start search after longer thinking period to show all database steps
       searchTimer = setTimeout(() => {
         clearInterval(thinkingTimer);
-        setWaitingForSearch(false); // This should be set to false AFTER handleSearch completes
-        handleSearch();
+        // Use directSearch instead of handleSearch for more reliable results
+        directSearch();
+        // waitingForSearch will be set to false inside directSearch
       }, 8000);
     }
 
@@ -133,12 +134,21 @@ export default function SearchBox() {
     }
   };
 
-  // Handle manual search button click
+  // Handle manual search button click - now uses the countdown animation but with direct search
   const startSearch = () => {
     // If we have a query, start the countdown
     if (searchQuery.trim()) {
+      // Store the query for later use
+      const queryToUse = searchQuery.trim();
+      setSubmittedQuery(queryToUse);
+      setSearchSubmitted(true);
+
+      // Start the countdown
       setCountdownValue(3);
       setCountdownActive(true);
+
+      // After countdown completes, the useEffect will handle showing the animation
+      // and then calling directSearch() instead of handleSearch()
     }
   };
 
@@ -444,18 +454,20 @@ export default function SearchBox() {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && directSearch()}
+            onKeyPress={(e) => e.key === 'Enter' && startSearch()}
             placeholder="z.B. Kosmetik, unter 35 Jahre, TikTok..."
             className={styles.searchInput}
-            disabled={isLoading}
+            disabled={countdownActive || waitingForSearch || isLoading}
           />
           <button
-            onClick={directSearch}
+            onClick={startSearch}
             className={`${styles.searchButton} ${isLoading ? styles.pulsing : ''}`}
-            disabled={isLoading}
+            disabled={countdownActive || waitingForSearch || isLoading}
             aria-label="Search"
           >
-            {isLoading ? 'Suche läuft...' : <Search size={20} />}
+            {isLoading ? 'Suche läuft...' :
+             countdownActive ? countdownValue :
+             waitingForSearch ? '...' : <Search size={20} />}
           </button>
           <button
             onClick={toggleVoiceInput}
