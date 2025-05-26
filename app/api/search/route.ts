@@ -67,7 +67,7 @@ export async function POST(req: Request) {
         success: false,
         error: 'Invalid request body',
         message: 'Could not parse request body',
-        details: parseError.toString()
+        details: parseError instanceof Error ? parseError.message : String(parseError)
       }, { status: 400 });
     }
 
@@ -104,7 +104,7 @@ export async function POST(req: Request) {
       console.log(`[${requestId}] Airtable connection initialized successfully`);
     } catch (airtableError) {
       console.error(`[${requestId}] Failed to initialize Airtable:`, airtableError);
-      throw new Error(`Airtable initialization failed: ${airtableError.message}`);
+      throw new Error(`Airtable initialization failed: ${airtableError instanceof Error ? airtableError.message : String(airtableError)}`);
     }
 
     // Generate reasoning explanation
@@ -155,8 +155,9 @@ export async function POST(req: Request) {
         // Test if we can access the table
         try {
           console.log(`[${requestId}] Testing Airtable table access...`);
-          const tables = await base.tables();
-          console.log(`[${requestId}] Available tables:`, tables.map(t => ({ id: t.id, name: t.name })));
+          // Test table access by trying to get records from the main table
+          const testRecords = await base('UGC Creator').select({ maxRecords: 1 }).firstPage();
+          console.log(`[${requestId}] Successfully accessed UGC Creator table, found ${testRecords.length} records`);
         } catch (tableError) {
           console.error(`[${requestId}] Error accessing tables:`, tableError);
         }
@@ -177,7 +178,7 @@ export async function POST(req: Request) {
               }
 
               console.log(`[${requestId}] Airtable firstPage success, records:`, records?.length || 0);
-              resolve(records as AirtableRecord[]);
+              resolve(records ? [...records] as AirtableRecord[] : []);
             });
           } catch (selectError) {
             console.error(`[${requestId}] Error in select:`, selectError);
@@ -265,6 +266,76 @@ export async function POST(req: Request) {
             'Wie groß ist deine Reichweite pro Netzwerk? ': 'TikTok: 100k\nInstagram: 35k',
             'Price': '2000-3000€'
           }
+        },
+        {
+          id: 'rec4',
+          fields: {
+            'Wie heißt du?  (Vor- und Nachname)': 'Luca Bauer',
+            'Wie ist dein Geschlecht?': 'Männlich',
+            'In welchem Netzwerk hast du Accounts und möchtest du aktiv sein?&nbsp; ': 'TikTok\nInstagram',
+            'Wie groß ist deine Reichweite pro Netzwerk? ': 'TikTok: 80k\nInstagram: 30k',
+            'Price': '800-1500€'
+          }
+        },
+        {
+          id: 'rec5',
+          fields: {
+            'Wie heißt du?  (Vor- und Nachname)': 'René Fischer',
+            'Wie ist dein Geschlecht?': 'Männlich',
+            'In welchem Netzwerk hast du Accounts und möchtest du aktiv sein?&nbsp; ': 'TikTok\nYouTube',
+            'Wie groß ist deine Reichweite pro Netzwerk? ': 'TikTok: 120k\nYouTube: 45k',
+            'Price': '1500-2500€'
+          }
+        },
+        {
+          id: 'rec6',
+          fields: {
+            'Wie heißt du?  (Vor- und Nachname)': 'Serhan Özkan',
+            'Wie ist dein Geschlecht?': 'Männlich',
+            'In welchem Netzwerk hast du Accounts und möchtest du aktiv sein?&nbsp; ': 'Instagram\nTikTok',
+            'Wie groß ist deine Reichweite pro Netzwerk? ': 'Instagram: 60k\nTikTok: 90k',
+            'Price': '1200-2000€'
+          }
+        },
+        {
+          id: 'rec7',
+          fields: {
+            'Wie heißt du?  (Vor- und Nachname)': 'Mario Rossi',
+            'Wie ist dein Geschlecht?': 'Männlich',
+            'In welchem Netzwerk hast du Accounts und möchtest du aktiv sein?&nbsp; ': 'Instagram\nTikTok\nFacebook',
+            'Wie groß ist deine Reichweite pro Netzwerk? ': 'Instagram: 45k\nTikTok: 70k\nFacebook: 20k',
+            'Price': '1000-1800€'
+          }
+        },
+        {
+          id: 'rec8',
+          fields: {
+            'Wie heißt du?  (Vor- und Nachname)': 'Salvatore Romano',
+            'Wie ist dein Geschlecht?': 'Männlich',
+            'In welchem Netzwerk hast du Accounts und möchtest du aktiv sein?&nbsp; ': 'Instagram\nTikTok',
+            'Wie groß ist deine Reichweite pro Netzwerk? ': 'Instagram: 55k\nTikTok: 85k',
+            'Price': '1100-1900€'
+          }
+        },
+        {
+          id: 'rec9',
+          fields: {
+            'Wie heißt du?  (Vor- und Nachname)': 'David Müller',
+            'Wie ist dein Geschlecht?': 'Männlich',
+            'In welchem Netzwerk hast du Accounts und möchtest du aktiv sein?&nbsp; ': 'TikTok\nYouTube',
+            'Wie groß ist deine Reichweite pro Netzwerk? ': 'TikTok: 95k\nYouTube: 40k',
+            'Price': '1300-2200€'
+          }
+        },
+        {
+          id: 'rec10',
+          fields: {
+            'Wie heißt du?  (Vor- und Nachname)': 'Marco Schneider',
+            'Wie ist dein Geschlecht?': 'Männlich',
+            'In welchem Netzwerk hast du Accounts und möchtest du aktiv sein?&nbsp; ': 'Instagram\nTikTok',
+            'Wie groß ist deine Reichweite pro Netzwerk? ': 'Instagram: 35k\nTikTok: 65k',
+            'Price': '900-1600€'
+          }
         }
       ];
     }
@@ -293,14 +364,20 @@ export async function POST(req: Request) {
       const totalReach = calculateTotalReach(reachText);
 
       // 1. Gender match (highest priority)
+      console.log(`[${requestId}] Gender filtering for ${fullName}: query wants "${analysis.gender}", creator is "${gender}"`);
+
       if (analysis.gender === 'male' && gender === 'Männlich') {
         score += 100;
+        console.log(`[${requestId}] ✓ Male match for ${fullName}`);
       } else if (analysis.gender === 'female' && gender === 'Weiblich') {
         score += 100;
+        console.log(`[${requestId}] ✓ Female match for ${fullName}`);
       } else if (analysis.gender === 'any') {
         score += 50; // Neutral score for any gender when no preference
+        console.log(`[${requestId}] ✓ Any gender accepted for ${fullName}`);
       } else {
         // Gender mismatch is a deal-breaker for gender-specific queries
+        console.log(`[${requestId}] ✗ Gender mismatch for ${fullName} - excluding from results`);
         return -1;
       }
 
@@ -425,13 +502,17 @@ export async function POST(req: Request) {
 
           // Use gender-specific placeholder if needed
           let finalImage = profileImage;
-          if (profileImage.includes('placeholder.jpg')) {
+          if (profileImage.includes('placeholder.jpg') || profileImage === '/placeholder.jpg' || !profileImage || profileImage === '') {
             if (gender === 'Weiblich') {
               finalImage = '/female-placeholder.webp';
             } else {
-              finalImage = '/placeholder.jpg';
+              finalImage = '/placeholder.jpg'; // For 'Männlich' and any other values
             }
           }
+
+          // Debug logging for gender and image assignment
+          console.log(`[${requestId}] Creator ${fullName}: gender="${gender}", finalImage="${finalImage}"`);
+
 
           console.log(`[${requestId}] Creator ${fullName} passed AI filtering with score ${score}`);
           return {
@@ -495,8 +576,8 @@ export async function POST(req: Request) {
       console.warn(`[${requestId}] No valid creators found for query: "${query}"`);
     }
 
-    // Remove helper properties before sending
-    const finalCreators = validCreators.map(({ hasCustomImage, totalReach, gender, score, ...rest }) => rest);
+    // Remove helper properties before sending (but keep gender for frontend placeholder logic)
+    const finalCreators = validCreators.map(({ hasCustomImage, totalReach, score, ...rest }) => rest);
 
     console.log(`[${requestId}] Returning ${finalCreators.length} creators to client after AI filtering`);
 
@@ -591,11 +672,16 @@ function analyzeQueryWithAI(query: string, requestId: string): QueryAnalysis {
   // Step 1: Extract gender preferences
   if (queryLower.includes('männer') || queryLower.includes('männlich') || queryLower.includes('mann')) {
     analysis.gender = 'male';
+    console.log('Gender analysis: Detected MALE preference from query');
   } else if (queryLower.includes('frauen') || queryLower.includes('weiblich') || queryLower.includes('frau')) {
     analysis.gender = 'female';
+    console.log('Gender analysis: Detected FEMALE preference from query');
   } else if (queryLower.includes('kosmetik') || queryLower.includes('beauty') || queryLower.includes('make-up')) {
     // Default to female for beauty/cosmetics if not specified
     analysis.gender = 'female';
+    console.log('Gender analysis: Defaulting to FEMALE for beauty/cosmetics query');
+  } else {
+    console.log('Gender analysis: No specific gender preference detected, using ANY');
   }
 
   // Step 2: Extract platforms

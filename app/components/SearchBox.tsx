@@ -3,10 +3,18 @@
 import React, { useState, useRef, useEffect } from 'react';
 import '../styles/search.css';
 import styles from '../styles/search.module.css';
-// Removed Button component import
-import { Mic, MicOff, Search } from 'lucide-react';
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 import { toast } from 'react-toastify';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import NoResults from '../../components/NoResults';
+import {
+  faInstagram,
+  faTiktok,
+  faYoutube,
+  faFacebook,
+  faLinkedin,
+  faTwitter
+} from '@fortawesome/free-brands-svg-icons';
 
 // Define types for your data
 interface Creator {
@@ -16,6 +24,7 @@ interface Creator {
   reach: string;
   networks: string[];
   priceRange: string;
+  gender?: string;
 }
 
 export default function SearchBox() {
@@ -31,8 +40,18 @@ export default function SearchBox() {
   const [countdownValue, setCountdownValue] = useState(3);
   const [waitingForSearch, setWaitingForSearch] = useState(false);
   const [aiThinking, setAiThinking] = useState('');
+  const [showNoResults, setShowNoResults] = useState(false);
+  const searchInputRef = useRef<HTMLTextAreaElement>(null);
 
   const { browserSupportsSpeechRecognition, finalTranscript } = useSpeechRecognition();
+
+  // Effect to adjust textarea height when content changes
+  useEffect(() => {
+    if (searchInputRef.current) {
+      searchInputRef.current.style.height = 'auto';
+      searchInputRef.current.style.height = Math.max(90, searchInputRef.current.scrollHeight) + 'px';
+    }
+  }, [searchQuery]);
 
   // Effect to handle speech recognition transcript updates
   useEffect(() => {
@@ -47,30 +66,145 @@ export default function SearchBox() {
       setSubmittedQuery(finalTranscript);
       setSearchSubmitted(true);
 
-      // Automatically start countdown after a short delay
-      const autoStartTimer = setTimeout(() => {
-        if (finalTranscript.trim() !== '') {
-          console.log("Auto-starting countdown for transcript:", finalTranscript);
-          setCountdownValue(3);
-          setCountdownActive(true);
-        }
-      }, 500); // Short delay to allow user to see the transcript
+      // Immediately start the search with the transcript
+      if (finalTranscript.trim() !== '') {
+        console.log("Immediately starting search with transcript:", finalTranscript);
 
-      return () => clearTimeout(autoStartTimer);
+        // Reset any previous search state
+        setCreators([]);
+        setReasoning('');
+        setShowNoResults(false);
+        setWaitingForSearch(false); // Don't show the "KI sucht passende Creator" display
+        setIsLoading(false); // Don't show loading state initially
+
+        // Create a unique request ID for debugging
+        const requestId = Date.now().toString();
+
+        // Show countdown immediately
+        console.log("Starting countdown for visual feedback");
+        setCountdownValue(3);
+        setCountdownActive(true);
+
+        // Start the API call immediately in the background while countdown runs
+        fetch('/api/search', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Request-ID': requestId,
+            'Cache-Control': 'no-cache, no-store'
+          },
+          body: JSON.stringify({
+            query: finalTranscript.trim(),
+            requestId: requestId,
+            timestamp: new Date().toISOString(),
+            isTest: false
+          })
+        })
+        .then(response => {
+          console.log("🔍 Voice Search API Response Status:", response.status);
+          if (response.ok) {
+            return response.json();
+          } else {
+            throw new Error(`API failed with status: ${response.status}`);
+          }
+        })
+        .then(data => {
+          console.log("🔍 Voice Search API Response Data:", data);
+          if (data.success) {
+            const creatorCount = data.creators?.length || 0;
+            console.log(`🔍 Voice search found ${creatorCount} creators`);
+            if (creatorCount > 0) {
+              // Store the results but don't show them until countdown finishes
+              setTimeout(() => {
+                setCreators(data.creators);
+                setIsLoading(false);
+                setWaitingForSearch(false);
+                setCountdownActive(false);
+              }, 3000); // Wait for countdown to finish (3 seconds)
+
+              // Also set reasoning if it's included in the search response
+              if (data.reasoning) {
+                setReasoning(data.reasoning);
+              }
+            } else {
+              console.warn(`🔍 No creators found for query: "${finalTranscript}"`);
+              setTimeout(() => {
+                setShowNoResults(true);
+                setIsLoading(false);
+                setWaitingForSearch(false);
+                setCountdownActive(false);
+              }, 3000);
+            }
+          } else {
+            console.error("🔍 Search failed:", data.error);
+            setTimeout(() => {
+              toast.error(`Suche fehlgeschlagen: ${data.error || 'Unbekannter Fehler'}`);
+              setIsLoading(false);
+              setWaitingForSearch(false);
+              setCountdownActive(false);
+            }, 3000);
+          }
+        })
+        .catch(error => {
+          console.error('🔍 Error during voice search:', error);
+          setTimeout(() => {
+            toast.error(`Fehler bei der Suche: ${error.message || 'Unbekannter Fehler'}`);
+            setIsLoading(false);
+            setWaitingForSearch(false);
+            setCountdownActive(false);
+          }, 3000);
+        });
+
+        // Fetch reasoning separately
+        fetch('/api/reasoning', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Request-ID': requestId,
+            'Cache-Control': 'no-cache, no-store'
+          },
+          body: JSON.stringify({
+            query: finalTranscript.trim(),
+            requestId: requestId,
+            timestamp: new Date().toISOString(),
+            isTest: false
+          })
+        })
+        .then(response => {
+          if (response.ok) {
+            return response.json();
+          }
+          return null;
+        })
+        .then(data => {
+          if (data && data.success) {
+            setReasoning(data.reasoning);
+          }
+        })
+        .catch(error => {
+          console.error('🔍 Error fetching reasoning:', error);
+        });
+      }
     }
   }, [finalTranscript, isListening]);
 
-  // Effect to handle countdown and automatic search
+  // This function has been replaced by the startSearch function
+
+  // Effect to handle countdown and visual feedback
   useEffect(() => {
+    console.log("⏱️ Countdown effect running with:", { countdownActive, countdownValue });
+
     let countdownTimer: NodeJS.Timeout;
     let thinkingTimer: NodeJS.Timeout;
-    let searchTimer: NodeJS.Timeout;
 
     if (countdownActive && countdownValue > 0) {
+      console.log(`⏱️ Countdown active: ${countdownValue} seconds remaining`);
       countdownTimer = setTimeout(() => {
+        console.log(`⏱️ Decreasing countdown from ${countdownValue} to ${countdownValue - 1}`);
         setCountdownValue(prev => prev - 1);
       }, 1000);
     } else if (countdownActive && countdownValue === 0) {
+      console.log("⏱️ Countdown reached zero! Showing thinking animation...");
       setCountdownActive(false);
       setWaitingForSearch(true);
 
@@ -90,26 +224,26 @@ export default function SearchBox() {
 
       let phraseIndex = 0;
       setAiThinking(thinkingPhrases[0]);
+      console.log(`⏱️ Starting thinking animation: "${thinkingPhrases[0]}"`);
 
       // Use shorter intervals for more dynamic feeling
       thinkingTimer = setInterval(() => {
         phraseIndex = (phraseIndex + 1) % thinkingPhrases.length;
         setAiThinking(thinkingPhrases[phraseIndex]);
+        console.log(`⏱️ Thinking animation: "${thinkingPhrases[phraseIndex]}"`);
       }, 800);
 
-      // Start search after longer thinking period to show all database steps
-      searchTimer = setTimeout(() => {
+      // Stop thinking animation after 5 seconds
+      setTimeout(() => {
+        console.log("⏱️ Thinking animation complete");
         clearInterval(thinkingTimer);
-        // Use directSearch instead of handleSearch for more reliable results
-        directSearch();
-        // waitingForSearch will be set to false inside directSearch
-      }, 8000);
+        setWaitingForSearch(false);
+      }, 5000);
     }
 
     return () => {
-      clearTimeout(countdownTimer);
-      clearInterval(thinkingTimer);
-      clearTimeout(searchTimer);
+      if (countdownTimer) clearTimeout(countdownTimer);
+      if (thinkingTimer) clearInterval(thinkingTimer);
     };
   }, [countdownActive, countdownValue]);
 
@@ -134,93 +268,39 @@ export default function SearchBox() {
     }
   };
 
-  // Handle manual search button click - now uses the countdown animation but with direct search
+  // Handle manual search button click - immediately starts the search and shows UI animation after 1 second
   const startSearch = () => {
-    // If we have a query, start the countdown
+    console.log("🔍 Start search button clicked");
+
+    // If we have a query, start the search immediately
     if (searchQuery.trim()) {
       // Store the query for later use
       const queryToUse = searchQuery.trim();
+      console.log(`🔍 Starting search for: "${queryToUse}"`);
+
       setSubmittedQuery(queryToUse);
       setSearchSubmitted(true);
 
-      // Start the countdown
-      setCountdownValue(3);
-      setCountdownActive(true);
-
-      // After countdown completes, the useEffect will handle showing the animation
-      // and then calling directSearch() instead of handleSearch()
-    }
-  };
-
-  // Direct API test function - for debugging
-  const testBackendAPI = async () => {
-    const testQuery = "Test query for backend";
-    console.log("DIRECT API TEST: Sending direct test to backend API");
-
-    try {
-      const response = await fetch('/api/search', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Test-Request': 'true'
-        },
-        body: JSON.stringify({
-          query: testQuery,
-          isTest: true
-        })
-      });
-
-      console.log("DIRECT API TEST: Response status:", response.status);
-
-      if (response.ok) {
-        const data = await response.json();
-        console.log("DIRECT API TEST: Response data:", data);
-      } else {
-        console.error("DIRECT API TEST: Failed with status:", response.status);
-      }
-    } catch (error) {
-      console.error("DIRECT API TEST: Error:", error);
-    }
-  };
-
-  // Disabled automatic test API call
-  // useEffect(() => {
-  //   const timer = setTimeout(() => {
-  //     testBackendAPI();
-  //   }, 2000);
-  //   return () => clearTimeout(timer);
-  // }, []);
-
-  // Direct API search function
-  const directSearch = async () => {
-    console.log('Performing direct search...');
-
-    // Use the current search query
-    const queryToUse = searchQuery.trim() || submittedQuery.trim();
-
-    if (!queryToUse) {
-      console.error("No query to search for!");
-      toast.error("Bitte geben Sie einen Suchbegriff ein");
-      return;
-    }
-
-    // Update UI state
-    setIsLoading(true);
-    setWaitingForSearch(false);
-    setReasoning('');
-    setCreators([]);
-    setSelectedCreators([]);
-    setSearchSubmitted(true);
-    setSubmittedQuery(queryToUse);
-
-    try {
-      console.log("Sending direct API request for query:", queryToUse);
+      // Reset any previous search state
+      setCreators([]);
+      setReasoning('');
+      setShowNoResults(false);
+      setWaitingForSearch(false); // Don't show the "KI sucht passende Creator" display
+      setIsLoading(false); // Don't show loading state initially
 
       // Create a unique request ID for debugging
       const requestId = Date.now().toString();
 
-      // Call the search API
-      const response = await fetch('/api/search', {
+      // Start the API request immediately
+      console.log("🔍 Starting API request immediately");
+
+      // Show countdown immediately
+      console.log("🔍 Starting countdown for visual feedback");
+      setCountdownValue(3);
+      setCountdownActive(true);
+
+      // Start the API call immediately in the background while countdown runs
+      fetch('/api/search', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -233,209 +313,102 @@ export default function SearchBox() {
           timestamp: new Date().toISOString(),
           isTest: false
         })
-      });
-
-      console.log("API Response Status:", response.status);
-
-      if (response.ok) {
-        const data = await response.json();
-        console.log("API Response Data:", data);
-
+      })
+      .then(response => {
+        console.log("🔍 API Response Status:", response.status);
+        if (response.ok) {
+          return response.json();
+        } else {
+          throw new Error(`API failed with status: ${response.status}`);
+        }
+      })
+      .then(data => {
+        console.log("🔍 API Response Data:", data);
         if (data.success) {
           const creatorCount = data.creators?.length || 0;
-          console.log(`Found ${creatorCount} creators`);
-
+          console.log(`🔍 Search found ${creatorCount} creators`);
           if (creatorCount > 0) {
-            setCreators(data.creators);
+            // Store the results but don't show them until countdown finishes
+            setTimeout(() => {
+              setCreators(data.creators);
+              setIsLoading(false);
+              setWaitingForSearch(false);
+              setCountdownActive(false);
+            }, 3000); // Wait for countdown to finish (3 seconds)
+
+            // Also set reasoning if it's included in the search response
+            if (data.reasoning) {
+              setReasoning(data.reasoning);
+            }
           } else {
-            console.warn(`No creators found for query: "${queryToUse}"`);
-            toast.warning("Keine passenden Creator gefunden. Bitte versuchen Sie eine andere Suchanfrage.");
+            console.warn(`🔍 No creators found for query: "${queryToUse}"`);
+            setTimeout(() => {
+              setShowNoResults(true);
+              setIsLoading(false);
+              setWaitingForSearch(false);
+              setCountdownActive(false);
+            }, 3000);
           }
         } else {
-          console.error("Search failed:", data.error);
-          toast.error(`Suche fehlgeschlagen: ${data.error || 'Unbekannter Fehler'}`);
+          console.error("🔍 Search failed:", data.error);
+          setTimeout(() => {
+            toast.error(`Suche fehlgeschlagen: ${data.error || 'Unbekannter Fehler'}`);
+            setIsLoading(false);
+            setWaitingForSearch(false);
+            setCountdownActive(false);
+          }, 3000);
         }
-      } else {
-        console.error("API failed with status:", response.status);
-        toast.error(`API-Fehler: ${response.statusText}`);
-      }
+      })
+      .catch(error => {
+        console.error('🔍 Error during search:', error);
+        setTimeout(() => {
+          toast.error(`Fehler bei der Suche: ${error.message || 'Unbekannter Fehler'}`);
+          setIsLoading(false);
+          setWaitingForSearch(false);
+          setCountdownActive(false);
+        }, 3000);
+      });
 
-      // Also get reasoning
-      try {
-        const reasoningResponse = await fetch('/api/reasoning', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Request-ID': requestId,
-            'Cache-Control': 'no-cache, no-store'
-          },
-          body: JSON.stringify({
-            query: queryToUse,
-            requestId: requestId,
-            timestamp: new Date().toISOString(),
-            isTest: false
-          })
-        });
-
-        if (reasoningResponse.ok) {
-          const reasoningData = await reasoningResponse.json();
-          if (reasoningData.success) {
-            setReasoning(reasoningData.reasoning);
-          }
-        }
-      } catch (reasoningError) {
-        console.error("Error fetching reasoning:", reasoningError);
-      }
-
-    } catch (error) {
-      console.error('Error during direct search:', error);
-      toast.error(`Fehler bei der Suche: ${error.message || 'Unbekannter Fehler'}`);
-    } finally {
-      setIsLoading(false);
-      setWaitingForSearch(false);
-      console.log("Direct search completed");
-    }
-  };
-
-  // The actual search function that gets called after countdown
-  const handleSearch = async () => {
-    // Use either the searchQuery or the submittedQuery (from voice input)
-    const queryToUse = searchQuery.trim() || submittedQuery.trim();
-
-    console.log("Starting actual search with query:", queryToUse);
-
-    if (!queryToUse) {
-      console.error("No query to search for!");
-      return;
-    }
-
-    // Make sure we have the query in the search field too (for consistency)
-    if (searchQuery !== queryToUse) {
-      setSearchQuery(queryToUse);
-    }
-
-    // Store the submitted query and mark as submitted (if not already done)
-    if (submittedQuery !== queryToUse) {
-      setSubmittedQuery(queryToUse);
-      setSearchSubmitted(true);
-    }
-
-    setIsLoading(true);
-    setWaitingForSearch(false); // Ensure waitingForSearch is false when actual search starts
-    setReasoning('');
-    setCreators([]);
-    setSelectedCreators([]); // Clear selected creators on new search
-    setAiThinking(''); // Clear AI thinking message
-
-    // Stop speech recognition if active
-    if (isListening) {
-      SpeechRecognition.stopListening();
-      setIsListening(false);
-    }
-
-    try {
-      console.log("Sending API requests for query:", queryToUse);
-
-      // Create a unique request ID for debugging
-      const requestId = Date.now().toString();
-      console.log(`Request ID: ${requestId}`);
-
-      // First, get creators from Airtable (prioritize this for faster results)
-      console.log(`[${requestId}] Fetching creators from Airtable...`);
-      const creatorsPromise = fetch('/api/search', {
+      // Fetch reasoning separately
+      fetch('/api/reasoning', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'X-Request-ID': requestId,
-          'Cache-Control': 'no-cache, no-store' // Prevent caching
+          'Cache-Control': 'no-cache, no-store'
         },
         body: JSON.stringify({
           query: queryToUse,
           requestId: requestId,
-          timestamp: new Date().toISOString(), // Add timestamp to prevent caching
-          isTest: false // Explicitly set isTest to false to ensure it's not treated as a test
+          timestamp: new Date().toISOString(),
+          isTest: false
         })
+      })
+      .then(response => {
+        if (response.ok) {
+          return response.json();
+        }
+        return null;
+      })
+      .then(data => {
+        if (data && data.success) {
+          setReasoning(data.reasoning);
+        }
+      })
+      .catch(error => {
+        console.error('🔍 Error fetching reasoning:', error);
       });
 
-      // In parallel, get reasoning from OpenRouter
-      console.log(`[${requestId}] Fetching reasoning from OpenRouter...`);
-      const reasoningPromise = fetch('/api/reasoning', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Request-ID': requestId,
-          'Cache-Control': 'no-cache, no-store' // Prevent caching
-        },
-        body: JSON.stringify({
-          query: queryToUse,
-          requestId: requestId,
-          timestamp: new Date().toISOString(), // Add timestamp to prevent caching
-          isTest: false // Explicitly set isTest to false
-        })
-      });
-
-      // Wait for both responses
-      console.log(`[${requestId}] Waiting for API responses...`);
-      const [creatorsResponse, reasoningResponse] = await Promise.all([
-        creatorsPromise,
-        reasoningPromise
-      ]);
-
-      console.log(`[${requestId}] Creators API response status:`, creatorsResponse.status);
-      console.log(`[${requestId}] Reasoning API response status:`, reasoningResponse.status);
-
-      // Log the full response for debugging
-      const creatorsResponseText = await creatorsResponse.clone().text();
-      console.log(`[${requestId}] Creators API raw response:`, creatorsResponseText);
-
-      // Process creators response first (more important)
-      if (creatorsResponse.ok) {
-        const creatorsData = await creatorsResponse.json();
-        console.log(`[${requestId}] Creators data received, success:`, creatorsData.success);
-
-        if (creatorsData.success) {
-          const creatorCount = creatorsData.creators?.length || 0;
-          console.log(`[${requestId}] Found ${creatorCount} creators`);
-
-          if (creatorCount > 0) {
-            console.log(`[${requestId}] First creator:`, creatorsData.creators[0]);
-            setCreators(creatorsData.creators);
-          } else {
-            console.warn(`[${requestId}] No creators found for query: "${queryToUse}"`);
-            toast.warning("Keine passenden Creator gefunden. Bitte versuchen Sie eine andere Suchanfrage.");
-          }
-        } else {
-          console.error(`[${requestId}] Search failed:`, creatorsData.error);
-          toast.error(`Suche fehlgeschlagen: ${creatorsData.error || 'Unbekannter Fehler'}`);
-        }
-      } else {
-        console.error(`[${requestId}] Creators API failed with status:`, creatorsResponse.status);
-        toast.error(`API-Fehler: ${creatorsResponse.statusText}`);
-      }
-
-      // Process reasoning response
-      if (reasoningResponse.ok) {
-        const reasoningData = await reasoningResponse.json();
-        console.log(`[${requestId}] Reasoning data received:`, reasoningData.success);
-
-        if (reasoningData.success) {
-          console.log(`[${requestId}] Reasoning length:`, reasoningData.reasoning?.length || 0);
-          setReasoning(reasoningData.reasoning);
-        } else {
-          console.error(`[${requestId}] Reasoning API returned error:`, reasoningData.error);
-        }
-      } else {
-        console.error(`[${requestId}] Reasoning API failed with status:`, reasoningResponse.status);
-      }
-    } catch (error) {
-      console.error('Error during search:', error);
-      toast.error(`Fehler bei der Suche: ${error.message || 'Unbekannter Fehler'}`);
-    } finally {
-      setIsLoading(false);
-      setWaitingForSearch(false); // Ensure waitingForSearch is false when search completes
-      console.log("Search completed");
+    } else {
+      console.warn("⚠️ No search query provided");
+      toast.warning("Bitte geben Sie einen Suchbegriff ein");
     }
   };
+
+  // Test function removed - no longer needed
+
+
+  // This function has been replaced by the startSearch function
 
   // Function to handle creator selection
   const handleSelectCreator = (creatorId: string) => {
@@ -446,63 +419,114 @@ export default function SearchBox() {
     );
   };
 
+  // State for contact form
+  const [showContactForm, setShowContactForm] = useState(false);
+  const [clientInfo, setClientInfo] = useState({ email: '', name: '', message: '' });
+  const [emailError, setEmailError] = useState('');
+  const [submitLoading, setSubmitLoading] = useState(false);
+
+  // Handle form submission
+  const handleSubmitSelection = async () => {
+    if (selectedCreators.length === 0) return;
+
+    // Validate email
+    if (!clientInfo.email || !clientInfo.email.includes('@')) {
+      setEmailError('Bitte geben Sie eine gültige E-Mail-Adresse ein');
+      return;
+    }
+
+    setSubmitLoading(true);
+
+    try {
+      const res = await fetch('/api/submit-request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          creatorIds: selectedCreators,
+          clientInfo
+        })
+      });
+
+      const data = await res.json();
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to submit');
+      }
+
+      toast.success('Ihre Anfrage wurde erfolgreich gesendet!');
+      setShowContactForm(false);
+      setSelectedCreators([]);
+      setSubmitLoading(false);
+    } catch (error) {
+      console.error('Submit error:', error);
+      toast.error('Fehler beim Senden der Anfrage. Bitte versuchen Sie es später erneut.');
+      setSubmitLoading(false);
+    }
+  };
+
   return (
     <div className={styles.searchContainer}>
       {/* Search input */}
       <div className={styles.searchInputContainer}>
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && startSearch()}
-            placeholder="z.B. Kosmetik, unter 35 Jahre, TikTok..."
-            className={styles.searchInput}
-            disabled={countdownActive || waitingForSearch || isLoading}
-          />
-          <button
-            onClick={startSearch}
-            className={`${styles.searchButton} ${isLoading ? styles.pulsing : ''}`}
-            disabled={countdownActive || waitingForSearch || isLoading}
-            aria-label="Search"
-          >
-            {isLoading ? 'Suche läuft...' :
-             countdownActive ? countdownValue :
-             waitingForSearch ? '...' : <Search size={20} />}
-          </button>
+        <textarea
+          ref={searchInputRef}
+          value={searchQuery}
+          onChange={(e) => {
+            setSearchQuery(e.target.value);
+            // Auto-resize the textarea based on content
+            e.target.style.height = 'auto';
+            e.target.style.height = Math.max(60, e.target.scrollHeight) + 'px';
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault();
+              startSearch();
+            }
+          }}
+          placeholder="z.B. Kosmetik, unter 35 Jahre, TikTok..."
+          className={styles.searchInput}
+          disabled={countdownActive || waitingForSearch || isLoading}
+          rows={1}
+        />
+
+        <button
+          onClick={startSearch}
+          disabled={countdownActive || waitingForSearch || isLoading}
+          aria-label="Search"
+          className="search-button-gradient p-4 rounded-lg flex items-center justify-center focus:outline-none hover:opacity-90 transition-opacity"
+          style={{
+            minWidth: '60px',
+            height: '60px'
+          }}
+        >
+          {isLoading ? 'Suche läuft...' :
+           countdownActive ? countdownValue :
+           waitingForSearch ? '...' : <span className="material-icons text-white text-2xl">search</span>}
+        </button>
+
+        <div className="relative group">
           <button
             onClick={toggleVoiceInput}
-            className={`${styles.searchButton} ${isListening ? 'bg-red-500' : ''} ml-2 relative group`}
             disabled={isLoading}
             aria-label="Toggle Voice Input"
+            className="mic-button-gradient p-4 rounded-lg flex items-center justify-center focus:outline-none hover:opacity-90 transition-opacity"
             style={{
-              position: 'relative',
-              overflow: 'visible',
-              background: isListening ? 'linear-gradient(45deg, #ff3e3e, #ff5757)' : 'linear-gradient(45deg, #ff9500, #ff5757)',
-              boxShadow: isListening ? '0 0 15px rgba(255, 62, 62, 0.7)' : '0 0 10px rgba(255, 149, 0, 0.5)',
-              width: '60px',
-              height: '60px',
-              borderRadius: '50%',
-              marginLeft: '15px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              border: '2px solid rgba(255, 255, 255, 0.2)'
+              minWidth: '60px',
+              height: '60px'
             }}
             title={isListening ? 'Sprachaufnahme beenden' : 'Sprachsuche starten'}
           >
             {isListening ?
-              <MicOff size={32} color="#ffffff" style={{filter: 'drop-shadow(0 0 3px rgba(255,255,255,0.7))'}} /> :
-              <Mic size={32} color="#ffffff" style={{filter: 'drop-shadow(0 0 3px rgba(255,255,255,0.7))'}} />
+              <span className="material-icons text-white text-2xl">mic_off</span> :
+              <span className="material-icons text-white text-2xl">mic</span>
             }
-
-            {isListening && <span className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 rounded-full animate-pulse"></span>}
-            <span className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs rounded py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none">
-              {isListening ? 'Sprachaufnahme beenden' : 'Sprachsuche starten'}
-            </span>
           </button>
 
-          {/* Test buttons removed */}
+          {isListening && <span className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 rounded-full animate-pulse"></span>}
+          <span className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs rounded py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none">
+            {isListening ? 'Sprachaufnahme beenden' : 'Sprachsuche starten'}
+          </span>
         </div>
+      </div>
 
       {/* We don't need to display the transcript separately anymore since it's shown in the chat bubble */}
 
@@ -599,25 +623,13 @@ export default function SearchBox() {
               </div>
             </div>
 
-            {/* Reasoning as simple text below */}
-            {isLoading ? (
-              <div className={styles.loadingContainer}>
-                <span className={styles.loadingText}>KI sucht passende Creator</span>
-                <div className="mt-4 w-full">
-                  <div className="h-2 bg-emerald-500 rounded-full animate-pulse-slow"></div>
-                </div>
-                <span className={styles.pulsingDots}>
-                  <span className={styles.dot}></span>
-                  <span className={styles.dot}></span>
-                  <span className={styles.dot}></span>
-                </span>
-              </div>
-            ) : reasoning ? (
+            {/* Show reasoning only when available */}
+            {reasoning && !countdownActive && (
               <div className={styles.reasoningContainer}>
                 <h3>Analyse der Suchanfrage:</h3>
                 <pre className={styles.reasoningText}>{reasoning}</pre>
               </div>
-            ) : null}
+            )}
           </div>
         )}
 
@@ -632,19 +644,160 @@ export default function SearchBox() {
                   className={`${styles.creatorCard} ${selectedCreators.includes(creator.id) ? styles.selected : ''}`} // Add selected class
                   onClick={() => handleSelectCreator(creator.id)} // Add click handler
                 >
-                  <img src={creator.image} alt={creator.name} />
+                  <img
+                    src={creator.image || (creator.gender === 'Weiblich' ? '/female-placeholder.webp' : '/placeholder.jpg')}
+                    alt={creator.name}
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      // Ensure correct gender-specific placeholder on error
+                      if (creator.gender === 'Weiblich') {
+                        target.src = '/female-placeholder.webp';
+                      } else {
+                        target.src = '/placeholder.jpg'; // For 'Männlich' and any other values
+                      }
+                      console.log(`Image error for ${creator.name} (${creator.gender}), using: ${target.src}`);
+                    }}
+                  />
                   <h3>{creator.name}</h3>
-                  <p>{creator.reach}</p>
                   <div className={styles.networks}>
-                    {creator.networks.map((network, index) => (
-                      <span key={index} className={styles.networkTag}>{network}</span>
-                    ))}
+                    {/* Check which networks are mentioned in the reach text */}
+                    {(() => {
+                      const reachText = creator.reach.toLowerCase();
+                      const networks = [];
+
+                      // Check for Instagram in reach
+                      if (reachText.includes('instagram') || reachText.includes('insta')) {
+                        networks.push({ name: 'Instagram', icon: faInstagram });
+                      }
+
+                      // Check for TikTok in reach
+                      if (reachText.includes('tiktok') || reachText.includes('tt')) {
+                        networks.push({ name: 'TikTok', icon: faTiktok });
+                      }
+
+                      // Check for YouTube in reach
+                      if (reachText.includes('youtube') || reachText.includes('yt')) {
+                        networks.push({ name: 'YouTube', icon: faYoutube });
+                      }
+
+                      // Check for Facebook in reach
+                      if (reachText.includes('facebook') || reachText.includes('fb')) {
+                        networks.push({ name: 'Facebook', icon: faFacebook });
+                      }
+
+                      // Check for LinkedIn in reach
+                      if (reachText.includes('linkedin')) {
+                        networks.push({ name: 'LinkedIn', icon: faLinkedin });
+                      }
+
+                      // Check for Twitter in reach
+                      if (reachText.includes('twitter') || reachText.includes('x.com')) {
+                        networks.push({ name: 'Twitter', icon: faTwitter });
+                      }
+
+                      return networks.map((network, index) => (
+                        <span key={index} className={styles.networkTag} title={network.name}>
+                          <FontAwesomeIcon icon={network.icon} />
+                        </span>
+                      ));
+                    })()}
                   </div>
-                  <p className={styles.price}>{creator.priceRange}</p>
                 </div>
               ))}
             </div>
           </>
+        )}
+
+        {/* No Results display */}
+        {showNoResults && (
+          <NoResults query={submittedQuery} />
+        )}
+
+        {/* Fixed bottom bar for selected creators */}
+        {selectedCreators.length > 0 && (
+          <div className={styles.selectedCreatorsBar}>
+            <div className={styles.selectedCreatorsContent}>
+              <div className={styles.selectedCreatorsInfo}>
+                <span className={styles.selectedCount}>{selectedCreators.length} Creator ausgewählt</span>
+                <span className={styles.selectedHint}>Möchtest du diese Creator kontaktieren?</span>
+              </div>
+              <div className={styles.selectedCreatorsActions}>
+                <button
+                  onClick={() => setSelectedCreators([])}
+                  className={styles.cancelButton}
+                >
+                  Abbrechen
+                </button>
+                <button
+                  onClick={() => setShowContactForm(true)}
+                  className={styles.submitButton}
+                >
+                  <span>Anfrage senden</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" className={styles.arrowIcon} viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Contact form modal */}
+        {showContactForm && (
+          <div className={styles.modalOverlay}>
+            <div className={styles.modalContent}>
+              <h3 className={styles.modalTitle}>Kontaktinformationen</h3>
+              <div className={styles.formField}>
+                <input
+                  type="email"
+                  placeholder="Email *"
+                  value={clientInfo.email}
+                  onChange={e => {
+                    setEmailError('');
+                    setClientInfo(prev => ({ ...prev, email: e.target.value }));
+                  }}
+                  className={`${styles.formInput} ${emailError ? styles.inputError : ''}`}
+                />
+                {emailError && <p className={styles.errorText}>{emailError}</p>}
+              </div>
+              <input
+                type="text"
+                placeholder="Name (optional)"
+                value={clientInfo.name}
+                onChange={e => setClientInfo(prev => ({ ...prev, name: e.target.value }))}
+                className={styles.formInput}
+              />
+              <textarea
+                placeholder="Nachricht (optional)"
+                value={clientInfo.message}
+                onChange={e => setClientInfo(prev => ({ ...prev, message: e.target.value }))}
+                className={styles.formTextarea}
+              />
+              <div className={styles.modalActions}>
+                <button
+                  onClick={() => setShowContactForm(false)}
+                  className={styles.modalCancelButton}
+                  disabled={submitLoading}
+                >
+                  Abbrechen
+                </button>
+                <button
+                  onClick={handleSubmitSelection}
+                  disabled={submitLoading}
+                  className={styles.modalSubmitButton}
+                >
+                  {submitLoading ? (
+                    <>
+                      <span className={styles.loadingIcon}>⏳</span>
+                      Wird gesendet...
+                    </>
+                  ) : (
+                    'Absenden'
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </div>

@@ -1,6 +1,7 @@
 import axios from 'axios';
-import * as cheerio from 'cheerio';
-import * as TikTokScraper from 'tiktok-scraper';
+// Temporarily disable cheerio and tiktok-scraper to fix canvas dependency issue
+// import * as cheerio from 'cheerio';
+// import * as TikTokScraper from 'tiktok-scraper';
 
 // Array of user agents to rotate through
 const USER_AGENTS = [
@@ -62,27 +63,28 @@ async function getInstagramProfilePic(username: string): Promise<string | null> 
         timeout: 8000
       });
 
-      const $ = cheerio.load(response.data);
+      // Temporarily disabled cheerio parsing due to canvas dependency issue
+      // const $ = cheerio.load(response.data);
+      // const ogImage = $('meta[property="og:image"]').attr('content');
 
-      // Try to find the og:image meta tag (most reliable method)
-      const ogImage = $('meta[property="og:image"]').attr('content');
-      if (ogImage) {
-        console.log('Found Instagram profile image via og:image:', ogImage);
-        return ogImage;
+      // Simple regex fallback for og:image
+      const ogImageMatch = response.data.match(/<meta[^>]*property="og:image"[^>]*content="([^"]*)"[^>]*>/i);
+      if (ogImageMatch && ogImageMatch[1]) {
+        console.log('Found Instagram profile image via regex:', ogImageMatch[1]);
+        return ogImageMatch[1];
       }
 
-      // Try alternative methods if og:image fails
-      const scripts = $('script').toArray();
-      for (const script of scripts) {
-        const content = $(script).html() || '';
-
-        // Look for profile_pic_url in JSON data
-        if (content.includes('profile_pic_url')) {
-          const match = content.match(/"profile_pic_url_hd":"([^"]+)"|"profile_pic_url":"([^"]+)"/);
-          if (match) {
-            const imageUrl = (match[1] || match[2]).replace(/\\u0026/g, '&').replace(/\\/g, '');
-            console.log('Found Instagram profile image via JSON data:', imageUrl);
-            return imageUrl;
+      // Try alternative methods if og:image fails - using regex instead of cheerio
+      const scriptMatches = response.data.match(/<script[^>]*>(.*?)<\/script>/gi);
+      if (scriptMatches) {
+        for (const scriptMatch of scriptMatches) {
+          if (scriptMatch.includes('profile_pic_url')) {
+            const match = scriptMatch.match(/"profile_pic_url_hd":"([^"]+)"|"profile_pic_url":"([^"]+)"/);
+            if (match) {
+              const imageUrl = (match[1] || match[2]).replace(/\\u0026/g, '&').replace(/\\/g, '');
+              console.log('Found Instagram profile image via JSON data:', imageUrl);
+              return imageUrl;
+            }
           }
         }
       }
@@ -143,31 +145,9 @@ async function getTikTokProfilePic(username: string): Promise<string | null> {
   try {
     console.log('Fetching TikTok profile for:', username);
 
-    // Method 1: Try using tiktok-scraper library
-    try {
-      const options = {
-        number: 1,
-        sessionList: ['sid_tt=58ba9e34431774703d3c34e60d584475;'],
-        proxy: '',
-        asyncDownload: 5,
-        asyncScraping: 3,
-        filepath: '',
-        filetype: '',
-        headers: {
-          'user-agent': getRandomUserAgent(),
-          referer: 'https://www.tiktok.com/',
-          cookie: ''
-        }
-      };
-
-      const user = await TikTokScraper.getUserProfileInfo(username, options);
-      if (user && user.user.avatarLarger) {
-        console.log('Found TikTok profile image via scraper library:', user.user.avatarLarger);
-        return user.user.avatarLarger;
-      }
-    } catch (error) {
-      console.log('TikTok scraper library method failed, trying alternative methods...');
-    }
+    // Method 1: TikTok scraper library temporarily disabled due to canvas dependency
+    // Will use direct HTML scraping instead
+    console.log('TikTok scraper library temporarily disabled, using alternative methods...');
 
     // Method 2: Direct HTML scraping
     try {
@@ -184,12 +164,11 @@ async function getTikTokProfilePic(username: string): Promise<string | null> {
       const html = response.data;
       console.log('Got TikTok HTML response, searching for profile image');
 
-      // Try with cheerio first (more reliable)
-      const $ = cheerio.load(html);
-      const ogImage = $('meta[property="og:image"]').attr('content');
-      if (ogImage) {
-        console.log('Found TikTok image via og:image:', ogImage);
-        return ogImage;
+      // Try with regex instead of cheerio (temporarily disabled due to canvas dependency)
+      const ogImageMatch = html.match(/<meta[^>]*property="og:image"[^>]*content="([^"]*)"[^>]*>/i);
+      if (ogImageMatch && ogImageMatch[1]) {
+        console.log('Found TikTok image via og:image:', ogImageMatch[1]);
+        return ogImageMatch[1];
       }
 
       // Try multiple regex patterns as fallback
@@ -267,22 +246,26 @@ async function getGoogleImageResult(searchQuery: string): Promise<string | null>
       timeout: 8000 // Add timeout for Google search
     });
 
-    const $ = cheerio.load(response.data);
-    const images = $('img').toArray();
+    // Use regex instead of cheerio (temporarily disabled due to canvas dependency)
+    const imgMatches = response.data.match(/<img[^>]*src="([^"]*)"[^>]*>/gi);
 
-    // Try each image until we find a valid one
-    for (const img of images) {
-      const src = $(img).attr('src');
-      if (src &&
-          !src.startsWith('data:') &&
-          !src.includes('gstatic.com') &&
-          !src.includes('google.com')) {
+    if (imgMatches) {
+      for (const imgMatch of imgMatches) {
+        const srcMatch = imgMatch.match(/src="([^"]*)"/);
+        if (srcMatch && srcMatch[1]) {
+          const src = srcMatch[1];
+          if (src &&
+              !src.startsWith('data:') &&
+              !src.includes('gstatic.com') &&
+              !src.includes('google.com')) {
 
-        // Validate that the URL actually returns an image
-        const isValid = await validateImageUrl(src);
-        if (isValid) {
-          console.log('Found and validated Google image result:', src);
-          return src;
+            // Validate that the URL actually returns an image
+            const isValid = await validateImageUrl(src);
+            if (isValid) {
+              console.log('Found and validated Google image result:', src);
+              return src;
+            }
+          }
         }
       }
     }
@@ -321,7 +304,7 @@ export async function getProfileImage(socialLinks: string): Promise<string> {
           const result = await fn();
           if (result) return result;
         } catch (error) {
-          console.warn(`Attempt ${i + 1} failed: ${error.message}`);
+          console.warn(`Attempt ${i + 1} failed: ${error instanceof Error ? error.message : String(error)}`);
           if (i < retries - 1) {
             await new Promise(resolve => setTimeout(resolve, delay * (i + 1))); // Exponential backoff
           } else {

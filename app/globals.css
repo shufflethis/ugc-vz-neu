@@ -17,5 +17,77 @@
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: var(--font-sans, Arial, Helvetica, sans-serif);
+  font-family: var(--font-inter, 'Inter'), var(--font-sans, Arial, Helvetica, sans-serif);
+}
+
+.gradient-text {
+  background: linear-gradient(90deg, #2EFFD1, #2E9FFF);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.search-button-gradient {
+  background: linear-gradient(180deg, #2EFFD1 0%, #2E9FFF 100%);
+}
+
+.mic-button-gradient {
+  background: linear-gradient(180deg, #FF8A2E 0%, #FF2E7A 100%);
+}
+
+.footer-bg {
+  background-color: #1A1A1A;
+}
+
+.footer-link {
+  transition: color 0.3s ease;
+  position: relative;
+}
+
+.footer-link:hover {
+  color: #ffffff;
+}
+
+.footer-link::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 1px;
+  bottom: -2px;
+  left: 0;
+  background-color: #ffffff;
+  transition: width 0.3s ease;
+}
+
+.footer-link:hover::after {
+  width: 100%;
+}
+
+.social-icon {
+  transition: transform 0.3s ease, color 0.3s ease;
+}
+
+.social-icon:hover {
+  transform: scale(1.1);
+  color: #ffffff;
+}
+
+/* Footer 4-column layout enforcement */
+@media (min-width: 1024px) {
+  .footer-grid-4 {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 3rem !important;
+  }
+
+  .footer-grid-4 > div {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+}
+
+/* Ensure proper grid behavior */
+.footer-container {
+  width: 100%;
+  max-width: 100%;
 }

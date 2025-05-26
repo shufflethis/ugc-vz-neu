@@ -3,14 +3,47 @@ import { NextResponse } from 'next/server';
 export const maxDuration = 60;
 export const dynamic = 'force-dynamic';
 
+// Function to generate a simple reasoning for short queries
+function generateSimpleReasoning(query: string): string {
+  const platforms = [];
+  if (query.toLowerCase().includes('tiktok')) platforms.push('TikTok');
+  if (query.toLowerCase().includes('instagram') || query.toLowerCase().includes('insta')) platforms.push('Instagram');
+
+  const topics = [];
+  if (query.toLowerCase().includes('kosmetik') || query.toLowerCase().includes('beauty')) topics.push('Beauty/Kosmetik');
+  if (query.toLowerCase().includes('mode') || query.toLowerCase().includes('fashion')) topics.push('Mode/Fashion');
+  if (query.toLowerCase().includes('reise') || query.toLowerCase().includes('travel')) topics.push('Reise');
+
+  let reasoning = "1. Verständnis der Anfrage\n\n";
+  reasoning += `Die Suchanfrage "${query}" wird analysiert, um passende Creator zu finden.\n\n`;
+
+  if (platforms.length > 0) {
+    reasoning += `Plattformen: ${platforms.join(', ')}\n`;
+  }
+
+  if (topics.length > 0) {
+    reasoning += `Themen: ${topics.join(', ')}\n`;
+  }
+
+  reasoning += "\n2. Datenbankabfrage\n\n";
+  reasoning += "Die Datenbank wird nach Creators durchsucht, die den Kriterien entsprechen.\n\n";
+
+  reasoning += "3. Filterung und Priorisierung\n\n";
+  reasoning += "Die Ergebnisse werden nach Relevanz und Qualität sortiert, um die besten Matches zu finden.";
+
+  return reasoning;
+}
+
 export async function POST(req: Request) {
   // Extract request ID from headers for better logging
   const requestId = req.headers.get('x-request-id') || Date.now().toString();
   console.log(`[${requestId}] Reasoning API called`);
 
+  // Declare query variable outside try block so it's accessible in catch block
+  let query: string | undefined;
+
   try {
     // Check if request body is valid
-    let query;
     let reqBody;
 
     try {
@@ -69,7 +102,7 @@ export async function POST(req: Request) {
         'X-Request-ID': requestId
       },
       body: JSON.stringify({
-        model: 'nvidia/llama-3.1-nemotron-70b-instruct:free',
+        model: 'google/gemini-2.0-flash-exp:free',
         messages: [
           {
             role: 'system',
@@ -109,37 +142,6 @@ export async function POST(req: Request) {
     const reasoning = data.choices[0].message.content;
     console.log(`[${requestId}] Reasoning content length:`, reasoning.length);
 
-    // Function to generate a simple reasoning for short queries
-    function generateSimpleReasoning(query: string): string {
-      const platforms = [];
-      if (query.toLowerCase().includes('tiktok')) platforms.push('TikTok');
-      if (query.toLowerCase().includes('instagram') || query.toLowerCase().includes('insta')) platforms.push('Instagram');
-
-      const topics = [];
-      if (query.toLowerCase().includes('kosmetik') || query.toLowerCase().includes('beauty')) topics.push('Beauty/Kosmetik');
-      if (query.toLowerCase().includes('mode') || query.toLowerCase().includes('fashion')) topics.push('Mode/Fashion');
-      if (query.toLowerCase().includes('reise') || query.toLowerCase().includes('travel')) topics.push('Reise');
-
-      let reasoning = "1. Verständnis der Anfrage\n\n";
-      reasoning += `Die Suchanfrage "${query}" wird analysiert, um passende Creator zu finden.\n\n`;
-
-      if (platforms.length > 0) {
-        reasoning += `Plattformen: ${platforms.join(', ')}\n`;
-      }
-
-      if (topics.length > 0) {
-        reasoning += `Themen: ${topics.join(', ')}\n`;
-      }
-
-      reasoning += "\n2. Datenbankabfrage\n\n";
-      reasoning += "Die Datenbank wird nach Creators durchsucht, die den Kriterien entsprechen.\n\n";
-
-      reasoning += "3. Filterung und Priorisierung\n\n";
-      reasoning += "Die Ergebnisse werden nach Relevanz und Qualität sortiert, um die besten Matches zu finden.";
-
-      return reasoning;
-    }
-
     return NextResponse.json({
       success: true,
       reasoning: reasoning,
@@ -153,15 +155,20 @@ export async function POST(req: Request) {
     // If OpenRouter fails, generate a simple reasoning as fallback
     try {
       console.log(`[${requestId}] Generating fallback reasoning`);
-      const fallbackReasoning = generateSimpleReasoning(query);
+      // Make sure query is defined before using it
+      if (typeof query === 'string') {
+        const fallbackReasoning = generateSimpleReasoning(query);
 
-      return NextResponse.json({
-        success: true,
-        reasoning: fallbackReasoning,
-        source: 'fallback',
-        requestId: requestId,
-        timestamp: new Date().toISOString()
-      });
+        return NextResponse.json({
+          success: true,
+          reasoning: fallbackReasoning,
+          source: 'fallback',
+          requestId: requestId,
+          timestamp: new Date().toISOString()
+        });
+      } else {
+        throw new Error('Query is not defined');
+      }
     } catch (fallbackError) {
       console.error(`[${requestId}] Fallback reasoning also failed:`, fallbackError);
     }

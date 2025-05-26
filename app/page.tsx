@@ -9,36 +9,45 @@ import SearchBox from './components/SearchBox';
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-black to-gray-900">
-      <div className="fixed top-0 left-0 w-full border-b border-gray-800/50 backdrop-blur-sm z-50">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+    <div className="min-h-screen bg-[#0D0D0D] flex flex-col">
+      <header className="py-6 px-4 sm:px-8 md:px-16 lg:px-24">
+        <div className="container mx-auto flex justify-between items-center">
+          <div className="flex items-center">
             <Image
               src="/ugc-vz-logo.webp"
               alt="UGC VZ"
-              width={40}
-              height={40}
-              className="rounded-lg"
+              width={32}
+              height={32}
+              className="mr-2"
               priority
             />
-            <span className="text-xl font-bold bg-gradient-to-r from-emerald-400 to-blue-500 text-transparent bg-clip-text">
+            <span className="text-xl font-bold gradient-text">
               UGC VZ
             </span>
           </div>
-        </div>
-      </div>
 
-      <main className="container mx-auto px-4 pt-24 pb-16">
-        <div className="max-w-4xl mx-auto text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-emerald-400 to-blue-500 text-transparent bg-clip-text">
-            Finde deinen perfekten UGC Creator
-          </h1>
-          <p className="text-gray-400 text-lg">
-            Beschreibe deine Kampagne und wir finden die passenden Creator für dich.
-          </p>
+          <Link
+            href="https://tally.so/r/w25dBp"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="bg-gradient-to-r from-teal-400 to-blue-500 hover:from-teal-500 hover:to-blue-600 text-white font-semibold py-2 px-4 rounded-md text-sm whitespace-nowrap"
+          >
+            Ich bin UGC Creator und will mitmachen
+          </Link>
         </div>
+      </header>
 
-        <SearchBox />
+      <main className="flex-grow flex flex-col items-center justify-center text-center px-4">
+        <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6">
+          Finde deinen perfekten <span className="gradient-text">UGC Creator</span>
+        </h1>
+        <p className="text-lg sm:text-xl text-gray-300 max-w-2xl mb-12">
+          Beschreibe deine Kampagne und wir finden die passenden Creator gratis für dich. Wähle danach einfach aus und unser Agent wird dir umgehend die Details kostenlos zusenden.
+        </p>
+
+        <div className="w-full max-w-2xl mx-auto">
+          <SearchBox />
+        </div>
         <ToastContainer position="top-center" autoClose={3000} hideProgressBar={false} />
       </main>
     </div>
