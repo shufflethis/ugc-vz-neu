@@ -36,7 +36,7 @@ export default function Footer() {
           <div>
             <h3 className="text-lg font-semibold text-white mb-6">Unternehmen</h3>
             <ul className="space-y-3">
-              <li><Link href="/ueber-uns" className="text-gray-400 hover:text-white transition-colors duration-200 text-sm">Über uns</Link></li>
+              <li><Link href="/about" className="text-gray-400 hover:text-white transition-colors duration-200 text-sm">Über uns</Link></li>
               <li><Link href="/bewerben" className="text-gray-400 hover:text-white transition-colors duration-200 text-sm">Mitmachen</Link></li>
               <li><Link href="/presse" className="text-gray-400 hover:text-white transition-colors duration-200 text-sm">Presse</Link></li>
               <li><Link href="/karriere" className="text-gray-400 hover:text-white transition-colors duration-200 text-sm">Karriere</Link></li>
