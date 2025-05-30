@@ -166,10 +166,8 @@ async function fetchSinglePost(slug: string): Promise<BlogPost | null> {
       return cached;
     }
 
-    // Konstruiere URL für einzelnen Artikel
-    const articleUrl = `http://wp.ugc-vz.de/${slug}/`;
-
-    const response = await fetch(articleUrl, {
+    // Verwende WordPress REST API für bessere Datenqualität
+    const response = await fetch(`http://wp.ugc-vz.de/wp-json/wp/v2/posts?slug=${slug}&_embed`, {
       headers: {
         'User-Agent': 'UGC-VZ Blog Sync/1.0'
       }
@@ -179,59 +177,111 @@ async function fetchSinglePost(slug: string): Promise<BlogPost | null> {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const html = await response.text();
-    const $ = cheerio.load(html);
+    const wpPosts = await response.json();
 
-    // Titel extrahieren
-    const title = $('h1, .entry-title, .post-title').first().text().trim() ||
-                  $('title').text().replace(' - Meine Webseite', '').trim();
-
-    // Content extrahieren und bereinigen
-    let content = cleanContent(html);
-
-    // Fallback: Wenn kein Content gefunden, versuche direkten Text-Extraktion
-    if (!content || content.trim().length < 100) {
-      const $ = cheerio.load(html);
-
-      // Entferne unwichtige Elemente
-      $('script, style, nav, footer, header, .navigation, .menu, .sidebar, #comments, .comments, .comment-form').remove();
-
-      // Extrahiere den gesamten Body-Text und strukturiere ihn
-      const bodyText = $('body').text();
-      const paragraphs = bodyText.split('\n\n').filter(p => p.trim().length > 50);
-
-      // Konvertiere zu HTML
-      content = paragraphs.map(p => `<p class="mb-4 text-gray-200 leading-relaxed">${p.trim()}</p>`).join('\n');
+    if (!wpPosts || wpPosts.length === 0) {
+      return null; // Post nicht gefunden
     }
 
-    // Excerpt aus Content generieren
-    const textContent = content.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
-    const excerpt = textContent.length > 200 ?
-                   textContent.substring(0, 200) + '...' :
-                   textContent;
+    const wpPost = wpPosts[0]; // Erstes (und einziges) Ergebnis
 
-    // Featured Image
-    const featuredImage = $('img').first().attr('src') || '/placeholder-blog.svg';
+    // Titel extrahieren und HTML-Entitäten dekodieren
+    let title = wpPost.title?.rendered || '';
+    if (!title) {
+      return null;
+    }
 
-    // Datum extrahieren
-    let date = new Date().toISOString();
-    const dateText = $('.date, .post-date, time').first().text().trim();
+    // HTML-Entitäten dekodieren
+    title = title.replace(/&#038;/g, '&').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"');
 
-    if (dateText) {
-      const germanMonths: { [key: string]: number } = {
-        'Januar': 0, 'Februar': 1, 'März': 2, 'April': 3, 'Mai': 4, 'Juni': 5,
-        'Juli': 6, 'August': 7, 'September': 8, 'Oktober': 9, 'November': 10, 'Dezember': 11
-      };
+    // Content extrahieren
+    let content = wpPost.content?.rendered || '';
 
-      const dateMatch = dateText.match(/(\d{1,2})\.\s*(\w+)\s*(\d{4})/);
-      if (dateMatch) {
-        const [, day, month, year] = dateMatch;
-        const monthIndex = germanMonths[month];
-        if (monthIndex !== undefined) {
-          date = new Date(parseInt(year), monthIndex, parseInt(day)).toISOString();
+    // Content bereinigen und stylen
+    if (content) {
+      const $ = cheerio.load(content);
+
+      // Bereinige Links
+      $('a').each((_, link) => {
+        const $link = $(link);
+        const href = $link.attr('href');
+        if (href && href.includes('ugc-vz.de')) {
+          // Konvertiere zu relativen Links
+          const slug = href.split('/').filter(Boolean).pop();
+          $link.attr('href', `/wissen/${slug}`);
         }
+      });
+
+      // Bereinige Bilder
+      $('img').each((_, img) => {
+        const $img = $(img);
+        $img.addClass('max-w-full h-auto rounded-lg my-4');
+        $img.attr('loading', 'lazy');
+
+        // Konvertiere relative URLs zu absoluten URLs
+        const src = $img.attr('src');
+        if (src && !src.startsWith('http') && !src.startsWith('/placeholder')) {
+          $img.attr('src', `http://wp.ugc-vz.de${src}`);
+        }
+      });
+
+      // Füge Styling zu Überschriften hinzu
+      $('h1, h2, h3, h4, h5, h6').each((_, heading) => {
+        const $heading = $(heading);
+        $heading.addClass('font-bold mb-4 mt-8 text-gray-900');
+
+        const tagName = (heading as any).name || (heading as any).tagName || '';
+        if (tagName === 'h1') $heading.addClass('text-3xl');
+        else if (tagName === 'h2') $heading.addClass('text-2xl');
+        else if (tagName === 'h3') $heading.addClass('text-xl');
+        else $heading.addClass('text-lg');
+      });
+
+      // Füge Styling zu Paragraphen hinzu
+      $('p').addClass('mb-4 text-gray-700 leading-relaxed');
+
+      // Füge Styling zu Listen hinzu
+      $('ul').addClass('list-disc list-inside mb-4 text-gray-700');
+      $('ol').addClass('list-decimal list-inside mb-4 text-gray-700');
+      $('li').addClass('mb-2');
+
+      content = $.html();
+    }
+
+    // Excerpt extrahieren
+    let excerpt = wpPost.excerpt?.rendered || '';
+    if (excerpt) {
+      // HTML-Tags entfernen
+      excerpt = excerpt.replace(/<[^>]*>/g, '').trim();
+      // WordPress-spezifische Zeichen bereinigen
+      excerpt = excerpt.replace(/\[&hellip;\]/g, '...');
+
+      if (excerpt.length > 200) {
+        excerpt = excerpt.substring(0, 200) + '...';
       }
     }
+
+    if (!excerpt || excerpt.length < 10) {
+      // Fallback: Excerpt aus Content generieren
+      const textContent = content.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+      excerpt = textContent.length > 200 ? textContent.substring(0, 200) + '...' : textContent;
+    }
+
+    // Featured Image extrahieren
+    let featuredImage = '/placeholder-blog.svg';
+
+    // Versuche Featured Media aus _embedded zu extrahieren
+    if (wpPost._embedded && wpPost._embedded['wp:featuredmedia'] && wpPost._embedded['wp:featuredmedia'][0]) {
+      const media = wpPost._embedded['wp:featuredmedia'][0];
+      featuredImage = media.source_url || media.guid?.rendered || '/placeholder-blog.svg';
+    }
+
+    // Datum extrahieren
+    const date = wpPost.date || new Date().toISOString();
+
+    // Lesezeit berechnen
+    const textContent = content.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+    const readingTime = estimateReadingTime(textContent);
 
     const post: BlogPost = {
       id: slug,
@@ -243,7 +293,7 @@ async function fetchSinglePost(slug: string): Promise<BlogPost | null> {
       featuredImage,
       author: 'UGC VZ Team',
       categories: ['UGC', 'Creator Marketing'],
-      readingTime: estimateReadingTime(textContent)
+      readingTime
     };
 
     // Cache speichern
