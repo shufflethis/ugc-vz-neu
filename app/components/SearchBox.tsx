@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import '../styles/search.css';
 import styles from '../styles/search.module.css';
-import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 import { toast } from 'react-toastify';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import NoResults from '../../components/NoResults';
+import { trackUGCEvents } from '../lib/analytics';
 import {
   faInstagram,
   faTiktok,
@@ -16,34 +16,60 @@ import {
   faTwitter
 } from '@fortawesome/free-brands-svg-icons';
 
-// Define types for your data
-interface Creator {
-  id: string;
-  name: string;
-  image: string;
-  reach: string;
-  networks: string[];
-  priceRange: string;
-  gender?: string;
-}
+// Import custom hooks
+import { useDeviceDetection } from '../hooks/useDeviceDetection';
+import { useSearch } from '../hooks/useSearch';
+import { useCountdown } from '../hooks/useCountdown';
+import { useVoiceRecognition } from '../hooks/useVoiceRecognition';
 
 export default function SearchBox() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [creators, setCreators] = useState<Creator[]>([]);
-  const [reasoning, setReasoning] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [searchSubmitted, setSearchSubmitted] = useState(false);
-  const [submittedQuery, setSubmittedQuery] = useState('');
-  const [selectedCreators, setSelectedCreators] = useState<string[]>([]);
-  const [isListening, setIsListening] = useState(false);
-  const [countdownActive, setCountdownActive] = useState(false);
-  const [countdownValue, setCountdownValue] = useState(3);
-  const [waitingForSearch, setWaitingForSearch] = useState(false);
-  const [aiThinking, setAiThinking] = useState('');
-  const [showNoResults, setShowNoResults] = useState(false);
   const searchInputRef = useRef<HTMLTextAreaElement>(null);
 
-  const { browserSupportsSpeechRecognition, finalTranscript } = useSpeechRecognition();
+  // Use custom hooks
+  const { isIOSDeviceState, isMobileDeviceState } = useDeviceDetection();
+  const {
+    creators,
+    reasoning,
+    isLoading,
+    searchSubmitted,
+    submittedQuery,
+    selectedCreators,
+    showNoResults,
+    performSearch,
+    toggleCreatorSelection,
+    resetSearch
+  } = useSearch();
+
+  const {
+    countdownActive,
+    countdownValue,
+    waitingForSearch,
+    aiThinking,
+    startCountdown,
+    stopCountdown
+  } = useCountdown();
+
+  // Handle voice transcript
+  const handleVoiceTranscript = useCallback((transcript: string) => {
+    setSearchQuery(transcript);
+    startCountdown();
+    // Track voice search start
+    trackUGCEvents.voiceSearchStart();
+    // Perform search after countdown
+    setTimeout(() => {
+      performSearch(transcript);
+      stopCountdown();
+      // Track voice search completion
+      trackUGCEvents.voiceSearchEnd(true);
+    }, 3000);
+  }, [performSearch, startCountdown, stopCountdown]);
+
+  const {
+    isListening,
+    browserSupportsSpeechRecognition,
+    toggleVoiceInput
+  } = useVoiceRecognition(isIOSDeviceState, isMobileDeviceState, handleVoiceTranscript);
 
   // Effect to adjust textarea height when content changes
   useEffect(() => {
@@ -53,370 +79,38 @@ export default function SearchBox() {
     }
   }, [searchQuery]);
 
-  // Effect to handle speech recognition transcript updates
-  useEffect(() => {
-    // When finalTranscript changes and is not empty, update the search query
-    if (finalTranscript && !isListening) {
-      console.log("Final transcript updated:", finalTranscript);
-
-      // Set the transcript as the search query
-      setSearchQuery(finalTranscript);
-
-      // Also set it as the submitted query to show in chat bubble immediately
-      setSubmittedQuery(finalTranscript);
-      setSearchSubmitted(true);
-
-      // Immediately start the search with the transcript
-      if (finalTranscript.trim() !== '') {
-        console.log("Immediately starting search with transcript:", finalTranscript);
-
-        // Reset any previous search state
-        setCreators([]);
-        setReasoning('');
-        setShowNoResults(false);
-        setWaitingForSearch(false); // Don't show the "KI sucht passende Creator" display
-        setIsLoading(false); // Don't show loading state initially
-
-        // Create a unique request ID for debugging
-        const requestId = Date.now().toString();
-
-        // Show countdown immediately
-        console.log("Starting countdown for visual feedback");
-        setCountdownValue(3);
-        setCountdownActive(true);
-
-        // Start the API call immediately in the background while countdown runs
-        fetch('/api/search', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Request-ID': requestId,
-            'Cache-Control': 'no-cache, no-store'
-          },
-          body: JSON.stringify({
-            query: finalTranscript.trim(),
-            requestId: requestId,
-            timestamp: new Date().toISOString(),
-            isTest: false
-          })
-        })
-        .then(response => {
-          console.log("🔍 Voice Search API Response Status:", response.status);
-          if (response.ok) {
-            return response.json();
-          } else {
-            throw new Error(`API failed with status: ${response.status}`);
-          }
-        })
-        .then(data => {
-          console.log("🔍 Voice Search API Response Data:", data);
-          if (data.success) {
-            const creatorCount = data.creators?.length || 0;
-            console.log(`🔍 Voice search found ${creatorCount} creators`);
-            if (creatorCount > 0) {
-              // Store the results but don't show them until countdown finishes
-              setTimeout(() => {
-                setCreators(data.creators);
-                setIsLoading(false);
-                setWaitingForSearch(false);
-                setCountdownActive(false);
-              }, 3000); // Wait for countdown to finish (3 seconds)
-
-              // Also set reasoning if it's included in the search response
-              if (data.reasoning) {
-                setReasoning(data.reasoning);
-              }
-            } else {
-              console.warn(`🔍 No creators found for query: "${finalTranscript}"`);
-              setTimeout(() => {
-                setShowNoResults(true);
-                setIsLoading(false);
-                setWaitingForSearch(false);
-                setCountdownActive(false);
-              }, 3000);
-            }
-          } else {
-            console.error("🔍 Search failed:", data.error);
-            setTimeout(() => {
-              toast.error(`Suche fehlgeschlagen: ${data.error || 'Unbekannter Fehler'}`);
-              setIsLoading(false);
-              setWaitingForSearch(false);
-              setCountdownActive(false);
-            }, 3000);
-          }
-        })
-        .catch(error => {
-          console.error('🔍 Error during voice search:', error);
-          setTimeout(() => {
-            toast.error(`Fehler bei der Suche: ${error.message || 'Unbekannter Fehler'}`);
-            setIsLoading(false);
-            setWaitingForSearch(false);
-            setCountdownActive(false);
-          }, 3000);
-        });
-
-        // Fetch reasoning separately
-        fetch('/api/reasoning', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Request-ID': requestId,
-            'Cache-Control': 'no-cache, no-store'
-          },
-          body: JSON.stringify({
-            query: finalTranscript.trim(),
-            requestId: requestId,
-            timestamp: new Date().toISOString(),
-            isTest: false
-          })
-        })
-        .then(response => {
-          if (response.ok) {
-            return response.json();
-          }
-          return null;
-        })
-        .then(data => {
-          if (data && data.success) {
-            setReasoning(data.reasoning);
-          }
-        })
-        .catch(error => {
-          console.error('🔍 Error fetching reasoning:', error);
-        });
-      }
-    }
-  }, [finalTranscript, isListening]);
-
-  // This function has been replaced by the startSearch function
-
-  // Effect to handle countdown and visual feedback
-  useEffect(() => {
-    console.log("⏱️ Countdown effect running with:", { countdownActive, countdownValue });
-
-    let countdownTimer: NodeJS.Timeout;
-    let thinkingTimer: NodeJS.Timeout;
-
-    if (countdownActive && countdownValue > 0) {
-      console.log(`⏱️ Countdown active: ${countdownValue} seconds remaining`);
-      countdownTimer = setTimeout(() => {
-        console.log(`⏱️ Decreasing countdown from ${countdownValue} to ${countdownValue - 1}`);
-        setCountdownValue(prev => prev - 1);
-      }, 1000);
-    } else if (countdownActive && countdownValue === 0) {
-      console.log("⏱️ Countdown reached zero! Showing thinking animation...");
-      setCountdownActive(false);
-      setWaitingForSearch(true);
-
-      // Enhanced AI thinking simulation with database processing steps
-      const thinkingPhrases = [
-        "Analysiere Suchanfrage...",
-        "Extrahiere Schlüsselwörter: TikTok, Instagram, Reichweite...",
-        "Verbinde mit Creator-Datenbank...",
-        "Durchsuche 1.253 Creator-Profile...",
-        "Filtere nach Plattform und Zielgruppe...",
-        "Prüfe Verfügbarkeit und Preisrahmen...",
-        "Bewerte Content-Qualität und Engagement...",
-        "Sortiere nach Relevanz...",
-        "Optimiere Ergebnisse für maximale Conversion...",
-        "Bereite Daten für Anzeige vor..."
-      ];
-
-      let phraseIndex = 0;
-      setAiThinking(thinkingPhrases[0]);
-      console.log(`⏱️ Starting thinking animation: "${thinkingPhrases[0]}"`);
-
-      // Use shorter intervals for more dynamic feeling
-      thinkingTimer = setInterval(() => {
-        phraseIndex = (phraseIndex + 1) % thinkingPhrases.length;
-        setAiThinking(thinkingPhrases[phraseIndex]);
-        console.log(`⏱️ Thinking animation: "${thinkingPhrases[phraseIndex]}"`);
-      }, 800);
-
-      // Stop thinking animation after 5 seconds
-      setTimeout(() => {
-        console.log("⏱️ Thinking animation complete");
-        clearInterval(thinkingTimer);
-        setWaitingForSearch(false);
-      }, 5000);
-    }
-
-    return () => {
-      if (countdownTimer) clearTimeout(countdownTimer);
-      if (thinkingTimer) clearInterval(thinkingTimer);
-    };
-  }, [countdownActive, countdownValue]);
-
-  const toggleVoiceInput = () => {
-    if (!browserSupportsSpeechRecognition) {
-      toast.error('Spracherkennung wird von Ihrem Browser nicht unterstützt');
-      return;
-    }
-
-    if (isListening) {
-      // Stop listening - the useEffect will handle the transcript processing
-      SpeechRecognition.stopListening();
-      setIsListening(false);
-      console.log("Voice input stopped, transcript will be processed by useEffect");
-    } else {
-      // Start listening
-      SpeechRecognition.startListening({ language: 'de-DE' });
-      setIsListening(true);
-      // Reset states when starting voice input
-      setCountdownActive(false);
-      setWaitingForSearch(false);
-    }
-  };
-
-  // Handle manual search button click - immediately starts the search and shows UI animation after 1 second
-  const startSearch = () => {
-    console.log("🔍 Start search button clicked");
-
-    // If we have a query, start the search immediately
+  // Handle manual search button click
+  const handleStartSearch = () => {
     if (searchQuery.trim()) {
-      // Store the query for later use
-      const queryToUse = searchQuery.trim();
-      console.log(`🔍 Starting search for: "${queryToUse}"`);
-
-      setSubmittedQuery(queryToUse);
-      setSearchSubmitted(true);
-
-      // Reset any previous search state
-      setCreators([]);
-      setReasoning('');
-      setShowNoResults(false);
-      setWaitingForSearch(false); // Don't show the "KI sucht passende Creator" display
-      setIsLoading(false); // Don't show loading state initially
-
-      // Create a unique request ID for debugging
-      const requestId = Date.now().toString();
-
-      // Start the API request immediately
-      console.log("🔍 Starting API request immediately");
-
-      // Show countdown immediately
-      console.log("🔍 Starting countdown for visual feedback");
-      setCountdownValue(3);
-      setCountdownActive(true);
-
-      // Start the API call immediately in the background while countdown runs
-      fetch('/api/search', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Request-ID': requestId,
-          'Cache-Control': 'no-cache, no-store'
-        },
-        body: JSON.stringify({
-          query: queryToUse,
-          requestId: requestId,
-          timestamp: new Date().toISOString(),
-          isTest: false
-        })
-      })
-      .then(response => {
-        console.log("🔍 API Response Status:", response.status);
-        if (response.ok) {
-          return response.json();
-        } else {
-          throw new Error(`API failed with status: ${response.status}`);
-        }
-      })
-      .then(data => {
-        console.log("🔍 API Response Data:", data);
-        if (data.success) {
-          const creatorCount = data.creators?.length || 0;
-          console.log(`🔍 Search found ${creatorCount} creators`);
-          if (creatorCount > 0) {
-            // Store the results but don't show them until countdown finishes
-            setTimeout(() => {
-              setCreators(data.creators);
-              setIsLoading(false);
-              setWaitingForSearch(false);
-              setCountdownActive(false);
-            }, 3000); // Wait for countdown to finish (3 seconds)
-
-            // Also set reasoning if it's included in the search response
-            if (data.reasoning) {
-              setReasoning(data.reasoning);
-            }
-          } else {
-            console.warn(`🔍 No creators found for query: "${queryToUse}"`);
-            setTimeout(() => {
-              setShowNoResults(true);
-              setIsLoading(false);
-              setWaitingForSearch(false);
-              setCountdownActive(false);
-            }, 3000);
-          }
-        } else {
-          console.error("🔍 Search failed:", data.error);
-          setTimeout(() => {
-            toast.error(`Suche fehlgeschlagen: ${data.error || 'Unbekannter Fehler'}`);
-            setIsLoading(false);
-            setWaitingForSearch(false);
-            setCountdownActive(false);
-          }, 3000);
-        }
-      })
-      .catch(error => {
-        console.error('🔍 Error during search:', error);
-        setTimeout(() => {
-          toast.error(`Fehler bei der Suche: ${error.message || 'Unbekannter Fehler'}`);
-          setIsLoading(false);
-          setWaitingForSearch(false);
-          setCountdownActive(false);
-        }, 3000);
-      });
-
-      // Fetch reasoning separately
-      fetch('/api/reasoning', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Request-ID': requestId,
-          'Cache-Control': 'no-cache, no-store'
-        },
-        body: JSON.stringify({
-          query: queryToUse,
-          requestId: requestId,
-          timestamp: new Date().toISOString(),
-          isTest: false
-        })
-      })
-      .then(response => {
-        if (response.ok) {
-          return response.json();
-        }
-        return null;
-      })
-      .then(data => {
-        if (data && data.success) {
-          setReasoning(data.reasoning);
-        }
-      })
-      .catch(error => {
-        console.error('🔍 Error fetching reasoning:', error);
-      });
-
+      startCountdown();
+      // Perform search after countdown
+      setTimeout(() => {
+        performSearch(searchQuery.trim());
+        stopCountdown();
+        // Track search event
+        trackUGCEvents.search(searchQuery.trim(), creators.length);
+      }, 3000);
     } else {
-      console.warn("⚠️ No search query provided");
       toast.warning("Bitte geben Sie einen Suchbegriff ein");
     }
   };
 
-  // Test function removed - no longer needed
-
-
-  // This function has been replaced by the startSearch function
-
-  // Function to handle creator selection
+  // Function to handle creator selection - use the hook function
   const handleSelectCreator = (creatorId: string) => {
-    setSelectedCreators(prevSelected =>
-      prevSelected.includes(creatorId)
-        ? prevSelected.filter(id => id !== creatorId)
-        : [...prevSelected, creatorId]
-    );
+    toggleCreatorSelection(creatorId);
+    // Track creator selection
+    const creator = creators.find(c => c.id === creatorId);
+    if (creator) {
+      // Extract platform from reach text
+      const reachText = creator.reach.toLowerCase();
+      let platform = 'unknown';
+      if (reachText.includes('instagram')) platform = 'instagram';
+      else if (reachText.includes('tiktok')) platform = 'tiktok';
+      else if (reachText.includes('youtube')) platform = 'youtube';
+      else if (reachText.includes('facebook')) platform = 'facebook';
+
+      trackUGCEvents.creatorView(creatorId, platform);
+    }
   };
 
   // State for contact form
@@ -454,8 +148,25 @@ export default function SearchBox() {
 
       toast.success('Ihre Anfrage wurde erfolgreich gesendet!');
       setShowContactForm(false);
-      setSelectedCreators([]);
+      resetSearch(); // Use the hook function to reset
       setSubmitLoading(false);
+
+      // Track successful contact form submission
+      trackUGCEvents.contactForm('creator_selection');
+      // Track individual creator contacts
+      selectedCreators.forEach(creatorId => {
+        const creator = creators.find(c => c.id === creatorId);
+        if (creator) {
+          const reachText = creator.reach.toLowerCase();
+          let platform = 'unknown';
+          if (reachText.includes('instagram')) platform = 'instagram';
+          else if (reachText.includes('tiktok')) platform = 'tiktok';
+          else if (reachText.includes('youtube')) platform = 'youtube';
+          else if (reachText.includes('facebook')) platform = 'facebook';
+
+          trackUGCEvents.creatorContact(creatorId, platform);
+        }
+      });
     } catch (error) {
       console.error('Submit error:', error);
       toast.error('Fehler beim Senden der Anfrage. Bitte versuchen Sie es später erneut.');
@@ -479,7 +190,7 @@ export default function SearchBox() {
           onKeyDown={(e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
               e.preventDefault();
-              startSearch();
+              handleStartSearch();
             }
           }}
           placeholder="z.B. Kosmetik, unter 35 Jahre, TikTok..."
@@ -489,7 +200,7 @@ export default function SearchBox() {
         />
 
         <button
-          onClick={startSearch}
+          onClick={handleStartSearch}
           disabled={countdownActive || waitingForSearch || isLoading}
           aria-label="Search"
           className="search-button-gradient p-4 rounded-lg flex items-center justify-center focus:outline-none hover:opacity-90 transition-opacity"
@@ -506,32 +217,56 @@ export default function SearchBox() {
         <div className="relative group">
           <button
             onClick={toggleVoiceInput}
-            disabled={isLoading}
+            disabled={isLoading || isIOSDeviceState || !browserSupportsSpeechRecognition}
             aria-label="Toggle Voice Input"
-            className="mic-button-gradient p-4 rounded-lg flex items-center justify-center focus:outline-none hover:opacity-90 transition-opacity"
+            className={`p-4 rounded-lg flex items-center justify-center focus:outline-none transition-opacity ${
+              isIOSDeviceState || !browserSupportsSpeechRecognition
+                ? 'bg-gray-500 cursor-not-allowed opacity-50'
+                : 'mic-button-gradient hover:opacity-90'
+            }`}
             style={{
               minWidth: '60px',
               height: '60px'
             }}
-            title={isListening ? 'Sprachaufnahme beenden' : 'Sprachsuche starten'}
-          >
-            {isListening ?
-              <span className="material-icons text-white text-2xl">mic_off</span> :
-              <span className="material-icons text-white text-2xl">mic</span>
+            title={
+              isIOSDeviceState
+                ? 'Spracherkennung ist auf iOS-Geräten nicht verfügbar'
+                : !browserSupportsSpeechRecognition
+                  ? 'Spracherkennung wird von Ihrem Browser nicht unterstützt'
+                  : isListening
+                    ? 'Sprachaufnahme beenden'
+                    : 'Sprachsuche starten'
             }
+          >
+            {/* CRITICAL: Show mic_off for iOS devices OR unsupported browsers */}
+            {isIOSDeviceState || !browserSupportsSpeechRecognition ? (
+              <span className="material-icons text-white text-2xl">mic_off</span>
+            ) : isListening ? (
+              <span className="material-icons text-white text-2xl">mic_off</span>
+            ) : (
+              <span className="material-icons text-white text-2xl">mic</span>
+            )}
           </button>
 
-          {isListening && <span className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 rounded-full animate-pulse"></span>}
+          {/* CRITICAL: Only show listening indicator if NOT on iOS */}
+          {isListening && !isIOSDeviceState && <span className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 rounded-full animate-pulse"></span>}
           <span className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs rounded py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none">
-            {isListening ? 'Sprachaufnahme beenden' : 'Sprachsuche starten'}
+            {isIOSDeviceState
+              ? 'Spracherkennung ist auf iOS-Geräten nicht verfügbar'
+              : !browserSupportsSpeechRecognition
+                ? 'Spracherkennung wird von Ihrem Browser nicht unterstützt'
+                : isListening
+                  ? 'Sprachaufnahme beenden'
+                  : 'Sprachsuche starten'
+            }
           </span>
         </div>
       </div>
 
       {/* We don't need to display the transcript separately anymore since it's shown in the chat bubble */}
 
-      {/* Visual indicator when listening */}
-      {isListening && (
+      {/* Visual indicator when listening - CRITICAL: Only show if NOT on iOS */}
+      {isListening && !isIOSDeviceState && (
         <div className="text-white text-center mt-2 bg-red-900/30 p-2 rounded-lg border border-red-500/50 animate-pulse">
           <span className="font-medium text-red-400">Spracherkennung aktiv</span> - Sprechen Sie jetzt...
         </div>
@@ -598,7 +333,7 @@ export default function SearchBox() {
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-emerald-400 mr-2" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                 </svg>
-                <p className="text-gray-300 text-sm">Kunde will: <span className="text-emerald-300 font-medium">"{finalTranscript || searchQuery}"</span></p>
+                <p className="text-gray-300 text-sm">Kunde will: <span className="text-emerald-300 font-medium">"{searchQuery}"</span></p>
               </div>
               <div className="flex items-center">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-emerald-400 mr-2" viewBox="0 0 20 20" fill="currentColor">
@@ -723,7 +458,7 @@ export default function SearchBox() {
               </div>
               <div className={styles.selectedCreatorsActions}>
                 <button
-                  onClick={() => setSelectedCreators([])}
+                  onClick={resetSearch}
                   className={styles.cancelButton}
                 >
                   Abbrechen

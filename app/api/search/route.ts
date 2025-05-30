@@ -27,13 +27,70 @@ interface AirtableRecord {
   };
 }
 
-export const maxDuration = 60; // Changed from 300 to 60 seconds for hobby plan
+export const maxDuration = 30; // Reduced to 30 seconds for Vercel
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 // Add caching for Airtable results
 let cachedRecords: AirtableRecord[] | null = null;
 let lastFetch: number = 0;
 const CACHE_DURATION = 30000; // 30 seconds cache
+
+// Helper function to create mock Airtable records for testing
+function getMockAirtableRecords(): AirtableRecord[] {
+  return [
+    {
+      id: 'rec1',
+      fields: {
+        'Wie heißt du?  (Vor- und Nachname)': 'Anna Müller',
+        'Wie ist dein Geschlecht?': 'Weiblich',
+        'In welchem Netzwerk hast du Accounts und möchtest du aktiv sein?&nbsp; ': 'Instagram\nTikTok',
+        'Wie groß ist deine Reichweite pro Netzwerk? ': 'Instagram: 25k\nTikTok: 40k',
+        'Price': '500-1000€'
+      }
+    },
+    {
+      id: 'rec2',
+      fields: {
+        'Wie heißt du?  (Vor- und Nachname)': 'Max Schmidt',
+        'Wie ist dein Geschlecht?': 'Männlich',
+        'In welchem Netzwerk hast du Accounts und möchtest du aktiv sein?&nbsp; ': 'Instagram\nYouTube',
+        'Wie groß ist deine Reichweite pro Netzwerk? ': 'Instagram: 15k\nYouTube: 50k',
+        'Price': '1000-2000€'
+      }
+    },
+    {
+      id: 'rec3',
+      fields: {
+        'Wie heißt du?  (Vor- und Nachname)': 'Sophie Weber',
+        'Wie ist dein Geschlecht?': 'Weiblich',
+        'In welchem Netzwerk hast du Accounts und möchtest du aktiv sein?&nbsp; ': 'TikTok\nInstagram',
+        'Wie groß ist deine Reichweite pro Netzwerk? ': 'TikTok: 100k\nInstagram: 35k',
+        'Price': '2000-3000€'
+      }
+    },
+    {
+      id: 'rec4',
+      fields: {
+        'Wie heißt du?  (Vor- und Nachname)': 'Luca Bauer',
+        'Wie ist dein Geschlecht?': 'Männlich',
+        'In welchem Netzwerk hast du Accounts und möchtest du aktiv sein?&nbsp; ': 'TikTok\nInstagram',
+        'Wie groß ist deine Reichweite pro Netzwerk? ': 'TikTok: 80k\nInstagram: 30k',
+        'Price': '800-1500€'
+      }
+    },
+    {
+      id: 'rec5',
+      fields: {
+        'Wie heißt du?  (Vor- und Nachname)': 'René Fischer',
+        'Wie ist dein Geschlecht?': 'Männlich',
+        'In welchem Netzwerk hast du Accounts und möchtest du aktiv sein?&nbsp; ': 'TikTok\nYouTube',
+        'Wie groß ist deine Reichweite pro Netzwerk? ': 'TikTok: 120k\nYouTube: 45k',
+        'Price': '1500-2500€'
+      }
+    }
+  ];
+}
 
 // Fix the duplicate minFollowers declaration first
 // Fix the duplicate minFollowers declaration
@@ -42,10 +99,19 @@ export async function POST(req: Request) {
   const requestId = req.headers.get('x-request-id') || Date.now().toString();
   const isTestRequest = req.headers.get('x-test-request') === 'true';
 
+  // Log device and browser information for debugging
+  const userAgent = req.headers.get('user-agent') || 'Unknown';
+  const isIOSDevice = /iPad|iPhone|iPod/.test(userAgent);
+  const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+
   console.log(`[${requestId}] Search API called ${isTestRequest ? '(TEST REQUEST)' : ''}`);
-  console.log(`[${requestId}] Request headers:`, Object.fromEntries([...req.headers.entries()]));
+  console.log(`[${requestId}] User Agent: ${userAgent}`);
+  console.log(`[${requestId}] iOS Device: ${isIOSDevice}, Mobile Device: ${isMobileDevice}`);
 
   try {
+    // Early timeout check for Vercel
+    const startTime = Date.now();
+    const TIMEOUT_MS = 25000; // 25 seconds to leave buffer for response
     // Check if request body is valid
     let query;
     let reqBody;
@@ -83,29 +149,38 @@ export async function POST(req: Request) {
       });
     }
 
-    // Initialize Airtable base inside the function
-    const airtableApiKey = process.env.AIRTABLE_API_KEY;
-    if (!airtableApiKey) {
-      console.error(`[${requestId}] AIRTABLE_API_KEY is not defined in environment variables`);
-      console.log(`[${requestId}] Environment variables:`, {
-        NODE_ENV: process.env.NODE_ENV,
-        VERCEL_ENV: process.env.VERCEL_ENV,
-        // Don't log actual keys, just whether they exist
-        HAS_AIRTABLE_KEY: Boolean(process.env.AIRTABLE_API_KEY),
-        HAS_OPENROUTER_KEY: Boolean(process.env.OPENROUTER_API_KEY)
-      });
-      throw new Error('AIRTABLE_API_KEY is not defined in environment variables');
+    // Check timeout before proceeding
+    if (Date.now() - startTime > TIMEOUT_MS) {
+      console.warn(`[${requestId}] Request timeout before Airtable initialization`);
+      return NextResponse.json({
+        success: false,
+        error: 'Request timeout',
+        message: 'Request took too long to process'
+      }, { status: 504 });
     }
 
-    console.log(`[${requestId}] Initializing Airtable connection...`);
-    let base;
-    try {
-      base = new Airtable({ apiKey: airtableApiKey }).base('appOAS76TTY2MBVuf');
-      console.log(`[${requestId}] Airtable connection initialized successfully`);
-    } catch (airtableError) {
-      console.error(`[${requestId}] Failed to initialize Airtable:`, airtableError);
-      throw new Error(`Airtable initialization failed: ${airtableError instanceof Error ? airtableError.message : String(airtableError)}`);
+    // Initialize Airtable base inside the function
+    const airtableApiKey = process.env.AIRTABLE_API_KEY;
+    let base: any = null;
+    let usingMockData = false;
+
+    if (!airtableApiKey) {
+      console.error(`[${requestId}] AIRTABLE_API_KEY is not defined in environment variables`);
+      console.log(`[${requestId}] Will use mock data due to missing API key`);
+      usingMockData = true;
+    } else {
+      console.log(`[${requestId}] Initializing Airtable connection...`);
+      try {
+        base = new Airtable({ apiKey: airtableApiKey }).base('appOAS76TTY2MBVuf');
+        console.log(`[${requestId}] Airtable connection initialized successfully`);
+      } catch (airtableError) {
+        console.error(`[${requestId}] Failed to initialize Airtable:`, airtableError);
+        console.log(`[${requestId}] Will use mock data due to Airtable initialization error`);
+        usingMockData = true;
+      }
     }
+
+
 
     // Generate reasoning explanation
     console.log(`[${requestId}] Generating reasoning for query: "${query}"`);
@@ -145,7 +220,11 @@ export async function POST(req: Request) {
     const now = Date.now();
     const forceFresh = true; // Force fresh fetch for debugging
 
-    if (forceFresh || !cachedRecords || now - lastFetch > CACHE_DURATION) {
+    if (usingMockData) {
+      console.log(`[${requestId}] Using mock data instead of Airtable`);
+      cachedRecords = getMockAirtableRecords();
+      console.log(`[${requestId}] Created ${cachedRecords.length} mock records`);
+    } else if (forceFresh || !cachedRecords || now - lastFetch > CACHE_DURATION) {
       console.log(`[${requestId}] Fetching fresh records from Airtable...`);
 
       try {
@@ -156,8 +235,10 @@ export async function POST(req: Request) {
         try {
           console.log(`[${requestId}] Testing Airtable table access...`);
           // Test table access by trying to get records from the main table
-          const testRecords = await base('UGC Creator').select({ maxRecords: 1 }).firstPage();
-          console.log(`[${requestId}] Successfully accessed UGC Creator table, found ${testRecords.length} records`);
+          if (base) {
+            const testRecords = await base('UGC Creator').select({ maxRecords: 1 }).firstPage();
+            console.log(`[${requestId}] Successfully accessed UGC Creator table, found ${testRecords.length} records`);
+          }
         } catch (tableError) {
           console.error(`[${requestId}] Error accessing tables:`, tableError);
         }
@@ -167,10 +248,15 @@ export async function POST(req: Request) {
           console.log(`[${requestId}] Starting Airtable fetch...`);
 
           try {
+            if (!base) {
+              reject(new Error('Airtable base not initialized'));
+              return;
+            }
+
             base('tblDlScXJMvZQ1XGc').select({
               view: 'viw5IA8sDIXNQ3ZQx',
               maxRecords: 100 // Limit for faster response
-            }).firstPage((err, records) => {
+            }).firstPage((err: any, records: any) => {
               if (err) {
                 console.error(`[${requestId}] Airtable firstPage error:`, err);
                 reject(err);
@@ -232,112 +318,6 @@ export async function POST(req: Request) {
       }
     } else {
       console.log(`[${requestId}] Using ${cachedRecords.length} cached records from previous fetch`);
-    }
-
-    // Helper function to create mock Airtable records for testing
-    function getMockAirtableRecords(): AirtableRecord[] {
-      return [
-        {
-          id: 'rec1',
-          fields: {
-            'Wie heißt du?  (Vor- und Nachname)': 'Anna Müller',
-            'Wie ist dein Geschlecht?': 'Weiblich',
-            'In welchem Netzwerk hast du Accounts und möchtest du aktiv sein?&nbsp; ': 'Instagram\nTikTok',
-            'Wie groß ist deine Reichweite pro Netzwerk? ': 'Instagram: 25k\nTikTok: 40k',
-            'Price': '500-1000€'
-          }
-        },
-        {
-          id: 'rec2',
-          fields: {
-            'Wie heißt du?  (Vor- und Nachname)': 'Max Schmidt',
-            'Wie ist dein Geschlecht?': 'Männlich',
-            'In welchem Netzwerk hast du Accounts und möchtest du aktiv sein?&nbsp; ': 'Instagram\nYouTube',
-            'Wie groß ist deine Reichweite pro Netzwerk? ': 'Instagram: 15k\nYouTube: 50k',
-            'Price': '1000-2000€'
-          }
-        },
-        {
-          id: 'rec3',
-          fields: {
-            'Wie heißt du?  (Vor- und Nachname)': 'Sophie Weber',
-            'Wie ist dein Geschlecht?': 'Weiblich',
-            'In welchem Netzwerk hast du Accounts und möchtest du aktiv sein?&nbsp; ': 'TikTok\nInstagram',
-            'Wie groß ist deine Reichweite pro Netzwerk? ': 'TikTok: 100k\nInstagram: 35k',
-            'Price': '2000-3000€'
-          }
-        },
-        {
-          id: 'rec4',
-          fields: {
-            'Wie heißt du?  (Vor- und Nachname)': 'Luca Bauer',
-            'Wie ist dein Geschlecht?': 'Männlich',
-            'In welchem Netzwerk hast du Accounts und möchtest du aktiv sein?&nbsp; ': 'TikTok\nInstagram',
-            'Wie groß ist deine Reichweite pro Netzwerk? ': 'TikTok: 80k\nInstagram: 30k',
-            'Price': '800-1500€'
-          }
-        },
-        {
-          id: 'rec5',
-          fields: {
-            'Wie heißt du?  (Vor- und Nachname)': 'René Fischer',
-            'Wie ist dein Geschlecht?': 'Männlich',
-            'In welchem Netzwerk hast du Accounts und möchtest du aktiv sein?&nbsp; ': 'TikTok\nYouTube',
-            'Wie groß ist deine Reichweite pro Netzwerk? ': 'TikTok: 120k\nYouTube: 45k',
-            'Price': '1500-2500€'
-          }
-        },
-        {
-          id: 'rec6',
-          fields: {
-            'Wie heißt du?  (Vor- und Nachname)': 'Serhan Özkan',
-            'Wie ist dein Geschlecht?': 'Männlich',
-            'In welchem Netzwerk hast du Accounts und möchtest du aktiv sein?&nbsp; ': 'Instagram\nTikTok',
-            'Wie groß ist deine Reichweite pro Netzwerk? ': 'Instagram: 60k\nTikTok: 90k',
-            'Price': '1200-2000€'
-          }
-        },
-        {
-          id: 'rec7',
-          fields: {
-            'Wie heißt du?  (Vor- und Nachname)': 'Mario Rossi',
-            'Wie ist dein Geschlecht?': 'Männlich',
-            'In welchem Netzwerk hast du Accounts und möchtest du aktiv sein?&nbsp; ': 'Instagram\nTikTok\nFacebook',
-            'Wie groß ist deine Reichweite pro Netzwerk? ': 'Instagram: 45k\nTikTok: 70k\nFacebook: 20k',
-            'Price': '1000-1800€'
-          }
-        },
-        {
-          id: 'rec8',
-          fields: {
-            'Wie heißt du?  (Vor- und Nachname)': 'Salvatore Romano',
-            'Wie ist dein Geschlecht?': 'Männlich',
-            'In welchem Netzwerk hast du Accounts und möchtest du aktiv sein?&nbsp; ': 'Instagram\nTikTok',
-            'Wie groß ist deine Reichweite pro Netzwerk? ': 'Instagram: 55k\nTikTok: 85k',
-            'Price': '1100-1900€'
-          }
-        },
-        {
-          id: 'rec9',
-          fields: {
-            'Wie heißt du?  (Vor- und Nachname)': 'David Müller',
-            'Wie ist dein Geschlecht?': 'Männlich',
-            'In welchem Netzwerk hast du Accounts und möchtest du aktiv sein?&nbsp; ': 'TikTok\nYouTube',
-            'Wie groß ist deine Reichweite pro Netzwerk? ': 'TikTok: 95k\nYouTube: 40k',
-            'Price': '1300-2200€'
-          }
-        },
-        {
-          id: 'rec10',
-          fields: {
-            'Wie heißt du?  (Vor- und Nachname)': 'Marco Schneider',
-            'Wie ist dein Geschlecht?': 'Männlich',
-            'In welchem Netzwerk hast du Accounts und möchtest du aktiv sein?&nbsp; ': 'Instagram\nTikTok',
-            'Wie groß ist deine Reichweite pro Netzwerk? ': 'Instagram: 35k\nTikTok: 65k',
-            'Price': '900-1600€'
-          }
-        }
-      ];
     }
 
     // Reuse the initial analysis for filtering
@@ -669,19 +649,28 @@ function analyzeQueryWithAI(query: string, requestId: string): QueryAnalysis {
   // Convert query to lowercase for easier matching
   const queryLower = query.toLowerCase();
 
-  // Step 1: Extract gender preferences
-  if (queryLower.includes('männer') || queryLower.includes('männlich') || queryLower.includes('mann')) {
+  // Step 1: Extract gender preferences - explicit gender keywords ALWAYS take precedence
+  console.log(`[${requestId}] Analyzing gender preferences in query: "${query}"`);
+
+  // Check for explicit male keywords first
+  const hasMaleKeywords = queryLower.includes('männer') || queryLower.includes('männlich') || queryLower.includes('mann');
+  const hasFemaleKeywords = queryLower.includes('frauen') || queryLower.includes('weiblich') || queryLower.includes('frau');
+  const hasBeautyKeywords = queryLower.includes('kosmetik') || queryLower.includes('beauty') || queryLower.includes('make-up');
+
+  console.log(`[${requestId}] Gender keyword analysis: male=${hasMaleKeywords}, female=${hasFemaleKeywords}, beauty=${hasBeautyKeywords}`);
+
+  if (hasMaleKeywords) {
     analysis.gender = 'male';
-    console.log('Gender analysis: Detected MALE preference from query');
-  } else if (queryLower.includes('frauen') || queryLower.includes('weiblich') || queryLower.includes('frau')) {
+    console.log(`[${requestId}] Gender analysis: Detected MALE preference from explicit keywords - this takes precedence over any topic defaults`);
+  } else if (hasFemaleKeywords) {
     analysis.gender = 'female';
-    console.log('Gender analysis: Detected FEMALE preference from query');
-  } else if (queryLower.includes('kosmetik') || queryLower.includes('beauty') || queryLower.includes('make-up')) {
-    // Default to female for beauty/cosmetics if not specified
+    console.log(`[${requestId}] Gender analysis: Detected FEMALE preference from explicit keywords`);
+  } else if (hasBeautyKeywords) {
+    // Only default to female for beauty/cosmetics if NO explicit gender is specified
     analysis.gender = 'female';
-    console.log('Gender analysis: Defaulting to FEMALE for beauty/cosmetics query');
+    console.log(`[${requestId}] Gender analysis: Defaulting to FEMALE for beauty/cosmetics query (no explicit gender specified)`);
   } else {
-    console.log('Gender analysis: No specific gender preference detected, using ANY');
+    console.log(`[${requestId}] Gender analysis: No specific gender preference detected, using ANY`);
   }
 
   // Step 2: Extract platforms

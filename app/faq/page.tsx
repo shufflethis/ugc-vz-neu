@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import ContactButton from '../components/ContactButton';
+import ResponsiveCTAButton from '@/src/components/ResponsiveCTAButton';
 
 interface FAQItem {
   question: string;
@@ -140,14 +142,7 @@ export default function FAQPage() {
             </span>
           </Link>
 
-          <Link
-            href="https://tally.so/r/w25dBp"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="bg-gradient-to-r from-teal-400 to-blue-500 hover:from-teal-500 hover:to-blue-600 text-white font-semibold py-2 px-4 rounded-md text-sm whitespace-nowrap"
-          >
-            Ich bin UGC Creator und will mitmachen
-          </Link>
+          <ResponsiveCTAButton />
         </div>
       </header>
 
@@ -224,15 +219,15 @@ export default function FAQPage() {
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link
-                  href="mailto:hi@ugc-vz.de?subject=Frage zu UGC-VZ"
-                  className="bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-500 hover:to-blue-500 text-white font-semibold py-3 px-8 rounded-lg transition-all transform hover:scale-105 inline-flex items-center justify-center"
+                <ContactButton
+                  title="Kontakt aufnehmen"
+                  subtitle="Haben Sie eine Frage zu UGC-VZ? Schreiben Sie uns!"
                 >
                   <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                   </svg>
-                  E-Mail senden
-                </Link>
+                  Kontakt aufnehmen
+                </ContactButton>
                 <Link
                   href="/"
                   className="border-2 border-emerald-500 text-emerald-400 hover:bg-emerald-500 hover:text-white font-semibold py-3 px-8 rounded-lg transition-all transform hover:scale-105 inline-flex items-center justify-center"

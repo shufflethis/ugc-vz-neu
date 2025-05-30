@@ -1,5 +1,6 @@
-import Image from 'next/image';
 import Link from 'next/link';
+import ResponsiveCTAButton from '@/src/components/ResponsiveCTAButton';
+import LogoImage from '../components/LogoImage';
 
 export default function AboutPage() {
   return (
@@ -8,9 +9,7 @@ export default function AboutPage() {
       <header className="py-6 px-4 sm:px-8 md:px-16 lg:px-24">
         <div className="container mx-auto flex justify-between items-center">
           <Link href="/" className="flex items-center">
-            <Image
-              src="/ugc-vz-logo.webp"
-              alt="UGC VZ"
+            <LogoImage
               width={32}
               height={32}
               className="mr-2"
@@ -21,14 +20,7 @@ export default function AboutPage() {
             </span>
           </Link>
 
-          <Link
-            href="https://tally.so/r/w25dBp"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="bg-gradient-to-r from-teal-400 to-blue-500 hover:from-teal-500 hover:to-blue-600 text-white font-semibold py-2 px-4 rounded-md text-sm whitespace-nowrap"
-          >
-            Ich bin UGC Creator und will mitmachen
-          </Link>
+          <ResponsiveCTAButton />
         </div>
       </header>
 
