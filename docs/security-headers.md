@@ -45,6 +45,13 @@ object-src 'none';
 
 **Zweck:** Verhindert Clickjacking-Angriffe durch Verbot des Einbettens in Frames.
 
+**Abdeckung:**
+- ✅ Alle HTML-Seiten (via Middleware)
+- ✅ Alle API-Routen (via next.config.js)
+- ✅ Statische Assets (_next/static/*)
+- ✅ Favicon und Root-Assets
+- ✅ CSS, JS, Image und Font Assets
+
 **Alternative:** `frame-ancestors 'none'` in CSP (moderne Browser)
 
 ### 3. X-Content-Type-Options ✅
