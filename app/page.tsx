@@ -5,6 +5,7 @@ import './styles/search.css';
 import SearchBox from './components/SearchBox';
 import ResponsiveCTAButton from '@/src/components/ResponsiveCTAButton';
 import LogoImage from './components/LogoImage';
+import TrustElements from './components/TrustElements';
 
 export default function Home() {
   return (
@@ -39,6 +40,9 @@ export default function Home() {
           <SearchBox />
         </div>
       </main>
+
+      {/* Trust Elements Section */}
+      <TrustElements />
     </div>
   );
 }
