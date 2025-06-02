@@ -22,7 +22,7 @@ async function fetchWordPressPosts(): Promise<BlogPost[]> {
   try {
     // Verwende WordPress REST API mit ACF-Feldern für bessere Datenqualität
     // Sortiere nach Datum absteigend, um neueste Artikel zuerst zu bekommen
-    const response = await fetch('http://wp.ugc-vz.de/wp-json/wp/v2/posts?per_page=50&_embed&acf_format=standard&orderby=date&order=desc', {
+    const response = await fetch('https://wp.ugc-vz.de/wp-json/wp/v2/posts?per_page=50&_embed&acf_format=standard&orderby=date&order=desc', {
       headers: {
         'User-Agent': 'UGC-VZ Blog Sync/1.0'
       }
@@ -116,7 +116,7 @@ async function fetchWordPressPosts(): Promise<BlogPost[]> {
 
       // Konvertiere relative URLs zu absoluten URLs
       if (featuredImage && !featuredImage.startsWith('http') && !featuredImage.startsWith('/placeholder')) {
-        featuredImage = `http://wp.ugc-vz.de${featuredImage}`;
+        featuredImage = `https://wp.ugc-vz.de${featuredImage}`;
       }
 
       // Datum extrahieren und formatieren
@@ -175,13 +175,19 @@ export async function GET(request: NextRequest) {
                       lastSyncTime <= lastFetch;
 
     if (cacheValid) {
-      return NextResponse.json({
+      const response = NextResponse.json({
         success: true,
         posts: blogCache,
         cached: true,
         lastFetch: new Date(lastFetch).toISOString(),
         lastSync: lastSyncTime > 0 ? new Date(lastSyncTime).toISOString() : null
       });
+
+      // Sicherheits-Header setzen
+      response.headers.set('X-Content-Type-Options', 'nosniff');
+      response.headers.set('Cache-Control', 'public, max-age=120, stale-while-revalidate=60');
+
+      return response;
     }
 
     // Neue Daten laden
@@ -192,7 +198,7 @@ export async function GET(request: NextRequest) {
       lastFetch = now;
     }
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       posts: posts.length > 0 ? posts : blogCache,
       cached: false,
@@ -200,9 +206,15 @@ export async function GET(request: NextRequest) {
       lastSync: lastSyncTime > 0 ? new Date(lastSyncTime).toISOString() : null,
       totalPosts: posts.length
     });
+
+    // Sicherheits-Header setzen
+    response.headers.set('X-Content-Type-Options', 'nosniff');
+    response.headers.set('Cache-Control', 'public, max-age=120, stale-while-revalidate=60');
+
+    return response;
   } catch (error) {
     console.error('Blog API error:', error);
-    return NextResponse.json(
+    const errorResponse = NextResponse.json(
       {
         success: false,
         error: 'Failed to fetch blog posts',
@@ -210,5 +222,10 @@ export async function GET(request: NextRequest) {
       },
       { status: 500 }
     );
+
+    // Sicherheits-Header auch für Fehler-Responses
+    errorResponse.headers.set('X-Content-Type-Options', 'nosniff');
+
+    return errorResponse;
   }
 }

@@ -116,7 +116,7 @@ function cleanContent(html: string): string {
     $content('a').each((_, link) => {
       const $link = $content(link);
       const href = $link.attr('href');
-      if (href && href.startsWith('http://wp.ugc-vz.de/')) {
+      if (href && (href.startsWith('http://wp.ugc-vz.de/') || href.startsWith('https://wp.ugc-vz.de/'))) {
         // Konvertiere zu relativen Links
         const slug = href.split('/').filter(Boolean).pop();
         $link.attr('href', `/wissen/${slug}`);
@@ -167,7 +167,7 @@ async function fetchSinglePost(slug: string): Promise<BlogPost | null> {
     }
 
     // Verwende WordPress REST API mit ACF-Feldern für bessere Datenqualität
-    const response = await fetch(`http://wp.ugc-vz.de/wp-json/wp/v2/posts?slug=${slug}&_embed&acf_format=standard`, {
+    const response = await fetch(`https://wp.ugc-vz.de/wp-json/wp/v2/posts?slug=${slug}&_embed&acf_format=standard`, {
       headers: {
         'User-Agent': 'UGC-VZ Blog Sync/1.0'
       }
@@ -275,7 +275,7 @@ async function fetchSinglePost(slug: string): Promise<BlogPost | null> {
         // Konvertiere relative URLs zu absoluten URLs
         const src = $img.attr('src');
         if (src && !src.startsWith('http') && !src.startsWith('/placeholder')) {
-          $img.attr('src', `http://wp.ugc-vz.de${src}`);
+          $img.attr('src', `https://wp.ugc-vz.de${src}`);
         }
       });
 

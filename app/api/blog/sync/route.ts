@@ -13,11 +13,21 @@ export async function POST(request: NextRequest) {
   try {
     console.log('Blog sync webhook triggered');
 
-    // Einfache Authentifizierung über Header oder Query Parameter
+    // Starke Authentifizierung - erfordert BLOG_SYNC_SECRET
     const authHeader = request.headers.get('authorization');
     const authQuery = request.nextUrl.searchParams.get('auth');
-    const expectedAuth = process.env.BLOG_SYNC_SECRET || 'ugc-vz-sync-2025';
+    const expectedAuth = process.env.BLOG_SYNC_SECRET;
 
+    // Fehler wenn kein Secret konfiguriert ist
+    if (!expectedAuth) {
+      console.error('BLOG_SYNC_SECRET not configured');
+      return NextResponse.json(
+        { success: false, error: 'Server configuration error' },
+        { status: 500 }
+      );
+    }
+
+    // Authentifizierung prüfen
     if (authHeader !== `Bearer ${expectedAuth}` && authQuery !== expectedAuth) {
       console.log('Unauthorized blog sync attempt');
       return NextResponse.json(
@@ -68,7 +78,16 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     const authQuery = request.nextUrl.searchParams.get('auth');
-    const expectedAuth = process.env.BLOG_SYNC_SECRET || 'ugc-vz-sync-2025';
+    const expectedAuth = process.env.BLOG_SYNC_SECRET;
+
+    // Fehler wenn kein Secret konfiguriert ist
+    if (!expectedAuth) {
+      console.error('BLOG_SYNC_SECRET not configured');
+      return NextResponse.json(
+        { success: false, error: 'Server configuration error' },
+        { status: 500 }
+      );
+    }
 
     if (authQuery !== expectedAuth) {
       return NextResponse.json(

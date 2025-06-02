@@ -8,7 +8,9 @@ Um sicherzustellen, dass neue Blog-Artikel sofort auf der UGC-VZ Website angezei
 
 **URL:** `https://ugc-vz.de/api/blog/sync`
 **Methode:** POST
-**Authentifizierung:** Bearer Token oder Query Parameter
+**Authentifizierung:** Bearer Token oder Query Parameter (ERFORDERLICH)
+
+⚠️ **Sicherheitshinweis:** Die Authentifizierung ist zwingend erforderlich. Der Endpunkt funktioniert nicht ohne gültiges `BLOG_SYNC_SECRET`.
 
 ### Authentifizierung
 
