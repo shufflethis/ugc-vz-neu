@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 
 export async function GET() {
   const baseUrl = 'https://ugc-vz.de';
-  
+
   const robotsTxt = `User-agent: *
 Allow: /
 
@@ -10,9 +10,13 @@ Allow: /
 Sitemap: ${baseUrl}/sitemap_index.xml
 Sitemap: ${baseUrl}/sitemap.xml
 
-# Disallow admin areas
+# Allow static assets (CSS, JS, images)
+Allow: /_next/static/
+Allow: /_next/image
+
+# Disallow admin areas and sensitive paths
 Disallow: /api/
-Disallow: /_next/
+Disallow: /_next/webpack-hmr
 Disallow: /admin/
 
 # Allow important pages

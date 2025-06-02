@@ -166,8 +166,8 @@ async function fetchSinglePost(slug: string): Promise<BlogPost | null> {
       return cached;
     }
 
-    // Verwende WordPress REST API für bessere Datenqualität
-    const response = await fetch(`http://wp.ugc-vz.de/wp-json/wp/v2/posts?slug=${slug}&_embed`, {
+    // Verwende WordPress REST API mit ACF-Feldern für bessere Datenqualität
+    const response = await fetch(`http://wp.ugc-vz.de/wp-json/wp/v2/posts?slug=${slug}&_embed&acf_format=standard`, {
       headers: {
         'User-Agent': 'UGC-VZ Blog Sync/1.0'
       }
@@ -194,8 +194,62 @@ async function fetchSinglePost(slug: string): Promise<BlogPost | null> {
     // HTML-Entitäten dekodieren
     title = title.replace(/&#038;/g, '&').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"');
 
-    // Content extrahieren
-    let content = wpPost.content?.rendered || '';
+    // Content aus ACF oder Standard-Feldern extrahieren
+    let content = '';
+
+    // Versuche zuerst ACF-Daten zu verwenden
+    if (wpPost.acf && wpPost.acf.page_content && Array.isArray(wpPost.acf.page_content)) {
+      // Konvertiere ACF-Blöcke zu HTML
+      const contentBlocks = [];
+
+      for (const block of wpPost.acf.page_content) {
+        if (block.acf_fc_layout === 'text_block' && block.text) {
+          contentBlocks.push(block.text);
+        } else if (block.acf_fc_layout === 'faq_accordion' && block.faqs) {
+          // FAQ-Sektion hinzufügen
+          contentBlocks.push('<div class="faq-section mt-8">');
+          contentBlocks.push('<h2 class="text-2xl font-bold mb-6 text-white">Häufig gestellte Fragen</h2>');
+
+          for (const faq of block.faqs) {
+            if (faq.question && faq.answer) {
+              contentBlocks.push(`
+                <div class="faq-item mb-6 p-6 bg-gray-900/30 rounded-lg border border-gray-800/50">
+                  <h3 class="text-lg font-semibold mb-3 text-emerald-300">${faq.question}</h3>
+                  <div class="text-gray-200 leading-relaxed">${faq.answer}</div>
+                </div>
+              `);
+            }
+          }
+
+          contentBlocks.push('</div>');
+        }
+      }
+
+      content = contentBlocks.join('\n\n');
+    }
+
+    // Fallback auf Standard-Content
+    if (!content) {
+      content = wpPost.content?.rendered || '';
+    }
+
+    // Prüfe auf Platzhalter-Content und verwende Fallback
+    const cleanTextContent = content.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+    if (!content || cleanTextContent.length < 50 || cleanTextContent.includes('UGC VZ 404') || cleanTextContent.includes('404')) {
+      console.log(`Post "${title}" has placeholder content - using fallback content`);
+      // Verwende Fallback-Content für Artikel ohne echten Inhalt
+      content = `
+        <div class="placeholder-content">
+          <p class="text-lg mb-6">Dieser Artikel wird derzeit überarbeitet und bald mit umfassenden Inhalten gefüllt.</p>
+          <p class="mb-4">In der Zwischenzeit empfehlen wir Ihnen, unsere anderen Artikel zu entdecken:</p>
+          <ul class="list-disc list-inside mb-6">
+            <li><a href="/wissen/ugc-qualitaet-vs-quantitaet-was-ist-wichtiger" class="text-emerald-400 hover:text-emerald-300 underline">UGC-Qualität vs. Quantität: Was ist wichtiger?</a></li>
+            <li><a href="/wissen" class="text-emerald-400 hover:text-emerald-300 underline">Alle Artikel im Überblick</a></li>
+          </ul>
+          <p class="text-sm text-gray-400">Haben Sie Fragen zu diesem Thema? <a href="mailto:hi@ugc-vz.de" class="text-emerald-400 hover:text-emerald-300 underline">Kontaktieren Sie uns gerne!</a></p>
+        </div>
+      `;
+    }
 
     // Content bereinigen und stylen
     if (content) {
@@ -228,7 +282,7 @@ async function fetchSinglePost(slug: string): Promise<BlogPost | null> {
       // Füge Styling zu Überschriften hinzu
       $('h1, h2, h3, h4, h5, h6').each((_, heading) => {
         const $heading = $(heading);
-        $heading.addClass('font-bold mb-4 mt-8 text-gray-900');
+        $heading.addClass('font-bold mb-4 mt-8 text-white');
 
         const tagName = (heading as any).name || (heading as any).tagName || '';
         if (tagName === 'h1') $heading.addClass('text-3xl');
@@ -238,33 +292,64 @@ async function fetchSinglePost(slug: string): Promise<BlogPost | null> {
       });
 
       // Füge Styling zu Paragraphen hinzu
-      $('p').addClass('mb-4 text-gray-700 leading-relaxed');
+      $('p').addClass('mb-4 text-gray-200 leading-relaxed');
 
       // Füge Styling zu Listen hinzu
-      $('ul').addClass('list-disc list-inside mb-4 text-gray-700');
-      $('ol').addClass('list-decimal list-inside mb-4 text-gray-700');
+      $('ul').addClass('list-disc list-inside mb-4 text-gray-200');
+      $('ol').addClass('list-decimal list-inside mb-4 text-gray-200');
       $('li').addClass('mb-2');
+
+      // Füge Styling zu starken Texten hinzu
+      $('strong, b').addClass('text-white font-semibold');
+
+      // Füge Styling zu Links hinzu
+      $('a').addClass('text-emerald-400 hover:text-emerald-300 underline');
 
       content = $.html();
     }
 
-    // Excerpt extrahieren
-    let excerpt = wpPost.excerpt?.rendered || '';
+    // Excerpt aus ACF oder Standard-Feldern extrahieren
+    let excerpt = '';
+
+    // Versuche zuerst ACF-Daten zu verwenden
+    if (wpPost.acf && wpPost.acf.page_content && Array.isArray(wpPost.acf.page_content)) {
+      // Extrahiere Text aus ACF-Blöcken für Excerpt
+      for (const block of wpPost.acf.page_content) {
+        if (block.acf_fc_layout === 'text_block' && block.text) {
+          excerpt = block.text;
+          break;
+        }
+      }
+    }
+
+    // Fallback auf Standard-Excerpt
+    if (!excerpt) {
+      excerpt = wpPost.excerpt?.rendered || '';
+    }
+
     if (excerpt) {
       // HTML-Tags entfernen
       excerpt = excerpt.replace(/<[^>]*>/g, '').trim();
       // WordPress-spezifische Zeichen bereinigen
       excerpt = excerpt.replace(/\[&hellip;\]/g, '...');
+      // Markdown-Formatierung entfernen
+      excerpt = excerpt.replace(/\*\*/g, '');
+      // Zeilenumbrüche durch Leerzeichen ersetzen
+      excerpt = excerpt.replace(/\n+/g, ' ');
 
-      if (excerpt.length > 200) {
-        excerpt = excerpt.substring(0, 200) + '...';
+      if (excerpt.length > 250) {
+        excerpt = excerpt.substring(0, 250) + '...';
       }
     }
 
     if (!excerpt || excerpt.length < 10) {
       // Fallback: Excerpt aus Content generieren
       const textContent = content.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
-      excerpt = textContent.length > 200 ? textContent.substring(0, 200) + '...' : textContent;
+      excerpt = textContent.length > 250 ? textContent.substring(0, 250) + '...' : textContent;
+
+      if (!excerpt || excerpt.length < 10) {
+        excerpt = 'Entdecke die neuesten Insights und Strategien für erfolgreiches User Generated Content Marketing.';
+      }
     }
 
     // Featured Image extrahieren

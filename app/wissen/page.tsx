@@ -128,11 +128,20 @@ export default function WissenPage() {
           {error && (
             <div className="text-center py-16">
               <div className="bg-red-900/30 border border-red-700/50 rounded-xl p-8 max-w-md mx-auto">
-                <p className="text-red-300 mb-4">{error}</p>
+                <div className="mb-4">
+                  <svg className="w-12 h-12 text-red-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                  </svg>
+                  <p className="text-red-300 mb-2">Fehler beim Laden der Artikel</p>
+                  <p className="text-red-400 text-sm">{error}</p>
+                </div>
                 <button
                   onClick={fetchPosts}
-                  className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg transition-colors"
+                  className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg transition-colors inline-flex items-center"
                 >
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
                   Erneut versuchen
                 </button>
               </div>

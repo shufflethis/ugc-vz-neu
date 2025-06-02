@@ -39,6 +39,28 @@ body {
   background-color: #1A1A1A;
 }
 
+/* Trust Elements Partner Logos */
+.partner-logo {
+  filter: brightness(0) invert(1) opacity(0.5);
+  transition: all 0.3s ease;
+}
+
+.partner-logo:hover,
+.group:hover .partner-logo {
+  filter: brightness(0) invert(1) opacity(0.8);
+}
+
+/* Alternative gradient effect for partner logos */
+.partner-logo-gradient {
+  filter: brightness(0) saturate(100%) invert(1) opacity(0.6);
+  transition: all 0.3s ease;
+}
+
+.partner-logo-gradient:hover,
+.group:hover .partner-logo-gradient {
+  filter: brightness(0) saturate(100%) invert(1) opacity(0.9) hue-rotate(180deg);
+}
+
 .footer-link {
   transition: color 0.3s ease;
   position: relative;
