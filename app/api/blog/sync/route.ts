@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidateTag } from 'next/cache';
 import { setLastSyncTime, setPendingSyncTime } from '../../../lib/blog-sync';
-import { fetchWordPressPosts } from '../route'; // Import the fetch function
+import { fetchAndProcessWordPressPosts } from '../../../lib/wordpress-api'; // Import the fetch function
 
 export const maxDuration = 30;
 export const dynamic = 'force-dynamic';
@@ -41,8 +41,8 @@ async function syncBlogPosts(postSlug?: string) {
   console.log('Starting blog synchronization...');
   try {
     // Fetch posts to ensure they are available for the revalidation process
-    // This also ensures the fetchWordPressPosts function is called, which updates the Next.js cache
-    const posts = await fetchWordPressPosts();
+    // This also ensures the fetchAndProcessWordPressPosts function is called, which updates the Next.js cache
+    const posts = await fetchAndProcessWordPressPosts();
     console.log(`Fetched ${posts.length} posts from WordPress.`);
 
     // Revalidate the 'blog-posts' tag to invalidate the cache for the /api/blog route
