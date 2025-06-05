@@ -228,24 +228,11 @@ export default function SearchBox() {
               minWidth: '60px',
               height: '60px'
             }}
-            title={
-              isIOSDeviceState
-                ? 'Spracherkennung ist auf iOS-Geräten nicht verfügbar'
-                : !browserSupportsSpeechRecognition
-                  ? 'Spracherkennung wird von Ihrem Browser nicht unterstützt'
-                  : isListening
-                    ? 'Sprachaufnahme beenden'
-                    : 'Sprachsuche starten'
-            }
+            title={isIOSDeviceState ? 'Spracherkennung ist auf iOS-Geräten nicht verfügbar' : !browserSupportsSpeechRecognition ? 'Spracherkennung wird von Ihrem Browser nicht unterstützt' : isListening ? 'Sprachaufnahme beenden' : 'Sprachsuche starten'}
           >
-            {/* CRITICAL: Show mic_off for iOS devices OR unsupported browsers */}
-            {isIOSDeviceState || !browserSupportsSpeechRecognition ? (
-              <span className="material-icons text-white text-2xl">mic_off</span>
-            ) : isListening ? (
-              <span className="material-icons text-white text-2xl">mic_off</span>
-            ) : (
-              <span className="material-icons text-white text-2xl">mic</span>
-            )}
+            <span className="material-icons text-white text-2xl">
+              {isListening ? "mic" : "mic_off"}
+            </span>
           </button>
 
           {/* CRITICAL: Only show listening indicator if NOT on iOS */}
@@ -440,100 +427,86 @@ export default function SearchBox() {
                 </div>
               ))}
             </div>
+
+            {/* Selection summary and contact form button */}
+            {selectedCreators.length > 0 && (
+              <div className={styles.selectionSummary}>
+                <p>{selectedCreators.length} Creator ausgewählt</p>
+                <button 
+                  onClick={() => setShowContactForm(true)}
+                  className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-3 rounded-lg font-medium hover:from-purple-700 hover:to-indigo-700 transition-all shadow-lg"
+                >
+                  Anfrage stellen
+                </button>
+              </div>
+            )}
+
+            {/* Contact form modal */}
+            {showContactForm && (
+              <div className={styles.modalOverlay}>
+                <div className={styles.modalContent}>
+                  <h2>Ihre Anfrage an {selectedCreators.length} Creator</h2>
+                  <p>Bitte füllen Sie das Formular aus, um Ihre Anfrage zu senden.</p>
+                  
+                  <div className={styles.formGroup}>
+                    <label htmlFor="name">Name *</label>
+                    <input 
+                      type="text" 
+                      id="name" 
+                      value={clientInfo.name}
+                      onChange={(e) => setClientInfo({...clientInfo, name: e.target.value})}
+                      required
+                    />
+                  </div>
+                  
+                  <div className={styles.formGroup}>
+                    <label htmlFor="email">E-Mail *</label>
+                    <input 
+                      type="email" 
+                      id="email" 
+                      value={clientInfo.email}
+                      onChange={(e) => {
+                        setClientInfo({...clientInfo, email: e.target.value});
+                        setEmailError('');
+                      }}
+                      required
+                    />
+                    {emailError && <p className={styles.errorText}>{emailError}</p>}
+                  </div>
+                  
+                  <div className={styles.formGroup}>
+                    <label htmlFor="message">Nachricht</label>
+                    <textarea 
+                      id="message" 
+                      value={clientInfo.message}
+                      onChange={(e) => setClientInfo({...clientInfo, message: e.target.value})}
+                      rows={4}
+                    ></textarea>
+                  </div>
+                  
+                  <div className={styles.formActions}>
+                    <button 
+                      onClick={() => setShowContactForm(false)}
+                      className="bg-gray-500 text-white px-4 py-2 rounded-lg mr-2"
+                    >
+                      Abbrechen
+                    </button>
+                    <button 
+                      onClick={handleSubmitSelection}
+                      className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-2 rounded-lg font-medium hover:from-purple-700 hover:to-indigo-700 transition-all shadow-lg"
+                      disabled={submitLoading}
+                    >
+                      {submitLoading ? 'Wird gesendet...' : 'Anfrage senden'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </>
         )}
 
-        {/* No Results display */}
-        {showNoResults && (
-          <NoResults query={submittedQuery} />
-        )}
-
-        {/* Fixed bottom bar for selected creators */}
-        {selectedCreators.length > 0 && (
-          <div className={styles.selectedCreatorsBar}>
-            <div className={styles.selectedCreatorsContent}>
-              <div className={styles.selectedCreatorsInfo}>
-                <span className={styles.selectedCount}>{selectedCreators.length} Creator ausgewählt</span>
-                <span className={styles.selectedHint}>Möchtest du diese Creator kontaktieren?</span>
-              </div>
-              <div className={styles.selectedCreatorsActions}>
-                <button
-                  onClick={resetSearch}
-                  className={styles.cancelButton}
-                >
-                  Abbrechen
-                </button>
-                <button
-                  onClick={() => setShowContactForm(true)}
-                  className={styles.submitButton}
-                >
-                  <span>Anfrage senden</span>
-                  <svg xmlns="http://www.w3.org/2000/svg" className={styles.arrowIcon} viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Contact form modal */}
-        {showContactForm && (
-          <div className={styles.modalOverlay}>
-            <div className={styles.modalContent}>
-              <h3 className={styles.modalTitle}>Kontaktinformationen</h3>
-              <div className={styles.formField}>
-                <input
-                  type="email"
-                  placeholder="Email *"
-                  value={clientInfo.email}
-                  onChange={e => {
-                    setEmailError('');
-                    setClientInfo(prev => ({ ...prev, email: e.target.value }));
-                  }}
-                  className={`${styles.formInput} ${emailError ? styles.inputError : ''}`}
-                />
-                {emailError && <p className={styles.errorText}>{emailError}</p>}
-              </div>
-              <input
-                type="text"
-                placeholder="Name (optional)"
-                value={clientInfo.name}
-                onChange={e => setClientInfo(prev => ({ ...prev, name: e.target.value }))}
-                className={styles.formInput}
-              />
-              <textarea
-                placeholder="Nachricht (optional)"
-                value={clientInfo.message}
-                onChange={e => setClientInfo(prev => ({ ...prev, message: e.target.value }))}
-                className={styles.formTextarea}
-              />
-              <div className={styles.modalActions}>
-                <button
-                  onClick={() => setShowContactForm(false)}
-                  className={styles.modalCancelButton}
-                  disabled={submitLoading}
-                >
-                  Abbrechen
-                </button>
-                <button
-                  onClick={handleSubmitSelection}
-                  disabled={submitLoading}
-                  className={styles.modalSubmitButton}
-                >
-                  {submitLoading ? (
-                    <>
-                      <span className={styles.loadingIcon}>⏳</span>
-                      Wird gesendet...
-                    </>
-                  ) : (
-                    'Absenden'
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* No results message */}
+        {showNoResults && <NoResults query={submittedQuery} />}
       </div>
     </div>
   );

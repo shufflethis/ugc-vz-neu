@@ -1,13 +1,62 @@
 'use client';
 
-import React from 'react';
-import Link from 'next/link';
+import React, { useState } from 'react';
+import { toast } from 'react-toastify';
+import { trackUGCEvents } from '../app/lib/analytics';
 
 interface NoResultsProps {
   query: string;
 }
 
 const NoResults: React.FC<NoResultsProps> = ({ query }) => {
+  const [clientInfo, setClientInfo] = useState({
+    name: '',
+    message: ''
+  });
+  const [submitLoading, setSubmitLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!clientInfo.name.trim()) {
+      toast.error('Bitte geben Sie Ihren Namen ein');
+      return;
+    }
+
+    setSubmitLoading(true);
+
+    try {
+      const res = await fetch('/api/submit-request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          creatorIds: [], // Leere Liste, da keine Creator gefunden wurden
+          clientInfo: {
+            ...clientInfo,
+            noResultsQuery: query, // Die Suchanfrage, die keine Ergebnisse lieferte
+            requestType: 'no_results_found' // Markierung, dass es sich um eine Anfrage ohne Ergebnisse handelt
+          }
+        })
+      });
+
+      const data = await res.json();
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to submit');
+      }
+
+      toast.success('Ihre Anfrage wurde erfolgreich gesendet!');
+      setClientInfo({ name: '', message: '' });
+      setSubmitLoading(false);
+
+      // Track successful contact form submission
+      trackUGCEvents.contactForm('no_results');
+    } catch (error) {
+      console.error('Error submitting request:', error);
+      toast.error('Es ist ein Fehler aufgetreten. Bitte versuchen Sie es später erneut.');
+      setSubmitLoading(false);
+    }
+  };
+
   return (
     <div className="text-center py-12 px-6 mb-24">
       <div className="bg-gray-900/30 backdrop-blur-sm rounded-2xl p-8 border border-gray-800/50 max-w-2xl mx-auto">
@@ -43,29 +92,38 @@ const NoResults: React.FC<NoResultsProps> = ({ query }) => {
             Kontaktieren Sie uns - wir können andere Quellen für entsprechende UGC Creator wie z.B. KI-Avatare auftun und Ihnen passende Lösungen anbieten.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Link
-              href={`mailto:kontakt@ugc-vz.de?subject=Anfrage für UGC Creator&body=Hallo, ich suche nach UGC Creators für:%0D%0A%0D%0AMeine Suchanfrage war: ${encodeURIComponent(query)}%0D%0A%0D%0ABitte kontaktieren Sie mich für alternative Lösungen.%0D%0A%0D%0AVielen Dank!`}
-              className="inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-emerald-600 to-blue-600 text-white rounded-lg hover:from-emerald-500 hover:to-blue-500 transition-all font-medium"
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="flex flex-col text-left">
+              <label htmlFor="name" className="text-sm text-gray-300 mb-1">Name *</label>
+              <input 
+                type="text" 
+                id="name" 
+                value={clientInfo.name}
+                onChange={(e) => setClientInfo({...clientInfo, name: e.target.value})}
+                className="bg-gray-800/50 border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                required
+              />
+            </div>
+            
+            <div className="flex flex-col text-left">
+              <label htmlFor="message" className="text-sm text-gray-300 mb-1">Nachricht</label>
+              <textarea 
+                id="message" 
+                value={clientInfo.message}
+                onChange={(e) => setClientInfo({...clientInfo, message: e.target.value})}
+                rows={3}
+                className="bg-gray-800/50 border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              ></textarea>
+            </div>
+            
+            <button 
+              type="submit"
+              className="w-full inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-emerald-600 to-blue-600 text-white rounded-lg hover:from-emerald-500 hover:to-blue-500 transition-all font-medium"
+              disabled={submitLoading}
             >
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-              </svg>
-              E-Mail senden
-            </Link>
-
-            <Link
-              href="https://tally.so/r/w25dBp"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center justify-center px-6 py-3 border border-emerald-500 text-emerald-400 rounded-lg hover:bg-emerald-500/10 transition-all font-medium"
-            >
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-3.582 8-8 8a8.955 8.955 0 01-4.126-.98L3 20l1.98-5.874A8.955 8.955 0 013 12c0-4.418 3.582-8 8-8s8 3.582 8 8z" />
-              </svg>
-              Kontakt-Formular
-            </Link>
-          </div>
+              {submitLoading ? 'Wird gesendet...' : 'Go'}
+            </button>
+          </form>
         </div>
 
         <div className="text-left">

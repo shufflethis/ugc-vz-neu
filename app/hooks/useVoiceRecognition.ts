@@ -9,8 +9,16 @@ export const useVoiceRecognition = (
   isMobileDeviceState: boolean,
   onTranscriptReceived: (transcript: string) => void
 ) => {
+  // Verwende useEffect für die Initialisierung von clientseitigen Zuständen
   const [isListening, setIsListening] = useState(false);
+  const [isBrowserSupported, setIsBrowserSupported] = useState(false);
+  
   const { browserSupportsSpeechRecognition, finalTranscript } = useSpeechRecognition();
+
+  // Initialisiere den Browser-Support-Status erst nach dem Mounting
+  useEffect(() => {
+    setIsBrowserSupported(browserSupportsSpeechRecognition);
+  }, [browserSupportsSpeechRecognition]);
 
   // Effect to handle speech recognition transcript updates
   useEffect(() => {
@@ -27,7 +35,7 @@ export const useVoiceRecognition = (
       return;
     }
 
-    if (!browserSupportsSpeechRecognition) {
+    if (!isBrowserSupported) {
       if (isMobileDeviceState) {
         toast.error('Spracherkennung wird auf diesem mobilen Gerät nicht unterstützt. Bitte verwenden Sie die Texteingabe.');
       } else {
@@ -70,7 +78,7 @@ export const useVoiceRecognition = (
 
   return {
     isListening,
-    browserSupportsSpeechRecognition,
+    browserSupportsSpeechRecognition: isBrowserSupported,
     toggleVoiceInput
   };
 };

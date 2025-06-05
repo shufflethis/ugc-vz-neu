@@ -12,6 +12,7 @@ interface BlogPost {
   author: string;
   categories: string[];
   readingTime: number;
+  schemaOrg?: string; // Schema.org JSON-LD als optionales Feld
 }
 
 // Cache für einzelne Artikel
@@ -368,6 +369,79 @@ async function fetchSinglePost(slug: string): Promise<BlogPost | null> {
     const textContent = content.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
     const readingTime = estimateReadingTime(textContent);
 
+    // Schema.org JSON-LD aus ACF extrahieren oder automatisch generieren
+    let schemaOrg: string | undefined = undefined;
+    if (wpPost.acf && wpPost.acf.schema_org_json) {
+      try {
+        // Verwende das Schema.org JSON-LD direkt aus dem ACF-Feld
+        schemaOrg = wpPost.acf.schema_org_json;
+      } catch (error) {
+        console.error('Error processing Schema.org JSON-LD:', error);
+      }
+    }
+    
+    // Fallback: Generiere Schema.org JSON-LD automatisch, wenn es nicht im ACF-Feld vorhanden ist
+    if (!schemaOrg) {
+      try {
+        // Generiere BlogPosting Schema
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://ugc-vz.de';
+        const postUrl = `${baseUrl}/wissen/${slug}`;
+        
+        // Extrahiere Bild-Dimensionen (Fallback-Werte, wenn nicht verfügbar)
+        let imageWidth = 1200;
+        let imageHeight = 630;
+        
+        // Extrahiere Wortanzahl für wordCount
+        const wordCount = textContent.split(/\s+/).length;
+        
+        // Extrahiere Keywords aus Kategorien
+        const keywords = wpPost.categories ? 
+          wpPost._embedded?.['wp:term']?.[0]?.map((term: any) => term.name).join(', ') : 
+          'UGC, Creator Marketing';
+        
+        const blogPostSchema = {
+          "@context": "https://schema.org",
+          "@type": "BlogPosting",
+          "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": postUrl
+          },
+          "headline": title,
+          "description": excerpt,
+          "image": {
+            "@type": "ImageObject",
+            "url": featuredImage,
+            "width": imageWidth,
+            "height": imageHeight
+          },
+          "datePublished": date,
+          "dateModified": wpPost.modified || date,
+          "author": {
+            "@type": "Person",
+            "name": "UGC VZ Team",
+            "url": baseUrl
+          },
+          "publisher": {
+            "@type": "Organization",
+            "name": "UGC VZ",
+            "logo": {
+              "@type": "ImageObject",
+              "url": `${baseUrl}/ugc-vz-logo-600x60.svg`,
+              "width": 600,
+              "height": 60
+            }
+          },
+          "articleBody": textContent,
+          "wordCount": wordCount,
+          "keywords": keywords
+        };
+        
+        schemaOrg = JSON.stringify(blogPostSchema);
+      } catch (error) {
+        console.error('Error generating Schema.org JSON-LD:', error);
+      }
+    }
+
     const post: BlogPost = {
       id: slug,
       title,
@@ -378,7 +452,8 @@ async function fetchSinglePost(slug: string): Promise<BlogPost | null> {
       featuredImage,
       author: 'UGC VZ Team',
       categories: ['UGC', 'Creator Marketing'],
-      readingTime
+      readingTime,
+      schemaOrg // Schema.org JSON-LD hinzufügen
     };
 
     // Cache speichern
