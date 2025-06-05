@@ -9,16 +9,7 @@ import LogoImage from '../components/LogoImage';
 import ClientWissenContent from './ClientWissenContent';
 import JsonLdScript from './[slug]/JsonLdScript';
 
-interface BlogPost {
-  id: string;
-  title: string;
-  excerpt: string;
-  slug: string;
-  date: string;
-  featuredImage: string;
-  author: string;
-  categories: string[];
-}
+import { BlogPost } from '../lib/wordpress-api'; // Import BlogPost from central definition
 
 // Metadaten für die Seite generieren
 export const metadata: Metadata = {
@@ -91,7 +82,7 @@ function generateBlogListingSchema(posts: BlogPost[]) {
           "height": 60
         }
       },
-      "image": post.featuredImage,
+      "image": post.image,
       "url": `${baseUrl}/wissen/${post.slug}`
     }
   }));

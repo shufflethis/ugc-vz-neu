@@ -5,16 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import ContactButton from '../components/ContactButton';
 
-interface BlogPost {
-  id: string;
-  title: string;
-  excerpt: string;
-  slug: string;
-  date: string;
-  featuredImage: string;
-  author: string;
-  categories: string[];
-}
+import { BlogPost } from '../lib/wordpress-api';
 
 interface ClientWissenContentProps {
   posts: BlogPost[];
@@ -87,7 +78,7 @@ export default function ClientWissenContent({ posts }: ClientWissenContentProps)
               {/* Featured Image */}
               <div className="relative h-48 overflow-hidden">
                 <Image
-                  src={post.featuredImage}
+                  src={post.image}
                   alt={post.title}
                   fill
                   className="object-cover group-hover:scale-105 transition-transform duration-300"
