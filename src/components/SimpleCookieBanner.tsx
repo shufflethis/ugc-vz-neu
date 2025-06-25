@@ -77,14 +77,15 @@ export default function SimpleCookieBanner() {
     <>
       {/* Cookie Banner */}
       {showBanner && !showSettings && (
-        <div className="fixed bottom-0 left-0 right-0 z-[9999] p-4 shadow-2xl border-t border-gray-700"
+        <div className="fixed bottom-0 left-0 right-0 z-[10001] p-4 shadow-2xl border-t border-gray-700"
              style={{
-               background: 'rgba(26, 26, 26, 0.95)',
-               backdropFilter: 'blur(16px)'
+               background: 'rgb(26, 26, 26)',
+               backdropFilter: 'blur(16px)',
+               zIndex: '999999'
              }}>
-          <div className="max-w-6xl mx-auto">
-            <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-              <div className="flex-1">
+          <div className="max-w-6xl mx-auto" style={{ background: 'rgb(26, 26, 26)' }}>
+            <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4" style={{ background: 'rgb(26, 26, 26)' }}>
+              <div className="flex-1" style={{ background: 'rgb(26, 26, 26)' }}>
                 <h3 className="text-lg font-semibold text-white mb-2">
                   🍪 Cookie-Einstellungen für UGC-VZ
                 </h3>
@@ -94,7 +95,7 @@ export default function SimpleCookieBanner() {
                 </p>
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-3 min-w-fit">
+              <div className="flex flex-col sm:flex-row gap-3 min-w-fit" style={{ background: 'rgb(26, 26, 26)' }}>
                 <button
                   onClick={openSettings}
                   className="px-4 py-2 text-sm border border-gray-600 text-gray-300 hover:text-white hover:border-gray-500 rounded-lg transition-colors"
@@ -121,7 +122,7 @@ export default function SimpleCookieBanner() {
 
       {/* Cookie Settings Modal */}
       {showSettings && (
-        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 backdrop-blur-sm"
+        <div className="fixed inset-0 z-[10002] flex items-center justify-center p-4 backdrop-blur-sm"
              style={{ background: 'rgba(0, 0, 0, 0.8)' }}>
           <div className="border border-gray-700/50 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
                style={{
