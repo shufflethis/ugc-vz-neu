@@ -4,7 +4,7 @@ export const maxDuration = 25; // Reduced for Vercel
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-// Simple mock data for testing
+// Extended mock data for testing - more female creators
 const mockCreators = [
   {
     id: 'rec1',
@@ -45,6 +45,57 @@ const mockCreators = [
     networks: ['TikTok', 'Instagram'],
     priceRange: '800-1500€',
     gender: 'Männlich'
+  },
+  // Add more female creators for better fallback coverage
+  {
+    id: 'rec6',
+    name: 'Laura',
+    image: '/female-placeholder.webp',
+    reach: 'Instagram: 45k\nTikTok: 20k',
+    totalReach: 65000,
+    networks: ['Instagram', 'TikTok'],
+    priceRange: '800-1500€',
+    gender: 'Weiblich'
+  },
+  {
+    id: 'rec7',
+    name: 'Marina',
+    image: '/female-placeholder.webp',
+    reach: 'YouTube: 30k\nInstagram: 18k',
+    totalReach: 48000,
+    networks: ['YouTube', 'Instagram'],
+    priceRange: '600-1200€',
+    gender: 'Weiblich'
+  },
+  {
+    id: 'rec8',
+    name: 'Julia',
+    image: '/female-placeholder.webp',
+    reach: 'TikTok: 60k\nInstagram: 25k',
+    totalReach: 85000,
+    networks: ['TikTok', 'Instagram'],
+    priceRange: '900-1600€',
+    gender: 'Weiblich'
+  },
+  {
+    id: 'rec9',
+    name: 'Sarah',
+    image: '/female-placeholder.webp',
+    reach: 'Instagram: 35k\nFacebook: 15k',
+    totalReach: 50000,
+    networks: ['Instagram', 'Facebook'],
+    priceRange: '700-1300€',
+    gender: 'Weiblich'
+  },
+  {
+    id: 'rec10',
+    name: 'Mia',
+    image: '/female-placeholder.webp',
+    reach: 'TikTok: 75k\nYouTube: 12k',
+    totalReach: 87000,
+    networks: ['TikTok', 'YouTube'],
+    priceRange: '1000-1800€',
+    gender: 'Weiblich'
   },
   {
     id: 'rec5',

@@ -48,7 +48,7 @@ export const trackEvent = (
   value?: number
 ): void => {
   if (!isAnalyticsEnabled() || typeof window === 'undefined' || !window.gtag) {
-    console.log('Analytics nicht verfügbar oder nicht erlaubt');
+    // Analytics nicht verfügbar oder nicht erlaubt - silent return
     return;
   }
 
@@ -67,7 +67,7 @@ export const trackEvent = (
 // Sende Seitenaufruf an Google Analytics
 export const trackPageView = (url: string, title?: string): void => {
   if (!isAnalyticsEnabled() || typeof window === 'undefined' || !window.gtag) {
-    console.log('Analytics nicht verfügbar oder nicht erlaubt');
+    // Analytics nicht verfügbar oder nicht erlaubt - silent return
     return;
   }
 

@@ -34,7 +34,7 @@ export const runtime = 'nodejs';
 // Add caching for Airtable results
 let cachedRecords: AirtableRecord[] | null = null;
 let lastFetch: number = 0;
-const CACHE_DURATION = 30000; // 30 seconds cache
+const CACHE_DURATION = 300000; // 5 minutes cache for better performance
 
 // Helper function to create mock Airtable records for testing
 function getMockAirtableRecords(): AirtableRecord[] {
@@ -171,7 +171,7 @@ export async function POST(req: Request) {
     } else {
       console.log(`[${requestId}] Initializing Airtable connection...`);
       try {
-        base = new Airtable({ apiKey: airtableApiKey }).base('appOAS76TTY2MBVuf');
+        base = new Airtable({ apiKey: airtableApiKey }).base(process.env.AIRTABLE_BASE_ID || 'appbpBRQkSWkdwTT5');
         console.log(`[${requestId}] Airtable connection initialized successfully`);
       } catch (airtableError) {
         console.error(`[${requestId}] Failed to initialize Airtable:`, airtableError);
@@ -216,9 +216,9 @@ export async function POST(req: Request) {
     // const minFollowers = followerMatch ? parseInt(followerMatch[1]) : 0;
     // console.log('Minimum followers:', minFollowers);
 
-    // Use cached records if available, but for debugging always fetch fresh records
+    // Use cached records if available for better performance
     const now = Date.now();
-    const forceFresh = true; // Force fresh fetch for debugging
+    const forceFresh = false; // Use cache for better performance
 
     if (usingMockData) {
       console.log(`[${requestId}] Using mock data instead of Airtable`);
@@ -236,8 +236,8 @@ export async function POST(req: Request) {
           console.log(`[${requestId}] Testing Airtable table access...`);
           // Test table access by trying to get records from the main table
           if (base) {
-            const testRecords = await base('UGC Creator').select({ maxRecords: 1 }).firstPage();
-            console.log(`[${requestId}] Successfully accessed UGC Creator table, found ${testRecords.length} records`);
+            const testRecords = await base(process.env.AIRTABLE_TABLE_NAME || 'tblXbhX5gIB47BjBr').select({ maxRecords: 1 }).firstPage();
+            console.log(`[${requestId}] Successfully accessed table, found ${testRecords.length} records`);
           }
         } catch (tableError) {
           console.error(`[${requestId}] Error accessing tables:`, tableError);
@@ -253,9 +253,8 @@ export async function POST(req: Request) {
               return;
             }
 
-            base('tblDlScXJMvZQ1XGc').select({
-              view: 'viw5IA8sDIXNQ3ZQx',
-              maxRecords: 100 // Limit for faster response
+            base(process.env.AIRTABLE_TABLE_NAME || 'tblXbhX5gIB47BjBr').select({
+              maxRecords: 200 // Increased limit to get all records
             }).firstPage((err: any, records: any) => {
               if (err) {
                 console.error(`[${requestId}] Airtable firstPage error:`, err);
@@ -275,9 +274,9 @@ export async function POST(req: Request) {
         // Set a timeout for the Airtable fetch
         const timeoutPromise = new Promise<AirtableRecord[]>((_, reject) =>
           setTimeout(() => {
-            console.log(`[${requestId}] Airtable fetch timeout after 15 seconds`);
+            console.log(`[${requestId}] Airtable fetch timeout after 20 seconds`);
             reject(new Error('Airtable timeout'));
-          }, 15000)
+          }, 20000)
         );
 
         // Race the fetch against the timeout
@@ -477,16 +476,19 @@ export async function POST(req: Request) {
           const reachText = String(fields['Wie groß ist deine Reichweite pro Netzwerk? '] || '');
           const totalReach = calculateTotalReach(reachText);
 
-          console.log(`[${requestId}] Getting profile image for ${fullName}`);
-          const profileImage = await getProfileImage(socialLinks);
+          console.log(`[${requestId}] Skipping profile image scraping for speed - using placeholder`);
+          
+          // Use immediate placeholder instead of slow image scraping
+          const genderParam = gender === 'Weiblich' ? 'female' : gender === 'Männlich' ? 'male' : undefined;
+          const profileImage = genderParam === 'female' ? '/female-placeholder.webp' : '/placeholder.jpg';
 
-          // Use gender-specific placeholder if needed
+          // Additional fallback logic for gender-specific placeholders
           let finalImage = profileImage;
           if (profileImage.includes('placeholder.jpg') || profileImage === '/placeholder.jpg' || !profileImage || profileImage === '') {
             if (gender === 'Weiblich') {
               finalImage = '/female-placeholder.webp';
             } else {
-              finalImage = '/placeholder.jpg'; // For 'Männlich' and any other values
+              finalImage = '/placeholder.jpg'; // Use original placeholder for male and others
             }
           }
 
@@ -519,8 +521,8 @@ export async function POST(req: Request) {
 
       results.push(...batchResults);
 
-      // Small delay between batches to avoid overwhelming the system
-      await new Promise(resolve => setTimeout(resolve, 100));
+      // Reduced delay for faster processing
+      await new Promise(resolve => setTimeout(resolve, 10));
     }
 
     // Filter out nulls and creators with 0 reach
@@ -759,7 +761,11 @@ function analyzeQueryWithAI(query: string, requestId: string): QueryAnalysis {
     }
   }
 
-  // Step 5: Extract age range
+  // Step 5: Extract age range - DISABLED for now since database has no age data
+  // TODO: Add age fields to database schema before enabling this
+  console.log(`[${requestId}] Age filtering disabled - no age data in database schema`);
+  
+  /*
   const agePatterns = [
     /unter (\d+)/i,
     /über (\d+)/i,
@@ -781,6 +787,7 @@ function analyzeQueryWithAI(query: string, requestId: string): QueryAnalysis {
       break;
     }
   }
+  */
 
   // Step 6: Extract keywords
   // Remove common words and extract potential keywords

@@ -281,9 +281,45 @@ async function getGoogleImageResult(searchQuery: string): Promise<string | null>
 // Cache for profile images to avoid duplicate requests
 const profileImageCache: Record<string, string> = {};
 
-// In getProfileImage function
-export async function getProfileImage(socialLinks: string): Promise<string> {
-  const defaultImage = '/placeholder.jpg';
+// Persistent cache for successful image URLs (in a real app, this would be in a database)
+const successfulImageCache: Record<string, { url: string; timestamp: number; username: string }> = {};
+
+// Cache management
+const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+
+function getCachedImage(username: string, platform: string): string | null {
+  const key = `${platform}:${username}`;
+  const cached = successfulImageCache[key];
+  
+  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+    console.log(`Using cached image for ${username} on ${platform}: ${cached.url}`);
+    return cached.url;
+  }
+  
+  return null;
+}
+
+function setCachedImage(username: string, platform: string, url: string): void {
+  const key = `${platform}:${username}`;
+  successfulImageCache[key] = {
+    url,
+    timestamp: Date.now(),
+    username
+  };
+  console.log(`Cached image for ${username} on ${platform}: ${url}`);
+}
+
+// Enhanced getProfileImage function with better error handling and gender-specific placeholders
+export async function getProfileImage(socialLinks: string, gender?: string): Promise<string> {
+  // Gender-specific placeholders
+  const getDefaultImage = (gender?: string) => {
+    if (gender?.toLowerCase() === 'female' || gender?.toLowerCase() === 'woman' || gender?.toLowerCase() === 'w') {
+      return '/female-placeholder.webp';
+    }
+    return '/placeholder.jpg'; // Use original placeholder for male and others
+  };
+  
+  const defaultImage = getDefaultImage(gender);
 
   try {
     if (!socialLinks) return defaultImage;
@@ -297,49 +333,76 @@ export async function getProfileImage(socialLinks: string): Promise<string> {
       return profileImageCache[cacheKey];
     }
 
-    // Add retry mechanism for failed requests
-    const fetchWithRetry = async (fn: () => Promise<string | null>, retries = 3, delay = 1000): Promise<string | null> => {
+    // Enhanced retry mechanism with better timeout handling
+    const fetchWithRetry = async (fn: () => Promise<string | null>, retries = 2, delay = 500): Promise<string | null> => {
       for (let i = 0; i < retries; i++) {
         try {
-          const result = await fn();
-          if (result) return result;
+          // Set a timeout for each individual attempt
+          const timeoutPromise = new Promise<null>((_, reject) => 
+            setTimeout(() => reject(new Error('Request timeout')), 5000)
+          );
+          
+          const result = await Promise.race([fn(), timeoutPromise]);
+          if (result) {
+            console.log(`Successfully fetched image on attempt ${i + 1}`);
+            return result;
+          }
         } catch (error) {
           console.warn(`Attempt ${i + 1} failed: ${error instanceof Error ? error.message : String(error)}`);
           if (i < retries - 1) {
             await new Promise(resolve => setTimeout(resolve, delay * (i + 1))); // Exponential backoff
-          } else {
-            throw error; // Re-throw if all retries fail
           }
         }
       }
+      console.log('All retry attempts failed, returning null');
       return null;
     };
 
     // Collect all possible profile images
     const profileImages: string[] = [];
 
-    // Process TikTok links
+    // Process TikTok links with caching
     const tiktokLinks = links.filter(link => link.toLowerCase().includes('tiktok.com'));
     for (const link of tiktokLinks) {
       const username = await extractTikTokUsername(link);
       if (username) {
+        // Check cache first
+        const cachedImage = getCachedImage(username, 'tiktok');
+        if (cachedImage) {
+          profileImages.push(cachedImage);
+          continue;
+        }
+        
         try {
           const profilePic = await fetchWithRetry(() => getTikTokProfilePic(username));
-          if (profilePic) profileImages.push(profilePic);
+          if (profilePic) {
+            profileImages.push(profilePic);
+            setCachedImage(username, 'tiktok', profilePic); // Cache successful result
+          }
         } catch (e: any) {
           console.error(`Failed to get TikTok profile pic after retries for ${username}:`, e);
         }
       }
     }
 
-    // Process Instagram links
+    // Process Instagram links with caching
     const instagramLinks = links.filter(link => link.toLowerCase().includes('instagram.com'));
     for (const link of instagramLinks) {
       const username = await extractInstagramUsername(link);
       if (username) {
+        // Check cache first
+        const cachedImage = getCachedImage(username, 'instagram');
+        if (cachedImage) {
+          profileImages.push(cachedImage);
+          continue;
+        }
+        
         try {
           const profilePic = await fetchWithRetry(() => getInstagramProfilePic(username));
-          if (profilePic) profileImages.push(profilePic);
+          if (profilePic) {
+            profileImages.push(profilePic);
+            setCachedImage(username, 'instagram', profilePic); // Cache successful result
+          }
         } catch (e: any) {
           console.error(`Failed to get Instagram profile pic after retries for ${username}:`, e);
         }

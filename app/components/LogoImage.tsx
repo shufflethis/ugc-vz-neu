@@ -28,6 +28,7 @@ export default function LogoImage({
       height={height}
       className={className}
       priority={priority}
+      style={{ width: 'auto', height: 'auto' }}
       onError={() => setImageError(true)}
     />
   );

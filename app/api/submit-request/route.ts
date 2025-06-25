@@ -85,7 +85,7 @@ export async function POST(req: Request) {
       if (!airtableApiKey) {
         throw new Error('AIRTABLE_API_KEY is not defined in environment variables');
       }
-      const base = new Airtable({ apiKey: airtableApiKey }).base('appOAS76TTY2MBVuf');
+      const base = new Airtable({ apiKey: airtableApiKey }).base(process.env.AIRTABLE_BASE_ID || 'appbpBRQkSWkdwTT5');
 
       // Fetch full details of selected creators mit Sanitization
       selectedCreators = await Promise.all(
@@ -95,7 +95,7 @@ export async function POST(req: Request) {
             throw new Error('Invalid creator ID format');
           }
 
-          const record = await base('tblDlScXJMvZQ1XGc').find(id);
+          const record = await base(process.env.AIRTABLE_TABLE_NAME || 'tblXbhX5gIB47BjBr').find(id);
           return {
             name: String(record.fields['Wie heißt du?  (Vor- und Nachname)'] || '').substring(0, 100),
             reach: String(record.fields['Wie groß ist deine Reichweite pro Netzwerk? '] || '').substring(0, 200),
