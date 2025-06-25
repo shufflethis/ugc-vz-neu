@@ -197,16 +197,23 @@ export default function RootLayout({
             __html: `
               // Warte bis Klaro geladen ist und initialisiere
               function initializeKlaro() {
-                if (typeof window.klaro !== 'undefined' && window.klaroConfig && typeof window.klaro.setup === 'function') {
+                if (typeof window.klaro !== 'undefined' && window.klaroConfig) {
                   console.log('Initialisiere Klaro...');
                   try {
-                    window.klaro.setup(window.klaroConfig);
-                    console.log('Klaro erfolgreich initialisiert');
+                    // Prüfe ob setup Funktion existiert
+                    if (typeof window.klaro.setup === 'function') {
+                      window.klaro.setup(window.klaroConfig);
+                      console.log('Klaro erfolgreich initialisiert');
+                    } else if (typeof window.klaro.render === 'function') {
+                      // Fallback für andere Klaro-Versionen
+                      window.klaro.render(window.klaroConfig);
+                      console.log('Klaro mit render() initialisiert');
+                    } else {
+                      console.log('Klaro geladen aber keine setup/render Funktion verfügbar');
+                    }
                   } catch (error) {
                     console.error('Fehler bei Klaro-Initialisierung:', error);
                   }
-                } else if (typeof window.klaro !== 'undefined' && typeof window.klaro.setup !== 'function') {
-                  console.log('Klaro geladen aber setup Funktion nicht verfügbar - überspringe Initialisierung');
                 } else {
                   console.log('Klaro noch nicht bereit, versuche in 100ms erneut...');
                   setTimeout(initializeKlaro, 100);

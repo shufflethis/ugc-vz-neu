@@ -354,10 +354,18 @@ export async function POST(req: Request) {
       } else if (analysis.gender === 'any') {
         score += 50; // Neutral score for any gender when no preference
         console.log(`[${requestId}] ✓ Any gender accepted for ${fullName}`);
+      } else if (analysis.gender === 'male' && gender !== 'Männlich') {
+        // Male requested but creator is not male - reduce score but don't exclude
+        score += 10; // Very low score but still included
+        console.log(`[${requestId}] ⚠ Male requested but ${fullName} is ${gender} - low score`);
+      } else if (analysis.gender === 'female' && gender !== 'Weiblich') {
+        // Female requested but creator is not female - reduce score but don't exclude
+        score += 10; // Very low score but still included
+        console.log(`[${requestId}] ⚠ Female requested but ${fullName} is ${gender} - low score`);
       } else {
-        // Gender mismatch is a deal-breaker for gender-specific queries
-        console.log(`[${requestId}] ✗ Gender mismatch for ${fullName} - excluding from results`);
-        return -1;
+        // Default case - give some points
+        score += 30;
+        console.log(`[${requestId}] ✓ Default gender scoring for ${fullName}`);
       }
 
       // 2. Platform match
@@ -379,9 +387,10 @@ export async function POST(req: Request) {
           }
         }
 
-        // If no platforms match and platforms were specified, this is a deal-breaker
+        // If no platforms match and platforms were specified, reduce score but don't exclude
         if (!hasPlatformMatch) {
-          return -1;
+          score += 5; // Very low score but still included
+          console.log(`[${requestId}] ⚠ No platform match for ${fullName} - low score`);
         }
       } else {
         // If no specific platforms requested, give some points for having any platform
@@ -390,13 +399,13 @@ export async function POST(req: Request) {
 
       // 3. Reach/follower count match
       if (analysis.minFollowers > 0 && totalReach < analysis.minFollowers) {
-        // Below minimum followers is a deal-breaker
-        return -1;
-      }
-
-      if (analysis.maxFollowers && totalReach > analysis.maxFollowers) {
-        // Above maximum followers is a deal-breaker
-        return -1;
+        // Below minimum followers - reduce score but don't exclude
+        score += 5;
+        console.log(`[${requestId}] ⚠ ${fullName} below minimum followers (${totalReach} < ${analysis.minFollowers}) - low score`);
+      } else if (analysis.maxFollowers && totalReach > analysis.maxFollowers) {
+        // Above maximum followers - reduce score but don't exclude
+        score += 5;
+        console.log(`[${requestId}] ⚠ ${fullName} above maximum followers (${totalReach} > ${analysis.maxFollowers}) - low score`);
       }
 
       // If within range, give points based on how close to the ideal range
@@ -462,9 +471,9 @@ export async function POST(req: Request) {
           // Score this creator based on the query analysis
           const score = scoreCreator(record);
 
-          // If score is negative, this creator doesn't match the requirements
-          if (score < 0) {
-            console.log(`[${requestId}] Skipping ${fullName} - doesn't meet requirements`);
+          // If score is very low, this creator doesn't match the requirements
+          if (score < 5) {
+            console.log(`[${requestId}] Skipping ${fullName} - score too low (${score})`);
             return null;
           }
 
@@ -484,7 +493,7 @@ export async function POST(req: Request) {
 
           // Additional fallback logic for gender-specific placeholders
           let finalImage = profileImage;
-          if (profileImage.includes('placeholder.jpg') || profileImage === '/placeholder.jpg' || !profileImage || profileImage === '') {
+          if (profileImage.includes('placeholder.jpg') || profileImage === '/placeholder.jpg' || !profileImage || profileImage.length === 0) {
             if (gender === 'Weiblich') {
               finalImage = '/female-placeholder.webp';
             } else {

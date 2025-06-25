@@ -13,6 +13,13 @@ function generateSimpleReasoning(query: string): string {
   if (query.toLowerCase().includes('kosmetik') || query.toLowerCase().includes('beauty')) topics.push('Beauty/Kosmetik');
   if (query.toLowerCase().includes('mode') || query.toLowerCase().includes('fashion')) topics.push('Mode/Fashion');
   if (query.toLowerCase().includes('reise') || query.toLowerCase().includes('travel')) topics.push('Reise');
+  if (query.toLowerCase().includes('sport') || query.toLowerCase().includes('fitness')) topics.push('Sport/Fitness');
+  if (query.toLowerCase().includes('food') || query.toLowerCase().includes('essen') || query.toLowerCase().includes('kochen')) topics.push('Food/Essen');
+
+  const demographics = [];
+  if (query.toLowerCase().includes('frauen') || query.toLowerCase().includes('weiblich')) demographics.push('Weiblich');
+  if (query.toLowerCase().includes('männer') || query.toLowerCase().includes('männlich')) demographics.push('Männlich');
+  if (query.toLowerCase().includes('unter 30') || query.toLowerCase().includes('<30') || query.toLowerCase().includes('jung')) demographics.push('Unter 30 Jahre');
 
   let reasoning = "1. Verständnis der Anfrage\n\n";
   reasoning += `Die Suchanfrage "${query}" wird analysiert, um passende Creator zu finden.\n\n`;
@@ -23,6 +30,10 @@ function generateSimpleReasoning(query: string): string {
 
   if (topics.length > 0) {
     reasoning += `Themen: ${topics.join(', ')}\n`;
+  }
+
+  if (demographics.length > 0) {
+    reasoning += `Zielgruppe: ${demographics.join(', ')}\n`;
   }
 
   reasoning += "\n2. Datenbankabfrage\n\n";
@@ -65,15 +76,18 @@ export async function POST(req: Request) {
       }, { status: 400 });
     }
 
-    // Check if API key is available
+    // Check if API key is available - if not, use fallback
     if (!process.env.OPENROUTER_API_KEY) {
-      console.error(`[${requestId}] OPENROUTER_API_KEY is not defined`);
+      console.log(`[${requestId}] OPENROUTER_API_KEY is not defined, using fallback reasoning`);
+      const fallbackReasoning = generateSimpleReasoning(query);
+
       return NextResponse.json({
-        success: false,
-        error: 'API configuration error',
-        message: 'API key is not configured',
-        requestId: requestId
-      }, { status: 500 });
+        success: true,
+        reasoning: fallbackReasoning,
+        source: 'fallback',
+        requestId: requestId,
+        timestamp: new Date().toISOString()
+      });
     }
 
     console.log(`[${requestId}] Making OpenRouter API call...`);
