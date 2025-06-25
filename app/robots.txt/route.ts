@@ -6,7 +6,29 @@ export async function GET() {
   const robotsTxt = `User-agent: *
 Allow: /
 
-# Sitemap
+# LLM and AI Crawlers (Perplexity, GPT, Claude, Bing Copilot)
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: BingBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+# LLM-optimized sitemap
+Sitemap: ${baseUrl}/llm.txt
+
+# Standard Sitemaps
 Sitemap: ${baseUrl}/sitemap_index.xml
 Sitemap: ${baseUrl}/sitemap.xml
 
@@ -19,7 +41,7 @@ Disallow: /api/
 Disallow: /_next/webpack-hmr
 Disallow: /admin/
 
-# Allow important pages
+# Explicitly allow important pages for all crawlers
 Allow: /
 Allow: /about
 Allow: /wissen/
@@ -27,7 +49,10 @@ Allow: /agb
 Allow: /datenschutz
 Allow: /impressum
 Allow: /cookies
-Allow: /faq`;
+Allow: /faq
+
+# Crawl-delay for respectful crawling
+Crawl-delay: 1`;
 
   return new NextResponse(robotsTxt, {
     headers: {

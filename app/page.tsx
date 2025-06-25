@@ -6,6 +6,7 @@ import SearchBox from './components/SearchBox';
 import ResponsiveCTAButton from '@/src/components/ResponsiveCTAButton';
 import LogoImage from './components/LogoImage';
 import TrustElements from './components/TrustElements';
+import ContentCascade from './components/ContentCascade';
 
 export default function Home() {
   return (
@@ -43,6 +44,9 @@ export default function Home() {
 
       {/* Trust Elements Section */}
       <TrustElements />
+
+      {/* Content Cascade Section */}
+      <ContentCascade />
     </div>
   );
 }

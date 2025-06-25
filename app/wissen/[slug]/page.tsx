@@ -105,6 +105,7 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
   
   if (!post) {
     notFound();
+    return; // This will never be reached, but helps TypeScript understand
   }
 
   // Schema.org JSON-LD mit der JsonLdScript-Komponente einbetten

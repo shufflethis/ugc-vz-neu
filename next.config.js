@@ -1,5 +1,14 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Disable static optimization for problematic pages during build
+  experimental: {
+    missingSuspenseWithCSRBailout: false,
+  },
+
+  // Disable static generation to fix React context issues
+  output: 'standalone',
+  trailingSlash: false,
+
   images: {
     remotePatterns: [
       // WordPress Backend (HTTPS bevorzugt)
