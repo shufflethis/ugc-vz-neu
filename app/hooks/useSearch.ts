@@ -140,6 +140,10 @@ export const useSearch = () => {
     setShowNoResults(false);
   };
 
+  const clearSelection = () => {
+    setSelectedCreators([]);
+  };
+
   return {
     creators,
     reasoning,
@@ -150,6 +154,7 @@ export const useSearch = () => {
     showNoResults,
     performSearch,
     toggleCreatorSelection,
-    resetSearch
+    resetSearch,
+    clearSelection
   };
 };

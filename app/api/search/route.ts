@@ -355,13 +355,13 @@ export async function POST(req: Request) {
         score += 50; // Neutral score for any gender when no preference
         console.log(`[${requestId}] ✓ Any gender accepted for ${fullName}`);
       } else if (analysis.gender === 'male' && gender !== 'Männlich') {
-        // Male requested but creator is not male - reduce score but don't exclude
-        score += 10; // Very low score but still included
-        console.log(`[${requestId}] ⚠ Male requested but ${fullName} is ${gender} - low score`);
+        // Male requested but creator is not male - EXCLUDE completely
+        console.log(`[${requestId}] ❌ Male requested but ${fullName} is ${gender} - EXCLUDED`);
+        return 0; // Return 0 score to exclude this creator entirely
       } else if (analysis.gender === 'female' && gender !== 'Weiblich') {
-        // Female requested but creator is not female - reduce score but don't exclude
-        score += 10; // Very low score but still included
-        console.log(`[${requestId}] ⚠ Female requested but ${fullName} is ${gender} - low score`);
+        // Female requested but creator is not female - EXCLUDE completely
+        console.log(`[${requestId}] ❌ Female requested but ${fullName} is ${gender} - EXCLUDED`);
+        return 0; // Return 0 score to exclude this creator entirely
       } else {
         // Default case - give some points
         score += 30;

@@ -6,6 +6,7 @@ import styles from '../styles/search.module.css';
 import { toast } from 'react-toastify';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import NoResults from '../../components/NoResults';
+import CreatorSelectionPopup from './CreatorSelectionPopup';
 import { trackUGCEvents } from '../lib/analytics';
 import {
   faInstagram,
@@ -38,7 +39,8 @@ export default function SearchBox() {
     showNoResults,
     performSearch,
     toggleCreatorSelection,
-    resetSearch
+    resetSearch,
+    clearSelection
   } = useSearch();
 
   const {
@@ -115,21 +117,10 @@ export default function SearchBox() {
 
   // State for contact form
   const [showContactForm, setShowContactForm] = useState(false);
-  const [clientInfo, setClientInfo] = useState({ email: '', name: '', message: '' });
-  const [emailError, setEmailError] = useState('');
-  const [submitLoading, setSubmitLoading] = useState(false);
 
   // Handle form submission
-  const handleSubmitSelection = async () => {
+  const handleSubmitSelection = async (clientInfo: { name: string; email: string; message: string }) => {
     if (selectedCreators.length === 0) return;
-
-    // Validate email
-    if (!clientInfo.email || !clientInfo.email.includes('@')) {
-      setEmailError('Bitte geben Sie eine gültige E-Mail-Adresse ein');
-      return;
-    }
-
-    setSubmitLoading(true);
 
     try {
       const res = await fetch('/api/submit-request', {
@@ -145,11 +136,6 @@ export default function SearchBox() {
       if (!data.success) {
         throw new Error(data.error || 'Failed to submit');
       }
-
-      toast.success('Ihre Anfrage wurde erfolgreich gesendet!');
-      setShowContactForm(false);
-      resetSearch(); // Use the hook function to reset
-      setSubmitLoading(false);
 
       // Track successful contact form submission
       trackUGCEvents.contactForm('creator_selection');
@@ -167,10 +153,12 @@ export default function SearchBox() {
           trackUGCEvents.creatorContact(creatorId, platform);
         }
       });
+
+      // Reset nur die Auswahl nach erfolgreichem Senden
+      clearSelection();
     } catch (error) {
       console.error('Submit error:', error);
-      toast.error('Fehler beim Senden der Anfrage. Bitte versuchen Sie es später erneut.');
-      setSubmitLoading(false);
+      throw error; // Re-throw to be handled by the popup
     }
   };
 
@@ -428,80 +416,17 @@ export default function SearchBox() {
               ))}
             </div>
 
-            {/* Selection summary and contact form button */}
-            {selectedCreators.length > 0 && (
-              <div className={styles.selectionSummary}>
-                <p>{selectedCreators.length} Creator ausgewählt</p>
-                <button 
-                  onClick={() => setShowContactForm(true)}
-                  className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-3 rounded-lg font-medium hover:from-purple-700 hover:to-indigo-700 transition-all shadow-lg"
-                >
-                  Anfrage stellen
-                </button>
-              </div>
-            )}
-
-            {/* Contact form modal */}
-            {showContactForm && (
-              <div className={styles.modalOverlay}>
-                <div className={styles.modalContent}>
-                  <h2>Ihre Anfrage an {selectedCreators.length} Creator</h2>
-                  <p>Bitte füllen Sie das Formular aus, um Ihre Anfrage zu senden.</p>
-                  
-                  <div className={styles.formGroup}>
-                    <label htmlFor="name">Name *</label>
-                    <input 
-                      type="text" 
-                      id="name" 
-                      value={clientInfo.name}
-                      onChange={(e) => setClientInfo({...clientInfo, name: e.target.value})}
-                      required
-                    />
-                  </div>
-                  
-                  <div className={styles.formGroup}>
-                    <label htmlFor="email">E-Mail *</label>
-                    <input 
-                      type="email" 
-                      id="email" 
-                      value={clientInfo.email}
-                      onChange={(e) => {
-                        setClientInfo({...clientInfo, email: e.target.value});
-                        setEmailError('');
-                      }}
-                      required
-                    />
-                    {emailError && <p className={styles.errorText}>{emailError}</p>}
-                  </div>
-                  
-                  <div className={styles.formGroup}>
-                    <label htmlFor="message">Nachricht</label>
-                    <textarea 
-                      id="message" 
-                      value={clientInfo.message}
-                      onChange={(e) => setClientInfo({...clientInfo, message: e.target.value})}
-                      rows={4}
-                    ></textarea>
-                  </div>
-                  
-                  <div className={styles.formActions}>
-                    <button 
-                      onClick={() => setShowContactForm(false)}
-                      className="bg-gray-500 text-white px-4 py-2 rounded-lg mr-2"
-                    >
-                      Abbrechen
-                    </button>
-                    <button 
-                      onClick={handleSubmitSelection}
-                      className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-2 rounded-lg font-medium hover:from-purple-700 hover:to-indigo-700 transition-all shadow-lg"
-                      disabled={submitLoading}
-                    >
-                      {submitLoading ? 'Wird gesendet...' : 'Anfrage senden'}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
+            {/* Modern Creator Selection Popup */}
+            <CreatorSelectionPopup
+              selectedCreators={selectedCreators}
+              creators={creators}
+              isVisible={selectedCreators.length > 0}
+              onClose={() => {
+                // Nur die Auswahl zurücksetzen, Creator-Liste bleibt
+                clearSelection();
+              }}
+              onSubmit={handleSubmitSelection}
+            />
           </>
         )}
 

@@ -12,7 +12,8 @@ export async function POST(req: Request) {
     // Prüfe ob Request von der eigenen Domain kommt oder gültigen API-Key hat
     const isValidReferer = referer && (
       referer.includes('ugc-vz.de') ||
-      referer.includes('localhost:3000')
+      referer.includes('localhost:3000') ||
+      referer.includes('localhost:3001')
     );
     const isValidApiKey = expectedApiKey && apiKey === expectedApiKey;
 
@@ -109,7 +110,17 @@ export async function POST(req: Request) {
 
     const webhookUrl = process.env.SLACK_WEBHOOK_URL;
     if (!webhookUrl) {
-      throw new Error('SLACK_WEBHOOK_URL is not defined in environment variables');
+      console.warn('SLACK_WEBHOOK_URL is not defined - Creator request will be logged but not sent to Slack');
+      console.log('Creator request received:', {
+        creatorIds: isNoResultsRequest ? [] : creatorIds,
+        clientInfo: {
+          name: clientInfo.name,
+          email: clientInfo.email,
+          message: clientInfo.message
+        },
+        selectedCreators: isNoResultsRequest ? [] : selectedCreators
+      });
+      return NextResponse.json({ success: true, note: 'Request logged, but Slack webhook not configured' });
     }
     const webhook = new IncomingWebhook(webhookUrl);
     
@@ -168,7 +179,11 @@ export async function POST(req: Request) {
             fields: [
               {
                 type: "mrkdwn" as const,
-                text: `*Kunde:*\n${clientInfo.email?.substring(0, 100) || 'Nicht angegeben'}`
+                text: `*Kunde:*\n${clientInfo.name?.substring(0, 100) || 'Nicht angegeben'}`
+              },
+              {
+                type: "mrkdwn" as const,
+                text: `*Email:*\n${clientInfo.email?.substring(0, 100) || 'Nicht angegeben'}`
               }
             ]
           },
