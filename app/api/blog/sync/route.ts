@@ -50,7 +50,7 @@ async function syncBlogPosts(postSlug?: string) {
     console.log('Revalidated cache tag: blog-posts');
 
     // Revalidate specific paths for immediate page updates
-    const pathsToRevalidate = ['/wissen'];
+    const pathsToRevalidate = ['/wissen', '/sitemap.xml'];
     if (postSlug) {
       pathsToRevalidate.push(`/wissen/${postSlug}`);
     }

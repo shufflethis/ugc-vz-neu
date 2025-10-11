@@ -189,11 +189,25 @@ export async function POST(req: Request) {
 
     console.log(`[${requestId}] Analyzing query with AI: "${query}"`);
 
-    // AI-based query analysis - this is used for generating reasoning
-    // We'll reuse this analysis later for filtering
-    const initialAnalysis = analyzeQueryWithAI(query, requestId);
-
-    console.log(`[${requestId}] AI query analysis results:`, initialAnalysis);
+    // AI-based query analysis - try OpenRouter first, fallback to regex-based
+    let initialAnalysis: QueryAnalysis;
+    
+    // Try OpenRouter if API key is available
+    if (process.env.OPENROUTER_API_KEY) {
+      try {
+        console.log(`[${requestId}] Using OpenRouter for query analysis`);
+        initialAnalysis = await analyzeQueryWithOpenRouter(query, requestId);
+        console.log(`[${requestId}] OpenRouter query analysis results:`, initialAnalysis);
+      } catch (openRouterError) {
+        console.warn(`[${requestId}] OpenRouter failed, falling back to regex analysis:`, openRouterError);
+        initialAnalysis = analyzeQueryWithAI(query, requestId);
+        console.log(`[${requestId}] Fallback regex analysis results:`, initialAnalysis);
+      }
+    } else {
+      console.log(`[${requestId}] No OpenRouter key, using regex analysis`);
+      initialAnalysis = analyzeQueryWithAI(query, requestId);
+      console.log(`[${requestId}] Regex query analysis results:`, initialAnalysis);
+    }
 
     // Extract filters from AI analysis
     const isMaleQuery = initialAnalysis.gender === 'male';
@@ -228,6 +242,38 @@ export async function POST(req: Request) {
       console.log(`[${requestId}] Fetching fresh records from Airtable...`);
 
       try {
+        // Build Airtable filter formula based on query analysis
+        let filterFormula = '';
+        
+        // Apply gender filter if specified
+        if (initialAnalysis.gender === 'male') {
+          filterFormula = "{Wie ist dein Geschlecht?} = 'Männlich'";
+          console.log(`[${requestId}] Applying Airtable gender filter: Male`);
+        } else if (initialAnalysis.gender === 'female') {
+          filterFormula = "{Wie ist dein Geschlecht?} = 'Weiblich'";
+          console.log(`[${requestId}] Applying Airtable gender filter: Female`);
+        }
+        
+        // Apply platform filter if specified
+        if (initialAnalysis.platforms.length > 0) {
+          const platformFilters = initialAnalysis.platforms.map(platform => {
+            const platformName = platform.charAt(0).toUpperCase() + platform.slice(1);
+            return `FIND('${platformName}', {In welchem Netzwerk hast du Accounts und möchtest du aktiv sein?})`;
+          });
+          
+          const platformFormula = platformFilters.length > 1 
+            ? `OR(${platformFilters.join(', ')})` 
+            : platformFilters[0];
+          
+          filterFormula = filterFormula 
+            ? `AND(${filterFormula}, ${platformFormula})` 
+            : platformFormula;
+          
+          console.log(`[${requestId}] Applying Airtable platform filter: ${initialAnalysis.platforms.join(', ')}`);
+        }
+        
+        console.log(`[${requestId}] Final Airtable filter formula: ${filterFormula || 'none (fetching all records)'}`);
+
         // Create a direct fetch promise
         console.log(`[${requestId}] Creating Airtable fetch promise...`);
 
@@ -245,7 +291,7 @@ export async function POST(req: Request) {
 
         // Force a direct Airtable fetch to ensure we get fresh data
         const fetchPromise = new Promise<AirtableRecord[]>((resolve, reject) => {
-          console.log(`[${requestId}] Starting Airtable fetch...`);
+          console.log(`[${requestId}] Starting Airtable fetch with filters...`);
 
           try {
             if (!base) {
@@ -253,16 +299,23 @@ export async function POST(req: Request) {
               return;
             }
 
-            base(process.env.AIRTABLE_TABLE_NAME || 'tblXbhX5gIB47BjBr').select({
-              maxRecords: 200 // Increased limit to get all records
-            }).firstPage((err: any, records: any) => {
+            const selectOptions: any = {
+              maxRecords: 100 // Reduced from 200 since we're filtering server-side
+            };
+            
+            // Only add filter if we have one
+            if (filterFormula) {
+              selectOptions.filterByFormula = filterFormula;
+            }
+
+            base(process.env.AIRTABLE_TABLE_NAME || 'tblXbhX5gIB47BjBr').select(selectOptions).firstPage((err: any, records: any) => {
               if (err) {
                 console.error(`[${requestId}] Airtable firstPage error:`, err);
                 reject(err);
                 return;
               }
 
-              console.log(`[${requestId}] Airtable firstPage success, records:`, records?.length || 0);
+              console.log(`[${requestId}] Airtable firstPage success with filters, records:`, records?.length || 0);
               resolve(records ? [...records] as AirtableRecord[] : []);
             });
           } catch (selectError) {
@@ -323,7 +376,8 @@ export async function POST(req: Request) {
     console.log(`[${requestId}] Using initial analysis for filtering`);
 
     // Process creators in batches with AI-based filtering
-    const BATCH_SIZE = 10;
+    // Dynamic batch size: 25% of total records, min 10, max 50
+    const BATCH_SIZE = Math.max(10, Math.min(50, Math.ceil(cachedRecords.length / 4)));
     const results = [];
 
     console.log(`[${requestId}] Processing ${cachedRecords.length} creators with AI filtering in batches of ${BATCH_SIZE}`);
@@ -635,6 +689,110 @@ interface QueryAnalysis {
   keywords: string[];
 }
 
+// OpenRouter-based AI query analysis
+async function analyzeQueryWithOpenRouter(query: string, requestId: string): Promise<QueryAnalysis> {
+  console.log(`[${requestId}] Attempting OpenRouter AI analysis for query: "${query}"`);
+
+  try {
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+        'HTTP-Referer': 'https://ugc-vz.vercel.app',
+        'X-Title': 'UGC VZ Creator Search',
+        'X-Request-ID': requestId
+      },
+      body: JSON.stringify({
+        model: 'zhipu-ai/glm-4.5-air:free',
+        messages: [
+          {
+            role: 'system',
+            content: `Du bist ein Experte für Creator-Suche. Analysiere die Suchanfrage und extrahiere strukturierte Informationen.
+
+Antworte NUR mit einem JSON-Objekt in diesem exakten Format (keine zusätzlichen Erklärungen):
+{
+  "gender": "male" | "female" | "any",
+  "platforms": ["tiktok", "instagram", "youtube", "facebook"],
+  "topics": ["beauty", "fashion", "travel", "fitness", "food", "lifestyle", "tech"],
+  "minFollowers": 0,
+  "maxFollowers": null,
+  "keywords": ["relevante", "begriffe"]
+}
+
+Regeln:
+- Erkenne Synonyme: "Insta" = "instagram", "YT" = "youtube"
+- Interpretiere Kontext: "Beauty/Kosmetik" impliziert meist "female"
+- Extrahiere Reichweiten intelligent: "10k" = 10000, "1m" = 1000000
+- WICHTIG: Explizite Geschlechts-Keywords haben IMMER Vorrang vor Topic-Defaults`
+          },
+          {
+            role: 'user',
+            content: `Analysiere diese Creator-Suchanfrage: "${query}"`
+          }
+        ],
+        temperature: 0.3, // Lower temperature for more consistent structured output
+        max_tokens: 300
+      })
+    });
+
+    if (!response.ok) {
+      console.error(`[${requestId}] OpenRouter API error: ${response.status} ${response.statusText}`);
+      throw new Error(`OpenRouter API failed with status ${response.status}`);
+    }
+
+    const data = await response.json();
+    
+    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+      console.error(`[${requestId}] Invalid OpenRouter response format`);
+      throw new Error('Invalid OpenRouter response format');
+    }
+
+    const content = data.choices[0].message.content;
+    console.log(`[${requestId}] OpenRouter raw response:`, content);
+
+    // Parse JSON from response
+    let analysis: QueryAnalysis;
+    try {
+      // Try to extract JSON from the response (in case there's extra text)
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]);
+        analysis = {
+          gender: parsed.gender || 'any',
+          platforms: parsed.platforms || [],
+          topics: parsed.topics || [],
+          minFollowers: parsed.minFollowers || 0,
+          maxFollowers: parsed.maxFollowers || null,
+          ageRange: {
+            min: null,
+            max: null
+          },
+          location: null,
+          priceRange: {
+            min: null,
+            max: null
+          },
+          keywords: parsed.keywords || []
+        };
+      } else {
+        throw new Error('No JSON found in response');
+      }
+    } catch (parseError) {
+      console.error(`[${requestId}] Failed to parse OpenRouter JSON:`, parseError);
+      throw parseError;
+    }
+
+    console.log(`[${requestId}] OpenRouter analysis successful:`, analysis);
+    return analysis;
+
+  } catch (error) {
+    console.error(`[${requestId}] OpenRouter analysis failed:`, error);
+    throw error;
+  }
+}
+
+// Fallback: Regex-based query analysis (used when OpenRouter fails or is unavailable)
 function analyzeQueryWithAI(query: string, requestId: string): QueryAnalysis {
   console.log(`[${requestId}] Running AI analysis on query: "${query}"`);
 
@@ -698,7 +856,7 @@ function analyzeQueryWithAI(query: string, requestId: string): QueryAnalysis {
     analysis.platforms.push('facebook');
   }
 
-  // Step 3: Extract topics/niches
+  // Step 3: Extract topics/niches with fuzzy matching for typo tolerance
   const topics = [
     { keywords: ['kosmetik', 'beauty', 'make-up', 'makeup', 'schminke'], topic: 'beauty' },
     { keywords: ['mode', 'fashion', 'kleidung', 'style'], topic: 'fashion' },
@@ -710,8 +868,14 @@ function analyzeQueryWithAI(query: string, requestId: string): QueryAnalysis {
   ];
 
   topics.forEach(topicObj => {
-    if (topicObj.keywords.some(keyword => queryLower.includes(keyword))) {
+    // Check for exact match OR fuzzy match (typo tolerance)
+    const hasMatch = topicObj.keywords.some(keyword => 
+      queryLower.includes(keyword) || isSimilar(queryLower, keyword, 2)
+    );
+    
+    if (hasMatch) {
       analysis.topics.push(topicObj.topic);
+      console.log(`[${requestId}] Topic match found: ${topicObj.topic}`);
     }
   });
 
@@ -937,6 +1101,40 @@ function generateReasoning(query: string): string {
   }
 
   return reasoning;
+}
+
+// Helper function to calculate Levenshtein distance for fuzzy matching
+function levenshteinDistance(a: string, b: string): number {
+  const matrix = [];
+  
+  for (let i = 0; i <= b.length; i++) {
+    matrix[i] = [i];
+  }
+  
+  for (let j = 0; j <= a.length; j++) {
+    matrix[0][j] = j;
+  }
+  
+  for (let i = 1; i <= b.length; i++) {
+    for (let j = 1; j <= a.length; j++) {
+      if (b.charAt(i - 1) === a.charAt(j - 1)) {
+        matrix[i][j] = matrix[i - 1][j - 1];
+      } else {
+        matrix[i][j] = Math.min(
+          matrix[i - 1][j - 1] + 1,
+          matrix[i][j - 1] + 1,
+          matrix[i - 1][j] + 1
+        );
+      }
+    }
+  }
+  
+  return matrix[b.length][a.length];
+}
+
+// Helper function to check if two strings are similar (for typo tolerance)
+function isSimilar(query: string, keyword: string, threshold: number = 2): boolean {
+  return levenshteinDistance(query.toLowerCase(), keyword.toLowerCase()) <= threshold;
 }
 
 // Helper function to calculate numeric reach value for sorting

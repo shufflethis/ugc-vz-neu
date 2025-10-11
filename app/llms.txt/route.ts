@@ -1,0 +1,163 @@
+import { NextResponse } from 'next/server';
+
+export async function GET() {
+  const content = `# UGC VZ - Creator Verzeichnis
+
+> Kostenlose Vermittlung von UGC Creators und Unternehmen
+
+## Über UGC VZ
+
+UGC-VZ ist ein kostenloses Verzeichnis, das UGC Creators und Unternehmen zusammenbringt. Creators können sich gratis registrieren und ihr Portfolio präsentieren, während Unternehmen kostenlos nach passenden Creators suchen und direkte Kontakte knüpfen können.
+
+## Hauptfunktionen
+
+- **Creator-Suche**: Kostenlose Suche nach UGC Creators
+- **Creator-Profile**: Gratis Profilerstellung für Creator
+- **Direkte Vermittlung**: Direkte Kontaktaufnahme zwischen Creator und Unternehmen
+- **Kein Algorithmus**: Transparente Vermittlung ohne versteckte Algorithmen
+
+## Unternehmen
+
+**Anbieter:** track by track GmbH
+**Geschäftsführer:** Tobias Sander
+**Sitz:** Berlin, Deutschland
+**USt-IdNr:** DE814954842
+**DUNS-Nummer:** 34-024-8055
+
+**Kontakt:**
+- Adresse: Schliemannstr. 23, 10437 Berlin
+- Telefon: +49 30 403665430
+- E-Mail: info@famefact.com
+- Website: https://ugc-vz.de
+
+**Social Media:**
+- Twitter/X: @Ugc_Vz
+- LinkedIn: https://www.linkedin.com/in/tobias-s-32bab365/
+
+## Hintergrund
+
+UGC-VZ wurde von famefact ins Leben gerufen – einer der führenden Social Media Agenturen Deutschlands mit über 15 Jahren Erfahrung. Das Verzeichnis ist ein Community-Projekt ohne direkte Monetarisierung.
+
+## Für Creator
+
+### Wer kann sich registrieren?
+Jeder, der authentischen User Generated Content erstellt. Keine Follower-Mindestanzahl erforderlich.
+
+### Registrierung
+- Kostenlos für alle Creator
+- Portfolio-Präsentation
+- Direkte Unternehmenskontakte
+- Keine versteckten Kosten
+
+### Was gehört ins Profil?
+- Best-Practice UGC-Arbeiten
+- Style-Beschreibung
+- Themenbereiche (Fashion, Food, Tech, etc.)
+- Kontaktdaten
+
+## Für Unternehmen
+
+### Nutzung
+- Kostenlose Creator-Suche
+- Direkte Kontaktaufnahme
+- Keine Vermittlungsgebühren
+- Profile durchsuchen
+
+### Projektgrößen
+Von kleinen Startups bis zu etablierten Brands. Auch "kleinere" Projekte, die bei großen Agenturen keinen Platz finden.
+
+### Kampagnenplanung
+Für größere Kampagnen kann optional die Expertise von famefact genutzt werden (nicht verpflichtend).
+
+## Service-Prinzipien
+
+1. **Komplett kostenlos**: Keine Kosten für Registrierung, Profile oder Kontaktaufnahme
+2. **Transparenz**: Keine versteckten Algorithmen oder Gebühren
+3. **Direkte Verbindung**: Unternehmen und Creator wickeln alles direkt ab
+4. **Community-Fokus**: Service für die Creator-Community
+
+## FAQ
+
+### Ist UGC-VZ wirklich kostenlos?
+Ja, komplett kostenlos für Creator und Unternehmen. Keine Registrierungskosten, keine Profil-Gebühren, keine Vermittlungsgebühren.
+
+### Wie verdient UGC-VZ Geld?
+Gar nicht. Es ist ein Community-Projekt von famefact. Optional können Unternehmen bei größeren Projekten Agentur-Services nutzen.
+
+### Muss ich über UGC-VZ abrechnen?
+Nein. Sobald ein Match zustande kommt, wickeln Creator und Unternehmen alles direkt miteinander ab.
+
+### Brauche ich einen Account?
+Nein, das Verzeichnis ist öffentlich zugänglich. Creator können direkt über ihre Kontaktdaten erreicht werden.
+
+## Technologie
+
+- **Platform**: Next.js 14
+- **Hosting**: Vercel
+- **Blog**: WordPress Integration
+- **Sprache**: Deutsch (de_DE)
+
+## Beliebte Suchanfragen
+
+- UGC Creator finden
+- User Generated Content Vermittlung
+- Authentischer Content Creator
+- Micro Influencer Deutschland
+- Content Creator für Startups
+- UGC Marketing Deutschland
+- Creator Marketplace kostenlos
+
+## URLs
+
+- Homepage: https://ugc-vz.de
+- Über uns: https://ugc-vz.de/about
+- FAQ: https://ugc-vz.de/faq
+- Blog/Wissen: https://ugc-vz.de/wissen
+- Impressum: https://ugc-vz.de/impressum
+- Datenschutz: https://ugc-vz.de/datenschutz
+
+## SEO & Strukturierte Daten
+
+Die Website nutzt umfangreiche Schema.org Strukturen:
+- Organization Schema
+- WebSite Schema mit Sitelinks Searchbox
+- Service Schema
+- FAQPage Schema
+- BlogPosting Schema
+- BreadcrumbList Schema
+
+## Zielgruppe
+
+**Creator:**
+- UGC Content Creators
+- Micro Influencer
+- Video Creator
+- Social Media Content Producer
+- Authentische Storyteller
+
+**Unternehmen:**
+- Startups
+- E-Commerce Brands
+- Etablierte Marken
+- Marketing Agenturen
+- Direct-to-Consumer Brands
+
+## Expertenwissen
+
+UGC-VZ bietet regelmäßig Wissen und Insights zu:
+- UGC Best Practices
+- Creator Marketing Strategien
+- Authentischer Content
+- Social Media Trends
+- Performance Marketing mit UGC
+- ROI von User Generated Content
+
+Aktuelle Artikel: https://ugc-vz.de/wissen`;
+
+  return new NextResponse(content, {
+    headers: {
+      'Content-Type': 'text/plain; charset=utf-8',
+      'Cache-Control': 'public, max-age=3600, s-maxage=3600',
+    },
+  });
+}

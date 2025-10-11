@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import ContactButton from '../components/ContactButton';
 import ResponsiveCTAButton from '@/src/components/ResponsiveCTAButton';
+import FAQSchema from '../components/FAQSchema';
 
 interface FAQItem {
   question: string;
@@ -123,8 +124,14 @@ export default function FAQPage() {
     );
   };
 
+  // Flatten all FAQ items for schema
+  const allFAQItems = faqData.flatMap(section => section.items);
+
   return (
     <div className="min-h-screen bg-[#0D0D0D] text-white">
+      {/* FAQ Schema for rich snippets */}
+      <FAQSchema faqItems={allFAQItems} />
+      
       {/* Header */}
       <header className="py-6 px-4 sm:px-8 md:px-16 lg:px-24">
         <div className="container mx-auto flex justify-between items-center">

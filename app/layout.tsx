@@ -17,8 +17,47 @@ const inter = Inter({
 
 
 export const metadata: Metadata = {
-  title: "UGC VZ - Finde deine UGC Creators",
-  description: "Finde deine UGC Creators gratis. Direct mit Agentifizierung",
+  title: "UGC VZ - Finde deine UGC Creators | Kostenlose Creator Vermittlung",
+  description: "Professionelle Vermittlung von UGC Creators für Businesses. Beschreibe deine Kampagne und wir finden die passenden Creator gratis für dich.",
+  keywords: "UGC Creator, User Generated Content, Creator Vermittlung, Influencer Marketing, Content Creator, UGC Marketing",
+  authors: [{ name: "UGC VZ - track by track GmbH" }],
+  openGraph: {
+    title: "UGC VZ - Finde deine UGC Creators",
+    description: "Professionelle Vermittlung von UGC Creators für Businesses. Kostenlose Creator-Suche und Vermittlung.",
+    url: "https://ugc-vz.de",
+    siteName: "UGC VZ",
+    locale: "de_DE",
+    type: "website",
+    images: [
+      {
+        url: "https://ugc-vz.de/ugc-vz-logo.webp",
+        width: 1200,
+        height: 630,
+        alt: "UGC VZ - Creator Vermittlung",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "UGC VZ - Finde deine UGC Creators",
+    description: "Professionelle Vermittlung von UGC Creators für Businesses. Kostenlose Creator-Suche.",
+    images: ["https://ugc-vz.de/ugc-vz-logo.webp"],
+    creator: "@Ugc_Vz",
+  },
+  alternates: {
+    canonical: "https://ugc-vz.de",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
 };
 
 export default function RootLayout({

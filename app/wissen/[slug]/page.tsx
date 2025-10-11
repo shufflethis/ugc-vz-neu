@@ -11,6 +11,7 @@ import { notFound } from 'next/navigation';
 // Client-Komponenten importieren
 import ClientBlogPostContent from './ClientBlogPostContent';
 import JsonLdScript from './JsonLdScript';
+import BreadcrumbSchema from '../../components/BreadcrumbSchema';
 
 interface BlogPost {
   id: string;
@@ -43,15 +44,23 @@ export async function generateMetadata(
     };
   }
   
+  const baseUrl = 'https://ugc-vz.de';
+  const postUrl = `${baseUrl}/wissen/${slug}`;
+  
   return {
     title: `${post.title} | UGC VZ`,
     description: post.excerpt,
+    keywords: post.categories.join(', '),
+    authors: [{ name: post.author }],
     openGraph: {
       title: post.title,
       description: post.excerpt,
       type: 'article',
       publishedTime: post.date,
       authors: [post.author],
+      url: postUrl,
+      siteName: 'UGC VZ',
+      locale: 'de_DE',
       images: [
         {
           url: post.featuredImage,
@@ -60,7 +69,17 @@ export async function generateMetadata(
           alt: post.title,
         }
       ],
-    }
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: post.title,
+      description: post.excerpt,
+      images: [post.featuredImage],
+      creator: '@Ugc_Vz',
+    },
+    alternates: {
+      canonical: postUrl,
+    },
   };
 }
 
@@ -111,10 +130,18 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
   // Schema.org JSON-LD mit der JsonLdScript-Komponente einbetten
   const jsonLd = post.schemaOrg ? <JsonLdScript data={post.schemaOrg} /> : null;
 
+  // BreadcrumbList für SEO
+  const breadcrumbs = [
+    { name: 'Home', url: 'https://ugc-vz.de' },
+    { name: 'Wissen', url: 'https://ugc-vz.de/wissen' },
+    { name: post.title, url: `https://ugc-vz.de/wissen/${params.slug}` }
+  ];
+
   return (
     <div className="min-h-screen bg-[#0D0D0D] text-white">
       {/* Schema.org JSON-LD für Rich Snippets */}
       {jsonLd}
+      <BreadcrumbSchema items={breadcrumbs} />
       
       {/* Header */}
       <header className="py-6 px-4 sm:px-8 md:px-16 lg:px-24">

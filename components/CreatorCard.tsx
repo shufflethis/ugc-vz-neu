@@ -26,6 +26,7 @@ interface CreatorCardProps {
 }
 
 export default function CreatorCard({ creator, isSelected, onSelect, className }: CreatorCardProps) {
+
   // Function to detect networks from text and links
   const detectNetworks = (networks: string[]): string[] => {
     const detectedNetworks = new Set<string>();
@@ -120,5 +121,3 @@ export default function CreatorCard({ creator, isSelected, onSelect, className }
     </div>
   );
 }
-
-

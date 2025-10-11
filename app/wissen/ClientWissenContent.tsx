@@ -25,7 +25,14 @@ export default function ClientWissenContent({ posts }: ClientWissenContentProps)
   };
   const [searchTerm, setSearchTerm] = useState('');
 
-  const filteredPosts = posts.filter(post =>
+  // Filter posts: nur Posts mit echten Bildern zeigen (keine Platzhalter)
+  const postsWithImages = posts.filter(post => 
+    post.image && 
+    post.image !== '/placeholder-blog.svg' && 
+    !post.image.includes('placeholder')
+  );
+
+  const filteredPosts = postsWithImages.filter(post =>
     post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     post.excerpt.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -163,7 +170,7 @@ export default function ClientWissenContent({ posts }: ClientWissenContentProps)
             </ContactButton>
             <Link
               href="/"
-              className="border-2 border-emerald-500 text-emerald-400 hover:bg-emerald-500 hover:text-white font-semibold py-3 px-8 rounded-lg transition-all transform hover:scale-105 inline-flex items-center justify-center"
+              className="bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-500 hover:to-blue-500 text-white font-semibold py-3 px-8 rounded-lg transition-all transform hover:scale-105 inline-flex items-center justify-center"
             >
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />

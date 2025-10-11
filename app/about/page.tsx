@@ -1,10 +1,50 @@
 import Link from 'next/link';
+import { Metadata } from 'next';
 import ResponsiveCTAButton from '@/src/components/ResponsiveCTAButton';
 import LogoImage from '../components/LogoImage';
+import BreadcrumbSchema from '../components/BreadcrumbSchema';
+
+export const metadata: Metadata = {
+  title: 'Über UGC VZ - Das kostenlose Creator-Verzeichnis | UGC VZ',
+  description: 'UGC-VZ ist mehr als nur ein Verzeichnis – wir sind die Brücke zwischen talentierten UGC Creators und Unternehmen. Komplett kostenlos für beide Seiten.',
+  keywords: 'UGC VZ, Über uns, Creator Verzeichnis, famefact, Social Media Agentur, User Generated Content',
+  openGraph: {
+    title: 'Über UGC VZ - Das kostenlose Creator-Verzeichnis',
+    description: 'Wir demokratisieren User Generated Content. Jeder Creator verdient eine Chance, entdeckt zu werden.',
+    url: 'https://ugc-vz.de/about',
+    siteName: 'UGC VZ',
+    locale: 'de_DE',
+    type: 'website',
+    images: [
+      {
+        url: 'https://ugc-vz.de/ugc-vz-logo.webp',
+        width: 1200,
+        height: 630,
+        alt: 'UGC VZ - Über uns',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Über UGC VZ - Das kostenlose Creator-Verzeichnis',
+    description: 'Wir demokratisieren User Generated Content. Komplett kostenlos für Creator und Unternehmen.',
+    images: ['https://ugc-vz.de/ugc-vz-logo.webp'],
+    creator: '@Ugc_Vz',
+  },
+  alternates: {
+    canonical: 'https://ugc-vz.de/about',
+  },
+};
 
 export default function AboutPage() {
+  const breadcrumbs = [
+    { name: 'Home', url: 'https://ugc-vz.de' },
+    { name: 'Über uns', url: 'https://ugc-vz.de/about' }
+  ];
+
   return (
     <div className="min-h-screen bg-[#0D0D0D] text-white">
+      <BreadcrumbSchema items={breadcrumbs} />
       {/* Header */}
       <header className="py-6 px-4 sm:px-8 md:px-16 lg:px-24">
         <div className="container mx-auto flex justify-between items-center">
@@ -52,7 +92,7 @@ export default function AboutPage() {
             </h2>
             <div className="bg-gray-900/30 backdrop-blur-sm rounded-2xl p-8 border border-gray-800/50">
               <p className="text-lg text-gray-200 leading-relaxed">
-                Wir democratisieren User Generated Content. Jeder Creator verdient eine Chance, entdeckt zu werden.
+                Wir demokratisieren User Generated Content. Jeder Creator verdient eine Chance, entdeckt zu werden.
                 Jedes Unternehmen – egal ob Startup oder etablierte Marke – sollte Zugang zu authentischem Content haben,
                 ohne Umwege über teure Agenturen oder komplizierte Plattformen.
               </p>
