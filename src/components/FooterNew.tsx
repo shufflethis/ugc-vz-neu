@@ -77,7 +77,16 @@ export default function Footer() {
         {/* Copyright bar */}
         <div className="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center">
           <p className="text-sm text-gray-500 mb-4 md:mb-0">
-            © {new Date().getFullYear()} UGC-VZ ist ein Produkt der track by track GmbH. Alle Rechte vorbehalten.
+            © {new Date().getFullYear()} UGC-VZ ist ein Produkt der track by track GmbH. Der Berliner Social Media Agentur{' '}
+            <a 
+              href="https://famefact.com" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="hover:text-white transition-colors duration-200"
+            >
+              famefact
+            </a>
+            . Alle Rechte vorbehalten.
           </p>
         </div>
       </div>
