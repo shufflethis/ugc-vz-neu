@@ -3,6 +3,7 @@ import { Metadata } from 'next';
 import ResponsiveCTAButton from '@/src/components/ResponsiveCTAButton';
 import LogoImage from '../components/LogoImage';
 import BreadcrumbSchema from '../components/BreadcrumbSchema';
+import HomePageSchema from '../components/HomePageSchema';
 
 export const metadata: Metadata = {
   title: 'Über UGC VZ - Das kostenlose Creator-Verzeichnis | UGC VZ',
@@ -44,7 +45,10 @@ export default function AboutPage() {
 
   return (
     <div className="min-h-screen bg-[#0D0D0D] text-white">
+      {/* Schema.org structured data */}
+      <HomePageSchema />
       <BreadcrumbSchema items={breadcrumbs} />
+      
       {/* Header */}
       <header className="py-6 px-4 sm:px-8 md:px-16 lg:px-24">
         <div className="container mx-auto flex justify-between items-center">
