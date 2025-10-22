@@ -170,6 +170,31 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Video Section */}
+      <section className="px-4 sm:px-8 md:px-16 lg:px-24 py-16 bg-gradient-to-b from-gray-900/30 to-transparent">
+        <div className="max-w-5xl mx-auto">
+          <div className="bg-gradient-to-br from-purple-900/20 to-blue-900/20 backdrop-blur-sm rounded-2xl p-8 border border-purple-700/30">
+            <h2 className="text-3xl font-bold mb-6 text-center">
+              <span className="gradient-text">So findest du deinen UGC Creator</span>
+            </h2>
+            <p className="text-gray-200 text-center mb-8 max-w-2xl mx-auto">
+              Schau dir an, wie einfach es ist, den perfekten Creator für deine Kampagne zu finden
+            </p>
+            <div className="relative rounded-xl overflow-hidden shadow-2xl">
+              <video 
+                className="w-full h-auto"
+                controls
+                preload="metadata"
+                poster="/placeholder-blog.svg"
+              >
+                <source src="/ugc-creator-finden.mp4" type="video/mp4" />
+                Dein Browser unterstützt keine Videos.
+              </video>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Content Cascade Section */}
       <ContentCascade />
     </div>
