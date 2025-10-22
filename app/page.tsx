@@ -184,8 +184,9 @@ export default function Home() {
               <video 
                 className="w-full h-auto"
                 controls
-                preload="metadata"
-                poster="/placeholder-blog.svg"
+                preload="auto"
+                playsInline
+                controlsList="nodownload"
               >
                 <source src="/ugc-creator-finden.mp4" type="video/mp4" />
                 Dein Browser unterstützt keine Videos.
