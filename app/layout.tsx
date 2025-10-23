@@ -80,6 +80,14 @@ export default function RootLayout({
         <link rel="stylesheet" href="https://cdn.kiprotect.com/klaro/latest/klaro.min.css" />
         <link rel="stylesheet" href="/styles/klaro-custom.css" />
 
+        {/* Plausible Analytics */}
+        <script defer data-domain="ugc-vz.de" src="https://analytics.polymarkt.de/js/script.file-downloads.hash.outbound-links.pageview-props.revenue.tagged-events.js"></script>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `window.plausible = window.plausible || function() { (window.plausible.q = window.plausible.q || []).push(arguments) }`
+          }}
+        />
+
         {/* Google Analytics - wird nur geladen wenn Cookies akzeptiert wurden */}
         <script async src="https://www.googletagmanager.com/gtag/js?id=G-CE33NMGRD2" data-name="analytics"></script>
         <script
