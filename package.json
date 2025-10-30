@@ -12,6 +12,7 @@
     "scrape-images:hyperbrowser": "tsx scripts/scrape-images-hyperbrowser.ts"
   },
   "dependencies": {
+    "@bochilteam/scraper-tiktok": "^5.0.0",
     "@fortawesome/fontawesome-svg-core": "^6.7.2",
     "@fortawesome/free-brands-svg-icons": "^6.7.2",
     "@fortawesome/react-fontawesome": "^0.2.2",
