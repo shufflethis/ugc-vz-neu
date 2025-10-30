@@ -154,7 +154,7 @@ async function getTikTokProfilePic(username: string): Promise<string | null> {
         if (user?.avatarLarger) {
           imageUrl = user.avatarLarger;
           console.log('Found TikTok image via JSON data with cheerio:', imageUrl);
-          return imageUrl;
+          return imageUrl || null;
         }
       }
     } catch (error) {
