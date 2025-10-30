@@ -1,6 +1,7 @@
 import axios from 'axios';
+import * as cheerio from 'cheerio';
+import { tiktokdl } from '@bochilteam/scraper-tiktok';
 // Temporarily disable cheerio and tiktok-scraper to fix canvas dependency issue
-// import * as cheerio from 'cheerio';
 // import * as TikTokScraper from 'tiktok-scraper';
 
 // Array of user agents to rotate through
@@ -62,31 +63,12 @@ async function getInstagramProfilePic(username: string): Promise<string | null> 
         headers,
         timeout: 8000
       });
+      const $ = cheerio.load(response.data);
+      const ogImage = $('meta[property="og:image"]').attr('content');
 
-      // Temporarily disabled cheerio parsing due to canvas dependency issue
-      // const $ = cheerio.load(response.data);
-      // const ogImage = $('meta[property="og:image"]').attr('content');
-
-      // Simple regex fallback for og:image
-      const ogImageMatch = response.data.match(/<meta[^>]*property="og:image"[^>]*content="([^"]*)"[^>]*>/i);
-      if (ogImageMatch && ogImageMatch[1]) {
-        console.log('Found Instagram profile image via regex:', ogImageMatch[1]);
-        return ogImageMatch[1];
-      }
-
-      // Try alternative methods if og:image fails - using regex instead of cheerio
-      const scriptMatches = response.data.match(/<script[^>]*>(.*?)<\/script>/gi);
-      if (scriptMatches) {
-        for (const scriptMatch of scriptMatches) {
-          if (scriptMatch.includes('profile_pic_url')) {
-            const match = scriptMatch.match(/"profile_pic_url_hd":"([^"]+)"|"profile_pic_url":"([^"]+)"/);
-            if (match) {
-              const imageUrl = (match[1] || match[2]).replace(/\\u0026/g, '&').replace(/\\/g, '');
-              console.log('Found Instagram profile image via JSON data:', imageUrl);
-              return imageUrl;
-            }
-          }
-        }
+      if (ogImage) {
+        console.log('Found Instagram profile image via cheerio:', ogImage);
+        return ogImage;
       }
     } catch (error) {
       console.log('Method 1 failed, trying alternative methods...');
@@ -145,11 +127,7 @@ async function getTikTokProfilePic(username: string): Promise<string | null> {
   try {
     console.log('Fetching TikTok profile for:', username);
 
-    // Method 1: TikTok scraper library temporarily disabled due to canvas dependency
-    // Will use direct HTML scraping instead
-    console.log('TikTok scraper library temporarily disabled, using alternative methods...');
-
-    // Method 2: Direct HTML scraping
+    // Method 2: Direct HTML scraping with Cheerio
     try {
       const response = await axios.get(`https://www.tiktok.com/@${username}`, {
         headers: {
@@ -162,27 +140,21 @@ async function getTikTokProfilePic(username: string): Promise<string | null> {
       });
 
       const html = response.data;
-      console.log('Got TikTok HTML response, searching for profile image');
-
-      // Try with regex instead of cheerio (temporarily disabled due to canvas dependency)
-      const ogImageMatch = html.match(/<meta[^>]*property="og:image"[^>]*content="([^"]*)"[^>]*>/i);
-      if (ogImageMatch && ogImageMatch[1]) {
-        console.log('Found TikTok image via og:image:', ogImageMatch[1]);
-        return ogImageMatch[1];
+      const $ = cheerio.load(html);
+      let imageUrl = $('meta[property="og:image"]').attr('content');
+      if (imageUrl) {
+        console.log('Found TikTok image via og:image with cheerio:', imageUrl);
+        return imageUrl;
       }
 
-      // Try multiple regex patterns as fallback
-      const patterns = [
-        /"avatarLarger":"([^"]+)"/,
-        /"avatarMedium":"([^"]+)"/,
-        /property="og:image"\s+content="([^"]+)"/
-      ];
-
-      for (const pattern of patterns) {
-        const match = html.match(pattern);
-        if (match?.[1]) {
-          const imageUrl = match[1].replace(/\\u002F/g, '/');
-          console.log('Found TikTok image via regex:', imageUrl);
+      // Fallback to searching for the image in the page's JSON data
+      const jsonData = $('script[id="__UNIVERSAL_DATA_FOR_REHYDRATION__"]').html();
+      if (jsonData) {
+        const data = JSON.parse(jsonData);
+        const user = data?.['__DEFAULT_SCOPE__']?.['webapp.user-detail']?.userInfo?.user;
+        if (user?.avatarLarger) {
+          imageUrl = user.avatarLarger;
+          console.log('Found TikTok image via JSON data with cheerio:', imageUrl);
           return imageUrl;
         }
       }
