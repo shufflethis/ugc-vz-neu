@@ -1,6 +1,5 @@
 import axios from 'axios';
 import * as cheerio from 'cheerio';
-import { tiktokdl } from '@bochilteam/scraper-tiktok';
 // Temporarily disable cheerio and tiktok-scraper to fix canvas dependency issue
 // import * as TikTokScraper from 'tiktok-scraper';
 
@@ -155,7 +154,7 @@ async function getTikTokProfilePic(username: string): Promise<string | null> {
         if (user?.avatarLarger) {
           imageUrl = user.avatarLarger;
           console.log('Found TikTok image via JSON data with cheerio:', imageUrl);
-          return imageUrl;
+          return imageUrl || null;
         }
       }
     } catch (error) {

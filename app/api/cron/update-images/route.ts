@@ -83,17 +83,6 @@ export async function GET(req: Request) {
           continue;
         }
 
-        // Download and save image
-        const response = await axios({
-          url: imageUrl,
-          method: 'GET',
-          responseType: 'arraybuffer',
-          timeout: 30000,
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-          }
-        });
-
         // For Vercel deployment, we'd use Vercel Blob Storage instead
         // For now, just update Airtable with the scraped URL
         await base(tableName).update([
