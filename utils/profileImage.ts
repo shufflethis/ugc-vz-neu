@@ -1,6 +1,5 @@
 import axios from 'axios';
 import * as cheerio from 'cheerio';
-import { tiktokdl } from '@bochilteam/scraper-tiktok';
 // Temporarily disable cheerio and tiktok-scraper to fix canvas dependency issue
 // import * as TikTokScraper from 'tiktok-scraper';
 

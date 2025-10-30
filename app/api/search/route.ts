@@ -24,6 +24,7 @@ interface AirtableRecord {
     'In welchem Netzwerk hast du Accounts und möchtest du aktiv sein?&nbsp; '?: string;
     'Wie groß ist deine Reichweite pro Netzwerk? '?: string;
     'Price'?: string;
+    'cached_image_url'?: string;
   };
 }
 
@@ -539,34 +540,35 @@ export async function POST(req: Request) {
           const reachText = String(fields['Wie groß ist deine Reichweite pro Netzwerk? '] || '');
           const totalReach = calculateTotalReach(reachText);
 
-          console.log(`[${requestId}] Skipping profile image scraping for speed - using placeholder`);
-          
-          // Use immediate placeholder instead of slow image scraping
-          const genderParam = gender === 'Weiblich' ? 'female' : gender === 'Männlich' ? 'male' : undefined;
-          const profileImage = genderParam === 'female' ? '/female-placeholder.webp' : '/placeholder.jpg';
+          const cachedImageUrl = fields['cached_image_url'] as string | undefined;
+          let finalImage: string;
+          let hasCustomImage: boolean;
 
-          // Additional fallback logic for gender-specific placeholders
-          let finalImage = profileImage;
-          if (profileImage.includes('placeholder.jpg') || profileImage === '/placeholder.jpg' || !profileImage || profileImage.length === 0) {
+          if (cachedImageUrl && cachedImageUrl.trim() !== '') {
+            finalImage = cachedImageUrl;
+            hasCustomImage = true;
+            console.log(`[${requestId}] Using cached image for ${fullName}: ${finalImage}`);
+          } else {
+            // Fallback to gender-specific placeholder
             if (gender === 'Weiblich') {
               finalImage = '/female-placeholder.webp';
             } else {
-              finalImage = '/placeholder.jpg'; // Use original placeholder for male and others
+              finalImage = '/placeholder.jpg';
             }
+            hasCustomImage = false;
+            console.log(`[${requestId}] No cached image for ${fullName}, using placeholder: ${finalImage}`);
           }
 
           // Debug logging for gender and image assignment
           console.log(`[${requestId}] Creator ${fullName}: gender="${gender}", finalImage="${finalImage}"`);
 
-
-          console.log(`[${requestId}] Creator ${fullName} passed AI filtering with score ${score}`);
           return {
             id: record.id,
             name: firstName,
             image: finalImage,
             reach: reachText,
             totalReach: totalReach,
-            hasCustomImage: !profileImage.includes('placeholder'),
+            hasCustomImage: hasCustomImage,
             networks: socialLinks.split('\n').filter(Boolean),
             priceRange: String(fields.Price || ''),
             gender: gender, // Add gender for debugging
