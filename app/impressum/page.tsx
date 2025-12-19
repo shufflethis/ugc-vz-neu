@@ -1,6 +1,15 @@
 import Link from 'next/link';
+import { Metadata } from 'next';
 import ResponsiveCTAButton from '@/src/components/ResponsiveCTAButton';
 import LogoImage from '../components/LogoImage';
+
+export const metadata: Metadata = {
+  title: 'Impressum | UGC VZ',
+  description: 'Impressum der UGC VZ Plattform - track by track GmbH, Berlin. Angaben gemäß § 5 DDG.',
+  alternates: {
+    canonical: 'https://ugc-vz.de/impressum',
+  },
+};
 
 export default function ImpressumPage() {
   return (

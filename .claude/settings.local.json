@@ -12,7 +12,18 @@
       "Bash(pkill:*)",
       "Bash(curl:*)",
       "Bash(lsof:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(npx next build:*)",
+      "Bash(cat:*)",
+      "Bash(npm install:*)",
+      "Bash(./node_modules/.bin/next build:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfix: Add 301 redirects for 69 dead /wissen/ URLs \\(Seobility SEO fix\\)\n\nRedirect broken URLs to relevant existing articles or /wissen:\n- Thematic redirects \\(37\\): was-ist-ugc, creator-werden, preise, trends etc.\n- General redirects \\(32\\): anmeldung, community, registrierung etc.\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git push:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfix: Remove HTML/HEAD/BODY tags from WordPress content \\(SEO fix\\)\n\nWordPress content sometimes includes <html>, <head>, <body> tags which\ncauses \"multiple head elements\" warnings in SEO crawlers like Screaming Frog.\n\nAdded sanitizeContent\\(\\) function to strip these structural tags before rendering.\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(python3:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfix: Add 3 more redirects and fix broken mailto links \\(Screaming Frog SEO\\)\n\n- Add redirects for plattform-vergleich, ugc-monetarisierung, erfolgreiche-ugc-strategien\n- Fix email links without mailto: prefix in WordPress content\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git commit:*)"
     ],
     "deny": []
   }

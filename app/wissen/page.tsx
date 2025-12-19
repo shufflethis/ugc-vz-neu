@@ -15,6 +15,9 @@ import { BlogPost } from '../lib/wordpress-api'; // Import BlogPost from central
 export const metadata: Metadata = {
   title: 'Wissen für UGC Creators | UGC VZ',
   description: 'Entdecke die neuesten Trends, Strategien und Insights aus der Welt des User Generated Content. Von Creator-Tipps bis hin zu Brand-Strategien.',
+  alternates: {
+    canonical: 'https://ugc-vz.de/wissen',
+  },
   openGraph: {
     title: 'Wissen für UGC Creators | UGC VZ',
     description: 'Entdecke die neuesten Trends, Strategien und Insights aus der Welt des User Generated Content.',

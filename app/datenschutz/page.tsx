@@ -1,6 +1,15 @@
 import Image from 'next/image';
 import Link from 'next/link';
+import { Metadata } from 'next';
 import ResponsiveCTAButton from '@/src/components/ResponsiveCTAButton';
+
+export const metadata: Metadata = {
+  title: 'Datenschutz | UGC VZ',
+  description: 'Datenschutzerklärung der UGC VZ Plattform. Informationen zur Verarbeitung Ihrer personenbezogenen Daten.',
+  alternates: {
+    canonical: 'https://ugc-vz.de/datenschutz',
+  },
+};
 
 export default function DatenschutzPage() {
   return (
