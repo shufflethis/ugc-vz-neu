@@ -255,6 +255,7 @@ async function fetchSinglePost(slug: string): Promise<BlogPost | null> {
     }
 
     // Redirect-Mapping für interne Links (vermeidet Weiterleitungsketten)
+    // Wert "" bedeutet: Link auf /wissen (Übersichtsseite)
     const linkRedirectMap: Record<string, string> = {
       // Duplicate Content → Original
       'ugc-success-stories-2': 'ugc-success-stories',
@@ -268,7 +269,7 @@ async function fetchSinglePost(slug: string): Promise<BlogPost | null> {
       'ugc-bewertungen-so-werden-sie-authentisch-3': 'ugc-bewertungen-so-werden-sie-authentisch',
       'ugc-bewertungen-so-werden-sie-authentisch-4': 'ugc-bewertungen-so-werden-sie-authentisch',
       'ugc-bewertungen-so-werden-sie-authentisch-5': 'ugc-bewertungen-so-werden-sie-authentisch',
-      // Thematische Redirects
+      // Thematische Redirects → spezifische Artikel
       'ugc-creator-finden': 'ugc-creator-finden-17-wege-ohne-agentur-fuer-erfolgreiches-marketing',
       'creator-finden': 'ugc-creator-finden-17-wege-ohne-agentur-fuer-erfolgreiches-marketing',
       'ugc-agentur': 'ugc-agentur-vs-plattform-was-ist-besser',
@@ -309,6 +310,39 @@ async function fetchSinglePost(slug: string): Promise<BlogPost | null> {
       'nano-influencer': 'warum-ugc-guenstiger-als-influencer-marketing-ist',
       'warum-ugc-das-vertrauen-in-marken-staerkt': 'ugc-und-social-proof',
       'user-generated-content-erstellen-lassen': 'ugc-briefing-so-briefest-du-creator-richtig',
+      // Allgemeine Seiten → /wissen (Übersicht) - Wert "" bedeutet /wissen
+      'ugc-vz.de': '',
+      'blog': '',
+      'registrierung': '',
+      'marken': '',
+      'formate': '',
+      'creators': '',
+      'kategorien': '',
+      'fuer-unternehmen': '',
+      'arten-von-user-generated-content': '',
+      'anmeldung': '',
+      'verifizierung': '',
+      'creator-verzeichnis': '',
+      'marken-ressourcen': '',
+      'events': '',
+      'community': '',
+      'creator-services': '',
+      'community-events': '',
+      'registration': '',
+      'fuer-creator': '',
+      'fuer-creator-registrieren': '',
+      'creator-ranking': '',
+      'unternehmen': '',
+      'ratgeber': '',
+      'leistungen': '',
+      'ueber-uns': '',
+      'formats': '',
+      'creator-anmeldung': '',
+      'tiktok-content-creators': '',
+      'creator-typen': '',
+      'creator-verifizierung': '',
+      'workshops': '',
+      'premium-profil-vorteile': '',
     };
 
     // Liste der kaputten externen Links (404s), die entfernt werden sollen
@@ -367,9 +401,15 @@ async function fetchSinglePost(slug: string): Promise<BlogPost | null> {
             linkSlug = href.replace('/wissen/', '');
           }
 
-          // Wende Redirect-Mapping an
-          if (linkSlug && linkRedirectMap[linkSlug]) {
-            $link.attr('href', `/wissen/${linkRedirectMap[linkSlug]}`);
+          // Wende Redirect-Mapping an (prüfe ob Key existiert, nicht ob Wert truthy ist)
+          if (linkSlug && linkSlug in linkRedirectMap) {
+            const targetSlug = linkRedirectMap[linkSlug];
+            // Wenn Wert leer ist, zeige auf /wissen (Übersichtsseite)
+            if (targetSlug === '') {
+              $link.attr('href', '/wissen');
+            } else {
+              $link.attr('href', `/wissen/${targetSlug}`);
+            }
           } else if (href.includes('ugc-vz.de')) {
             // Konvertiere zu relativen Links
             $link.attr('href', `/wissen/${linkSlug}`);

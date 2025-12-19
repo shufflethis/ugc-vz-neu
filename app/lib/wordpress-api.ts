@@ -34,13 +34,29 @@ export interface BlogPost {
   categories: string[];
 }
 
+// Duplikat-Slugs die gefiltert werden sollen (diese werden per 301 weitergeleitet)
+const duplicateSlugsToFilter: string[] = [
+  // WordPress-Duplikate (werden auf Originale weitergeleitet)
+  'ugc-recht-was-ist-zu-beachten-2',
+  'ugc-success-stories-2',
+  'ugc-success-stories-3',
+  'ugc-trends-2025-2',
+  'warum-ugc-guenstiger-als-influencer-marketing-ist-2',
+  'ugc-in-der-beauty-branche-2',
+  'ugc-in-der-beauty-branche-3',
+  'ugc-bewertungen-so-werden-sie-authentisch-2',
+  'ugc-bewertungen-so-werden-sie-authentisch-3',
+  'ugc-bewertungen-so-werden-sie-authentisch-4',
+  'ugc-bewertungen-so-werden-sie-authentisch-5',
+];
+
 export async function fetchAndProcessWordPressPosts(): Promise<BlogPost[]> {
   try {
     const timestamp = Date.now();
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     const beforeDate = tomorrow.toISOString();
-    
+
     const response = await fetch(`https://wp.ugc-vz.de/wp-json/wp/v2/posts?per_page=50&_embed&acf_format=standard&orderby=date&order=desc&_t=${timestamp}&before=${beforeDate}&status=publish`, {
       headers: {
         'User-Agent': 'UGC-VZ Blog Sync/1.0',
@@ -67,6 +83,12 @@ export async function fetchAndProcessWordPressPosts(): Promise<BlogPost[]> {
       title = title.replace(/&#038;/g, '&').replace(/&/g, '&').replace(/</g, '<').replace(/>/g, '>').replace(/"/g, '"');
 
       const slug = wpPost.slug || `post-${wpPost.id}`;
+
+      // Filtere Duplikat-Posts heraus (diese werden per 301 auf Originale weitergeleitet)
+      if (duplicateSlugsToFilter.includes(slug)) {
+        console.log(`Filtering out duplicate post: "${title}" (${slug})`);
+        continue;
+      }
 
       let excerpt = '';
       if (wpPost.acf && wpPost.acf.page_content && Array.isArray(wpPost.acf.page_content)) {
