@@ -64,9 +64,9 @@ const nextConfig = {
   // Redirects für alte/nicht existierende URLs (SEO fix für Seobility 404s)
   async redirects() {
     return [
-      // Kaputte mailto-Links die als relative URLs gecrawlt wurden
-      { source: '/mailto\\:hi@ugc-vz.de', destination: 'mailto:hi@ugc-vz.de', permanent: true },
-      { source: '/wissen/mailto\\:hi@ugc-vz.de', destination: 'mailto:hi@ugc-vz.de', permanent: true },
+      // Kaputte mailto-Links die als relative URLs gecrawlt wurden → redirect zur Homepage
+      { source: '/mailto\\:hi@ugc-vz.de', destination: '/', permanent: true },
+      { source: '/wissen/mailto\\:hi@ugc-vz.de', destination: '/', permanent: true },
 
       // Duplicate Content Redirects (WordPress Duplikate)
       { source: '/wissen/ugc-recht-was-ist-zu-beachten-2', destination: '/wissen/ugc-recht-was-ist-zu-beachten', permanent: true },
