@@ -68,6 +68,19 @@ const nextConfig = {
       { source: '/mailto\\:hi@ugc-vz.de', destination: 'mailto:hi@ugc-vz.de', permanent: true },
       { source: '/wissen/mailto\\:hi@ugc-vz.de', destination: 'mailto:hi@ugc-vz.de', permanent: true },
 
+      // Duplicate Content Redirects (WordPress Duplikate)
+      { source: '/wissen/ugc-recht-was-ist-zu-beachten-2', destination: '/wissen/ugc-recht-was-ist-zu-beachten', permanent: true },
+      { source: '/wissen/ugc-success-stories-2', destination: '/wissen/ugc-success-stories', permanent: true },
+      { source: '/wissen/ugc-success-stories-3', destination: '/wissen/ugc-success-stories', permanent: true },
+      { source: '/wissen/ugc-trends-2025-2', destination: '/wissen/ugc-trends-2025', permanent: true },
+      { source: '/wissen/warum-ugc-guenstiger-als-influencer-marketing-ist-2', destination: '/wissen/warum-ugc-guenstiger-als-influencer-marketing-ist', permanent: true },
+      { source: '/wissen/ugc-in-der-beauty-branche-2', destination: '/wissen/ugc-in-der-beauty-branche', permanent: true },
+      { source: '/wissen/ugc-in-der-beauty-branche-3', destination: '/wissen/ugc-in-der-beauty-branche', permanent: true },
+      { source: '/wissen/ugc-bewertungen-so-werden-sie-authentisch-2', destination: '/wissen/ugc-bewertungen-so-werden-sie-authentisch', permanent: true },
+      { source: '/wissen/ugc-bewertungen-so-werden-sie-authentisch-3', destination: '/wissen/ugc-bewertungen-so-werden-sie-authentisch', permanent: true },
+      { source: '/wissen/ugc-bewertungen-so-werden-sie-authentisch-4', destination: '/wissen/ugc-bewertungen-so-werden-sie-authentisch', permanent: true },
+      { source: '/wissen/ugc-bewertungen-so-werden-sie-authentisch-5', destination: '/wissen/ugc-bewertungen-so-werden-sie-authentisch', permanent: true },
+
       // Thematisch passende Redirects
       { source: '/wissen/was-ist-ugc', destination: '/wissen/ugc-faqs-fuer-brands', permanent: true },
       { source: '/wissen/ugc-creator-werden', destination: '/wissen/ugc-faqs-fuer-creator', permanent: true },
