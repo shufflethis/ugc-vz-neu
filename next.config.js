@@ -64,6 +64,9 @@ const nextConfig = {
   // Redirects für alte/nicht existierende URLs (SEO fix für Seobility 404s)
   async redirects() {
     return [
+      // Kaputte mailto-Links die als relative URLs gecrawlt wurden
+      { source: '/wissen/mailto\\:hi@ugc-vz.de', destination: 'mailto:hi@ugc-vz.de', permanent: true },
+
       // Thematisch passende Redirects
       { source: '/wissen/was-ist-ugc', destination: '/wissen/ugc-faqs-fuer-brands', permanent: true },
       { source: '/wissen/ugc-creator-werden', destination: '/wissen/ugc-faqs-fuer-creator', permanent: true },
