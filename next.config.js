@@ -65,6 +65,7 @@ const nextConfig = {
   async redirects() {
     return [
       // Kaputte mailto-Links die als relative URLs gecrawlt wurden
+      { source: '/mailto\\:hi@ugc-vz.de', destination: 'mailto:hi@ugc-vz.de', permanent: true },
       { source: '/wissen/mailto\\:hi@ugc-vz.de', destination: 'mailto:hi@ugc-vz.de', permanent: true },
 
       // Thematisch passende Redirects
