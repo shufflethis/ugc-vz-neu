@@ -254,18 +254,126 @@ async function fetchSinglePost(slug: string): Promise<BlogPost | null> {
       `;
     }
 
+    // Redirect-Mapping für interne Links (vermeidet Weiterleitungsketten)
+    const linkRedirectMap: Record<string, string> = {
+      // Duplicate Content → Original
+      'ugc-success-stories-2': 'ugc-success-stories',
+      'ugc-success-stories-3': 'ugc-success-stories',
+      'ugc-trends-2025-2': 'ugc-trends-2025',
+      'ugc-recht-was-ist-zu-beachten-2': 'ugc-recht-was-ist-zu-beachten',
+      'warum-ugc-guenstiger-als-influencer-marketing-ist-2': 'warum-ugc-guenstiger-als-influencer-marketing-ist',
+      'ugc-in-der-beauty-branche-2': 'ugc-in-der-beauty-branche',
+      'ugc-in-der-beauty-branche-3': 'ugc-in-der-beauty-branche',
+      'ugc-bewertungen-so-werden-sie-authentisch-2': 'ugc-bewertungen-so-werden-sie-authentisch',
+      'ugc-bewertungen-so-werden-sie-authentisch-3': 'ugc-bewertungen-so-werden-sie-authentisch',
+      'ugc-bewertungen-so-werden-sie-authentisch-4': 'ugc-bewertungen-so-werden-sie-authentisch',
+      'ugc-bewertungen-so-werden-sie-authentisch-5': 'ugc-bewertungen-so-werden-sie-authentisch',
+      // Thematische Redirects
+      'ugc-creator-finden': 'ugc-creator-finden-17-wege-ohne-agentur-fuer-erfolgreiches-marketing',
+      'creator-finden': 'ugc-creator-finden-17-wege-ohne-agentur-fuer-erfolgreiches-marketing',
+      'ugc-agentur': 'ugc-agentur-vs-plattform-was-ist-besser',
+      'preise': 'ugc-preise-was-kostet-ugc',
+      'ugc-creator-kosten': 'ugc-preise-was-kostet-ugc',
+      'trends': 'ugc-trends-2025',
+      'ugc-trends': 'ugc-trends-2025',
+      'ugc-entwicklung-trends-2023': 'ugc-trends-2025',
+      'rechtliches-ugc': 'ugc-recht-was-ist-zu-beachten',
+      'creator-werden': 'ugc-faqs-fuer-creator',
+      'ugc-creator-werden': 'ugc-faqs-fuer-creator',
+      'ugc-creator-werden-anleitung': 'ugc-faqs-fuer-creator',
+      'creator-guide': 'ugc-faqs-fuer-creator',
+      'ugc-academy': 'ugc-faqs-fuer-creator',
+      'ugc-creator-academy': 'ugc-faqs-fuer-creator',
+      'creator-academy': 'ugc-faqs-fuer-creator',
+      'ugc-creator-ressourcen': 'ugc-faqs-fuer-creator',
+      'ressourcen-fuer-creator': 'ugc-faqs-fuer-creator',
+      'erfolgsgeheimnisse-top-ugc-creator': 'ugc-faqs-fuer-creator',
+      'was-ist-ugc': 'ugc-faqs-fuer-brands',
+      'ugc-marketing-definition-vorteile-best-practices': 'ugc-faqs-fuer-brands',
+      'erfolgreiche-ugc-kampagnen': 'ugc-success-stories',
+      'erfolgsgeschichten': 'ugc-success-stories',
+      'case-studies': 'ugc-success-stories',
+      'creator-portfolio': 'ugc-creator-portfolio-so-baust-du-es-auf',
+      'creator-profil-erstellen': 'ugc-creator-portfolio-so-baust-du-es-auf',
+      'ugc-strategie-aufbauen': 'ugc-content-strategie-entwickeln',
+      'ugc-marketing-strategie-aufbauen': 'ugc-content-strategie-entwickeln',
+      'erfolgreiche-ugc-strategien': 'ugc-content-strategie-entwickeln',
+      'lifestyle': 'ugc-content-strategie-entwickeln',
+      'podcaster': 'ugc-content-repurposing',
+      'plattform-vergleich': 'ugc-plattformen-im-vergleich',
+      'ugc-monetarisierung': 'ugc-preise-was-kostet-ugc',
+      'erfolgsmetriken-fuer-content-creators': 'wie-messe-ich-ugc-roi',
+      'creator-erfolgsstatistiken-2023': 'wie-messe-ich-ugc-roi',
+      'ugc-vs-influencer-marketing-unterschiede-und-gemeinsamkeiten': 'warum-ugc-guenstiger-als-influencer-marketing-ist',
+      'warum-micro-influencer-die-zukunft-des-influencer-marketings-sind': 'warum-ugc-guenstiger-als-influencer-marketing-ist',
+      'nano-influencer': 'warum-ugc-guenstiger-als-influencer-marketing-ist',
+      'warum-ugc-das-vertrauen-in-marken-staerkt': 'ugc-und-social-proof',
+      'user-generated-content-erstellen-lassen': 'ugc-briefing-so-briefest-du-creator-richtig',
+    };
+
+    // Liste der kaputten externen Links (404s), die entfernt werden sollen
+    const brokenExternalLinks: string[] = [
+      // TikTok Business Blog (redirects/broken)
+      'tiktok.com/business/en/blog/ugc-on-tiktok',
+      'tiktok.com/business/en/blog',
+      // Later.com (404)
+      'later.com/blog/user-generated-content-marketing',
+      'later.com/blog/user-generated-content',
+      // Nielsen (404)
+      'nielsen.com',
+      // Tintup (404)
+      'tintup.com/blog/user-generated-content-statistics',
+      'tintup.com/blog/user-generated-content',
+      // The Drum (404)
+      'thedrum.com',
+      // eMarketer (404)
+      'emarketer.com',
+      // Brandwatch (404)
+      'brandwatch.com',
+    ];
+
     // Content bereinigen und stylen
     if (content) {
       const $ = cheerio.load(content);
 
-      // Bereinige Links
+      // Entferne kaputte externe Links (ersetze durch Text)
       $('a').each((_, link) => {
         const $link = $(link);
         const href = $link.attr('href');
-        if (href && href.includes('ugc-vz.de')) {
-          // Konvertiere zu relativen Links
-          const slug = href.split('/').filter(Boolean).pop();
-          $link.attr('href', `/wissen/${slug}`);
+        if (href) {
+          // Prüfe ob der Link zu einer kaputten externen Seite führt
+          const isBrokenExternal = brokenExternalLinks.some(brokenUrl =>
+            href.toLowerCase().includes(brokenUrl.toLowerCase())
+          );
+
+          if (isBrokenExternal) {
+            // Ersetze den Link durch seinen Text (entferne nur das <a>-Tag, behalte den Inhalt)
+            const linkText = $link.text();
+            $link.replaceWith(`<span class="text-gray-300">${linkText}</span>`);
+          }
+        }
+      });
+
+      // Bereinige Links und wende Redirect-Mapping an
+      $('a').each((_, link) => {
+        const $link = $(link);
+        let href = $link.attr('href');
+        if (href) {
+          // Extrahiere Slug aus der URL
+          let linkSlug = '';
+          if (href.includes('ugc-vz.de')) {
+            linkSlug = href.split('/').filter(Boolean).pop() || '';
+          } else if (href.startsWith('/wissen/')) {
+            linkSlug = href.replace('/wissen/', '');
+          }
+
+          // Wende Redirect-Mapping an
+          if (linkSlug && linkRedirectMap[linkSlug]) {
+            $link.attr('href', `/wissen/${linkRedirectMap[linkSlug]}`);
+          } else if (href.includes('ugc-vz.de')) {
+            // Konvertiere zu relativen Links
+            $link.attr('href', `/wissen/${linkSlug}`);
+          }
         }
       });
 
