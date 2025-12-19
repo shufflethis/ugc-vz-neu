@@ -236,12 +236,14 @@ async function fetchSinglePost(slug: string): Promise<BlogPost | null> {
 
     // Prüfe auf Platzhalter-Content und verwende Fallback
     const cleanTextContent = content.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+    let isPlaceholderContent = false;
     if (!content || cleanTextContent.length < 50 || cleanTextContent.includes('UGC VZ 404') || cleanTextContent.includes('404')) {
       console.log(`Post "${title}" has placeholder content - using fallback content`);
-      // Verwende Fallback-Content für Artikel ohne echten Inhalt
+      isPlaceholderContent = true;
+      // Verwende Fallback-Content für Artikel ohne echten Inhalt (mit Titel für Einzigartigkeit)
       content = `
         <div class="placeholder-content">
-          <p class="text-lg mb-6">Dieser Artikel wird derzeit überarbeitet und bald mit umfassenden Inhalten gefüllt.</p>
+          <p class="text-lg mb-6">Unser Artikel zu "${title}" wird derzeit überarbeitet und in Kürze mit umfassenden Inhalten aktualisiert.</p>
           <p class="mb-4">In der Zwischenzeit empfehlen wir Ihnen, unsere anderen Artikel zu entdecken:</p>
           <ul class="list-disc list-inside mb-6">
             <li><a href="/wissen/ugc-qualitaet-vs-quantitaet-was-ist-wichtiger" class="text-emerald-400 hover:text-emerald-300 underline">UGC-Qualität vs. Quantität: Was ist wichtiger?</a></li>
@@ -344,26 +346,40 @@ async function fetchSinglePost(slug: string): Promise<BlogPost | null> {
     }
 
     // Prüfe auf ungültige/Platzhalter-Excerpts
-    const invalidExcerpts = ['SearchGPT 404', '404', 'UGC VZ 404', 'placeholder', 'coming soon'];
+    const invalidExcerpts = ['SearchGPT 404', '404', 'UGC VZ 404', 'placeholder', 'coming soon', 'wird derzeit überarbeitet'];
     const isInvalidExcerpt = !excerpt ||
                              excerpt.length < 10 ||
+                             isPlaceholderContent ||
                              invalidExcerpts.some(invalid => excerpt.toLowerCase().includes(invalid.toLowerCase()));
 
     if (isInvalidExcerpt) {
-      // Fallback: Excerpt aus Content generieren
-      const textContent = content.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
-
-      // Versuche einen sinnvollen ersten Satz zu extrahieren
-      const firstSentence = textContent.match(/^[^.!?]+[.!?]/);
-      if (firstSentence && firstSentence[0].length > 50 && firstSentence[0].length < 200) {
-        excerpt = firstSentence[0].trim();
+      // Für Platzhalter-Content: Generiere einzigartige Description basierend auf Titel
+      if (isPlaceholderContent) {
+        // Erstelle einzigartige Meta-Descriptions basierend auf dem Slug/Titel
+        const descriptionMap: Record<string, string> = {
+          'ugc-success-stories': 'Entdecke inspirierende Erfolgsgeschichten von UGC Creators und Brands. Lerne aus realen Kampagnen und Best Practices.',
+          'ugc-trends-2025': 'Die wichtigsten UGC-Trends für 2025: Von AI-Content bis Micro-Influencer. So bleibst du als Creator relevant.',
+          'warum-ugc-guenstiger-als-influencer-marketing-ist': 'UGC vs. Influencer-Marketing: Warum User Generated Content oft kosteneffizienter ist und bessere Ergebnisse liefert.',
+          'ugc-recht-was-ist-zu-beachten': 'Rechtliche Grundlagen für UGC: Urheberrecht, Nutzungsrechte und Verträge. Was Creator und Brands wissen müssen.',
+          'ugc-bewertungen-so-werden-sie-authentisch': 'Authentische Bewertungen sammeln: So nutzt du User Generated Content für mehr Vertrauen und Conversions.',
+        };
+        excerpt = descriptionMap[slug] || `${title}: Tipps, Strategien und Insights für erfolgreiches UGC-Marketing. Jetzt mehr erfahren.`;
       } else {
-        excerpt = textContent.length > 250 ? textContent.substring(0, 250) + '...' : textContent;
-      }
+        // Fallback: Excerpt aus Content generieren
+        const textContent = content.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
 
-      // Letzter Fallback: Generiere Excerpt basierend auf Titel
-      if (!excerpt || excerpt.length < 20) {
-        excerpt = `Erfahre alles über ${title}. Praktische Tipps, Strategien und Insights für erfolgreiches Content Marketing.`;
+        // Versuche einen sinnvollen ersten Satz zu extrahieren
+        const firstSentence = textContent.match(/^[^.!?]+[.!?]/);
+        if (firstSentence && firstSentence[0].length > 50 && firstSentence[0].length < 200) {
+          excerpt = firstSentence[0].trim();
+        } else {
+          excerpt = textContent.length > 250 ? textContent.substring(0, 250) + '...' : textContent;
+        }
+
+        // Letzter Fallback: Generiere Excerpt basierend auf Titel
+        if (!excerpt || excerpt.length < 20) {
+          excerpt = `${title}: Praktische Tipps und Strategien für erfolgreiches Content Marketing.`;
+        }
       }
     }
 
