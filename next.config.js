@@ -124,6 +124,8 @@ const nextConfig = {
       { source: '/wissen/erfolgreiche-ugc-strategien', destination: '/wissen/ugc-content-strategie-entwickeln', permanent: true },
 
       // Allgemeine Redirects zur Hauptseite /wissen
+      { source: '/wissen/creator-anmeldung', destination: '/wissen', permanent: true },
+      { source: '/wissen/tiktok-content-creators', destination: '/wissen', permanent: true },
       { source: '/wissen/anmeldung', destination: '/wissen', permanent: true },
       { source: '/wissen/arten-von-user-generated-content', destination: '/wissen', permanent: true },
       { source: '/wissen/blog', destination: '/wissen', permanent: true },

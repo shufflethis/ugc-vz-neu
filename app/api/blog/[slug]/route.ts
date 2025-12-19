@@ -343,13 +343,27 @@ async function fetchSinglePost(slug: string): Promise<BlogPost | null> {
       }
     }
 
-    if (!excerpt || excerpt.length < 10) {
+    // Prüfe auf ungültige/Platzhalter-Excerpts
+    const invalidExcerpts = ['SearchGPT 404', '404', 'UGC VZ 404', 'placeholder', 'coming soon'];
+    const isInvalidExcerpt = !excerpt ||
+                             excerpt.length < 10 ||
+                             invalidExcerpts.some(invalid => excerpt.toLowerCase().includes(invalid.toLowerCase()));
+
+    if (isInvalidExcerpt) {
       // Fallback: Excerpt aus Content generieren
       const textContent = content.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
-      excerpt = textContent.length > 250 ? textContent.substring(0, 250) + '...' : textContent;
 
-      if (!excerpt || excerpt.length < 10) {
-        excerpt = 'Entdecke die neuesten Insights und Strategien für erfolgreiches User Generated Content Marketing.';
+      // Versuche einen sinnvollen ersten Satz zu extrahieren
+      const firstSentence = textContent.match(/^[^.!?]+[.!?]/);
+      if (firstSentence && firstSentence[0].length > 50 && firstSentence[0].length < 200) {
+        excerpt = firstSentence[0].trim();
+      } else {
+        excerpt = textContent.length > 250 ? textContent.substring(0, 250) + '...' : textContent;
+      }
+
+      // Letzter Fallback: Generiere Excerpt basierend auf Titel
+      if (!excerpt || excerpt.length < 20) {
+        excerpt = `Erfahre alles über ${title}. Praktische Tipps, Strategien und Insights für erfolgreiches Content Marketing.`;
       }
     }
 
