@@ -102,6 +102,9 @@ const nextConfig = {
       { source: '/wissen/creator-guide', destination: '/wissen/ugc-faqs-fuer-creator', permanent: true },
       { source: '/wissen/lifestyle', destination: '/wissen/ugc-content-strategie-entwickeln', permanent: true },
       { source: '/wissen/podcaster', destination: '/wissen/ugc-content-repurposing', permanent: true },
+      { source: '/wissen/plattform-vergleich', destination: '/wissen/ugc-plattformen-im-vergleich', permanent: true },
+      { source: '/wissen/ugc-monetarisierung', destination: '/wissen/ugc-preise-was-kostet-ugc', permanent: true },
+      { source: '/wissen/erfolgreiche-ugc-strategien', destination: '/wissen/ugc-content-strategie-entwickeln', permanent: true },
 
       // Allgemeine Redirects zur Hauptseite /wissen
       { source: '/wissen/anmeldung', destination: '/wissen', permanent: true },

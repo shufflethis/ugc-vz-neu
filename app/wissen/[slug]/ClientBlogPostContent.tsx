@@ -5,9 +5,8 @@ interface ClientBlogPostContentProps {
 }
 
 /**
- * Entfernt unerwünschte HTML-Strukturtags aus dem WordPress-Content.
- * WordPress liefert manchmal Content mit <html>, <head>, <body>-Tags,
- * die zu SEO-Problemen führen (multiple head elements).
+ * Entfernt unerwünschte HTML-Strukturtags aus dem WordPress-Content
+ * und repariert kaputte Links.
  */
 function sanitizeContent(html: string): string {
   let sanitized = html;
@@ -19,6 +18,18 @@ function sanitizeContent(html: string): string {
 
   // Entferne <!DOCTYPE> falls vorhanden
   sanitized = sanitized.replace(/<!DOCTYPE[^>]*>/gi, '');
+
+  // Repariere kaputte E-Mail-Links (href="email@domain.de" → href="mailto:email@domain.de")
+  sanitized = sanitized.replace(
+    /href="([^"@]+@[^"@]+\.[^"]+)"/gi,
+    (match, email) => {
+      // Nur reparieren wenn es keine URL ist und noch kein mailto: hat
+      if (!email.startsWith('mailto:') && !email.includes('://') && !email.includes('/')) {
+        return `href="mailto:${email}"`;
+      }
+      return match;
+    }
+  );
 
   return sanitized.trim();
 }
