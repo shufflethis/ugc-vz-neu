@@ -17,12 +17,12 @@ const inter = Inter({
 
 
 export const metadata: Metadata = {
-  title: "UGC VZ - Finde deine UGC Creators | Kostenlose Creator Vermittlung",
+  title: "Kostenlose Creator-Vermittlung für Brands | UGC VZ",
   description: "Professionelle Vermittlung von UGC Creators für Businesses. Beschreibe deine Kampagne und wir finden die passenden Creator gratis für dich.",
   keywords: "UGC Creator, User Generated Content, Creator Vermittlung, Influencer Marketing, Content Creator, UGC Marketing",
   authors: [{ name: "UGC VZ - track by track GmbH" }],
   openGraph: {
-    title: "UGC VZ - Finde deine UGC Creators",
+    title: "Kostenlose Creator-Vermittlung für Brands",
     description: "Professionelle Vermittlung von UGC Creators für Businesses. Kostenlose Creator-Suche und Vermittlung.",
     url: "https://ugc-vz.de",
     siteName: "UGC VZ",
@@ -39,7 +39,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "UGC VZ - Finde deine UGC Creators",
+    title: "Kostenlose Creator-Vermittlung für Brands",
     description: "Professionelle Vermittlung von UGC Creators für Businesses. Kostenlose Creator-Suche.",
     images: ["https://ugc-vz.de/ugc-vz-logo.webp"],
     creator: "@Ugc_Vz",
