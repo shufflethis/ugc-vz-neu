@@ -1,4 +1,5 @@
-'use client';
+
+
 
 interface JsonLdScriptProps {
   data: string | object;
@@ -12,11 +13,11 @@ interface JsonLdScriptProps {
 const JsonLdScript = ({ data }: JsonLdScriptProps) => {
   // Konvertiere das Objekt zu einem String, falls es ein Objekt ist
   const jsonString = typeof data === 'string' ? data : JSON.stringify(data);
-  
+
   // Verwende dangerouslySetInnerHTML, um sicherzustellen, dass der String korrekt gerendert wird
   return (
-    <script 
-      type="application/ld+json" 
+    <script
+      type="application/ld+json"
       dangerouslySetInnerHTML={{ __html: jsonString }}
     />
   );

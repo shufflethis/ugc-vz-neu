@@ -1,4 +1,4 @@
-'use client';
+
 
 /**
  * Homepage Schema.org structured data
