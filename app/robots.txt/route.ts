@@ -25,12 +25,13 @@ Allow: /
 User-agent: Google-Extended
 Allow: /
 
-# LLM-optimized sitemap
-Sitemap: ${baseUrl}/llm.txt
-
 # Standard Sitemaps
 Sitemap: ${baseUrl}/sitemap_index.xml
 Sitemap: ${baseUrl}/sitemap.xml
+
+# LLM-optimized content (not a sitemap, but useful for AI crawlers)
+# ${baseUrl}/llm.txt
+# ${baseUrl}/llms.txt
 
 # Allow static assets (CSS, JS, images)
 Allow: /_next/static/

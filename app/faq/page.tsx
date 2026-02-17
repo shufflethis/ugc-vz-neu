@@ -1,11 +1,10 @@
-'use client';
-
-import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { Metadata } from 'next';
 import ContactButton from '../components/ContactButton';
 import ResponsiveCTAButton from '@/src/components/ResponsiveCTAButton';
 import FAQSchema from '../components/FAQSchema';
+import BreadcrumbSchema from '../components/BreadcrumbSchema';
 
 interface FAQItem {
   question: string;
@@ -16,6 +15,23 @@ interface FAQSection {
   title: string;
   items: FAQItem[];
 }
+
+export const metadata: Metadata = {
+  title: 'FAQ – Häufig gestellte Fragen | UGC VZ',
+  description: 'Antworten auf die wichtigsten Fragen rund um UGC-VZ: Kostenlose Creator-Vermittlung, Registrierung, Ablauf für Creator und Unternehmen.',
+  keywords: 'UGC VZ FAQ, UGC Creator Fragen, Creator Vermittlung FAQ, UGC Kosten, Creator registrieren',
+  openGraph: {
+    title: 'FAQ – Häufig gestellte Fragen | UGC VZ',
+    description: 'Antworten auf die wichtigsten Fragen rund um UGC-VZ.',
+    url: 'https://ugc-vz.de/faq',
+    siteName: 'UGC VZ',
+    locale: 'de_DE',
+    type: 'website',
+  },
+  alternates: {
+    canonical: 'https://ugc-vz.de/faq',
+  },
+};
 
 const faqData: FAQSection[] = [
   {
@@ -113,25 +129,21 @@ const faqData: FAQSection[] = [
   }
 ];
 
+// Flatten all FAQ items for schema
+const allFAQItems = faqData.flatMap(section => section.items);
+
 export default function FAQPage() {
-  const [openItems, setOpenItems] = useState<string[]>([]);
-
-  const toggleItem = (itemId: string) => {
-    setOpenItems(prev =>
-      prev.includes(itemId)
-        ? prev.filter(id => id !== itemId)
-        : [...prev, itemId]
-    );
-  };
-
-  // Flatten all FAQ items for schema
-  const allFAQItems = faqData.flatMap(section => section.items);
+  const breadcrumbs = [
+    { name: 'Home', url: 'https://ugc-vz.de' },
+    { name: 'FAQ', url: 'https://ugc-vz.de/faq' }
+  ];
 
   return (
     <div className="min-h-screen bg-[#0D0D0D] text-white">
       {/* FAQ Schema for rich snippets */}
       <FAQSchema faqItems={allFAQItems} />
-      
+      <BreadcrumbSchema items={breadcrumbs} />
+
       {/* Header */}
       <header className="py-6 px-4 sm:px-8 md:px-16 lg:px-24">
         <div className="container mx-auto flex justify-between items-center">
@@ -153,6 +165,17 @@ export default function FAQPage() {
         </div>
       </header>
 
+      {/* Breadcrumb Navigation */}
+      <nav className="px-4 sm:px-8 md:px-16 lg:px-24 mb-8">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex items-center space-x-2 text-sm text-gray-400">
+            <Link href="/" className="hover:text-emerald-400 transition-colors">Home</Link>
+            <span>/</span>
+            <span className="text-gray-300">FAQ</span>
+          </div>
+        </div>
+      </nav>
+
       {/* Main Content */}
       <main className="px-4 sm:px-8 md:px-16 lg:px-24 pb-24">
         <div className="max-w-4xl mx-auto">
@@ -167,7 +190,7 @@ export default function FAQPage() {
             </p>
           </div>
 
-          {/* FAQ Sections */}
+          {/* FAQ Sections - SSR-compatible with details/summary */}
           {faqData.map((section, sectionIndex) => (
             <section key={sectionIndex} className="mb-12">
               <h2 className="text-2xl font-bold mb-8 text-center">
@@ -175,41 +198,31 @@ export default function FAQPage() {
               </h2>
 
               <div className="space-y-4">
-                {section.items.map((item, itemIndex) => {
-                  const itemId = `${sectionIndex}-${itemIndex}`;
-                  const isOpen = openItems.includes(itemId);
+                {section.items.map((item, itemIndex) => (
+                  <details
+                    key={itemIndex}
+                    className="group bg-gray-900/30 backdrop-blur-sm rounded-2xl border border-gray-800/50 overflow-hidden"
+                  >
+                    <summary className="w-full p-6 text-left flex justify-between items-center hover:bg-gray-800/30 transition-colors cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+                      <h3 className="text-lg font-semibold text-white pr-4">
+                        {item.question}
+                      </h3>
+                      <div className="transform transition-transform duration-200 group-open:rotate-180 flex-shrink-0">
+                        <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </div>
+                    </summary>
 
-                  return (
-                    <div
-                      key={itemIndex}
-                      className="bg-gray-900/30 backdrop-blur-sm rounded-2xl border border-gray-800/50 overflow-hidden"
-                    >
-                      <button
-                        onClick={() => toggleItem(itemId)}
-                        className="w-full p-6 text-left flex justify-between items-center hover:bg-gray-800/30 transition-colors"
-                      >
-                        <h3 className="text-lg font-semibold text-white pr-4">
-                          {item.question}
-                        </h3>
-                        <div className={`transform transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}>
-                          <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                          </svg>
-                        </div>
-                      </button>
-
-                      {isOpen && (
-                        <div className="px-6 pb-6">
-                          <div className="border-t border-gray-700/50 pt-4">
-                            <p className="text-gray-200 leading-relaxed">
-                              {item.answer}
-                            </p>
-                          </div>
-                        </div>
-                      )}
+                    <div className="px-6 pb-6">
+                      <div className="border-t border-gray-700/50 pt-4">
+                        <p className="text-gray-200 leading-relaxed">
+                          {item.answer}
+                        </p>
+                      </div>
                     </div>
-                  );
-                })}
+                  </details>
+                ))}
               </div>
             </section>
           ))}

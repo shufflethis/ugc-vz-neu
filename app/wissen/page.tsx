@@ -8,6 +8,7 @@ import LogoImage from '../components/LogoImage';
 // Client-Komponenten importieren
 import ClientWissenContent from './ClientWissenContent';
 import JsonLdScript from './[slug]/JsonLdScript';
+import BreadcrumbSchema from '../components/BreadcrumbSchema';
 
 import { BlogPost } from '../lib/wordpress-api'; // Import BlogPost from central definition
 
@@ -41,17 +42,17 @@ async function fetchPosts(): Promise<BlogPost[]> {
     const response = await fetch(`${baseUrl}/api/blog`, {
       next: { revalidate: 300 } // Cache für 5 Minuten - reduced for faster blog updates
     });
-    
+
     if (!response.ok) {
       return [];
     }
-    
+
     const data = await response.json();
-    
+
     if (!data.success) {
       return [];
     }
-    
+
     return data.posts;
   } catch (error) {
     console.error('Error fetching posts:', error);
@@ -62,7 +63,7 @@ async function fetchPosts(): Promise<BlogPost[]> {
 // Schema.org JSON-LD für die Blog-Liste generieren
 function generateBlogListingSchema(posts: BlogPost[]) {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://ugc-vz.de';
-  
+
   const itemListElements = posts.map((post, index) => ({
     "@type": "ListItem",
     "position": index + 1,
@@ -99,10 +100,10 @@ function generateBlogListingSchema(posts: BlogPost[]) {
 
 export default async function WissenPage() {
   const posts = await fetchPosts();
-  
+
   // Schema.org JSON-LD für die Blog-Liste generieren
   const blogListingSchema = generateBlogListingSchema(posts);
-  
+
   // Schema.org JSON-LD mit der JsonLdScript-Komponente einbetten
   const jsonLd = <JsonLdScript data={blogListingSchema} />;
 
@@ -110,7 +111,11 @@ export default async function WissenPage() {
     <div className="min-h-screen bg-[#0D0D0D] text-white">
       {/* Schema.org JSON-LD für Rich Snippets */}
       {jsonLd}
-      
+      <BreadcrumbSchema items={[
+        { name: 'Home', url: 'https://ugc-vz.de' },
+        { name: 'Wissen', url: 'https://ugc-vz.de/wissen' }
+      ]} />
+
       {/* Header */}
       <header className="py-6 px-4 sm:px-8 md:px-16 lg:px-24">
         <div className="container mx-auto flex justify-between items-center">

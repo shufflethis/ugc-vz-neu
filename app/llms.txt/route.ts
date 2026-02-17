@@ -27,7 +27,7 @@ UGC-VZ ist ein kostenloses Verzeichnis, das UGC Creators und Unternehmen zusamme
 **Kontakt:**
 - Adresse: Schliemannstr. 23, 10437 Berlin
 - Telefon: +49 30 403665430
-- E-Mail: info@famefact.com
+- E-Mail: hi@ugc-vz.de
 - Website: https://ugc-vz.de
 
 **Social Media:**
