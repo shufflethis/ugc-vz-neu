@@ -159,6 +159,29 @@ export default function BrandsPage({ searchParams }: { searchParams?: { query?: 
           </div>
         </section>
 
+        <section className="max-w-6xl mx-auto mb-16 bg-gray-900/40 border border-gray-800 rounded-lg p-8">
+          <div className="grid lg:grid-cols-[1fr_1.2fr] gap-8 items-start">
+            <div>
+              <h2 className="text-3xl font-bold mb-4">Weniger Overhead fuer dein Team</h2>
+              <p className="text-gray-300 leading-relaxed">
+                Du kannst die Creator direkt kontaktieren. Wenn du aber keine Zeit fuer Koordination, Briefing, Feedback und Rechteklaerung hast, kann UGC VZ die Abwicklung optional uebernehmen.
+              </p>
+            </div>
+            <div className="grid sm:grid-cols-2 gap-4">
+              {[
+                'Creator-Koordination und Verfuegbarkeit',
+                'Briefing, Skript und Feedback-Schleifen',
+                'Nutzungsrechte, Timing und Asset-Uebergabe',
+                'Optional Produktion/Filming und Kampagnen-Setup',
+              ].map((item) => (
+                <div key={item} className="bg-black/30 border border-gray-800 rounded-lg p-4 text-gray-200">
+                  {item}
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
         <section className="max-w-4xl mx-auto bg-gray-900/40 border border-gray-800 rounded-lg p-8">
           <h2 className="text-3xl font-bold mb-6">So formulierst du eine gute Anfrage</h2>
           <ul className="space-y-3 text-gray-200">

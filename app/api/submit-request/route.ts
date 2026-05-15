@@ -110,6 +110,8 @@ async function sendLeadEmails({
       <h2>Demand</h2>
       <p><strong>Suchanfrage:</strong> ${htmlEscape(searchQuery)}</p>
       <p><strong>Nachricht:</strong><br />${htmlEscape(message)}</p>
+      <h2>Upsell-Hinweis</h2>
+      <p>Brand hat in der Bestaetigungsmail die Option bekommen, mit "Bitte abwickeln" Unterstuetzung fuer Creator-Koordination, Briefing, Rechte, Feedback, Produktion/Filming und Asset-Uebergabe anzufragen.</p>
       <h2>Ausgewaehlte Creator</h2>
       <ol>${creatorListHtml}</ol>
     </div>
@@ -130,6 +132,9 @@ async function sendLeadEmails({
       <p>Hier findest du eine kompakte Vorlage mit Punkten zu Leistung, Verguetung, Timing, Nutzungsrechten und Abnahme:</p>
       <p><a href="https://ugc-vz.de/brands/ugc-vertrag-vorlage">https://ugc-vz.de/brands/ugc-vertrag-vorlage</a></p>
       <p><em>Hinweis: Die Vorlage ist eine praktische Arbeitsgrundlage und ersetzt keine Rechtsberatung.</em></p>
+      <h2>Optional: Wir koennen die Abwicklung uebernehmen</h2>
+      <p>Wenn du dir den Overhead sparen willst, kann UGC VZ bzw. das Team dahinter die naechsten Schritte fuer dich organisieren: Creator-Koordination, Briefing, Timings, Rechteklaerung, Feedback-Schleifen, Produktion/Filming und finale Asset-Uebergabe.</p>
+      <p>Antworte einfach auf diese E-Mail mit <strong>"Bitte abwickeln"</strong> oder beschreibe kurz Budget, Timing und gewuenschte Assets. Dann melden wir uns mit einem passenden Vorschlag.</p>
       <p>Naechster Schritt: Kontaktiere die passenden Creator direkt oder antworte auf diese E-Mail, wenn du Hilfe bei Briefing, Auswahl oder Vertragsdetails brauchst.</p>
       <p>Viele Gruesse<br />UGC VZ</p>
     </div>
