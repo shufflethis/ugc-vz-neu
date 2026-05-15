@@ -168,7 +168,7 @@ export default function SearchBox({ initialQuery = '' }: SearchBoxProps) {
   return (
     <div className={styles.searchContainer}>
       {/* Search input */}
-      <div className="mb-4 rounded-lg border border-emerald-700/40 bg-emerald-950/20 px-4 py-3 text-left text-sm text-gray-200">
+      <div className="mb-4 rounded-lg border border-hairline bg-surface px-4 py-3 text-left text-sm text-ink-soft">
         <p>
           Die KI hilft nur dabei, deine Suchanfrage zu verstehen und passende Creator-Vorschlaege zu sortieren.
           Die finale Auswahl triffst du selbst. An OpenRouter wird nur deine Suchanfrage gesendet, keine komplette Creator-Datenbank.
@@ -217,7 +217,7 @@ export default function SearchBox({ initialQuery = '' }: SearchBoxProps) {
             aria-label="Toggle Voice Input"
             className={`p-4 rounded-lg flex items-center justify-center focus:outline-none transition-opacity ${
               isIOSDeviceState || !browserSupportsSpeechRecognition
-                ? 'bg-gray-500 cursor-not-allowed opacity-50'
+                ? 'bg-hairline cursor-not-allowed opacity-50'
                 : 'mic-button-gradient hover:opacity-90'
             }`}
             style={{
@@ -233,7 +233,7 @@ export default function SearchBox({ initialQuery = '' }: SearchBoxProps) {
 
           {/* CRITICAL: Only show listening indicator if NOT on iOS */}
           {isListening && !isIOSDeviceState && <span className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 rounded-full animate-pulse"></span>}
-          <span className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs rounded py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none">
+          <span className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 bg-ink text-white text-xs rounded py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none">
             {isIOSDeviceState
               ? 'Spracherkennung ist auf iOS-Geräten nicht verfügbar'
               : !browserSupportsSpeechRecognition
@@ -256,11 +256,11 @@ export default function SearchBox({ initialQuery = '' }: SearchBoxProps) {
       )}
 
       {isLoading && (
-        <div className="w-full text-white mt-3 bg-emerald-950/30 p-4 rounded-lg border border-emerald-700/40">
+        <div className="w-full text-ink mt-3 bg-surface p-4 rounded-lg border border-hairline">
           <div className="flex items-center justify-center gap-3">
-            <div className="w-5 h-5 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />
-            <p className="text-sm sm:text-base text-gray-200">
-              Suche in <span className="text-emerald-300 font-semibold">370+ echten Creator-Profilen</span> nach passenden Treffern.
+            <div className="w-5 h-5 border-2 border-geo-violet border-t-transparent rounded-full animate-spin" />
+            <p className="text-sm sm:text-base text-ink-soft">
+              Suche in <span className="text-geo-violet font-semibold">370+ echten Creator-Profilen</span> nach passenden Treffern.
             </p>
           </div>
         </div>
@@ -292,7 +292,7 @@ export default function SearchBox({ initialQuery = '' }: SearchBoxProps) {
         {creators.length > 0 && (
           <> {/* Use fragment to group elements */}
             <h2 className={styles.resultsHeader}>Klicke dir die passenden UGC Creator zusammen. Die Anfrage ist kostenlos und du bekommst die verfuegbaren Kontaktinfos per E-Mail.</h2> {/* Add header */}
-            <p className="mb-5 text-center text-sm text-gray-400">
+            <p className="mb-5 text-center text-sm text-ink-soft">
               Die Sortierung ist ein Vorschlag aus deiner Suche und den Profilangaben. Es findet keine automatische Entscheidung ueber Creator oder Auftraege statt.
             </p>
             <div className={styles.creatorsGrid}>

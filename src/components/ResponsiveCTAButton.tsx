@@ -25,12 +25,10 @@ export default function ResponsiveCTAButton({
       rel="noopener noreferrer"
       onClick={handleClick}
       className={`
-        bg-gradient-to-r from-teal-400 to-blue-500
-        hover:from-teal-500 hover:to-blue-600
+        bg-geo-violet hover:bg-geo-violet-soft
         text-white font-semibold py-2 px-4 rounded-md text-sm
         whitespace-nowrap transition-all duration-200
         shadow-md hover:shadow-lg
-        border border-teal-300/20 hover:border-teal-300/40
         transform hover:scale-105 hover:-translate-y-0.5
         ${className}
       `}

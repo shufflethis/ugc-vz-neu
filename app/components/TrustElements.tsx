@@ -57,11 +57,11 @@ const partnerLogos: PartnerLogo[] = [
 
 export default function TrustElements() {
   return (
-    <section className="py-20 px-4 sm:px-8 md:px-16 lg:px-24 bg-gradient-to-b from-[#0D0D0D] to-[#1A1A1A]/50">
+    <section className="py-20 px-4 sm:px-8 md:px-16 lg:px-24 bg-surface">
       <div className="container mx-auto">
         {/* Section Heading */}
         <div className="text-center mb-16">
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-8">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-ink mb-8">
             Folgende Partner vertrauen auf unsere{' '}
             <span className="gradient-text">Agenturarbeit</span>
           </h2>
