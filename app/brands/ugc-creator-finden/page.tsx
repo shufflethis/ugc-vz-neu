@@ -10,12 +10,12 @@ export const metadata: Metadata = {
 
 export default function UGCCreatorFindenPage() {
   return (
-    <main className="min-h-screen bg-[#0D0D0D] text-white px-4 sm:px-8 md:px-16 lg:px-24 py-16">
+    <main className="min-h-screen bg-white text-ink px-4 sm:px-8 md:px-16 lg:px-24 py-16">
       <div className="max-w-5xl mx-auto">
-        <Link href="/" className="text-sm text-gray-400 hover:text-white">UGC VZ</Link>
+        <Link href="/" className="text-sm text-ink-soft hover:text-ink">UGC VZ</Link>
         <section className="py-14 text-center">
-          <h1 className="text-4xl sm:text-5xl font-bold mb-6">UGC Creator finden</h1>
-          <p className="text-xl text-gray-300 max-w-3xl mx-auto mb-10">
+          <h1 className="text-4xl sm:text-5xl font-bold mb-6 text-ink">UGC Creator finden</h1>
+          <p className="text-xl text-ink-soft max-w-3xl mx-auto mb-10">
             Suche passende UGC Creator fuer Produktvideos, Social Ads, Testimonials und Launches. Beschreibe kurz deinen Demand und waehle relevante Profile aus.
           </p>
           <SearchBox initialQuery="UGC Creator fuer meine Kampagne finden" />
@@ -26,9 +26,9 @@ export default function UGCCreatorFindenPage() {
             ['Profile vergleichen', 'Die Suche liefert Creator-Vorschlaege aus der UGC VZ Datenbank.'],
             ['Anfrage an UGC VZ senden', 'Deine Auswahl wird nicht blind automatisiert, sondern als Anfrage weiterbearbeitet.'],
           ].map(([title, copy]) => (
-            <div key={title} className="bg-gray-900/40 border border-gray-800 rounded-lg p-6">
-              <h2 className="font-bold text-emerald-300 mb-3">{title}</h2>
-              <p className="text-gray-300">{copy}</p>
+            <div key={title} className="surface-card rounded-lg p-6">
+              <h2 className="font-bold text-geo-violet mb-3">{title}</h2>
+              <p className="text-ink-soft">{copy}</p>
             </div>
           ))}
         </section>

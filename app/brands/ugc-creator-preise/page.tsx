@@ -10,12 +10,12 @@ export const metadata: Metadata = {
 
 export default function UGCCreatorPreisePage() {
   return (
-    <main className="min-h-screen bg-[#0D0D0D] text-white px-4 sm:px-8 md:px-16 lg:px-24 py-16">
+    <main className="min-h-screen bg-white text-ink px-4 sm:px-8 md:px-16 lg:px-24 py-16">
       <div className="max-w-5xl mx-auto">
-        <Link href="/brands" className="text-sm text-gray-400 hover:text-white">UGC VZ fuer Brands</Link>
+        <Link href="/brands" className="text-sm text-ink-soft hover:text-ink">UGC VZ fuer Brands</Link>
         <section className="py-14 text-center">
-          <h1 className="text-4xl sm:text-5xl font-bold mb-6">UGC Creator Preise realistisch einschaetzen</h1>
-          <p className="text-xl text-gray-300 max-w-3xl mx-auto mb-10">
+          <h1 className="text-4xl sm:text-5xl font-bold mb-6 text-ink">UGC Creator Preise realistisch einschaetzen</h1>
+          <p className="text-xl text-ink-soft max-w-3xl mx-auto mb-10">
             UGC Preise haengen von Format, Aufwand, Nutzungsrechten, Erfahrung und Timing ab. Starte mit deinem Budgetrahmen und finde passende Creator-Vorschlaege.
           </p>
           <SearchBox initialQuery="UGC Creator bis 500 Euro fuer Produktvideo" />
@@ -26,9 +26,9 @@ export default function UGCCreatorPreisePage() {
             ['Budget offen nennen', 'Wenn du einen Rahmen nennst, kann die Suche Profile mit passenden Preisangaben besser priorisieren.'],
             ['Kontaktinfos kostenlos anfragen', 'Nach der Auswahl bekommst du verfuegbare Kontakt- und Social-Daten per E-Mail.'],
           ].map(([title, copy]) => (
-            <div key={title} className="bg-gray-900/40 border border-gray-800 rounded-lg p-6">
-              <h2 className="font-bold text-emerald-300 mb-3">{title}</h2>
-              <p className="text-gray-300">{copy}</p>
+            <div key={title} className="surface-card rounded-lg p-6">
+              <h2 className="font-bold text-geo-violet mb-3">{title}</h2>
+              <p className="text-ink-soft">{copy}</p>
             </div>
           ))}
         </section>

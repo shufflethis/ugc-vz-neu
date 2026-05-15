@@ -9,14 +9,14 @@ export const metadata: Metadata = {
 
 export default function UGCVertragVorlagePage() {
   return (
-    <main className="min-h-screen bg-[#0D0D0D] text-white px-4 sm:px-8 md:px-16 lg:px-24 py-16">
+    <main className="min-h-screen bg-white text-ink px-4 sm:px-8 md:px-16 lg:px-24 py-16">
       <div className="max-w-4xl mx-auto">
-        <Link href="/brands" className="text-sm text-gray-400 hover:text-white">Zurueck zu Brands</Link>
+        <Link href="/brands" className="text-sm text-ink-soft hover:text-ink">Zurueck zu Brands</Link>
 
         <section className="py-14">
-          <p className="text-emerald-300 font-semibold mb-4">Arbeitsvorlage, keine Rechtsberatung</p>
-          <h1 className="text-4xl sm:text-5xl font-bold mb-6">UGC Vertrag Vorlage fuer Creator Deals</h1>
-          <p className="text-xl text-gray-300 leading-relaxed">
+          <p className="text-geo-violet font-semibold mb-4">Arbeitsvorlage, keine Rechtsberatung</p>
+          <h1 className="text-4xl sm:text-5xl font-bold mb-6 text-ink">UGC Vertrag Vorlage fuer Creator Deals</h1>
+          <p className="text-xl text-ink-soft leading-relaxed">
             Diese Vorlage hilft dir, die wichtigsten Punkte vor einer UGC-Produktion sauber zu klaeren. Sie ersetzt keine anwaltliche Pruefung, ist aber eine gute Grundlage fuer Briefing, Angebot und Abstimmung.
           </p>
         </section>
@@ -72,9 +72,9 @@ export default function UGCVertragVorlagePage() {
               ],
             },
           ].map((section) => (
-            <div key={section.title} className="bg-gray-900/40 border border-gray-800 rounded-lg p-6">
-              <h2 className="text-2xl font-bold text-emerald-300 mb-4">{section.title}</h2>
-              <ul className="space-y-3 text-gray-300">
+            <div key={section.title} className="surface-card rounded-lg p-6">
+              <h2 className="text-2xl font-bold text-geo-violet mb-4">{section.title}</h2>
+              <ul className="space-y-3 text-ink-soft">
                 {section.items.map((item) => (
                   <li key={item}>{item}</li>
                 ))}
@@ -83,9 +83,9 @@ export default function UGCVertragVorlagePage() {
           ))}
         </section>
 
-        <section className="mt-12 bg-emerald-950/30 border border-emerald-800/60 rounded-lg p-6">
-          <h2 className="text-2xl font-bold mb-4">Kurztext fuer deine Anfrage</h2>
-          <p className="text-gray-200 leading-relaxed">
+        <section className="mt-12 surface-card rounded-lg p-6">
+          <h2 className="text-2xl font-bold mb-4 text-ink">Kurztext fuer deine Anfrage</h2>
+          <p className="text-ink-soft leading-relaxed">
             Hallo, wir suchen UGC Content fuer [Produkt/Brand]. Geplant sind [Anzahl] [Videos/Fotos] fuer [Plattform/Nutzung]. Wichtig sind [Zielgruppe/Stil/Claims]. Bitte sende uns Preis, Verfuegbarkeit, Beispiele und deine Konditionen fuer Nutzungsrechte.
           </p>
         </section>

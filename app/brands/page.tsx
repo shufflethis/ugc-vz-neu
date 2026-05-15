@@ -82,7 +82,7 @@ export default function BrandsPage({ searchParams }: { searchParams?: { query?: 
   };
 
   return (
-    <div className="min-h-screen bg-[#0D0D0D] text-white">
+    <div className="min-h-screen bg-white text-ink">
       <BreadcrumbSchema items={breadcrumbs} />
       <JsonLdScript data={serviceSchema} />
       <JsonLdScript data={faqSchema} />
@@ -93,7 +93,7 @@ export default function BrandsPage({ searchParams }: { searchParams?: { query?: 
             <Image src="/ugc-vz-logo.webp" alt="UGC VZ" width={32} height={32} className="mr-2" priority />
             <span className="text-xl font-bold gradient-text">UGC VZ</span>
           </Link>
-          <Link href="/creator" className="text-sm font-medium text-gray-300 hover:text-white">
+          <Link href="/creator" className="text-sm font-medium text-ink-soft hover:text-ink">
             Fuer Creator
           </Link>
         </div>
@@ -101,11 +101,11 @@ export default function BrandsPage({ searchParams }: { searchParams?: { query?: 
 
       <main className="px-4 sm:px-8 md:px-16 lg:px-24 pb-24">
         <section className="max-w-5xl mx-auto py-16 text-center">
-          <p className="text-emerald-300 font-semibold mb-4">Kostenlose UGC Creator Suche</p>
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6">
+          <p className="text-geo-violet font-semibold mb-4">Kostenlose UGC Creator Suche</p>
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 text-ink">
             UGC Creator <span className="gradient-text">fuer deine Brand finden</span>
           </h1>
-          <p className="text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed mb-10">
+          <p className="text-xl text-ink-soft max-w-3xl mx-auto leading-relaxed mb-10">
             Beschreibe Produkt, Zielgruppe, Plattform und Content-Wunsch. UGC VZ zeigt passende Creator und du kannst die Details kostenlos anfordern.
           </p>
           <div className="max-w-2xl mx-auto">
@@ -120,17 +120,17 @@ export default function BrandsPage({ searchParams }: { searchParams?: { query?: 
             ['Besser als kalte DMs', 'Statt endlos Instagram-Profile zu pruefen, startest du mit einer klaren Kampagnenbeschreibung.'],
             ['Fuer echte Kampagnen', 'Geeignet fuer Produktvideos, Testimonials, Social Ads, Launches, E-Commerce und lokale Brand-Aktivierungen.'],
           ].map(([title, copy]) => (
-            <div key={title} className="bg-gray-900/40 border border-gray-800 rounded-lg p-6">
-              <h2 className="text-xl font-bold mb-3 text-emerald-300">{title}</h2>
-              <p className="text-gray-300 leading-relaxed">{copy}</p>
+            <div key={title} className="surface-card rounded-lg p-6">
+              <h2 className="text-xl font-bold mb-3 text-geo-violet">{title}</h2>
+              <p className="text-ink-soft leading-relaxed">{copy}</p>
             </div>
           ))}
         </section>
 
         <section className="max-w-6xl mx-auto mb-16">
           <div className="grid lg:grid-cols-[1.1fr_0.9fr] gap-8 items-start">
-            <div className="bg-gray-900/40 border border-gray-800 rounded-lg p-8">
-              <h2 className="text-3xl font-bold mb-6">Was passiert nach der Creator-Auswahl?</h2>
+            <div className="surface-card rounded-lg p-8">
+              <h2 className="text-3xl font-bold mb-6 text-ink">Was passiert nach der Creator-Auswahl?</h2>
               <div className="space-y-5">
                 {[
                   ['1', 'Demand eingeben', 'Du beschreibst kurz Produkt, Zielgruppe, Plattform und Content-Wunsch.'],
@@ -139,50 +139,50 @@ export default function BrandsPage({ searchParams }: { searchParams?: { query?: 
                   ['4', 'Direkt starten', 'Du kontaktierst die Creator direkt oder holst optional Support fuer Briefing, Vertrag und Kampagnen-Setup dazu.'],
                 ].map(([step, title, copy]) => (
                   <div key={step} className="flex gap-4">
-                    <div className="w-9 h-9 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold shrink-0">{step}</div>
+                    <div className="w-9 h-9 rounded-full bg-geo-violet text-white flex items-center justify-center font-bold shrink-0">{step}</div>
                     <div>
-                      <h3 className="font-bold text-white">{title}</h3>
-                      <p className="text-gray-300 leading-relaxed">{copy}</p>
+                      <h3 className="font-bold text-ink">{title}</h3>
+                      <p className="text-ink-soft leading-relaxed">{copy}</p>
                     </div>
                   </div>
                 ))}
               </div>
             </div>
-            <div className="bg-emerald-950/30 border border-emerald-800/60 rounded-lg p-8">
-              <h2 className="text-2xl font-bold mb-4 text-emerald-300">Warum ist das kostenlos?</h2>
-              <p className="text-gray-200 leading-relaxed mb-4">
+            <div className="surface-card rounded-lg p-8">
+              <h2 className="text-2xl font-bold mb-4 text-geo-violet">Warum ist das kostenlos?</h2>
+              <p className="text-ink-soft leading-relaxed mb-4">
                 UGC VZ ist als niedrigschwelliger Einstieg gedacht: Brands sollen echte Creator entdecken koennen, ohne direkt einen Retainer oder eine Plattform-Lizenz zu buchen.
               </p>
-              <p className="text-gray-200 leading-relaxed">
+              <p className="text-ink-soft leading-relaxed">
                 Wenn aus einer Anfrage eine groessere Kampagne wird, kann optional Unterstuetzung durch das Team hinter UGC VZ sinnvoll sein. Die erste Suche bleibt davon unabhaengig.
               </p>
             </div>
           </div>
         </section>
 
-        <section className="max-w-6xl mx-auto mb-16 bg-gray-900/40 border border-gray-800 rounded-lg p-8">
-          <h2 className="text-3xl font-bold mb-4">KI, Datenschutz und Auswahl</h2>
-          <div className="grid md:grid-cols-3 gap-5 text-gray-300">
-            <div className="bg-black/30 border border-gray-800 rounded-lg p-5">
-              <h3 className="font-bold text-emerald-300 mb-2">Nur Suchhilfe</h3>
+        <section className="max-w-6xl mx-auto mb-16 surface-card rounded-lg p-8">
+          <h2 className="text-3xl font-bold mb-4 text-ink">KI, Datenschutz und Auswahl</h2>
+          <div className="grid md:grid-cols-3 gap-5 text-ink-soft">
+            <div className="bg-surface border border-hairline rounded-lg p-5">
+              <h3 className="font-bold text-geo-violet mb-2">Nur Suchhilfe</h3>
               <p>Die KI versteht deine Anfrage und hilft bei der Sortierung. Sie entscheidet nicht automatisch, welcher Creator einen Auftrag bekommt.</p>
             </div>
-            <div className="bg-black/30 border border-gray-800 rounded-lg p-5">
-              <h3 className="font-bold text-emerald-300 mb-2">Datensparsam</h3>
+            <div className="bg-surface border border-hairline rounded-lg p-5">
+              <h3 className="font-bold text-geo-violet mb-2">Datensparsam</h3>
               <p>An den KI-Anbieter wird nur deine Suchanfrage gesendet. Creator-Profile werden serverseitig in UGC VZ gematcht.</p>
             </div>
-            <div className="bg-black/30 border border-gray-800 rounded-lg p-5">
-              <h3 className="font-bold text-emerald-300 mb-2">Kontakt nach Auswahl</h3>
+            <div className="bg-surface border border-hairline rounded-lg p-5">
+              <h3 className="font-bold text-geo-violet mb-2">Kontakt nach Auswahl</h3>
               <p>Kontakt- und Social-Daten erhaeltst du nur fuer die Creator, die du bewusst fuer deine Anfrage auswaehlst.</p>
             </div>
           </div>
         </section>
 
-        <section className="max-w-6xl mx-auto mb-16 bg-gray-900/40 border border-gray-800 rounded-lg p-8">
+        <section className="max-w-6xl mx-auto mb-16 surface-card rounded-lg p-8">
           <div className="grid lg:grid-cols-[1fr_1.2fr] gap-8 items-start">
             <div>
-              <h2 className="text-3xl font-bold mb-4">Weniger Overhead fuer dein Team</h2>
-              <p className="text-gray-300 leading-relaxed">
+              <h2 className="text-3xl font-bold mb-4 text-ink">Weniger Overhead fuer dein Team</h2>
+              <p className="text-ink-soft leading-relaxed">
                 Du kannst die Creator direkt kontaktieren. Wenn du aber keine Zeit fuer Koordination, Briefing, Feedback und Rechteklaerung hast, kann UGC VZ die Abwicklung optional uebernehmen.
               </p>
             </div>
@@ -194,7 +194,7 @@ export default function BrandsPage({ searchParams }: { searchParams?: { query?: 
                 'Optional Produktion/Filming und Kampagnen-Setup',
                 'KI-UGC oder hybride Creator/KI-Setups fuer schnelle Creative-Tests',
               ].map((item) => (
-                <div key={item} className="bg-black/30 border border-gray-800 rounded-lg p-4 text-gray-200">
+                <div key={item} className="bg-surface border border-hairline rounded-lg p-4 text-ink-soft">
                   {item}
                 </div>
               ))}
@@ -202,9 +202,9 @@ export default function BrandsPage({ searchParams }: { searchParams?: { query?: 
           </div>
         </section>
 
-        <section className="max-w-4xl mx-auto bg-gray-900/40 border border-gray-800 rounded-lg p-8">
-          <h2 className="text-3xl font-bold mb-6">So formulierst du eine gute Anfrage</h2>
-          <ul className="space-y-3 text-gray-200">
+        <section className="max-w-4xl mx-auto surface-card rounded-lg p-8">
+          <h2 className="text-3xl font-bold mb-6 text-ink">So formulierst du eine gute Anfrage</h2>
+          <ul className="space-y-3 text-ink-soft">
             <li>Nenne Produkt, Branche und Zielgruppe.</li>
             <li>Beschreibe Plattform und Format, zum Beispiel TikTok, Reels, Short Ads oder Produktdemo.</li>
             <li>Erwaehne Standort, Sprache, Alter oder Stil, wenn relevant.</li>
@@ -213,7 +213,7 @@ export default function BrandsPage({ searchParams }: { searchParams?: { query?: 
         </section>
 
         <section className="max-w-4xl mx-auto mt-16">
-          <h2 className="text-3xl font-bold mb-6 text-center">Haeufige Fragen von Brands</h2>
+          <h2 className="text-3xl font-bold mb-6 text-center text-ink">Haeufige Fragen von Brands</h2>
           <div className="space-y-4">
             {[
               ['Bekomme ich die Kontaktinfos per E-Mail?', 'Ja. Nach der Anfrage senden wir dir eine E-Mail mit deiner Creator-Auswahl und den verfuegbaren Kontakt- oder Social-Daten aus dem Profil.'],
@@ -221,52 +221,52 @@ export default function BrandsPage({ searchParams }: { searchParams?: { query?: 
               ['Kann ich auch eine UGC Agentur anfragen?', 'Ja. Wenn du mehr brauchst als reine Creator-Auswahl, kannst du in der Projektbeschreibung optional Strategie, Briefing, Produktion oder Kampagnensteuerung erwaehnen.'],
               ['Welche Branchen funktionieren?', 'Besonders gut funktionieren E-Commerce, Beauty, Food, Tech, Fashion, Apps, lokale Angebote und erklaerungsbeduerftige Produkte.'],
             ].map(([question, answer]) => (
-              <details key={question} className="bg-gray-900/40 border border-gray-800 rounded-lg p-5">
-                <summary className="cursor-pointer font-semibold text-white">{question}</summary>
-                <p className="text-gray-300 mt-3 leading-relaxed">{answer}</p>
+              <details key={question} className="surface-card rounded-lg p-5">
+                <summary className="cursor-pointer font-semibold text-ink">{question}</summary>
+                <p className="text-ink-soft mt-3 leading-relaxed">{answer}</p>
               </details>
             ))}
           </div>
         </section>
 
         <section className="max-w-4xl mx-auto mt-16">
-          <h2 className="text-3xl font-bold mb-6 text-center">Weitere Einstiege fuer Brands</h2>
+          <h2 className="text-3xl font-bold mb-6 text-center text-ink">Weitere Einstiege fuer Brands</h2>
           <div className="grid sm:grid-cols-3 gap-4">
-            <Link href="/brands/ugc-creator-finden" className="bg-gray-900/40 border border-gray-800 rounded-lg p-5 hover:border-emerald-600 transition-colors">
-              <h3 className="font-bold text-emerald-300 mb-2">UGC Creator finden</h3>
-              <p className="text-gray-300 text-sm">Direkt in die Creator-Suche starten.</p>
+            <Link href="/brands/ugc-creator-finden" className="surface-card rounded-lg p-5 hover:border-geo-violet transition-colors">
+              <h3 className="font-bold text-geo-violet mb-2">UGC Creator finden</h3>
+              <p className="text-ink-soft text-sm">Direkt in die Creator-Suche starten.</p>
             </Link>
-            <Link href="/brands/ugc-creator-preise" className="bg-gray-900/40 border border-gray-800 rounded-lg p-5 hover:border-emerald-600 transition-colors">
-              <h3 className="font-bold text-emerald-300 mb-2">UGC Creator Preise</h3>
-              <p className="text-gray-300 text-sm">Budgetrahmen und Preislogik einschaetzen.</p>
+            <Link href="/brands/ugc-creator-preise" className="surface-card rounded-lg p-5 hover:border-geo-violet transition-colors">
+              <h3 className="font-bold text-geo-violet mb-2">UGC Creator Preise</h3>
+              <p className="text-ink-soft text-sm">Budgetrahmen und Preislogik einschaetzen.</p>
             </Link>
-            <Link href="/brands/ugc-creator-deutschland" className="bg-gray-900/40 border border-gray-800 rounded-lg p-5 hover:border-emerald-600 transition-colors">
-              <h3 className="font-bold text-emerald-300 mb-2">UGC Creator Deutschland</h3>
-              <p className="text-gray-300 text-sm">Creator fuer deutsche Kampagnen finden.</p>
+            <Link href="/brands/ugc-creator-deutschland" className="surface-card rounded-lg p-5 hover:border-geo-violet transition-colors">
+              <h3 className="font-bold text-geo-violet mb-2">UGC Creator Deutschland</h3>
+              <p className="text-ink-soft text-sm">Creator fuer deutsche Kampagnen finden.</p>
             </Link>
-            <Link href="/brands/ugc-creator-beauty" className="bg-gray-900/40 border border-gray-800 rounded-lg p-5 hover:border-emerald-600 transition-colors">
-              <h3 className="font-bold text-emerald-300 mb-2">Beauty UGC Creator</h3>
-              <p className="text-gray-300 text-sm">Creator fuer Kosmetik und Pflege finden.</p>
+            <Link href="/brands/ugc-creator-beauty" className="surface-card rounded-lg p-5 hover:border-geo-violet transition-colors">
+              <h3 className="font-bold text-geo-violet mb-2">Beauty UGC Creator</h3>
+              <p className="text-ink-soft text-sm">Creator fuer Kosmetik und Pflege finden.</p>
             </Link>
-            <Link href="/brands/ugc-plattform-deutschland" className="bg-gray-900/40 border border-gray-800 rounded-lg p-5 hover:border-emerald-600 transition-colors">
-              <h3 className="font-bold text-emerald-300 mb-2">UGC Plattform Deutschland</h3>
-              <p className="text-gray-300 text-sm">UGC VZ als Plattform fuer beide Seiten.</p>
+            <Link href="/brands/ugc-plattform-deutschland" className="surface-card rounded-lg p-5 hover:border-geo-violet transition-colors">
+              <h3 className="font-bold text-geo-violet mb-2">UGC Plattform Deutschland</h3>
+              <p className="text-ink-soft text-sm">UGC VZ als Plattform fuer beide Seiten.</p>
             </Link>
-            <Link href="/brands/ugc-agentur-berlin" className="bg-gray-900/40 border border-gray-800 rounded-lg p-5 hover:border-emerald-600 transition-colors">
-              <h3 className="font-bold text-emerald-300 mb-2">UGC Agentur Berlin</h3>
-              <p className="text-gray-300 text-sm">Plattform oder Agentur-Support einordnen.</p>
+            <Link href="/brands/ugc-agentur-berlin" className="surface-card rounded-lg p-5 hover:border-geo-violet transition-colors">
+              <h3 className="font-bold text-geo-violet mb-2">UGC Agentur Berlin</h3>
+              <p className="text-ink-soft text-sm">Plattform oder Agentur-Support einordnen.</p>
             </Link>
-            <Link href="/brands/ugc-agentur-hamburg" className="bg-gray-900/40 border border-gray-800 rounded-lg p-5 hover:border-emerald-600 transition-colors">
-              <h3 className="font-bold text-emerald-300 mb-2">UGC Agentur Hamburg</h3>
-              <p className="text-gray-300 text-sm">Creator-Suche fuer Hamburg einordnen.</p>
+            <Link href="/brands/ugc-agentur-hamburg" className="surface-card rounded-lg p-5 hover:border-geo-violet transition-colors">
+              <h3 className="font-bold text-geo-violet mb-2">UGC Agentur Hamburg</h3>
+              <p className="text-ink-soft text-sm">Creator-Suche fuer Hamburg einordnen.</p>
             </Link>
-            <Link href="/brands/ugc-agentur-muenchen" className="bg-gray-900/40 border border-gray-800 rounded-lg p-5 hover:border-emerald-600 transition-colors">
-              <h3 className="font-bold text-emerald-300 mb-2">UGC Agentur Muenchen</h3>
-              <p className="text-gray-300 text-sm">Creator-Suche fuer Muenchen einordnen.</p>
+            <Link href="/brands/ugc-agentur-muenchen" className="surface-card rounded-lg p-5 hover:border-geo-violet transition-colors">
+              <h3 className="font-bold text-geo-violet mb-2">UGC Agentur Muenchen</h3>
+              <p className="text-ink-soft text-sm">Creator-Suche fuer Muenchen einordnen.</p>
             </Link>
-            <Link href="/brands/ugc-vertrag-vorlage" className="bg-gray-900/40 border border-gray-800 rounded-lg p-5 hover:border-emerald-600 transition-colors">
-              <h3 className="font-bold text-emerald-300 mb-2">UGC Vertrag Vorlage</h3>
-              <p className="text-gray-300 text-sm">Briefing- und Vertrags-Checkliste fuer Creator Deals.</p>
+            <Link href="/brands/ugc-vertrag-vorlage" className="surface-card rounded-lg p-5 hover:border-geo-violet transition-colors">
+              <h3 className="font-bold text-geo-violet mb-2">UGC Vertrag Vorlage</h3>
+              <p className="text-ink-soft text-sm">Briefing- und Vertrags-Checkliste fuer Creator Deals.</p>
             </Link>
           </div>
         </section>
