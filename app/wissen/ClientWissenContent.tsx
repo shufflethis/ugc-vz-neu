@@ -48,10 +48,10 @@ export default function ClientWissenContent({ posts }: ClientWissenContentProps)
               placeholder="Artikel durchsuchen..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-6 py-4 bg-gray-900/50 text-white rounded-xl border border-gray-700/50 focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none placeholder-gray-400"
+              className="w-full px-6 py-4 bg-surface text-ink rounded-xl border border-hairline focus:border-geo-violet/50 focus:ring-2 focus:ring-geo-violet/20 focus:outline-none placeholder-ink-soft"
             />
             <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
-              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-ink-soft" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </div>
@@ -62,11 +62,11 @@ export default function ClientWissenContent({ posts }: ClientWissenContentProps)
       {/* No Results */}
       {filteredPosts.length === 0 && searchTerm && (
         <div className="text-center py-16">
-          <div className="bg-gray-900/30 border border-gray-700/50 rounded-xl p-8 max-w-md mx-auto">
-            <p className="text-gray-300">Keine Artikel gefunden für "{searchTerm}"</p>
+          <div className="surface-card rounded-xl p-8 max-w-md mx-auto">
+            <p className="text-ink-soft">Keine Artikel gefunden für "{searchTerm}"</p>
             <button
               onClick={() => setSearchTerm('')}
-              className="mt-4 text-emerald-400 hover:text-emerald-300 transition-colors"
+              className="mt-4 text-geo-violet hover:text-geo-violet-soft transition-colors"
             >
               Alle Artikel anzeigen
             </button>
@@ -80,7 +80,7 @@ export default function ClientWissenContent({ posts }: ClientWissenContentProps)
           {filteredPosts.map((post) => (
             <article
               key={post.id}
-              className="bg-gray-900/30 backdrop-blur-sm rounded-2xl border border-gray-800/50 overflow-hidden hover:border-emerald-500/30 transition-all duration-300 group"
+              className="surface-card rounded-2xl overflow-hidden hover:border-geo-violet/30 transition-all duration-300 group"
             >
               {/* Featured Image */}
               <div className="relative h-48 overflow-hidden">
@@ -104,7 +104,7 @@ export default function ClientWissenContent({ posts }: ClientWissenContentProps)
                   {post.categories.map((category) => (
                     <span
                       key={category}
-                      className="px-3 py-1 bg-emerald-600/20 text-emerald-300 text-xs rounded-full border border-emerald-600/30"
+                      className="px-3 py-1 bg-geo-green/10 text-geo-violet text-xs rounded-full border border-hairline"
                     >
                       {category}
                     </span>
@@ -112,19 +112,19 @@ export default function ClientWissenContent({ posts }: ClientWissenContentProps)
                 </div>
 
                 {/* Title */}
-                <h2 className="text-xl font-bold mb-3 text-white group-hover:text-emerald-300 transition-colors line-clamp-2">
+                <h2 className="text-xl font-bold mb-3 text-ink group-hover:text-geo-violet transition-colors line-clamp-2">
                   <Link href={`/wissen/${post.slug}`}>
                     {post.title}
                   </Link>
                 </h2>
 
                 {/* Excerpt */}
-                <p className="text-gray-300 text-sm leading-relaxed mb-4 line-clamp-3">
+                <p className="text-ink-soft text-sm leading-relaxed mb-4 line-clamp-3">
                   {post.excerpt}
                 </p>
 
                 {/* Meta */}
-                <div className="flex items-center justify-between text-xs text-gray-400">
+                <div className="flex items-center justify-between text-xs text-ink-soft">
                   <span>{post.author}</span>
                   <span>{formatDate(post.date)}</span>
                 </div>
@@ -133,7 +133,7 @@ export default function ClientWissenContent({ posts }: ClientWissenContentProps)
                 <div className="mt-4">
                   <Link
                     href={`/wissen/${post.slug}`}
-                    className="inline-flex items-center text-emerald-400 hover:text-emerald-300 transition-colors text-sm font-medium"
+                    className="inline-flex items-center text-geo-violet hover:text-geo-violet-soft transition-colors text-sm font-medium"
                   >
                     Weiterlesen
                     <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -149,11 +149,11 @@ export default function ClientWissenContent({ posts }: ClientWissenContentProps)
 
       {/* CTA Section */}
       <section className="mt-20">
-        <div className="bg-gradient-to-r from-emerald-900/30 to-blue-900/30 backdrop-blur-sm rounded-2xl p-12 border border-emerald-700/30 text-center">
+        <div className="surface-card rounded-2xl p-12 text-center">
           <h2 className="text-3xl font-bold mb-6">
             Hast du <span className="gradient-text">Fragen</span> zu UGC?
           </h2>
-          <p className="text-lg text-gray-200 leading-relaxed mb-8 max-w-2xl mx-auto">
+          <p className="text-lg text-ink-soft leading-relaxed mb-8 max-w-2xl mx-auto">
             Unser Team steht dir gerne zur Verfügung. Egal ob du Creator bist oder eine Brand –
             wir helfen dir dabei, das Beste aus User Generated Content herauszuholen.
           </p>
@@ -170,7 +170,7 @@ export default function ClientWissenContent({ posts }: ClientWissenContentProps)
             </ContactButton>
             <Link
               href="/"
-              className="bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-500 hover:to-blue-500 text-white font-semibold py-3 px-8 rounded-lg transition-all transform hover:scale-105 inline-flex items-center justify-center"
+              className="bg-geo-violet hover:bg-geo-violet-soft text-white font-semibold py-3 px-8 rounded-lg transition-all transform hover:scale-105 inline-flex items-center justify-center"
             >
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />

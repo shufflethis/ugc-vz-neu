@@ -108,7 +108,7 @@ export default async function WissenPage() {
   const jsonLd = <JsonLdScript data={blogListingSchema} />;
 
   return (
-    <div className="min-h-screen bg-[#0D0D0D] text-white">
+    <div className="min-h-screen bg-white text-ink">
       {/* Schema.org JSON-LD für Rich Snippets */}
       {jsonLd}
       <BreadcrumbSchema items={[
@@ -143,7 +143,7 @@ export default async function WissenPage() {
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6">
               <span className="gradient-text">Wissen</span> für UGC Creators
             </h1>
-            <p className="text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
+            <p className="text-xl text-ink-soft max-w-3xl mx-auto leading-relaxed">
               Entdecke die neuesten Trends, Strategien und Insights aus der Welt des User Generated Content.
               Von Creator-Tipps bis hin zu Brand-Strategien – hier findest du alles, was du wissen musst.
             </p>
@@ -153,15 +153,15 @@ export default async function WissenPage() {
           <ClientWissenContent posts={posts} />
 
           <section className="mt-20 grid md:grid-cols-2 gap-6">
-            <Link href="/brands" className="bg-gray-900/40 border border-gray-800 rounded-lg p-6 hover:border-emerald-600 transition-colors">
-              <h2 className="text-2xl font-bold text-emerald-300 mb-3">UGC Creator finden</h2>
-              <p className="text-gray-300 leading-relaxed">
+            <Link href="/brands" className="surface-card rounded-lg p-6 hover:border-geo-violet transition-colors">
+              <h2 className="text-2xl font-bold text-geo-violet mb-3">UGC Creator finden</h2>
+              <p className="text-ink-soft leading-relaxed">
                 Fuer Brands, E-Commerce Teams und Agenturen: Demand eingeben, passende Creator ansehen und Anfrage an UGC VZ senden.
               </p>
             </Link>
-            <Link href="/creator" className="bg-gray-900/40 border border-gray-800 rounded-lg p-6 hover:border-emerald-600 transition-colors">
-              <h2 className="text-2xl font-bold text-emerald-300 mb-3">Als UGC Creator anmelden</h2>
-              <p className="text-gray-300 leading-relaxed">
+            <Link href="/creator" className="surface-card rounded-lg p-6 hover:border-geo-violet transition-colors">
+              <h2 className="text-2xl font-bold text-geo-violet mb-3">Als UGC Creator anmelden</h2>
+              <p className="text-ink-soft leading-relaxed">
                 Fuer Creator: kostenlos Profil, Portfolio, Themen und Social-Links hinterlegen.
               </p>
             </Link>

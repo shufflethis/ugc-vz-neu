@@ -138,7 +138,7 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
   ];
 
   return (
-    <div className="min-h-screen bg-[#0D0D0D] text-white">
+    <div className="min-h-screen bg-white text-ink">
       {/* Schema.org JSON-LD für Rich Snippets */}
       {jsonLd}
       <BreadcrumbSchema items={breadcrumbs} />
@@ -165,12 +165,12 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
       {/* Breadcrumb */}
       <nav className="px-4 sm:px-8 md:px-16 lg:px-24 mb-8">
         <div className="max-w-4xl mx-auto">
-          <div className="flex items-center space-x-2 text-sm text-gray-400">
-            <Link href="/" className="hover:text-emerald-400 transition-colors">Home</Link>
+          <div className="flex items-center space-x-2 text-sm text-ink-soft">
+            <Link href="/" className="hover:text-geo-violet transition-colors">Home</Link>
             <span>/</span>
-            <Link href="/wissen" className="hover:text-emerald-400 transition-colors">Wissen</Link>
+            <Link href="/wissen" className="hover:text-geo-violet transition-colors">Wissen</Link>
             <span>/</span>
-            <span className="text-gray-300">{post.title}</span>
+            <span className="text-ink-soft">{post.title}</span>
           </div>
         </div>
       </nav>
@@ -185,7 +185,7 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
               {post.categories.map((category) => (
                 <span
                   key={category}
-                  className="px-4 py-2 bg-emerald-600/20 text-emerald-300 text-sm rounded-full border border-emerald-600/30"
+                  className="px-4 py-2 bg-geo-green/10 text-geo-violet text-sm rounded-full border border-hairline"
                 >
                   {category}
                 </span>
@@ -198,7 +198,7 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
             </h1>
 
             {/* Meta Information */}
-            <div className="flex flex-wrap items-center gap-6 text-gray-400 mb-8">
+            <div className="flex flex-wrap items-center gap-6 text-ink-soft mb-8">
               <div className="flex items-center">
                 <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -232,36 +232,36 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
           </header>
 
           {/* Article Content */}
-          <div className="prose prose-lg prose-invert max-w-none">
+          <div className="prose prose-lg max-w-none">
             <ClientBlogPostContent content={post.content} />
           </div>
         </article>
       </main>
 
       {/* CTA Section */}
-      <section className="px-4 sm:px-8 md:px-16 lg:px-24 py-16 bg-gradient-to-b from-transparent to-black/30">
+      <section className="px-4 sm:px-8 md:px-16 lg:px-24 py-16 grad-subtle">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-3xl font-bold mb-6">
             <span className="gradient-text">Bereit für professionellen UGC?</span>
           </h2>
-          <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
+          <p className="text-xl text-ink-soft mb-8 max-w-2xl mx-auto">
             Entdecke, wie UGC deine Marke auf das nächste Level bringen kann. Sprich mit unserem Team und erfahre mehr über unsere Creator-Vermittlung.
           </p>
           <ContactButton>Kontakt aufnehmen</ContactButton>
         </div>
       </section>
 
-      <section className="px-4 sm:px-8 md:px-16 lg:px-24 pb-20 bg-black/30">
+      <section className="px-4 sm:px-8 md:px-16 lg:px-24 pb-20 bg-surface">
         <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-6">
-          <Link href="/brands" className="bg-gray-900/40 border border-gray-800 rounded-lg p-6 hover:border-emerald-600 transition-colors">
-            <h2 className="text-xl font-bold text-emerald-300 mb-3">UGC Creator fuer Kampagne finden</h2>
-            <p className="text-gray-300 leading-relaxed">
+          <Link href="/brands" className="surface-card rounded-lg p-6 hover:border-geo-violet transition-colors">
+            <h2 className="text-xl font-bold text-geo-violet mb-3">UGC Creator fuer Kampagne finden</h2>
+            <p className="text-ink-soft leading-relaxed">
               Demand eingeben, passende Profile auswaehlen und Anfrage an UGC VZ senden.
             </p>
           </Link>
-          <Link href="/creator" className="bg-gray-900/40 border border-gray-800 rounded-lg p-6 hover:border-emerald-600 transition-colors">
-            <h2 className="text-xl font-bold text-emerald-300 mb-3">Als UGC Creator anmelden</h2>
-            <p className="text-gray-300 leading-relaxed">
+          <Link href="/creator" className="surface-card rounded-lg p-6 hover:border-geo-violet transition-colors">
+            <h2 className="text-xl font-bold text-geo-violet mb-3">Als UGC Creator anmelden</h2>
+            <p className="text-ink-soft leading-relaxed">
               Kostenloses Profil mit Portfolio, Themen und Social-Links hinterlegen.
             </p>
           </Link>

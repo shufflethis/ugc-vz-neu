@@ -139,7 +139,7 @@ export default function FAQPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#0D0D0D] text-white">
+    <div className="min-h-screen bg-white text-ink">
       {/* FAQ Schema for rich snippets */}
       <FAQSchema faqItems={allFAQItems} />
       <BreadcrumbSchema items={breadcrumbs} />
@@ -168,10 +168,10 @@ export default function FAQPage() {
       {/* Breadcrumb Navigation */}
       <nav className="px-4 sm:px-8 md:px-16 lg:px-24 mb-8">
         <div className="max-w-4xl mx-auto">
-          <div className="flex items-center space-x-2 text-sm text-gray-400">
-            <Link href="/" className="hover:text-emerald-400 transition-colors">Home</Link>
+          <div className="flex items-center space-x-2 text-sm text-ink-soft">
+            <Link href="/" className="hover:text-geo-violet transition-colors">Home</Link>
             <span>/</span>
-            <span className="text-gray-300">FAQ</span>
+            <span className="text-ink-soft">FAQ</span>
           </div>
         </div>
       </nav>
@@ -184,7 +184,7 @@ export default function FAQPage() {
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6">
               <span className="gradient-text">FAQ</span> - Häufig gestellte Fragen
             </h1>
-            <p className="text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
+            <p className="text-xl text-ink-soft max-w-3xl mx-auto leading-relaxed">
               Hier findest du Antworten auf die wichtigsten Fragen rund um UGC-VZ.
               Falls deine Frage nicht dabei ist, kontaktiere uns gerne!
             </p>
@@ -201,22 +201,22 @@ export default function FAQPage() {
                 {section.items.map((item, itemIndex) => (
                   <details
                     key={itemIndex}
-                    className="group bg-gray-900/30 backdrop-blur-sm rounded-2xl border border-gray-800/50 overflow-hidden"
+                    className="group surface-card rounded-2xl overflow-hidden"
                   >
-                    <summary className="w-full p-6 text-left flex justify-between items-center hover:bg-gray-800/30 transition-colors cursor-pointer list-none [&::-webkit-details-marker]:hidden">
-                      <h3 className="text-lg font-semibold text-white pr-4">
+                    <summary className="w-full p-6 text-left flex justify-between items-center hover:bg-surface transition-colors cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+                      <h3 className="text-lg font-semibold text-ink pr-4">
                         {item.question}
                       </h3>
                       <div className="transform transition-transform duration-200 group-open:rotate-180 flex-shrink-0">
-                        <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-5 h-5 text-geo-violet" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                         </svg>
                       </div>
                     </summary>
 
                     <div className="px-6 pb-6">
-                      <div className="border-t border-gray-700/50 pt-4">
-                        <p className="text-gray-200 leading-relaxed">
+                      <div className="border-t border-hairline pt-4">
+                        <p className="text-ink-soft leading-relaxed">
                           {item.answer}
                         </p>
                       </div>
@@ -229,11 +229,11 @@ export default function FAQPage() {
 
           {/* Contact Section */}
           <section className="mt-16">
-            <div className="bg-gradient-to-r from-emerald-900/30 to-blue-900/30 backdrop-blur-sm rounded-2xl p-12 border border-emerald-700/30 text-center">
+            <div className="surface-card rounded-2xl p-12 text-center">
               <h2 className="text-3xl font-bold mb-6">
                 Noch <span className="gradient-text">Fragen</span>?
               </h2>
-              <p className="text-lg text-gray-200 leading-relaxed mb-8 max-w-2xl mx-auto">
+              <p className="text-lg text-ink-soft leading-relaxed mb-8 max-w-2xl mx-auto">
                 Du findest deine Frage nicht? Schreib uns einfach eine E-Mail oder kontaktiere uns über unsere Social Media Kanäle.
                 Wir helfen gerne weiter!
               </p>
@@ -250,7 +250,7 @@ export default function FAQPage() {
                 </ContactButton>
                 <Link
                   href="/"
-                  className="border-2 border-emerald-500 text-emerald-400 hover:bg-emerald-500 hover:text-white font-semibold py-3 px-8 rounded-lg transition-all transform hover:scale-105 inline-flex items-center justify-center"
+                  className="border border-geo-violet text-geo-violet hover:bg-geo-violet hover:text-white font-semibold py-3 px-8 rounded-lg transition-all transform hover:scale-105 inline-flex items-center justify-center"
                 >
                   <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
