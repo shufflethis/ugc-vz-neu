@@ -19,6 +19,9 @@ type AgentAccess = {
   authenticated: boolean;
 };
 
+// Temporary in-memory quota guard. This is useful for early validation, but it resets
+// on serverless cold starts and deploys. Before selling A2A access, replace it with
+// a persistent store such as Vercel KV, Supabase, Airtable, or Stripe-metered billing.
 const usageCounters = new Map<string, { period: string; searches: number }>();
 
 const getCurrentPeriod = () => new Date().toISOString().slice(0, 7);

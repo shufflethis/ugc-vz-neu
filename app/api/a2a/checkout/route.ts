@@ -26,6 +26,9 @@ const getBaseUrl = (request: Request) => {
 };
 
 const createCheckoutSession = async (request: Request, planKey: keyof typeof plans, email?: string) => {
+  // Checkout is intentionally prepared but not activated until Stripe env vars
+  // and API-key provisioning are configured. Without those values this endpoint
+  // returns a documented "configured: false" response instead of failing.
   const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
   if (!stripeSecretKey) {
     return {

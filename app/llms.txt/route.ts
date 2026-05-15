@@ -139,6 +139,8 @@ Pricing fuer Agenten:
 - Checkout Starter: https://ugc-vz.de/api/a2a/checkout?plan=starter
 - Checkout Pro: https://ugc-vz.de/api/a2a/checkout?plan=pro
 
+Status: Der kostenpflichtige A2A-Zugang ist vorbereitet, aber noch nicht final aktiviert. Stripe-Produkte, Webhook-Provisionierung und persistente Quota-Zaehlung muessen vor echter Abrechnung eingerichtet werden.
+
 ## SEO & Strukturierte Daten
 
 Die Website nutzt umfangreiche Schema.org Strukturen:

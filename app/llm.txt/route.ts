@@ -97,7 +97,7 @@ ${baseUrl}/a2a - JSON-RPC Endpoint fuer Agent-to-Agent Requests
 ${baseUrl}/api/a2a/checkout?plan=starter - Stripe Checkout fuer Agent Starter
 ${baseUrl}/api/a2a/checkout?plan=pro - Stripe Checkout fuer Agent Pro
 
-Agenten duerfen Creator-Vorschlaege abrufen und mit Brand-Kontaktdaten eine Anfrage erstellen. Der A2A-Zugang ist kostenpflichtig: Agent Starter kostet 29 EUR pro Monat und enthaelt 10 Suchen, Agent Pro kostet 100 EUR pro Monat und ist fuer unbegrenzte Agent-Suchen vorgesehen. UGC-VZ sendet keine komplette Creator-Datenbank an KI-Dienste und direkte Creator-Outreach-Automation bleibt bewusst begrenzt.
+Agenten duerfen Creator-Vorschlaege abrufen und mit Brand-Kontaktdaten eine Anfrage erstellen. Der A2A-Zugang ist als kostenpflichtiger Zugang vorbereitet: Agent Starter kostet 29 EUR pro Monat und enthaelt 10 Suchen, Agent Pro kostet 100 EUR pro Monat und ist fuer unbegrenzte Agent-Suchen vorgesehen. Die Zahlung/API-Key-Provisionierung ist aktuell noch nicht final aktiviert. UGC-VZ sendet keine komplette Creator-Datenbank an KI-Dienste und direkte Creator-Outreach-Automation bleibt bewusst begrenzt.
 
 ## Wissens-Artikel (Blog)
 
