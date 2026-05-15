@@ -32,7 +32,7 @@ const sections: Section[] = [
   {
     id: 'why-works',
     title: 'Warum funktioniert das?',
-    content: 'Echte Datenbank, echte Results. Wir haben keine 3 Creator - wir haben tausende. Sortiert nach allem, was wichtig ist.'
+    content: 'Echte Datenbank, echte Results. 370+ echte UGC Creator, sortiert nach allem, was wichtig ist.'
   },
   {
     id: 'for-brands',
@@ -81,7 +81,7 @@ const features = [
 ];
 
 const stats = [
-  { number: '200+', label: 'Creator in der Datenbank' },
+  { number: '370+', label: 'echte UGC Creator' },
   { number: '< 5 Min', label: 'Durchschnittliche Matchzeit' },
   { number: '0€', label: 'Kosten für Brands' },
   { number: '95%', label: 'Erfolgreiche Matches' }

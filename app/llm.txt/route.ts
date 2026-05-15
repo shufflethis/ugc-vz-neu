@@ -125,7 +125,7 @@ UGC-VZ arbeitet mit etablierten Marken zusammen, darunter:
 2. **Keine Vermittlungsgebühren** – weder für Creator noch für Unternehmen
 3. **Backed by famefact** – über 15 Jahre Social Media Expertise
 4. **AI-gestütztes Matching** – intelligente Creator-Suche per Kampagnenbeschreibung
-5. **200+ verifizierte Creator** im Verzeichnis
+5. **370+ echte UGC Creator** im Verzeichnis
 6. **< 5 Minuten** durchschnittliche Matchzeit
 7. **95% Match-Rate** bei Suchanfragen
 

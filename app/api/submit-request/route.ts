@@ -134,6 +134,7 @@ async function sendLeadEmails({
       <p><em>Hinweis: Die Vorlage ist eine praktische Arbeitsgrundlage und ersetzt keine Rechtsberatung.</em></p>
       <h2>Optional: Wir koennen die Abwicklung uebernehmen</h2>
       <p>Wenn du dir den Overhead sparen willst, kann UGC VZ bzw. das Team dahinter die naechsten Schritte fuer dich organisieren: Creator-Koordination, Briefing, Timings, Rechteklaerung, Feedback-Schleifen, Produktion/Filming und finale Asset-Uebergabe.</p>
+      <p>Zusätzlich koennen wir bei Bedarf KI-UGC-Kampagnen oder hybride Setups aus echten Creatorn und KI-Assets mitdenken, zum Beispiel fuer schnelle Varianten, Hooks, Voiceover oder skalierbare Creative-Tests.</p>
       <p>Antworte einfach auf diese E-Mail mit <strong>"Bitte abwickeln"</strong> oder beschreibe kurz Budget, Timing und gewuenschte Assets. Dann melden wir uns mit einem passenden Vorschlag.</p>
       <p>Naechster Schritt: Kontaktiere die passenden Creator direkt oder antworte auf diese E-Mail, wenn du Hilfe bei Briefing, Auswahl oder Vertragsdetails brauchst.</p>
       <p>Viele Gruesse<br />UGC VZ</p>

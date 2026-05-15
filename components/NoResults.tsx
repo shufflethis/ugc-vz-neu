@@ -100,7 +100,7 @@ const NoResults: React.FC<NoResultsProps> = ({ query }) => {
             Wir helfen Ihnen gerne weiter!
           </h4>
           <p className="text-gray-300 mb-4 text-sm leading-relaxed">
-            Kontaktieren Sie uns - wir können andere Quellen für entsprechende UGC Creator wie z.B. KI-Avatare auftun und Ihnen passende Lösungen anbieten.
+            Kontaktieren Sie uns - wir können die Anfrage manuell prüfen, weitere passende Creator recherchieren oder ergänzend KI-UGC-Ansätze für Ihre Kampagne vorschlagen.
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">

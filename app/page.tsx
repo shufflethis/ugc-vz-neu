@@ -46,7 +46,7 @@ export default function Home() {
           UGC Creator finden oder als <span className="gradient-text">Creator anmelden</span>
         </h1>
         <p className="text-lg sm:text-xl text-gray-300 max-w-2xl mb-12">
-          UGC VZ ist die kostenlose Plattform fuer User Generated Content in Deutschland. Brands beschreiben ihre Kampagne und finden passende Creator. Creator fuellen den Fragebogen aus und werden fuer passende Anfragen sichtbar.
+          UGC VZ ist die kostenlose Plattform fuer User Generated Content in Deutschland. Brands beschreiben ihre Kampagne und finden passende Creator aus 370+ echten Profilen. Creator fuellen den Fragebogen aus und werden fuer passende Anfragen sichtbar.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 mb-10">
           <Link

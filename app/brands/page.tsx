@@ -116,6 +116,7 @@ export default function BrandsPage({ searchParams }: { searchParams?: { query?: 
         <section className="max-w-6xl mx-auto grid md:grid-cols-3 gap-6 mb-16">
           {[
             ['Keine Agenturpflicht', 'Du kannst UGC VZ kostenlos nutzen und Creator direkt anfragen. Agentur-Support ist optional, nicht Voraussetzung.'],
+            ['370+ echte Creator', 'Die Datenbank besteht aus echten UGC Creatorn, nicht aus synthetischen Platzhalterprofilen.'],
             ['Besser als kalte DMs', 'Statt endlos Instagram-Profile zu pruefen, startest du mit einer klaren Kampagnenbeschreibung.'],
             ['Fuer echte Kampagnen', 'Geeignet fuer Produktvideos, Testimonials, Social Ads, Launches, E-Commerce und lokale Brand-Aktivierungen.'],
           ].map(([title, copy]) => (
@@ -173,6 +174,7 @@ export default function BrandsPage({ searchParams }: { searchParams?: { query?: 
                 'Briefing, Skript und Feedback-Schleifen',
                 'Nutzungsrechte, Timing und Asset-Uebergabe',
                 'Optional Produktion/Filming und Kampagnen-Setup',
+                'KI-UGC oder hybride Creator/KI-Setups fuer schnelle Creative-Tests',
               ].map((item) => (
                 <div key={item} className="bg-black/30 border border-gray-800 rounded-lg p-4 text-gray-200">
                   {item}
