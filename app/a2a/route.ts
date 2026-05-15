@@ -10,6 +10,166 @@ type JsonRpcRequest = {
   params?: any;
 };
 
+type AgentTier = 'guest' | 'starter' | 'pro' | 'internal';
+
+type AgentAccess = {
+  keyId: string;
+  tier: AgentTier;
+  monthlySearchLimit: number | null;
+  authenticated: boolean;
+};
+
+const usageCounters = new Map<string, { period: string; searches: number }>();
+
+const getCurrentPeriod = () => new Date().toISOString().slice(0, 7);
+
+const getPlanConfig = (tier: AgentTier) => {
+  if (tier === 'starter') {
+    return {
+      tier,
+      name: 'Agent Starter',
+      monthlySearchLimit: 10,
+      priceEur: 29,
+    };
+  }
+
+  if (tier === 'pro' || tier === 'internal') {
+    return {
+      tier,
+      name: tier === 'internal' ? 'Internal Agent Access' : 'Agent Pro',
+      monthlySearchLimit: null,
+      priceEur: tier === 'internal' ? 0 : 100,
+    };
+  }
+
+  return {
+    tier,
+    name: 'Guest Agent',
+    monthlySearchLimit: Number(process.env.A2A_GUEST_MONTHLY_SEARCH_LIMIT || '0'),
+    priceEur: 0,
+  };
+};
+
+const parseAgentApiKeys = () => {
+  const entries = (process.env.A2A_AGENT_API_KEYS || '')
+    .split(',')
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+
+  const keys = new Map<string, AgentTier>();
+  entries.forEach((entry) => {
+    const [key, tier = 'starter'] = entry.split(':').map((part) => part.trim());
+    if (key && ['starter', 'pro'].includes(tier)) {
+      keys.set(key, tier as AgentTier);
+    }
+  });
+
+  return keys;
+};
+
+const getApiKeyFromRequest = (request: Request) => {
+  const authHeader = request.headers.get('authorization') || '';
+  if (authHeader.toLowerCase().startsWith('bearer ')) {
+    return authHeader.slice(7).trim();
+  }
+
+  return request.headers.get('x-api-key') || request.headers.get('x-a2a-api-key') || '';
+};
+
+const getAgentAccess = (request: Request): AgentAccess => {
+  const apiKey = getApiKeyFromRequest(request);
+  const internalKey = process.env.A2A_INTERNAL_API_KEY;
+
+  if (apiKey && internalKey && apiKey === internalKey) {
+    return {
+      keyId: 'internal',
+      authenticated: true,
+      ...getPlanConfig('internal'),
+    };
+  }
+
+  const knownKeys = parseAgentApiKeys();
+  const tier = apiKey ? knownKeys.get(apiKey) : undefined;
+
+  if (tier) {
+    return {
+      keyId: apiKey.slice(0, 12),
+      authenticated: true,
+      ...getPlanConfig(tier),
+    };
+  }
+
+  return {
+    keyId: apiKey ? 'unknown' : 'guest',
+    authenticated: false,
+    ...getPlanConfig('guest'),
+  };
+};
+
+const assertPaidAccess = (access: AgentAccess) => {
+  if (access.tier === 'guest' || !access.authenticated) {
+    const checkoutBase = 'https://ugc-vz.de/api/a2a/checkout';
+    const error: any = new Error('A2A paid access required');
+    error.code = 'PAYMENT_REQUIRED';
+    error.data = {
+      pricing: {
+        starter: {
+          price: '29 EUR / Monat',
+          monthlySearchLimit: 10,
+          checkoutUrl: `${checkoutBase}?plan=starter`,
+        },
+        pro: {
+          price: '100 EUR / Monat',
+          monthlySearchLimit: 'unlimited',
+          checkoutUrl: `${checkoutBase}?plan=pro`,
+        },
+      },
+      auth: 'Send your A2A API key as Authorization: Bearer <key> or x-a2a-api-key.',
+    };
+    throw error;
+  }
+};
+
+const consumeSearchQuota = (access: AgentAccess) => {
+  assertPaidAccess(access);
+
+  if (access.monthlySearchLimit === null) {
+    return {
+      tier: access.tier,
+      remainingSearches: null,
+      monthlySearchLimit: null,
+    };
+  }
+
+  const period = getCurrentPeriod();
+  const counterKey = `${access.keyId}:${period}`;
+  const counter = usageCounters.get(counterKey) || { period, searches: 0 };
+
+  if (counter.searches >= access.monthlySearchLimit) {
+    const error: any = new Error('A2A monthly search limit reached');
+    error.code = 'QUOTA_EXCEEDED';
+    error.data = {
+      tier: access.tier,
+      period,
+      monthlySearchLimit: access.monthlySearchLimit,
+      usedSearches: counter.searches,
+      upgradeUrl: 'https://ugc-vz.de/api/a2a/checkout?plan=pro',
+    };
+    throw error;
+  }
+
+  counter.searches += 1;
+  usageCounters.set(counterKey, counter);
+
+  return {
+    tier: access.tier,
+    period,
+    monthlySearchLimit: access.monthlySearchLimit,
+    usedSearches: counter.searches,
+    remainingSearches: Math.max(access.monthlySearchLimit - counter.searches, 0),
+  };
+};
+
 const clampResults = (value: unknown) => {
   const parsed = Number(value || 6);
   if (Number.isNaN(parsed)) return 6;
@@ -56,11 +216,13 @@ const jsonRpcError = (id: JsonRpcRequest['id'], code: number, message: string, d
     { status }
   );
 
-async function searchCreators(request: Request, params: any) {
+async function searchCreators(request: Request, params: any, access: AgentAccess) {
   const query = getMessageText(params);
   if (!query.trim()) {
     throw new Error('Missing query. Provide params.query or a text message.');
   }
+
+  const quota = consumeSearchQuota(access);
 
   const origin = getOrigin(request);
   const response = await fetch(`${origin}/api/search`, {
@@ -92,14 +254,17 @@ async function searchCreators(request: Request, params: any) {
     totalCount: data.totalCount || creators.length,
     returnedCount: creators.length,
     creators,
+    billing: quota,
     policy:
-      'A2A liefert Creator-Vorschlaege ohne private Kontaktinfos. Kontaktinfos werden erst nach bewusster Anfrage an die angegebene Brand-E-Mail gesendet.',
+      'A2A ist ein bezahlter Agent-Zugang. Ergebnisse enthalten Creator-Vorschlaege ohne private Kontaktinfos. Kontaktinfos werden erst nach bewusster Anfrage an die angegebene Brand-E-Mail gesendet.',
     nextStep:
       'Rufe ugc.submit_creator_request mit creatorIds und clientInfo.name/clientInfo.email auf, wenn die Brand diese Creator anfragen moechte.',
   };
 }
 
-async function submitCreatorRequest(request: Request, params: any) {
+async function submitCreatorRequest(request: Request, params: any, access: AgentAccess) {
+  assertPaidAccess(access);
+
   const creatorIds = Array.isArray(params?.creatorIds) ? params.creatorIds.slice(0, 10) : [];
   const clientInfo = params?.clientInfo || {};
 
@@ -144,6 +309,10 @@ async function submitCreatorRequest(request: Request, params: any) {
 
   return {
     success: true,
+    billing: {
+      tier: access.tier,
+      note: 'Creator-Anfragen sind fuer bezahlte A2A Keys freigeschaltet. Suchlimits werden nur bei ugc.search_creators verbraucht.',
+    },
     note:
       'Brand-Anfrage erstellt. Die Brand bekommt die verfuegbaren Kontaktinfos per E-Mail. Creator werden nicht ungeprueft automatisiert angeschrieben.',
     upstream: data,
@@ -169,10 +338,11 @@ export async function POST(request: Request) {
 
   const id = body.id ?? null;
   const method = body.method || body.params?.skill || body.params?.skillId;
+  const access = getAgentAccess(request);
 
   try {
     if (method === 'ugc.search_creators' || method === 'message/send' || method === 'tasks/send') {
-      const result = await searchCreators(request, body.params || {});
+      const result = await searchCreators(request, body.params || {}, access);
       return jsonRpcResult(id, {
         task: {
           id: `ugc-search-${Date.now()}`,
@@ -183,7 +353,7 @@ export async function POST(request: Request) {
     }
 
     if (method === 'ugc.submit_creator_request') {
-      const result = await submitCreatorRequest(request, body.params || {});
+      const result = await submitCreatorRequest(request, body.params || {}, access);
       return jsonRpcResult(id, {
         task: {
           id: `ugc-request-${Date.now()}`,
@@ -201,6 +371,14 @@ export async function POST(request: Request) {
       supportedMethods: ['ugc.search_creators', 'ugc.submit_creator_request', 'message/send', 'tasks/send', 'agent.card'],
     });
   } catch (error: any) {
+    if (error.code === 'PAYMENT_REQUIRED') {
+      return jsonRpcError(id, -32001, error.message, error.data, 402);
+    }
+
+    if (error.code === 'QUOTA_EXCEEDED') {
+      return jsonRpcError(id, -32002, error.message, error.data, 429);
+    }
+
     return jsonRpcError(id, -32000, error.message || 'A2A request failed', undefined, 500);
   }
 }

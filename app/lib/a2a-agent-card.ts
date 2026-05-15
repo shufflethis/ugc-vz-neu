@@ -14,6 +14,27 @@ export const ugcVzAgentCard = {
   version: '1.0.0',
   documentationUrl: `${baseUrl}/llms.txt`,
   iconUrl: `${baseUrl}/ugc-vz-logo.webp`,
+  pricing: {
+    currency: 'EUR',
+    plans: [
+      {
+        id: 'starter',
+        name: 'Agent Starter',
+        price: 29,
+        interval: 'month',
+        monthlySearchLimit: 10,
+        checkoutUrl: `${baseUrl}/api/a2a/checkout?plan=starter`,
+      },
+      {
+        id: 'pro',
+        name: 'Agent Pro',
+        price: 100,
+        interval: 'month',
+        monthlySearchLimit: null,
+        checkoutUrl: `${baseUrl}/api/a2a/checkout?plan=pro`,
+      },
+    ],
+  },
   capabilities: {
     streaming: false,
     pushNotifications: false,
@@ -22,17 +43,22 @@ export const ugcVzAgentCard = {
   defaultInputModes: ['text/plain', 'application/json'],
   defaultOutputModes: ['application/json'],
   securitySchemes: {
-    publicSearch: {
-      type: 'none',
-      description: 'Creator-Suche ist oeffentlich nutzbar.',
+    apiKey: {
+      type: 'apiKey',
+      in: 'header',
+      name: 'Authorization',
+      description:
+        'Bezahlter A2A API-Key als Authorization: Bearer <key>. Starter: 29 EUR/Monat mit 10 Suchen. Pro: 100 EUR/Monat unlimited.',
     },
     brandLead: {
-      type: 'none',
+      type: 'apiKey',
+      in: 'header',
+      name: 'Authorization',
       description:
         'Eine Brand-Anfrage benoetigt Name, E-Mail und bewusste Creator-Auswahl. Creator werden nicht ungeprueft automatisiert angeschrieben.',
     },
   },
-  security: [{ publicSearch: [] }],
+  security: [{ apiKey: [] }],
   skills: [
     {
       id: 'ugc.search_creators',

@@ -133,6 +133,12 @@ Nein, das Verzeichnis ist öffentlich zugänglich. Creator können direkt über 
 
 Agenten koennen ueber A2A die Skills "ugc.search_creators" und "ugc.submit_creator_request" nutzen. Die Suche gibt Creator-Vorschlaege ohne private Kontaktinfos zurueck. Kontaktinfos werden erst nach bewusster Anfrage an die angegebene Brand-E-Mail gesendet. Es findet kein unkontrolliertes automatisches Anschreiben aller Creator statt.
 
+Pricing fuer Agenten:
+- Agent Starter: 29 EUR pro Monat, 10 A2A-Suchen
+- Agent Pro: 100 EUR pro Monat, unbegrenzte A2A-Suchen
+- Checkout Starter: https://ugc-vz.de/api/a2a/checkout?plan=starter
+- Checkout Pro: https://ugc-vz.de/api/a2a/checkout?plan=pro
+
 ## SEO & Strukturierte Daten
 
 Die Website nutzt umfangreiche Schema.org Strukturen:
