@@ -216,6 +216,13 @@ const parsePriceValue = (priceText: string): number | null => {
   return match ? Number(match[1]) : null;
 };
 
+const normalizeGenderValue = (gender?: string) => {
+  const normalized = String(gender || '').toLowerCase();
+  if (normalized.includes('männ') || normalized.includes('mann') || normalized.includes('male')) return 'male';
+  if (normalized.includes('weib') || normalized.includes('frau') || normalized.includes('female')) return 'female';
+  return 'any';
+};
+
 const mapCreatorProfile = (record: AirtableRecord): CreatorProfile => {
   const fields = record.fields;
   const fullName = getFieldValue(fields, fieldCandidates.fullName);
@@ -240,6 +247,28 @@ const mapCreatorProfile = (record: AirtableRecord): CreatorProfile => {
     availability: getFieldValue(fields, fieldCandidates.availability),
     imageUrl: getFieldValue(fields, fieldCandidates.image),
   };
+};
+
+const applyDeterministicQueryOverrides = (analysis: QueryAnalysis, query: string, requestId: string): QueryAnalysis => {
+  const queryLower = query.toLowerCase();
+  const malePattern = /\b(männer|maenner|männlich|maennlich|mann|male|herren|jungs)\b/i;
+  const femalePattern = /\b(frauen|weiblich|frau|female|damen|mädchen|maedchen)\b/i;
+
+  if (malePattern.test(queryLower)) {
+    if (analysis.gender !== 'male') {
+      console.log(`[${requestId}] Deterministic override: query contains explicit male keyword, overriding gender "${analysis.gender}" -> "male"`);
+    }
+    return { ...analysis, gender: 'male' };
+  }
+
+  if (femalePattern.test(queryLower)) {
+    if (analysis.gender !== 'female') {
+      console.log(`[${requestId}] Deterministic override: query contains explicit female keyword, overriding gender "${analysis.gender}" -> "female"`);
+    }
+    return { ...analysis, gender: 'female' };
+  }
+
+  return analysis;
 };
 
 // Helper function to create mock Airtable records for testing
@@ -415,6 +444,8 @@ export async function POST(req: Request) {
       console.log(`[${requestId}] Regex query analysis results:`, initialAnalysis);
     }
 
+    initialAnalysis = applyDeterministicQueryOverrides(initialAnalysis, query, requestId);
+
     // Extract filters from AI analysis
     const isMaleQuery = initialAnalysis.gender === 'male';
     const isFemaleQuery = initialAnalysis.gender === 'female';
@@ -438,7 +469,7 @@ export async function POST(req: Request) {
 
     // Use cached records if available for better performance
     const now = Date.now();
-    const forceFresh = false; // Use cache for better performance
+    const forceFresh = initialAnalysis.gender !== 'any' || initialAnalysis.platforms.length > 0; // Keep explicit filters precise
 
     if (usingMockData) {
       console.log(`[${requestId}] Using mock data instead of Airtable`);
@@ -617,20 +648,22 @@ export async function POST(req: Request) {
       // 1. Gender match (highest priority)
       console.log(`[${requestId}] Gender filtering for ${fullName}: query wants "${analysis.gender}", creator is "${gender}"`);
 
-      if (analysis.gender === 'male' && gender === 'Männlich') {
+      const normalizedCreatorGender = normalizeGenderValue(gender);
+
+      if (analysis.gender === 'male' && normalizedCreatorGender === 'male') {
         score += 100;
         console.log(`[${requestId}] ✓ Male match for ${fullName}`);
-      } else if (analysis.gender === 'female' && gender === 'Weiblich') {
+      } else if (analysis.gender === 'female' && normalizedCreatorGender === 'female') {
         score += 100;
         console.log(`[${requestId}] ✓ Female match for ${fullName}`);
       } else if (analysis.gender === 'any') {
         score += 50; // Neutral score for any gender when no preference
         console.log(`[${requestId}] ✓ Any gender accepted for ${fullName}`);
-      } else if (analysis.gender === 'male' && gender !== 'Männlich') {
+      } else if (analysis.gender === 'male' && normalizedCreatorGender !== 'male') {
         // Male requested but creator is not male - EXCLUDE completely
         console.log(`[${requestId}] ❌ Male requested but ${fullName} is ${gender} - EXCLUDED`);
         return 0; // Return 0 score to exclude this creator entirely
-      } else if (analysis.gender === 'female' && gender !== 'Weiblich') {
+      } else if (analysis.gender === 'female' && normalizedCreatorGender !== 'female') {
         // Female requested but creator is not female - EXCLUDE completely
         console.log(`[${requestId}] ❌ Female requested but ${fullName} is ${gender} - EXCLUDED`);
         return 0; // Return 0 score to exclude this creator entirely
@@ -896,12 +929,22 @@ export async function POST(req: Request) {
       console.warn(`[${requestId}] No valid creators found for query: "${query}"`);
     }
 
-    const creatorsWithRealImages = validCreators.filter(creator => creator.hasCustomImage);
-    const displayCreators = creatorsWithRealImages.length > 0 ? creatorsWithRealImages : validCreators;
+    const genderFilteredCreators = initialAnalysis.gender === 'any'
+      ? validCreators
+      : validCreators.filter((creator) => normalizeGenderValue(creator.gender) === initialAnalysis.gender);
 
-    if (creatorsWithRealImages.length > 0 && creatorsWithRealImages.length < validCreators.length) {
+    if (initialAnalysis.gender !== 'any' && genderFilteredCreators.length < validCreators.length) {
       console.log(
-        `[${requestId}] Hiding ${validCreators.length - creatorsWithRealImages.length} creators without real images from visible results`
+        `[${requestId}] Strict gender filter removed ${validCreators.length - genderFilteredCreators.length} creators after scoring`
+      );
+    }
+
+    const creatorsWithRealImages = genderFilteredCreators.filter(creator => creator.hasCustomImage);
+    const displayCreators = creatorsWithRealImages.length > 0 ? creatorsWithRealImages : genderFilteredCreators;
+
+    if (creatorsWithRealImages.length > 0 && creatorsWithRealImages.length < genderFilteredCreators.length) {
+      console.log(
+        `[${requestId}] Hiding ${genderFilteredCreators.length - creatorsWithRealImages.length} creators without real images from visible results`
       );
     }
 
