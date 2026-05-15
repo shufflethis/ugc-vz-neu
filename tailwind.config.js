@@ -7,6 +7,19 @@ module.exports = {
   ],
   theme: {
     extend: {
+      colors: {
+        'geo-green': '#A8E06A',
+        'geo-green-deep': '#6FA82E',
+        'green-deep': '#6FA82E',
+        'geo-violet': '#8B3FCA',
+        'geo-violet-soft': '#A870E0',
+        'void': '#060606',
+        'surface': '#F7F7F5',
+        'surface-2': '#EFEFEC',
+        'ink': '#171717',
+        'ink-soft': '#5A5A5A',
+        'hairline': '#E8E8E4',
+      },
       keyframes: {
         'fade-in': {
           '0%': { opacity: '0' },
