@@ -33,6 +33,11 @@ Sitemap: ${baseUrl}/sitemap.xml
 # ${baseUrl}/llm.txt
 # ${baseUrl}/llms.txt
 
+# Agent discovery
+Allow: /.well-known/agent-card.json
+Allow: /.well-known/agent.json
+Allow: /a2a
+
 # Allow static assets (CSS, JS, images)
 Allow: /_next/static/
 Allow: /_next/image

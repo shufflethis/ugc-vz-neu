@@ -36,6 +36,7 @@ UGC-VZ ist ein kostenloses Creator-Verzeichnis, das UGC Creators und Unternehmen
 - **Kostenlose Creator-Suche**: Unternehmen finden passende UGC Creators ohne Gebühren
 - **Creator-Profile**: Gratis Profilerstellung und Portfolio-Präsentation für Content Creator
 - **AI-gestütztes Matching**: Intelligente Vermittlung basierend auf Kampagnenbeschreibung
+- **A2A Agent-Zugang**: Agenten koennen UGC-VZ ueber eine Agent Card entdecken, Creator-Vorschlaege abrufen und Brand-Anfragen ausloesen
 - **Direkte Vermittlung**: Direkte Kontaktaufnahme zwischen Creator und Unternehmen
 - **Keine Agentur-Gebühren**: Kostenlos für beide Seiten
 - **Creator-Fragebogen**: UGC Creator koennen sich kostenlos mit Portfolio, Themen und Social-Links anmelden
@@ -87,6 +88,14 @@ ${baseUrl}/agb - Allgemeine Geschäftsbedingungen
 ${baseUrl}/datenschutz - Datenschutzerklärung
 ${baseUrl}/impressum - Impressum
 ${baseUrl}/cookies - Cookie-Richtlinie
+
+## Agent/API Discovery
+
+${baseUrl}/.well-known/agent-card.json - A2A Agent Card fuer standardisierte Agent Discovery
+${baseUrl}/.well-known/agent.json - Kompatibler A2A Agent Card Alias
+${baseUrl}/a2a - JSON-RPC Endpoint fuer Agent-to-Agent Requests
+
+Agenten duerfen Creator-Vorschlaege abrufen und mit Brand-Kontaktdaten eine Anfrage erstellen. UGC-VZ sendet keine komplette Creator-Datenbank an KI-Dienste und direkte Creator-Outreach-Automation bleibt bewusst begrenzt.
 
 ## Wissens-Artikel (Blog)
 

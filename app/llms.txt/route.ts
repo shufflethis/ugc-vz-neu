@@ -14,6 +14,7 @@ UGC-VZ ist ein kostenloses Verzeichnis, das UGC Creators und Unternehmen zusamme
 - **Creator-Suche**: Kostenlose Suche nach UGC Creators
 - **Creator-Profile**: Gratis Profilerstellung für Creator
 - **Direkte Vermittlung**: Direkte Kontaktaufnahme zwischen Creator und Unternehmen
+- **A2A Agent-Zugang**: Agenten koennen UGC-VZ ueber eine Agent Card entdecken und Creator-Anfragen strukturiert einreichen
 - **Kein Algorithmus**: Transparente Vermittlung ohne versteckte Algorithmen
 
 ## Unternehmen
@@ -125,6 +126,12 @@ Nein, das Verzeichnis ist öffentlich zugänglich. Creator können direkt über 
 - Blog/Wissen: https://ugc-vz.de/wissen
 - Impressum: https://ugc-vz.de/impressum
 - Datenschutz: https://ugc-vz.de/datenschutz
+- A2A Agent Card: https://ugc-vz.de/.well-known/agent-card.json
+- A2A Endpoint: https://ugc-vz.de/a2a
+
+## Agenten-Nutzung
+
+Agenten koennen ueber A2A die Skills "ugc.search_creators" und "ugc.submit_creator_request" nutzen. Die Suche gibt Creator-Vorschlaege ohne private Kontaktinfos zurueck. Kontaktinfos werden erst nach bewusster Anfrage an die angegebene Brand-E-Mail gesendet. Es findet kein unkontrolliertes automatisches Anschreiben aller Creator statt.
 
 ## SEO & Strukturierte Daten
 
