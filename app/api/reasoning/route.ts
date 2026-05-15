@@ -3,6 +3,12 @@ import { NextResponse } from 'next/server';
 export const maxDuration = 60;
 export const dynamic = 'force-dynamic';
 
+const OPENROUTER_REASONING_MODELS = [
+  'deepseek/deepseek-v4-flash',
+  'tencent/hy3-preview',
+  'minimax/minimax-m2.7',
+];
+
 // Function to generate a simple reasoning for short queries
 function generateSimpleReasoning(query: string): string {
   const platforms = [];
@@ -105,64 +111,77 @@ export async function POST(req: Request) {
       });
     }
 
-    // OpenRouter API call
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
-        'HTTP-Referer': 'https://ugc-vz.vercel.app',
-        'X-Title': 'UGC VZ Creator Search',
-        'X-Request-ID': requestId
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.0-flash-exp:free',
-        messages: [
-          {
-            role: 'system',
-            content: 'Du bist ein Experte für Influencer-Marketing. Analysiere die Suchanfrage und erkläre, wie du die passenden Creator findest. Strukturiere deine Antwort in Abschnitte: 1. Verständnis der Anfrage, 2. Datenbankabfrage, 3. Filterung und Priorisierung. Antworte auf Deutsch.'
-          },
-          {
-            role: 'user',
-            content: `Analysiere diese Suchanfrage für Creator: "${query}"`
-          }
-        ],
-        temperature: 0.7,
-        max_tokens: 500
-      })
-    });
+    let lastOpenRouterError: unknown;
 
-    console.log(`[${requestId}] OpenRouter API response status:`, response.status);
-
-    if (!response.ok) {
-      let errorData;
+    for (const model of OPENROUTER_REASONING_MODELS) {
       try {
-        errorData = await response.json();
-        console.error(`[${requestId}] OpenRouter API error:`, errorData);
-      } catch (e) {
-        console.error(`[${requestId}] Failed to parse error response:`, e);
+        console.log(`[${requestId}] Trying OpenRouter reasoning model: ${model}`);
+
+        const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+            'HTTP-Referer': 'https://ugc-vz.vercel.app',
+            'X-Title': 'UGC VZ Creator Search',
+            'X-Request-ID': requestId
+          },
+          body: JSON.stringify({
+            model,
+            messages: [
+              {
+                role: 'system',
+                content: 'Du bist ein Experte für Influencer-Marketing. Analysiere die Suchanfrage und erkläre, wie du die passenden Creator findest. Strukturiere deine Antwort in Abschnitte: 1. Verständnis der Anfrage, 2. Datenbankabfrage, 3. Filterung und Priorisierung. Antworte auf Deutsch.'
+              },
+              {
+                role: 'user',
+                content: `Analysiere diese Suchanfrage für Creator: "${query}"`
+              }
+            ],
+            temperature: 0.7,
+            max_tokens: 500
+          })
+        });
+
+        console.log(`[${requestId}] OpenRouter API response status for ${model}:`, response.status);
+
+        if (!response.ok) {
+          let errorData;
+          try {
+            errorData = await response.json();
+            console.error(`[${requestId}] OpenRouter API error for ${model}:`, errorData);
+          } catch (e) {
+            console.error(`[${requestId}] Failed to parse error response for ${model}:`, e);
+          }
+          throw new Error(`Failed to get reasoning from OpenRouter model ${model}: ${response.status} ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        console.log(`[${requestId}] OpenRouter response received successfully from ${model}`);
+
+        if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+          console.error(`[${requestId}] Unexpected OpenRouter response format from ${model}:`, data);
+          throw new Error(`Invalid response format from OpenRouter model ${model}`);
+        }
+
+        const reasoning = data.choices[0].message.content;
+        console.log(`[${requestId}] Reasoning content length:`, reasoning.length);
+
+        return NextResponse.json({
+          success: true,
+          reasoning: reasoning,
+          source: 'openrouter',
+          model,
+          requestId: requestId,
+          timestamp: new Date().toISOString()
+        });
+      } catch (modelError) {
+        lastOpenRouterError = modelError;
+        console.error(`[${requestId}] OpenRouter reasoning failed for ${model}:`, modelError);
       }
-      throw new Error(`Failed to get reasoning from OpenRouter: ${response.status} ${response.statusText}`);
     }
 
-    const data = await response.json();
-    console.log(`[${requestId}] OpenRouter response received successfully`);
-
-    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-      console.error(`[${requestId}] Unexpected OpenRouter response format:`, data);
-      throw new Error('Invalid response format from OpenRouter');
-    }
-
-    const reasoning = data.choices[0].message.content;
-    console.log(`[${requestId}] Reasoning content length:`, reasoning.length);
-
-    return NextResponse.json({
-      success: true,
-      reasoning: reasoning,
-      source: 'openrouter',
-      requestId: requestId,
-      timestamp: new Date().toISOString()
-    });
+    throw lastOpenRouterError || new Error('All OpenRouter reasoning models failed');
   } catch (error: any) {
     console.error(`[${requestId}] Reasoning generation error:`, error);
 

@@ -974,10 +974,21 @@ interface QueryAnalysis {
 }
 
 // OpenRouter-based AI query analysis
+const OPENROUTER_ANALYSIS_MODELS = [
+  'deepseek/deepseek-v4-flash',
+  'tencent/hy3-preview',
+  'minimax/minimax-m2.7',
+];
+
 async function analyzeQueryWithOpenRouter(query: string, requestId: string): Promise<QueryAnalysis> {
   console.log(`[${requestId}] Attempting OpenRouter AI analysis for query: "${query}"`);
 
-  try {
+  let lastError: unknown;
+
+  for (const model of OPENROUTER_ANALYSIS_MODELS) {
+    try {
+    console.log(`[${requestId}] Trying OpenRouter model: ${model}`);
+
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -988,7 +999,7 @@ async function analyzeQueryWithOpenRouter(query: string, requestId: string): Pro
         'X-Request-ID': requestId
       },
       body: JSON.stringify({
-        model: 'zhipu-ai/glm-4.5-air:free',
+        model,
         messages: [
           {
             role: 'system',
@@ -1076,10 +1087,13 @@ Regeln:
     console.log(`[${requestId}] OpenRouter analysis successful:`, analysis);
     return analysis;
 
-  } catch (error) {
-    console.error(`[${requestId}] OpenRouter analysis failed:`, error);
-    throw error;
+    } catch (error) {
+      lastError = error;
+      console.error(`[${requestId}] OpenRouter analysis failed for ${model}:`, error);
+    }
   }
+
+  throw lastError || new Error('OpenRouter analysis failed for all models');
 }
 
 // Fallback: Regex-based query analysis (used when OpenRouter fails or is unavailable)
