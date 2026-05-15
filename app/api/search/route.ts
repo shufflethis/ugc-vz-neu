@@ -638,8 +638,17 @@ export async function POST(req: Request) {
       console.warn(`[${requestId}] No valid creators found for query: "${query}"`);
     }
 
+    const creatorsWithRealImages = validCreators.filter(creator => creator.hasCustomImage);
+    const displayCreators = creatorsWithRealImages.length > 0 ? creatorsWithRealImages : validCreators;
+
+    if (creatorsWithRealImages.length > 0 && creatorsWithRealImages.length < validCreators.length) {
+      console.log(
+        `[${requestId}] Hiding ${validCreators.length - creatorsWithRealImages.length} creators without real images from visible results`
+      );
+    }
+
     // Remove helper properties before sending (but keep gender for frontend placeholder logic)
-    const finalCreators = validCreators.map(({ hasCustomImage, totalReach, score, ...rest }) => rest);
+    const finalCreators = displayCreators.map(({ hasCustomImage, totalReach, score, ...rest }) => rest);
 
     console.log(`[${requestId}] Returning ${finalCreators.length} creators to client after AI filtering`);
 
