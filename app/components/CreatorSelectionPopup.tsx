@@ -116,7 +116,7 @@ export default function CreatorSelectionPopup({
       <div 
         className={`fixed bottom-0 left-0 right-0 z-50 transform transition-all duration-500 ease-out ${
           isVisible 
-            ? (isMinimized ? 'translate-y-[calc(100%-5rem)]' : 'translate-y-0') 
+            ? (isMinimized ? 'translate-y-[calc(100%-7.5rem)]' : 'translate-y-0') 
             : 'translate-y-full'
         }`}
         style={{
@@ -139,7 +139,7 @@ export default function CreatorSelectionPopup({
             
             {/* Header */}
             <div className="px-6 pt-8 pb-4 border-b border-gray-200/50">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-center space-x-4">
                   <div className="flex items-center space-x-3">
                     <div className="relative">
@@ -151,13 +151,25 @@ export default function CreatorSelectionPopup({
                         {selectedCreators.length} Creator{selectedCreators.length !== 1 ? 's' : ''} ausgewählt
                       </h3>
                       <p className="text-sm text-gray-600 mt-1">
-                        Ihre perfekte UGC-Creator Auswahl
+                        Kostenlos anfragen, Kontaktinfos per E-Mail erhalten.
                       </p>
                     </div>
                   </div>
                 </div>
                 
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center justify-end space-x-2">
+                  {!showForm && (
+                    <button
+                      onClick={() => {
+                        setIsMinimized(false);
+                        setShowForm(true);
+                        trackUGCEvents.leadFormOpened('creator_selection', selectedCreators.length);
+                      }}
+                      className="px-4 py-3 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-all font-semibold text-sm sm:text-base shadow-md"
+                    >
+                      Kostenlos Anfrage senden
+                    </button>
+                  )}
                   {!showForm && (
                     <button
                       onClick={() => setIsMinimized(!isMinimized)}

@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import Airtable from 'airtable';
+import fs from 'fs';
+import path from 'path';
 import { getProfileImage } from '@/utils/profileImage';
 
 // Define a proper type for processed creators
@@ -36,6 +38,13 @@ export const runtime = 'nodejs';
 let cachedRecords: AirtableRecord[] | null = null;
 let lastFetch: number = 0;
 const CACHE_DURATION = 300000; // 5 minutes cache for better performance
+
+const getLocalCreatorImage = (recordId: string): string | null => {
+  const relativePath = `/creator-images/${recordId}.jpg`;
+  const absolutePath = path.join(process.cwd(), 'public', 'creator-images', `${recordId}.jpg`);
+
+  return fs.existsSync(absolutePath) ? relativePath : null;
+};
 
 // Helper function to create mock Airtable records for testing
 function getMockAirtableRecords(): AirtableRecord[] {
@@ -549,16 +558,22 @@ export async function POST(req: Request) {
             hasCustomImage = true;
             console.log(`[${requestId}] Using cached image for ${fullName}: ${finalImage}`);
           } else {
-            // Fallback to gender-specific placeholder
-            if (gender === 'Weiblich') {
-              finalImage = '/female-placeholder.webp';
+            const localCreatorImage = getLocalCreatorImage(record.id);
+            if (localCreatorImage) {
+              finalImage = localCreatorImage;
+              hasCustomImage = true;
+              console.log(`[${requestId}] Using local creator image for ${fullName}: ${finalImage}`);
             } else {
-              finalImage = '/placeholder.jpg';
+              // Fallback to gender-specific placeholder
+              if (gender === 'Weiblich') {
+                finalImage = '/female-placeholder.webp';
+              } else {
+                finalImage = '/placeholder.jpg';
+              }
+              hasCustomImage = false;
+              console.log(`[${requestId}] No cached/local image for ${fullName}, using placeholder: ${finalImage}`);
             }
-            hasCustomImage = false;
-            console.log(`[${requestId}] No cached image for ${fullName}, using placeholder: ${finalImage}`);
           }
-
           // Debug logging for gender and image assignment
           console.log(`[${requestId}] Creator ${fullName}: gender="${gender}", finalImage="${finalImage}"`);
 
