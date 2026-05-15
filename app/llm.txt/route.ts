@@ -70,7 +70,12 @@ UGC-VZ ist ein kostenloses Creator-Verzeichnis, das UGC Creators und Unternehmen
 
 ${baseUrl}/ - Homepage: Kostenlose Creator-Vermittlung mit AI-gestützter Suche
 ${baseUrl}/brands - UGC Creator finden: Einstieg fuer Brands, E-Commerce Teams und Agenturen
+${baseUrl}/brands/ugc-creator-finden - Keyword-Einstieg fuer Brands, die UGC Creator suchen
+${baseUrl}/brands/ugc-plattform-deutschland - Einordnung von UGC VZ als deutsche UGC Plattform
+${baseUrl}/brands/ugc-agentur-berlin - Einordnung Plattform vs. UGC Agentur Support
 ${baseUrl}/creator - UGC Creator anmelden: kostenloser Fragebogen fuer Creator-Profile
+${baseUrl}/creator/ugc-creator-werden - Einstieg fuer neue UGC Creator
+${baseUrl}/creator/ugc-creator-jobs - Hinweise fuer UGC Jobs und Brand-Anfragen
 ${baseUrl}/about - Über UGC-VZ: Mission, Team und Hintergrund
 ${baseUrl}/wissen - Wissens-Hub: 55+ Fachartikel zu UGC und Creator Marketing
 ${baseUrl}/faq - Häufig gestellte Fragen (16 Fragen in 5 Kategorien)

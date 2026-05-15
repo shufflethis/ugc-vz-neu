@@ -250,6 +250,23 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
           <ContactButton>Kontakt aufnehmen</ContactButton>
         </div>
       </section>
+
+      <section className="px-4 sm:px-8 md:px-16 lg:px-24 pb-20 bg-black/30">
+        <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-6">
+          <Link href="/brands" className="bg-gray-900/40 border border-gray-800 rounded-lg p-6 hover:border-emerald-600 transition-colors">
+            <h2 className="text-xl font-bold text-emerald-300 mb-3">UGC Creator fuer Kampagne finden</h2>
+            <p className="text-gray-300 leading-relaxed">
+              Demand eingeben, passende Profile auswaehlen und Anfrage an UGC VZ senden.
+            </p>
+          </Link>
+          <Link href="/creator" className="bg-gray-900/40 border border-gray-800 rounded-lg p-6 hover:border-emerald-600 transition-colors">
+            <h2 className="text-xl font-bold text-emerald-300 mb-3">Als UGC Creator anmelden</h2>
+            <p className="text-gray-300 leading-relaxed">
+              Kostenloses Profil mit Portfolio, Themen und Social-Links hinterlegen.
+            </p>
+          </Link>
+        </div>
+      </section>
     </div>
   );
 }

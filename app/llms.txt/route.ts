@@ -113,7 +113,12 @@ Nein, das Verzeichnis ist öffentlich zugänglich. Creator können direkt über 
 
 - Homepage: https://ugc-vz.de
 - UGC Creator finden: https://ugc-vz.de/brands
+- UGC Creator finden Keyword-Seite: https://ugc-vz.de/brands/ugc-creator-finden
+- UGC Plattform Deutschland: https://ugc-vz.de/brands/ugc-plattform-deutschland
+- UGC Agentur Berlin Einordnung: https://ugc-vz.de/brands/ugc-agentur-berlin
 - UGC Creator anmelden: https://ugc-vz.de/creator
+- UGC Creator werden: https://ugc-vz.de/creator/ugc-creator-werden
+- UGC Creator Jobs: https://ugc-vz.de/creator/ugc-creator-jobs
 - Über uns: https://ugc-vz.de/about
 - FAQ: https://ugc-vz.de/faq
 - Blog/Wissen: https://ugc-vz.de/wissen

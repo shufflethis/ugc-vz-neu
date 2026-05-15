@@ -109,6 +109,47 @@ export default function CreatorPage() {
           ))}
         </section>
 
+        <section className="max-w-6xl mx-auto mb-16">
+          <div className="grid lg:grid-cols-[0.9fr_1.1fr] gap-8 items-start">
+            <div className="bg-gray-900/40 border border-gray-800 rounded-lg p-8">
+              <h2 className="text-3xl font-bold mb-5">So kann dein Profil wirken</h2>
+              <p className="text-gray-300 leading-relaxed mb-6">
+                Brands entscheiden schnell. Ein gutes UGC Profil zeigt nicht nur Reichweite, sondern Stil, Themen, Beispiele und klare Kontaktpunkte.
+              </p>
+              <Link
+                href={creatorFormUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-500 hover:to-blue-500 text-white font-semibold py-3 px-6 rounded-lg transition-all"
+              >
+                Profil anlegen
+              </Link>
+            </div>
+            <div className="bg-white text-gray-950 rounded-lg p-6 shadow-2xl">
+              <div className="flex items-start gap-4 mb-5">
+                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-emerald-400 to-blue-500" />
+                <div>
+                  <h3 className="text-xl font-bold">Beispiel Creator Profil</h3>
+                  <p className="text-gray-600">Beauty, Food und Produktvideos | Deutsch & Englisch</p>
+                </div>
+              </div>
+              <div className="grid sm:grid-cols-3 gap-3 mb-5">
+                {['TikTok/Reels', 'Voiceover', 'Produktdemo'].map((item) => (
+                  <span key={item} className="bg-emerald-50 text-emerald-800 border border-emerald-100 rounded-md px-3 py-2 text-sm font-medium">
+                    {item}
+                  </span>
+                ))}
+              </div>
+              <p className="text-gray-700 leading-relaxed mb-5">
+                Kurze, authentische Produktclips fuer DTC Brands. Erfahrung mit Hook-Varianten, Testimonials und Ad Creatives.
+              </p>
+              <div className="border-t border-gray-200 pt-4 text-sm text-gray-600">
+                Portfolio-Links, Preisrange, Standort, Nutzungsrechte und Verfuegbarkeit machen die Anfrage fuer Brands leichter.
+              </div>
+            </div>
+          </div>
+        </section>
+
         <section className="max-w-4xl mx-auto bg-gray-900/40 border border-gray-800 rounded-lg p-8">
           <h2 className="text-3xl font-bold mb-6">Was sollte in deinen Fragebogen?</h2>
           <ul className="space-y-3 text-gray-200">
@@ -118,6 +159,20 @@ export default function CreatorPage() {
             <li>Content-Formate: Reels, TikToks, Produktvideos, Voiceover, Fotos, Testimonials</li>
             <li>Grobe Preisrange, Nutzungsrechte und Verfuegbarkeit</li>
           </ul>
+        </section>
+
+        <section className="max-w-4xl mx-auto mt-16">
+          <h2 className="text-3xl font-bold mb-6 text-center">Mehr fuer Creator</h2>
+          <div className="grid sm:grid-cols-2 gap-4">
+            <Link href="/creator/ugc-creator-werden" className="bg-gray-900/40 border border-gray-800 rounded-lg p-5 hover:border-emerald-600 transition-colors">
+              <h3 className="font-bold text-emerald-300 mb-2">UGC Creator werden</h3>
+              <p className="text-gray-300">Was du brauchst, wie du startest und wie du dein Profil besser machst.</p>
+            </Link>
+            <Link href="/creator/ugc-creator-jobs" className="bg-gray-900/40 border border-gray-800 rounded-lg p-5 hover:border-emerald-600 transition-colors">
+              <h3 className="font-bold text-emerald-300 mb-2">UGC Creator Jobs</h3>
+              <p className="text-gray-300">Wie Brands dich finden und welche Angaben deine Chancen erhoehen.</p>
+            </Link>
+          </div>
         </section>
       </main>
     </div>

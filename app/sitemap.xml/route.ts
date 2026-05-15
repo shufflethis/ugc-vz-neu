@@ -14,7 +14,12 @@ export async function GET() {
     '/faq',
     '/wissen',
     '/creator',
-    '/brands'
+    '/creator/ugc-creator-werden',
+    '/creator/ugc-creator-jobs',
+    '/brands',
+    '/brands/ugc-creator-finden',
+    '/brands/ugc-plattform-deutschland',
+    '/brands/ugc-agentur-berlin'
   ];
 
   // Blog-Posts von der API abrufen

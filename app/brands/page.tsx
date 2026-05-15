@@ -50,10 +50,42 @@ export default function BrandsPage({ searchParams }: { searchParams?: { query?: 
     },
   };
 
+  const faqSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: [
+      {
+        '@type': 'Question',
+        name: 'Koennen Brands bei UGC VZ automatisch Creator kontaktieren?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Brands geben ihren Demand ein, erhalten passende Creator-Vorschlaege und koennen eine Auswahl an UGC VZ senden. Die Anfrage wird nicht vollautomatisch an alle Creator verschickt, sondern von UGC VZ weiterbearbeitet.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: 'Ist die UGC Creator Suche kostenlos?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Ja. Die Suche und erste Anfrage ueber UGC VZ ist kostenlos. Optional kann bei groesseren Kampagnen Agentur-Unterstuetzung angefragt werden.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: 'Welche Informationen sollte eine Brand angeben?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Hilfreich sind Produkt, Branche, Zielgruppe, Plattform, Content-Format, Budgetrahmen, Timing und gewuenschte Nutzungsrechte.',
+        },
+      },
+    ],
+  };
+
   return (
     <div className="min-h-screen bg-[#0D0D0D] text-white">
       <BreadcrumbSchema items={breadcrumbs} />
       <JsonLdScript data={serviceSchema} />
+      <JsonLdScript data={faqSchema} />
 
       <header className="py-6 px-4 sm:px-8 md:px-16 lg:px-24">
         <div className="container mx-auto flex justify-between items-center">
@@ -94,6 +126,39 @@ export default function BrandsPage({ searchParams }: { searchParams?: { query?: 
           ))}
         </section>
 
+        <section className="max-w-6xl mx-auto mb-16">
+          <div className="grid lg:grid-cols-[1.1fr_0.9fr] gap-8 items-start">
+            <div className="bg-gray-900/40 border border-gray-800 rounded-lg p-8">
+              <h2 className="text-3xl font-bold mb-6">Was passiert nach der Creator-Auswahl?</h2>
+              <div className="space-y-5">
+                {[
+                  ['1', 'Demand eingeben', 'Du beschreibst kurz Produkt, Zielgruppe, Plattform und Content-Wunsch.'],
+                  ['2', 'Creator-Liste ansehen', 'UGC VZ zeigt passende Profile aus der Datenbank an. Du klickst die relevanten Creator an.'],
+                  ['3', 'Anfrage senden', 'Deine Auswahl und Kontaktdaten werden an UGC VZ gesendet.'],
+                  ['4', 'Verbindung herstellen', 'UGC VZ prueft die Anfrage und kann dich mit passenden Creatorn oder optionalem Kampagnen-Support verbinden.'],
+                ].map(([step, title, copy]) => (
+                  <div key={step} className="flex gap-4">
+                    <div className="w-9 h-9 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold shrink-0">{step}</div>
+                    <div>
+                      <h3 className="font-bold text-white">{title}</h3>
+                      <p className="text-gray-300 leading-relaxed">{copy}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="bg-emerald-950/30 border border-emerald-800/60 rounded-lg p-8">
+              <h2 className="text-2xl font-bold mb-4 text-emerald-300">Warum ist das kostenlos?</h2>
+              <p className="text-gray-200 leading-relaxed mb-4">
+                UGC VZ ist als niedrigschwelliger Einstieg gedacht: Brands sollen echte Creator entdecken koennen, ohne direkt einen Retainer oder eine Plattform-Lizenz zu buchen.
+              </p>
+              <p className="text-gray-200 leading-relaxed">
+                Wenn aus einer Anfrage eine groessere Kampagne wird, kann optional Unterstuetzung durch das Team hinter UGC VZ sinnvoll sein. Die erste Suche bleibt davon unabhaengig.
+              </p>
+            </div>
+          </div>
+        </section>
+
         <section className="max-w-4xl mx-auto bg-gray-900/40 border border-gray-800 rounded-lg p-8">
           <h2 className="text-3xl font-bold mb-6">So formulierst du eine gute Anfrage</h2>
           <ul className="space-y-3 text-gray-200">
@@ -102,6 +167,40 @@ export default function BrandsPage({ searchParams }: { searchParams?: { query?: 
             <li>Erwaehne Standort, Sprache, Alter oder Stil, wenn relevant.</li>
             <li>Gib Budgetrahmen, Timing und Nutzungsrechte an, falls schon bekannt.</li>
           </ul>
+        </section>
+
+        <section className="max-w-4xl mx-auto mt-16">
+          <h2 className="text-3xl font-bold mb-6 text-center">Haeufige Fragen von Brands</h2>
+          <div className="space-y-4">
+            {[
+              ['Werden Creator automatisch angeschrieben?', 'Nein. Die Anfrage wird an UGC VZ gesendet. So bleibt der Prozess kontrolliert und es werden keine unpassenden Massenanfragen verschickt.'],
+              ['Kann ich auch eine UGC Agentur anfragen?', 'Ja. Wenn du mehr brauchst als reine Creator-Auswahl, kannst du in der Projektbeschreibung optional Strategie, Briefing, Produktion oder Kampagnensteuerung erwaehnen.'],
+              ['Welche Branchen funktionieren?', 'Besonders gut funktionieren E-Commerce, Beauty, Food, Tech, Fashion, Apps, lokale Angebote und erklaerungsbeduerftige Produkte.'],
+            ].map(([question, answer]) => (
+              <details key={question} className="bg-gray-900/40 border border-gray-800 rounded-lg p-5">
+                <summary className="cursor-pointer font-semibold text-white">{question}</summary>
+                <p className="text-gray-300 mt-3 leading-relaxed">{answer}</p>
+              </details>
+            ))}
+          </div>
+        </section>
+
+        <section className="max-w-4xl mx-auto mt-16">
+          <h2 className="text-3xl font-bold mb-6 text-center">Weitere Einstiege fuer Brands</h2>
+          <div className="grid sm:grid-cols-3 gap-4">
+            <Link href="/brands/ugc-creator-finden" className="bg-gray-900/40 border border-gray-800 rounded-lg p-5 hover:border-emerald-600 transition-colors">
+              <h3 className="font-bold text-emerald-300 mb-2">UGC Creator finden</h3>
+              <p className="text-gray-300 text-sm">Direkt in die Creator-Suche starten.</p>
+            </Link>
+            <Link href="/brands/ugc-plattform-deutschland" className="bg-gray-900/40 border border-gray-800 rounded-lg p-5 hover:border-emerald-600 transition-colors">
+              <h3 className="font-bold text-emerald-300 mb-2">UGC Plattform Deutschland</h3>
+              <p className="text-gray-300 text-sm">UGC VZ als Plattform fuer beide Seiten.</p>
+            </Link>
+            <Link href="/brands/ugc-agentur-berlin" className="bg-gray-900/40 border border-gray-800 rounded-lg p-5 hover:border-emerald-600 transition-colors">
+              <h3 className="font-bold text-emerald-300 mb-2">UGC Agentur Berlin</h3>
+              <p className="text-gray-300 text-sm">Plattform oder Agentur-Support einordnen.</p>
+            </Link>
+          </div>
         </section>
       </main>
     </div>

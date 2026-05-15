@@ -151,6 +151,21 @@ export default async function WissenPage() {
 
           {/* Client-Komponente für interaktive Elemente */}
           <ClientWissenContent posts={posts} />
+
+          <section className="mt-20 grid md:grid-cols-2 gap-6">
+            <Link href="/brands" className="bg-gray-900/40 border border-gray-800 rounded-lg p-6 hover:border-emerald-600 transition-colors">
+              <h2 className="text-2xl font-bold text-emerald-300 mb-3">UGC Creator finden</h2>
+              <p className="text-gray-300 leading-relaxed">
+                Fuer Brands, E-Commerce Teams und Agenturen: Demand eingeben, passende Creator ansehen und Anfrage an UGC VZ senden.
+              </p>
+            </Link>
+            <Link href="/creator" className="bg-gray-900/40 border border-gray-800 rounded-lg p-6 hover:border-emerald-600 transition-colors">
+              <h2 className="text-2xl font-bold text-emerald-300 mb-3">Als UGC Creator anmelden</h2>
+              <p className="text-gray-300 leading-relaxed">
+                Fuer Creator: kostenlos Profil, Portfolio, Themen und Social-Links hinterlegen.
+              </p>
+            </Link>
+          </section>
         </div>
       </main>
     </div>

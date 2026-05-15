@@ -220,7 +220,7 @@ export default function CreatorSelectionPopup({
                             Bereit für Ihr UGC-Projekt?
                           </h4>
                           <p className="text-gray-600 text-sm max-w-md mx-auto">
-                            Kontaktieren Sie unsere ausgewählten Creator und starten Sie Ihre erfolgreiche Kampagne noch heute.
+                            Senden Sie Ihre Auswahl an UGC VZ. Wir pruefen die Anfrage und verbinden Sie mit den passenden Creatorn.
                           </p>
                         </div>
                         
@@ -246,7 +246,7 @@ export default function CreatorSelectionPopup({
                         Fast geschafft! 🎉
                       </h4>
                       <p className="text-gray-600 text-sm">
-                        Teilen Sie uns Ihre Kontaktdaten mit und wir verbinden Sie mit Ihren ausgewählten Creatorn.
+                        Teilen Sie uns Ihre Kontaktdaten mit. Die Anfrage geht an UGC VZ und wird anschliessend weiterbearbeitet.
                       </p>
                     </div>
 
