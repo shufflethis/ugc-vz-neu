@@ -44,6 +44,8 @@ Disallow: /admin/
 
 # Explicitly allow important pages for all crawlers
 Allow: /
+Allow: /brands
+Allow: /creator
 Allow: /about
 Allow: /wissen/
 Allow: /agb

@@ -38,6 +38,7 @@ UGC-VZ ist ein kostenloses Creator-Verzeichnis, das UGC Creators und Unternehmen
 - **AI-gestütztes Matching**: Intelligente Vermittlung basierend auf Kampagnenbeschreibung
 - **Direkte Vermittlung**: Direkte Kontaktaufnahme zwischen Creator und Unternehmen
 - **Keine Agentur-Gebühren**: Kostenlos für beide Seiten
+- **Creator-Fragebogen**: UGC Creator koennen sich kostenlos mit Portfolio, Themen und Social-Links anmelden
 
 ## Unternehmen & Betreiber
 
@@ -68,6 +69,8 @@ UGC-VZ ist ein kostenloses Creator-Verzeichnis, das UGC Creators und Unternehmen
 ## Hauptseiten
 
 ${baseUrl}/ - Homepage: Kostenlose Creator-Vermittlung mit AI-gestützter Suche
+${baseUrl}/brands - UGC Creator finden: Einstieg fuer Brands, E-Commerce Teams und Agenturen
+${baseUrl}/creator - UGC Creator anmelden: kostenloser Fragebogen fuer Creator-Profile
 ${baseUrl}/about - Über UGC-VZ: Mission, Team und Hintergrund
 ${baseUrl}/wissen - Wissens-Hub: 55+ Fachartikel zu UGC und Creator Marketing
 ${baseUrl}/faq - Häufig gestellte Fragen (16 Fragen in 5 Kategorien)

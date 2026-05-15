@@ -13,7 +13,7 @@ export default function HomePageSchema() {
     "alternateName": "UGC-VZ",
     "url": "https://ugc-vz.de",
     "logo": "https://ugc-vz.de/ugc-vz-logo.webp",
-    "description": "Track by Track GmbH ist eine führende Agentur für User Generated Content Marketing und Creator Economy Strategien mit Sitz in Berlin.",
+    "description": "UGC-VZ ist eine kostenlose UGC Plattform der track by track GmbH fuer Creator Matching, Creator Registrierung und User Generated Content in Deutschland.",
     "foundingDate": "2020",
     "founder": {
       "@type": "Person",
@@ -106,13 +106,13 @@ export default function HomePageSchema() {
   const serviceSchema = {
     "@context": "https://schema.org",
     "@type": "Service",
-    "name": "UGC Marketing Services",
-    "description": "Professionelle User Generated Content Marketing Dienstleistungen für authentische Markenkommunikation durch Creator-Content",
+    "name": "UGC Creator Matching",
+    "description": "Kostenlose Vermittlung und Suche von UGC Creators fuer Unternehmen in Deutschland sowie kostenlose Registrierung fuer Creator.",
     "provider": {
       "@type": "Organization",
       "@id": "https://ugc-vz.de/#organization"
     },
-    "serviceType": "Marketing Services",
+    "serviceType": "Creator Matching Platform",
     "areaServed": {
       "@type": "Country",
       "name": "Germany"
@@ -125,27 +125,33 @@ export default function HomePageSchema() {
           "@type": "Offer",
           "itemOffered": {
             "@type": "Service",
-            "name": "UGC Creator Matching",
-            "description": "Vermittlung passender Content Creator für Ihre Marke"
+            "name": "UGC Creator finden",
+            "description": "Kostenlose Suche nach passenden Content Creators fuer Marken, Kampagnen und Produktvideos"
           }
         },
         {
           "@type": "Offer",
           "itemOffered": {
             "@type": "Service",
-            "name": "UGC Campaign Management",
-            "description": "End-to-End Management von User Generated Content Kampagnen"
+            "name": "UGC Creator Anmeldung",
+            "description": "Kostenlose Profil- und Portfolio-Anmeldung fuer UGC Creators"
           }
         },
         {
           "@type": "Offer",
           "itemOffered": {
             "@type": "Service",
-            "name": "Creator Strategy Consulting",
-            "description": "Strategieberatung für erfolgreiche Creator Economy Integration"
+            "name": "Optionaler Agentur-Support",
+            "description": "Optionale strategische Unterstuetzung fuer groessere UGC Kampagnen"
           }
         }
       ]
+    },
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "EUR",
+      "availability": "https://schema.org/InStock"
     }
   };
 
@@ -155,17 +161,17 @@ export default function HomePageSchema() {
     "@id": "https://ugc-vz.de/#website",
     "url": "https://ugc-vz.de",
     "name": "UGC-VZ - Track by Track GmbH",
-    "description": "Führende Plattform für User Generated Content Marketing und Creator Economy in Deutschland",
+    "description": "Kostenlose UGC Plattform fuer Creator-Suche, Creator-Anmeldung und User Generated Content Wissen in Deutschland",
     "publisher": {
       "@type": "Organization",
       "@id": "https://ugc-vz.de/#organization"
     },
     "potentialAction": {
       "@type": "SearchAction",
-      "target": "https://ugc-vz.de/search?q={search_term_string}",
+      "target": "https://ugc-vz.de/brands?query={search_term_string}",
       "query-input": "required name=search_term_string"
     },
-    "inLanguage": ["de-DE", "en-US"]
+    "inLanguage": "de-DE"
   };
 
   return (

@@ -23,8 +23,12 @@ import { useSearch } from '../hooks/useSearch';
 import { useCountdown } from '../hooks/useCountdown';
 import { useVoiceRecognition } from '../hooks/useVoiceRecognition';
 
-export default function SearchBox() {
-  const [searchQuery, setSearchQuery] = useState('');
+interface SearchBoxProps {
+  initialQuery?: string;
+}
+
+export default function SearchBox({ initialQuery = '' }: SearchBoxProps) {
+  const [searchQuery, setSearchQuery] = useState(initialQuery);
   const searchInputRef = useRef<HTMLTextAreaElement>(null);
 
   // Use custom hooks

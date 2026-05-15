@@ -100,6 +100,8 @@ Nein, das Verzeichnis ist öffentlich zugänglich. Creator können direkt über 
 ## Beliebte Suchanfragen
 
 - UGC Creator finden
+- UGC Creator anmelden
+- UGC Creator Jobs
 - User Generated Content Vermittlung
 - Authentischer Content Creator
 - Micro Influencer Deutschland
@@ -110,6 +112,8 @@ Nein, das Verzeichnis ist öffentlich zugänglich. Creator können direkt über 
 ## URLs
 
 - Homepage: https://ugc-vz.de
+- UGC Creator finden: https://ugc-vz.de/brands
+- UGC Creator anmelden: https://ugc-vz.de/creator
 - Über uns: https://ugc-vz.de/about
 - FAQ: https://ugc-vz.de/faq
 - Blog/Wissen: https://ugc-vz.de/wissen

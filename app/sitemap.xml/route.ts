@@ -12,7 +12,9 @@ export async function GET() {
     '/datenschutz',
     '/impressum',
     '/faq',
-    '/wissen'
+    '/wissen',
+    '/creator',
+    '/brands'
   ];
 
   // Blog-Posts von der API abrufen

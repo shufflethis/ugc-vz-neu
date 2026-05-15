@@ -17,13 +17,26 @@ const inter = Inter({
 
 
 export const metadata: Metadata = {
-  title: "Kostenlose Creator-Vermittlung für Brands | UGC VZ",
-  description: "Professionelle Vermittlung von UGC Creators für Businesses. Beschreibe deine Kampagne und wir finden die passenden Creator gratis für dich.",
-  keywords: "UGC Creator, User Generated Content, Creator Vermittlung, Influencer Marketing, Content Creator, UGC Marketing",
+  metadataBase: new URL("https://ugc-vz.de"),
+  title: {
+    default: "UGC VZ - UGC Creator finden und kostenlos anmelden",
+    template: "%s | UGC VZ",
+  },
+  description: "UGC VZ verbindet Brands und UGC Creator in Deutschland. Unternehmen finden passende Creator kostenlos, Creator melden sich gratis mit Portfolio an.",
+  applicationName: "UGC VZ",
+  category: "Marketing",
+  keywords: "UGC Creator, UGC Creator finden, UGC Creator anmelden, UGC Plattform Deutschland, User Generated Content, Creator Vermittlung, UGC Agentur, Content Creator, UGC Marketing",
   authors: [{ name: "UGC VZ - track by track GmbH" }],
+  creator: "track by track GmbH",
+  publisher: "track by track GmbH",
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
   openGraph: {
-    title: "Kostenlose Creator-Vermittlung für Brands",
-    description: "Professionelle Vermittlung von UGC Creators für Businesses. Kostenlose Creator-Suche und Vermittlung.",
+    title: "UGC VZ - UGC Creator finden und kostenlos anmelden",
+    description: "Kostenlose UGC Plattform fuer Brands und Creator in Deutschland: Creator suchen, Kampagne beschreiben oder als Creator mit Portfolio anmelden.",
     url: "https://ugc-vz.de",
     siteName: "UGC VZ",
     locale: "de_DE",
@@ -39,13 +52,16 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Kostenlose Creator-Vermittlung für Brands",
-    description: "Professionelle Vermittlung von UGC Creators für Businesses. Kostenlose Creator-Suche.",
+    title: "UGC VZ - UGC Creator finden und kostenlos anmelden",
+    description: "Kostenlose UGC Plattform fuer Brands und Creator in Deutschland.",
     images: ["https://ugc-vz.de/ugc-vz-logo.webp"],
     creator: "@Ugc_Vz",
   },
   alternates: {
     canonical: "https://ugc-vz.de",
+    languages: {
+      "de-DE": "https://ugc-vz.de",
+    },
   },
   robots: {
     index: true,

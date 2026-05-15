@@ -29,19 +29,41 @@ export default function Home() {
             </span>
           </div>
 
-          <ResponsiveCTAButton />
+          <nav className="flex items-center gap-3">
+            <Link href="/brands" className="hidden sm:inline-flex text-sm font-medium text-gray-300 hover:text-white transition-colors">
+              Fuer Brands
+            </Link>
+            <Link href="/creator" className="hidden sm:inline-flex text-sm font-medium text-gray-300 hover:text-white transition-colors">
+              Fuer Creator
+            </Link>
+            <ResponsiveCTAButton />
+          </nav>
         </div>
       </header>
 
       <main className="flex-grow flex flex-col items-center justify-center text-center px-4">
         <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6">
-          Finde deinen perfekten <span className="gradient-text">UGC Creator</span>
+          UGC Creator finden oder als <span className="gradient-text">Creator anmelden</span>
         </h1>
         <p className="text-lg sm:text-xl text-gray-300 max-w-2xl mb-12">
-          Beschreibe deine Kampagne und wir finden die passenden Creator gratis für dich. Wähle danach einfach aus und unser Agent wird dir umgehend die Details kostenlos zusenden.
+          UGC VZ ist die kostenlose Plattform fuer User Generated Content in Deutschland. Brands beschreiben ihre Kampagne und finden passende Creator. Creator fuellen den Fragebogen aus und werden fuer passende Anfragen sichtbar.
         </p>
+        <div className="flex flex-col sm:flex-row gap-4 mb-10">
+          <Link
+            href="/brands"
+            className="bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-500 hover:to-blue-500 text-white font-semibold py-3 px-6 rounded-lg transition-all"
+          >
+            Creator fuer Kampagne finden
+          </Link>
+          <Link
+            href="/creator"
+            className="border border-emerald-500 text-emerald-300 hover:bg-emerald-500 hover:text-white font-semibold py-3 px-6 rounded-lg transition-all"
+          >
+            Als UGC Creator anmelden
+          </Link>
+        </div>
 
-        <div className="w-full max-w-2xl mx-auto">
+        <div id="search" className="w-full max-w-2xl mx-auto scroll-mt-24">
           <SearchBox />
         </div>
       </main>
@@ -57,33 +79,30 @@ export default function Home() {
             {/* UGC Creator finden */}
             <div className="bg-gradient-to-br from-emerald-900/20 to-emerald-800/10 backdrop-blur-sm rounded-2xl p-8 border border-emerald-700/30">
               <h2 className="text-2xl font-bold mb-4 text-emerald-300">
-                UGC Creator finden – So einfach geht's
+                UGC Creator finden - kostenlos fuer Brands
               </h2>
               <p className="text-gray-200 leading-relaxed mb-4">
-                Du willst <strong>UGC Creators finden</strong>, die perfekt zu deiner Marke passen? Mit UGC-VZ ist das kinderleicht. 
-                Beschreibe einfach deine Kampagne in der Suche, und unser intelligentes System findet die passenden Creator für dich – 
-                kostenlos und ohne lange Wartezeiten.
+                Du willst <strong>UGC Creators finden</strong>, die zu Produkt, Zielgruppe und Content-Stil passen? Beschreibe deine Kampagne in der Suche, waehle passende Profile aus und fordere die Details kostenlos an.
               </p>
               <p className="text-gray-200 leading-relaxed">
-                Egal ob Fashion, Food, Tech oder Lifestyle: Unsere Datenbank bietet dir Zugang zu <strong>authentischen UGC Creators</strong>, 
-                die genau deinen Style treffen. Keine Agentur-Gebühren, keine versteckten Kosten – nur echte Connections.
+                Das ist kein klassischer Agentur-Retainer und keine teure Datenbank-Lizenz. UGC VZ funktioniert als niedrigschwelliger Einstieg fuer Marketing-Teams, die Creator testen, briefen und direkt anfragen wollen.
               </p>
             </div>
 
             {/* Was ist UGC Creator */}
             <div className="bg-gradient-to-br from-blue-900/20 to-blue-800/10 backdrop-blur-sm rounded-2xl p-8 border border-blue-700/30">
               <h2 className="text-2xl font-bold mb-4 text-blue-300">
-                UGC Creator – Was ist das?
+                Als UGC Creator anmelden
               </h2>
               <p className="text-gray-200 leading-relaxed mb-4">
-                Ein <strong>UGC Creator</strong> (User Generated Content Creator) erstellt authentische Inhalte über Produkte und Marken. 
-                Im Gegensatz zu klassischen Influencern geht es hier nicht um große Reichweiten, sondern um <strong>ehrliche, 
-                nachvollziehbare Empfehlungen</strong>, die potenzielle Kunden wirklich überzeugen.
+                Creator koennen sich kostenlos registrieren und ihr Portfolio hinterlegen. Wichtig sind klare Beispiele, Themenbereiche, Social-Links, Preise oder grobe Ranges und die Art von Marken, fuer die du Content erstellen willst.
               </p>
               <p className="text-gray-200 leading-relaxed">
-                <strong>UGC Creators</strong> produzieren Videos, Fotos und Reviews, die wie Content von echten Nutzern aussehen – 
-                weil sie es sind! Diese Authentizität macht UGC so wertvoll für moderne Marketing-Strategien.
+                Je vollstaendiger dein Fragebogen ist, desto besser kann dein Profil bei passenden Brand-Anfragen beruecksichtigt werden.
               </p>
+              <Link href="/creator" className="inline-flex mt-5 text-emerald-300 hover:text-emerald-200 font-semibold">
+                Zum Creator-Fragebogen
+              </Link>
             </div>
           </div>
 
