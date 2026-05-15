@@ -32,7 +32,14 @@ let cachedRecords: AirtableRecord[] | null = null;
 let lastFetch: number = 0;
 const CACHE_DURATION = 300000; // 5 minutes cache for better performance
 
+const BLOCKED_CREATOR_IMAGE_RECORD_IDS = new Set([
+  // Cached image does not match the creator profile (Nadine).
+  'recBkIwtksvVWVeaL',
+]);
+
 const getLocalCreatorImage = (recordId: string): string | null => {
+  if (BLOCKED_CREATOR_IMAGE_RECORD_IDS.has(recordId)) return null;
+
   const relativePath = `/creator-images/${recordId}.jpg`;
   const absolutePath = path.join(process.cwd(), 'public', 'creator-images', `${recordId}.jpg`);
 
@@ -844,7 +851,11 @@ export async function POST(req: Request) {
           let finalImage: string;
           let hasCustomImage: boolean;
 
-          if (cachedImageUrl && cachedImageUrl.trim() !== '') {
+          if (
+            cachedImageUrl &&
+            cachedImageUrl.trim() !== '' &&
+            !BLOCKED_CREATOR_IMAGE_RECORD_IDS.has(record.id)
+          ) {
             finalImage = cachedImageUrl;
             hasCustomImage = true;
             console.log(`[${requestId}] Using cached image for ${fullName}: ${finalImage}`);

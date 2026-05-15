@@ -284,7 +284,14 @@ function setCachedImage(username: string, platform: string, url: string): void {
 export async function getProfileImage(socialLinks: string, gender?: string): Promise<string> {
   // Gender-specific placeholders
   const getDefaultImage = (gender?: string) => {
-    if (gender?.toLowerCase() === 'female' || gender?.toLowerCase() === 'woman' || gender?.toLowerCase() === 'w') {
+    const normalizedGender = String(gender || '').toLowerCase();
+    if (
+      normalizedGender === 'female' ||
+      normalizedGender === 'woman' ||
+      normalizedGender === 'w' ||
+      normalizedGender.includes('weib') ||
+      normalizedGender.includes('frau')
+    ) {
       return '/female-placeholder.webp';
     }
     return '/placeholder.jpg'; // Use original placeholder for male and others
@@ -380,30 +387,17 @@ export async function getProfileImage(socialLinks: string, gender?: string): Pro
       }
     }
 
-    // If we have profile images, randomly select one
+    // If we have profile images, use the first direct social profile image deterministically.
+    // Randomly selecting across multiple links made wrong profile assignments harder to audit.
     if (profileImages.length > 0) {
-      const selectedImage = profileImages[Math.floor(Math.random() * profileImages.length)];
+      const selectedImage = profileImages[0];
       // Cache the result
       profileImageCache[cacheKey] = selectedImage;
       return selectedImage;
     }
 
-    // Fallback to Google Image Search if direct scraping fails
-    for (const link of links) {
-      if (link.toLowerCase().includes('tiktok.com') || link.toLowerCase().includes('instagram.com')) {
-        try {
-          const googleImage = await getGoogleImageResult(link);
-          if (googleImage) {
-            // Cache the result
-            profileImageCache[cacheKey] = googleImage;
-            return googleImage;
-          }
-        } catch (e: any) {
-          console.error(`Failed to get Google image for ${link}:`, e);
-        }
-      }
-    }
-
+    // Do not fall back to Google Image Search for people images. It can return a
+    // different person for the same social handle/name and create false matches.
     return defaultImage;
   } catch (error: any) {
     console.error('Error in getProfileImage:', error);
