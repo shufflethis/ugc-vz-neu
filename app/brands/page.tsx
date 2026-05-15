@@ -134,7 +134,7 @@ export default function BrandsPage({ searchParams }: { searchParams?: { query?: 
               <div className="space-y-5">
                 {[
                   ['1', 'Demand eingeben', 'Du beschreibst kurz Produkt, Zielgruppe, Plattform und Content-Wunsch.'],
-                  ['2', 'Creator-Liste ansehen', 'UGC VZ zeigt passende Profile aus der Datenbank an. Du klickst die relevanten Creator an.'],
+                  ['2', 'Creator-Liste ansehen', 'UGC VZ interpretiert deine Suchanfrage mit KI und zeigt passende Profilvorschlaege. Die Auswahl bleibt deine Entscheidung.'],
                   ['3', 'E-Mail erhalten', 'Du bekommst eine Bestaetigung mit den ausgewaehlten Creatorn und verfuegbaren Kontakt-/Social-Daten.'],
                   ['4', 'Direkt starten', 'Du kontaktierst die Creator direkt oder holst optional Support fuer Briefing, Vertrag und Kampagnen-Setup dazu.'],
                 ].map(([step, title, copy]) => (
@@ -156,6 +156,24 @@ export default function BrandsPage({ searchParams }: { searchParams?: { query?: 
               <p className="text-gray-200 leading-relaxed">
                 Wenn aus einer Anfrage eine groessere Kampagne wird, kann optional Unterstuetzung durch das Team hinter UGC VZ sinnvoll sein. Die erste Suche bleibt davon unabhaengig.
               </p>
+            </div>
+          </div>
+        </section>
+
+        <section className="max-w-6xl mx-auto mb-16 bg-gray-900/40 border border-gray-800 rounded-lg p-8">
+          <h2 className="text-3xl font-bold mb-4">KI, Datenschutz und Auswahl</h2>
+          <div className="grid md:grid-cols-3 gap-5 text-gray-300">
+            <div className="bg-black/30 border border-gray-800 rounded-lg p-5">
+              <h3 className="font-bold text-emerald-300 mb-2">Nur Suchhilfe</h3>
+              <p>Die KI versteht deine Anfrage und hilft bei der Sortierung. Sie entscheidet nicht automatisch, welcher Creator einen Auftrag bekommt.</p>
+            </div>
+            <div className="bg-black/30 border border-gray-800 rounded-lg p-5">
+              <h3 className="font-bold text-emerald-300 mb-2">Datensparsam</h3>
+              <p>An den KI-Anbieter wird nur deine Suchanfrage gesendet. Creator-Profile werden serverseitig in UGC VZ gematcht.</p>
+            </div>
+            <div className="bg-black/30 border border-gray-800 rounded-lg p-5">
+              <h3 className="font-bold text-emerald-300 mb-2">Kontakt nach Auswahl</h3>
+              <p>Kontakt- und Social-Daten erhaeltst du nur fuer die Creator, die du bewusst fuer deine Anfrage auswaehlst.</p>
             </div>
           </div>
         </section>

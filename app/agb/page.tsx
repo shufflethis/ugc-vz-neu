@@ -162,7 +162,8 @@ export default function AGBPage() {
                   <h3 className="text-xl font-semibold mb-3 text-teal-400">3.2 Datennutzung für Optimierung</h3>
                   <p className="text-gray-300">
                     Die hinterlegten Portfolio-Daten können zur Optimierung des Matching-Prozesses und zur Verbesserung
-                    unserer Suchalgorithmen verwendet werden. Hierfür setzen wir DSGVO-konforme, EU-basierte KI-Tools ein.
+                    unserer Suchalgorithmen verwendet werden. KI-gestützte Funktionen dienen als Such- und Sortierhilfe;
+                    eine verbindliche Entscheidung über Aufträge oder Eignung von Creatorn findet nicht automatisiert statt.
                   </p>
                 </div>
 
@@ -228,18 +229,20 @@ export default function AGBPage() {
                 <div>
                   <h3 className="text-xl font-semibold mb-3 text-teal-400">5.2 KI-Tools</h3>
                   <p className="text-gray-300">
-                    Zur Optimierung der Plattform und des Matching-Prozesses verwenden wir ausschließlich
-                    DSGVO-konforme, EU-basierte KI-Tools.
+                    Zur Optimierung der Plattform und des Matching-Prozesses können KI-Dienste eingesetzt werden.
+                    Diese helfen insbesondere dabei, Suchanfragen von Unternehmen zu interpretieren und passende
+                    Creator-Vorschläge zu sortieren.
                   </p>
                 </div>
 
                 <div className="bg-blue-900/20 rounded-lg p-4 border border-blue-500/30">
                   <h3 className="text-xl font-semibold mb-3 text-blue-400 flex items-center">
-                    🔒 EU-Datenschutz
+                    Datenschutz und KI-Transparenz
                   </h3>
                   <p className="text-gray-300">
-                    Creator-Portfolios werden zur Verbesserung der Suchergebnisse und des Matching-Prozesses analysiert.
-                    Die Daten verlassen nicht den EU-Raum.
+                    An KI-Dienste wird grundsätzlich nur die Suchanfrage des Unternehmens übermittelt. Die vollständige
+                    Creator-Datenbank wird nicht an KI-Dienste gesendet. Die finale Auswahl und Kontaktaufnahme liegt
+                    beim anfragenden Unternehmen bzw. bei UGC-VZ im Rahmen der Vermittlung.
                   </p>
                 </div>
               </div>

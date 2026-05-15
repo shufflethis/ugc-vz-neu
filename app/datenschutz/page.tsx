@@ -230,12 +230,14 @@ export default function DatenschutzPage() {
                   <h3 className="text-xl font-semibold mb-4 text-teal-400">Datenweitergabe an Unternehmen</h3>
                   <div className="bg-yellow-900/20 rounded-lg p-4 border border-yellow-500/30 mb-4">
                     <p className="text-gray-300">
-                      <strong>Wichtiger Hinweis:</strong> Wir können Ihre Profildaten an Unternehmen weiterleiten,
-                      die nach UGC Creators für ihre Projekte suchen.
+                      <strong>Wichtiger Hinweis:</strong> Wir können die von Ihnen angegebenen Profil-, Kontakt-
+                      und Social-Media-Daten an Unternehmen weiterleiten, wenn diese eine passende Creator-Anfrage
+                      stellen oder bestimmte Creator bewusst für eine Anfrage auswählen.
                     </p>
                   </div>
                   <p className="text-gray-300 mb-3">
-                    Vor einer Weitergabe sorgen wir dafür, dass diese Unternehmen sich vertraglich verpflichten:
+                    Die Weitergabe erfolgt nur im Rahmen der Creator-Vermittlung und Projektanbahnung. Unternehmen
+                    dürfen die Daten insbesondere nicht für fremde Zwecke, Spam oder den Aufbau eigener Datenbanken nutzen.
                   </p>
                   <ul className="text-gray-300 space-y-2 list-disc list-inside ml-4">
                     <li>Ihre Privatsphäre zu respektieren</li>
@@ -248,11 +250,34 @@ export default function DatenschutzPage() {
                 <div>
                   <h3 className="text-xl font-semibold mb-4 text-teal-400">KI-gestützte Datenverarbeitung</h3>
                   <div className="bg-blue-900/20 rounded-lg p-4 border border-blue-500/30">
-                    <p className="text-gray-300">
-                      Zur Optimierung unserer Suchergebnisse und des Matching-Prozesses verwenden wir
-                      ausschließlich DSGVO-konforme, EU-basierte KI-Tools. Ihre Daten verlassen nicht den EU-Raum.
+                    <p className="text-gray-300 mb-3">
+                      UGC-VZ kann KI-Dienste verwenden, um Suchanfragen von Unternehmen zu verstehen und passende
+                      Creator-Vorschläge zu sortieren. Die KI trifft keine verbindliche Entscheidung darüber,
+                      ob ein Creator geeignet ist oder einen Auftrag erhält.
                     </p>
+                    <ul className="text-gray-300 space-y-2 list-disc list-inside ml-4">
+                      <li>An den KI-Dienst wird grundsätzlich nur die Suchanfrage des Unternehmens übermittelt.</li>
+                      <li>Die vollständige Creator-Datenbank wird nicht an den KI-Dienst gesendet.</li>
+                      <li>Das anschließende Matching erfolgt serverseitig anhand der bei UGC-VZ gespeicherten Profilangaben.</li>
+                      <li>Als KI-Infrastruktur kann OpenRouter mit angebundenen Sprachmodellen eingesetzt werden.</li>
+                    </ul>
                   </div>
+                </div>
+
+                <div>
+                  <h3 className="text-xl font-semibold mb-4 text-teal-400">Eingesetzte Dienstleister</h3>
+                  <p className="text-gray-300 mb-3">
+                    Für Betrieb, Formulare, Datenhaltung, Benachrichtigungen und Kommunikation können insbesondere
+                    folgende Dienstleister eingesetzt werden:
+                  </p>
+                  <ul className="text-gray-300 space-y-2 list-disc list-inside ml-4">
+                    <li>Vercel für Hosting und technische Auslieferung der Website</li>
+                    <li>Tally für Creator- und Anfrageformulare</li>
+                    <li>Airtable für die Verwaltung der Creator-Datenbank</li>
+                    <li>Resend für transaktionale E-Mails an anfragende Unternehmen</li>
+                    <li>Slack für interne Benachrichtigungen und Mitschnitte von Anfragen</li>
+                    <li>OpenRouter für KI-gestützte Analyse von Suchanfragen</li>
+                  </ul>
                 </div>
               </div>
             </section>
@@ -320,6 +345,8 @@ export default function DatenschutzPage() {
                   <p className="text-gray-300 leading-relaxed">
                     Creator-Profile werden binnen 30 Tagen nach Ihrer Löschungsanfrage vollständig entfernt.
                     Sie können jederzeit die Löschung Ihres Profils über unser Kontaktformular beantragen.
+                    Alternativ genügt eine E-Mail an hi@ugc-vz.de mit dem Hinweis, welches Profil gelöscht,
+                    korrigiert oder für Brand-Anfragen deaktiviert werden soll.
                   </p>
                 </div>
 

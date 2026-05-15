@@ -86,6 +86,9 @@ export default function CreatorPage() {
           <p className="text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed mb-10">
             Trage dich bei UGC VZ ein, wenn du Content fuer Marken produzierst. Dein Profil hilft uns, dich bei passenden Anfragen von Brands, Agenturen und Marketing-Teams zu beruecksichtigen.
           </p>
+          <p className="text-sm text-gray-400 max-w-2xl mx-auto leading-relaxed mb-8">
+            Mit dem Fragebogen hinterlegst du Profil-, Portfolio- und Kontaktdaten fuer passende Brand-Anfragen. Deine Daten koennen ausgewaehlten Unternehmen fuer Kontaktaufnahme und Projektabstimmung angezeigt oder per E-Mail uebermittelt werden. Eine Loeschung oder Korrektur ist jederzeit per E-Mail an hi@ugc-vz.de moeglich.
+          </p>
           <Link
             href={creatorFormUrl}
             target="_blank"

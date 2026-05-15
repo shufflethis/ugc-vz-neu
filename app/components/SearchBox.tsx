@@ -168,6 +168,13 @@ export default function SearchBox({ initialQuery = '' }: SearchBoxProps) {
   return (
     <div className={styles.searchContainer}>
       {/* Search input */}
+      <div className="mb-4 rounded-lg border border-emerald-700/40 bg-emerald-950/20 px-4 py-3 text-left text-sm text-gray-200">
+        <p>
+          Die KI hilft nur dabei, deine Suchanfrage zu verstehen und passende Creator-Vorschlaege zu sortieren.
+          Die finale Auswahl triffst du selbst. An OpenRouter wird nur deine Suchanfrage gesendet, keine komplette Creator-Datenbank.
+        </p>
+      </div>
+
       <div className={styles.searchInputContainer}>
         <textarea
           ref={searchInputRef}
@@ -284,7 +291,10 @@ export default function SearchBox({ initialQuery = '' }: SearchBoxProps) {
         {/* Results display */}
         {creators.length > 0 && (
           <> {/* Use fragment to group elements */}
-            <h2 className={styles.resultsHeader}>Klicke dir die UGC Leute zusammen, und stell eine Anfrage über das Formular</h2> {/* Add header */}
+            <h2 className={styles.resultsHeader}>Klicke dir die passenden UGC Creator zusammen. Die Anfrage ist kostenlos und du bekommst die verfuegbaren Kontaktinfos per E-Mail.</h2> {/* Add header */}
+            <p className="mb-5 text-center text-sm text-gray-400">
+              Die Sortierung ist ein Vorschlag aus deiner Suche und den Profilangaben. Es findet keine automatische Entscheidung ueber Creator oder Auftraege statt.
+            </p>
             <div className={styles.creatorsGrid}>
               {creators.map(creator => (
                 <div
