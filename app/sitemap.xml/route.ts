@@ -18,8 +18,13 @@ export async function GET() {
     '/creator/ugc-creator-jobs',
     '/brands',
     '/brands/ugc-creator-finden',
+    '/brands/ugc-creator-preise',
+    '/brands/ugc-creator-deutschland',
+    '/brands/ugc-creator-beauty',
     '/brands/ugc-plattform-deutschland',
     '/brands/ugc-agentur-berlin',
+    '/brands/ugc-agentur-hamburg',
+    '/brands/ugc-agentur-muenchen',
     '/brands/ugc-vertrag-vorlage'
   ];
 

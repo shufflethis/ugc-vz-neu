@@ -236,6 +236,18 @@ export default function BrandsPage({ searchParams }: { searchParams?: { query?: 
               <h3 className="font-bold text-emerald-300 mb-2">UGC Creator finden</h3>
               <p className="text-gray-300 text-sm">Direkt in die Creator-Suche starten.</p>
             </Link>
+            <Link href="/brands/ugc-creator-preise" className="bg-gray-900/40 border border-gray-800 rounded-lg p-5 hover:border-emerald-600 transition-colors">
+              <h3 className="font-bold text-emerald-300 mb-2">UGC Creator Preise</h3>
+              <p className="text-gray-300 text-sm">Budgetrahmen und Preislogik einschaetzen.</p>
+            </Link>
+            <Link href="/brands/ugc-creator-deutschland" className="bg-gray-900/40 border border-gray-800 rounded-lg p-5 hover:border-emerald-600 transition-colors">
+              <h3 className="font-bold text-emerald-300 mb-2">UGC Creator Deutschland</h3>
+              <p className="text-gray-300 text-sm">Creator fuer deutsche Kampagnen finden.</p>
+            </Link>
+            <Link href="/brands/ugc-creator-beauty" className="bg-gray-900/40 border border-gray-800 rounded-lg p-5 hover:border-emerald-600 transition-colors">
+              <h3 className="font-bold text-emerald-300 mb-2">Beauty UGC Creator</h3>
+              <p className="text-gray-300 text-sm">Creator fuer Kosmetik und Pflege finden.</p>
+            </Link>
             <Link href="/brands/ugc-plattform-deutschland" className="bg-gray-900/40 border border-gray-800 rounded-lg p-5 hover:border-emerald-600 transition-colors">
               <h3 className="font-bold text-emerald-300 mb-2">UGC Plattform Deutschland</h3>
               <p className="text-gray-300 text-sm">UGC VZ als Plattform fuer beide Seiten.</p>
@@ -243,6 +255,14 @@ export default function BrandsPage({ searchParams }: { searchParams?: { query?: 
             <Link href="/brands/ugc-agentur-berlin" className="bg-gray-900/40 border border-gray-800 rounded-lg p-5 hover:border-emerald-600 transition-colors">
               <h3 className="font-bold text-emerald-300 mb-2">UGC Agentur Berlin</h3>
               <p className="text-gray-300 text-sm">Plattform oder Agentur-Support einordnen.</p>
+            </Link>
+            <Link href="/brands/ugc-agentur-hamburg" className="bg-gray-900/40 border border-gray-800 rounded-lg p-5 hover:border-emerald-600 transition-colors">
+              <h3 className="font-bold text-emerald-300 mb-2">UGC Agentur Hamburg</h3>
+              <p className="text-gray-300 text-sm">Creator-Suche fuer Hamburg einordnen.</p>
+            </Link>
+            <Link href="/brands/ugc-agentur-muenchen" className="bg-gray-900/40 border border-gray-800 rounded-lg p-5 hover:border-emerald-600 transition-colors">
+              <h3 className="font-bold text-emerald-300 mb-2">UGC Agentur Muenchen</h3>
+              <p className="text-gray-300 text-sm">Creator-Suche fuer Muenchen einordnen.</p>
             </Link>
             <Link href="/brands/ugc-vertrag-vorlage" className="bg-gray-900/40 border border-gray-800 rounded-lg p-5 hover:border-emerald-600 transition-colors">
               <h3 className="font-bold text-emerald-300 mb-2">UGC Vertrag Vorlage</h3>
