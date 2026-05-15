@@ -30,6 +30,8 @@ interface SearchBoxProps {
 export default function SearchBox({ initialQuery = '' }: SearchBoxProps) {
   const [searchQuery, setSearchQuery] = useState(initialQuery);
   const searchInputRef = useRef<HTMLTextAreaElement>(null);
+  const lastTrackedResultsRef = useRef('');
+  const lastTrackedNoResultsRef = useRef('');
 
   // Use custom hooks
   const { isIOSDeviceState, isMobileDeviceState } = useDeviceDetection();
@@ -85,16 +87,30 @@ export default function SearchBox({ initialQuery = '' }: SearchBoxProps) {
     }
   }, [searchQuery]);
 
+  useEffect(() => {
+    if (!submittedQuery || isLoading || countdownActive) return;
+
+    if (creators.length > 0) {
+      const key = `${submittedQuery}:${creators.length}`;
+      if (lastTrackedResultsRef.current !== key) {
+        trackUGCEvents.search(submittedQuery, creators.length);
+        lastTrackedResultsRef.current = key;
+      }
+    } else if (showNoResults && lastTrackedNoResultsRef.current !== submittedQuery) {
+      trackUGCEvents.searchNoResults(submittedQuery);
+      lastTrackedNoResultsRef.current = submittedQuery;
+    }
+  }, [submittedQuery, creators.length, showNoResults, isLoading, countdownActive]);
+
   // Handle manual search button click
   const handleStartSearch = () => {
     if (searchQuery.trim()) {
+      trackUGCEvents.searchStart(searchQuery.trim());
       startCountdown();
       // Perform search after countdown
       setTimeout(() => {
         performSearch(searchQuery.trim());
         stopCountdown();
-        // Track search event
-        trackUGCEvents.search(searchQuery.trim(), creators.length);
       }, 3000);
     } else {
       toast.warning("Bitte geben Sie einen Suchbegriff ein");
@@ -132,7 +148,12 @@ export default function SearchBox({ initialQuery = '' }: SearchBoxProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           creatorIds: selectedCreators,
-          clientInfo
+          clientInfo: {
+            ...clientInfo,
+            searchQuery: submittedQuery,
+            sourcePath: typeof window !== 'undefined' ? window.location.pathname : undefined,
+            sourceUrl: typeof window !== 'undefined' ? window.location.href : undefined
+          }
         })
       });
 

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
+import { trackUGCEvents } from '../lib/analytics';
 
 interface Creator {
   id: string;
@@ -74,11 +75,13 @@ export default function CreatorSelectionPopup({
     
     if (!formData.email || !validateEmail(formData.email)) {
       setEmailError('Bitte geben Sie eine gültige E-Mail-Adresse ein');
+      trackUGCEvents.leadFormError('creator_selection', 'invalid_email');
       return;
     }
 
     if (!formData.name.trim()) {
       toast.error('Bitte geben Sie Ihren Namen ein');
+      trackUGCEvents.leadFormError('creator_selection', 'missing_name');
       return;
     }
 
@@ -91,6 +94,7 @@ export default function CreatorSelectionPopup({
       toast.success('Ihre Anfrage wurde erfolgreich gesendet! Wir melden uns bald bei Ihnen.');
       onClose();
     } catch (error) {
+      trackUGCEvents.leadFormError('creator_selection', 'submit_failed');
       toast.error('Fehler beim Senden der Anfrage. Bitte versuchen Sie es erneut.');
     } finally {
       setIsSubmitting(false);
@@ -225,7 +229,10 @@ export default function CreatorSelectionPopup({
                         </div>
                         
                         <button
-                          onClick={() => setShowForm(true)}
+                          onClick={() => {
+                            setShowForm(true);
+                            trackUGCEvents.leadFormOpened('creator_selection', selectedCreators.length);
+                          }}
                           className="inline-flex items-center space-x-3 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 text-white px-8 py-4 rounded-2xl font-semibold text-lg hover:from-emerald-700 hover:via-teal-700 hover:to-emerald-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl group"
                         >
                           <svg className="w-6 h-6 group-hover:rotate-12 transition-transform duration-200" 

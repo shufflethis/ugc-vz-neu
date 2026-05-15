@@ -5,11 +5,38 @@ declare global {
   interface Window {
     gtag: (...args: any[]) => void;
     dataLayer: any[];
+    plausible?: (eventName: string, options?: { props?: Record<string, string | number | boolean> }) => void;
   }
 }
 
 // Google Analytics Tracking ID
 export const GA_TRACKING_ID = 'G-CE33NMGRD2';
+
+const sanitizeProp = (value: string): string => value.substring(0, 120);
+
+export const trackPlausibleEvent = (
+  eventName: string,
+  props?: Record<string, string | number | boolean>
+): void => {
+  if (typeof window === 'undefined' || !window.plausible) {
+    return;
+  }
+
+  try {
+    window.plausible(eventName, {
+      props: props
+        ? Object.fromEntries(
+            Object.entries(props).map(([key, value]) => [
+              key,
+              typeof value === 'string' ? sanitizeProp(value) : value,
+            ])
+          )
+        : undefined,
+    });
+  } catch (error) {
+    console.error('Fehler beim Senden des Plausible Events:', error);
+  }
+};
 
 // Prüft ob Analytics Cookies akzeptiert wurden
 export const isAnalyticsEnabled = (): boolean => {
@@ -84,22 +111,46 @@ export const trackPageView = (url: string, title?: string): void => {
 
 // Spezifische UGC-VZ Events
 export const trackUGCEvents = {
+  pageCTA: (location: string, target: string) => {
+    trackPlausibleEvent('CTA Click', { location, target });
+    trackEvent('cta_click', 'Navigation', `${location}_${target}`);
+  },
+
   // Suche Events
+  searchStart: (query: string) => {
+    trackPlausibleEvent('Brand Search Started', { query });
+    trackEvent('search_start', 'UGC_Search', query);
+  },
+
   search: (query: string, resultsCount: number) => {
+    trackPlausibleEvent('Brand Search Results', { query, resultsCount });
     trackEvent('search', 'UGC_Search', query, resultsCount);
+  },
+
+  searchNoResults: (query: string) => {
+    trackPlausibleEvent('Brand Search No Results', { query });
+    trackEvent('search_no_results', 'UGC_Search', query);
   },
   
   // Creator Events
   creatorView: (creatorId: string, platform: string) => {
+    trackPlausibleEvent('Creator Selected', { creatorId, platform });
     trackEvent('creator_view', 'UGC_Creator', `${platform}_${creatorId}`);
+  },
+
+  creatorDeselected: (creatorId: string, platform: string) => {
+    trackPlausibleEvent('Creator Deselected', { creatorId, platform });
+    trackEvent('creator_deselected', 'UGC_Creator', `${platform}_${creatorId}`);
   },
   
   creatorContact: (creatorId: string, platform: string) => {
+    trackPlausibleEvent('Creator Request Includes Creator', { creatorId, platform });
     trackEvent('creator_contact', 'UGC_Creator', `${platform}_${creatorId}`);
   },
   
   // Navigation Events
   ctaClick: (location: string) => {
+    trackPlausibleEvent('CTA Click', { location });
     trackEvent('cta_click', 'Navigation', location);
   },
   
@@ -118,15 +169,31 @@ export const trackUGCEvents = {
   
   // Form Events
   contactForm: (formType: string) => {
+    trackPlausibleEvent('Lead Form Submitted', { formType });
     trackEvent('contact_form', 'Engagement', formType);
+  },
+
+  leadFormOpened: (formType: string, selectedCount?: number) => {
+    trackPlausibleEvent('Lead Form Opened', {
+      formType,
+      selectedCount: selectedCount || 0,
+    });
+    trackEvent('lead_form_opened', 'Engagement', formType, selectedCount);
+  },
+
+  leadFormError: (formType: string, error: string) => {
+    trackPlausibleEvent('Lead Form Error', { formType, error });
+    trackEvent('lead_form_error', 'Engagement', `${formType}_${error}`);
   },
   
   // Voice Search Events
   voiceSearchStart: () => {
+    trackPlausibleEvent('Voice Search Started');
     trackEvent('voice_search_start', 'UGC_Search', 'microphone');
   },
   
   voiceSearchEnd: (success: boolean) => {
+    trackPlausibleEvent('Voice Search Ended', { success });
     trackEvent('voice_search_end', 'UGC_Search', success ? 'success' : 'failed');
   },
 };
