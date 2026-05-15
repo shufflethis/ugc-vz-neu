@@ -20,14 +20,7 @@ type ProcessedCreator = {
 
 interface AirtableRecord {
   id: string;
-  fields: {
-    'Wie heißt du?  (Vor- und Nachname)'?: string;
-    'Wie ist dein Geschlecht?'?: string;
-    'In welchem Netzwerk hast du Accounts und möchtest du aktiv sein?&nbsp; '?: string;
-    'Wie groß ist deine Reichweite pro Netzwerk? '?: string;
-    'Price'?: string;
-    'cached_image_url'?: string;
-  };
+  fields: Record<string, any>;
 }
 
 export const maxDuration = 30; // Reduced to 30 seconds for Vercel
@@ -44,6 +37,209 @@ const getLocalCreatorImage = (recordId: string): string | null => {
   const absolutePath = path.join(process.cwd(), 'public', 'creator-images', `${recordId}.jpg`);
 
   return fs.existsSync(absolutePath) ? relativePath : null;
+};
+
+type CreatorProfile = {
+  fullName: string;
+  firstName: string;
+  gender?: string;
+  socialLinks: string;
+  reachText: string;
+  totalReach: number;
+  priceRange: string;
+  age: number | null;
+  location: string;
+  languages: string;
+  topicsText: string;
+  formatsText: string;
+  portfolioText: string;
+  availability: string;
+  imageUrl: string;
+};
+
+const fieldCandidates = {
+  fullName: [
+    'Wie heißt du?  (Vor- und Nachname)',
+    'Wie heißt du? (Vor- und Nachname)',
+    'Name',
+    'Vor- und Nachname',
+    'Vollständiger Name',
+    'Full name',
+  ],
+  gender: [
+    'Wie ist dein Geschlecht?',
+    'Geschlecht',
+    'Gender',
+  ],
+  socialLinks: [
+    'In welchem Netzwerk hast du Accounts und möchtest du aktiv sein?&nbsp; ',
+    'In welchem Netzwerk hast du Accounts und möchtest du aktiv sein?',
+    'Social Links',
+    'Social Media Links',
+    'Instagram',
+    'TikTok',
+    'Profile',
+  ],
+  reach: [
+    'Wie groß ist deine Reichweite pro Netzwerk? ',
+    'Wie groß ist deine Reichweite pro Netzwerk?',
+    'Reichweite',
+    'Follower',
+    'Follower je Netzwerk',
+  ],
+  price: [
+    'Price',
+    'Preis',
+    'Preisrange',
+    'Preisvorstellung',
+    'Rate',
+    'Rates',
+    'Was kostet ein Video bei dir?',
+  ],
+  age: [
+    'Alter',
+    'Age',
+    'Wie alt bist du?',
+  ],
+  birthDate: [
+    'Geburtsdatum',
+    'Geburtstag',
+    'Date of birth',
+    'Birthday',
+  ],
+  location: [
+    'Standort',
+    'Stadt',
+    'Wohnort',
+    'Ort',
+    'Location',
+    'Wo wohnst du?',
+  ],
+  languages: [
+    'Sprache',
+    'Sprachen',
+    'Languages',
+    'Welche Sprachen sprichst du?',
+  ],
+  topics: [
+    'Branche',
+    'Branchen',
+    'Nische',
+    'Nischen',
+    'Themen',
+    'Kategorien',
+    'Für welche Themen erstellst du Content?',
+    'Welche Branchen passen zu dir?',
+  ],
+  formats: [
+    'Content-Formate',
+    'Formate',
+    'Videoformate',
+    'Welche Formate bietest du an?',
+    'UGC Formate',
+  ],
+  portfolio: [
+    'Portfolio',
+    'Portfolio-Link',
+    'Portfolio Links',
+    'Arbeitsproben',
+    'Beispiele',
+    'Content Beispiele',
+  ],
+  availability: [
+    'Verfügbarkeit',
+    'Availability',
+    'Wann bist du verfügbar?',
+  ],
+  image: [
+    'cached_image_url',
+    'Profilbild',
+    'Profile Picture',
+    'Bild',
+    'Foto',
+    'Image',
+  ],
+};
+
+const stringifyField = (value: any): string => {
+  if (Array.isArray(value)) {
+    return value.map(stringifyField).filter(Boolean).join('\n');
+  }
+
+  if (value && typeof value === 'object') {
+    if (value.url) return String(value.url);
+    if (value.filename) return String(value.filename);
+    return Object.values(value).map(stringifyField).filter(Boolean).join(' ');
+  }
+
+  return String(value || '').trim();
+};
+
+const getFieldValue = (fields: Record<string, any>, candidates: string[]): string => {
+  for (const candidate of candidates) {
+    const value = stringifyField(fields[candidate]);
+    if (value) return value;
+  }
+
+  const normalizedCandidates = candidates.map(candidate => candidate.toLowerCase().replace(/\s|&nbsp;|[?:()]/g, ''));
+  for (const [key, rawValue] of Object.entries(fields)) {
+    const normalizedKey = key.toLowerCase().replace(/\s|&nbsp;|[?:()]/g, '');
+    if (normalizedCandidates.some(candidate => normalizedKey.includes(candidate) || candidate.includes(normalizedKey))) {
+      const value = stringifyField(rawValue);
+      if (value) return value;
+    }
+  }
+
+  return '';
+};
+
+const parseAge = (ageText: string, birthDateText: string): number | null => {
+  const ageMatch = ageText.match(/\b(1[6-9]|[2-6]\d|70)\b/);
+  if (ageMatch) return Number(ageMatch[1]);
+
+  if (birthDateText) {
+    const birthDate = new Date(birthDateText);
+    if (!Number.isNaN(birthDate.getTime())) {
+      const now = new Date();
+      let age = now.getFullYear() - birthDate.getFullYear();
+      const monthDiff = now.getMonth() - birthDate.getMonth();
+      if (monthDiff < 0 || (monthDiff === 0 && now.getDate() < birthDate.getDate())) age -= 1;
+      return age >= 16 && age <= 90 ? age : null;
+    }
+  }
+
+  return null;
+};
+
+const parsePriceValue = (priceText: string): number | null => {
+  const match = priceText.replace(/\./g, '').match(/(\d{2,5})/);
+  return match ? Number(match[1]) : null;
+};
+
+const mapCreatorProfile = (record: AirtableRecord): CreatorProfile => {
+  const fields = record.fields;
+  const fullName = getFieldValue(fields, fieldCandidates.fullName);
+  const socialLinks = getFieldValue(fields, fieldCandidates.socialLinks);
+  const reachText = getFieldValue(fields, fieldCandidates.reach);
+  const priceRange = getFieldValue(fields, fieldCandidates.price);
+
+  return {
+    fullName,
+    firstName: fullName.split(' ')[0] || 'Creator',
+    gender: getFieldValue(fields, fieldCandidates.gender),
+    socialLinks,
+    reachText,
+    totalReach: calculateTotalReach(reachText),
+    priceRange,
+    age: parseAge(getFieldValue(fields, fieldCandidates.age), getFieldValue(fields, fieldCandidates.birthDate)),
+    location: getFieldValue(fields, fieldCandidates.location),
+    languages: getFieldValue(fields, fieldCandidates.languages),
+    topicsText: getFieldValue(fields, fieldCandidates.topics),
+    formatsText: getFieldValue(fields, fieldCandidates.formats),
+    portfolioText: getFieldValue(fields, fieldCandidates.portfolio),
+    availability: getFieldValue(fields, fieldCandidates.availability),
+    imageUrl: getFieldValue(fields, fieldCandidates.image),
+  };
 };
 
 // Helper function to create mock Airtable records for testing
@@ -396,15 +592,27 @@ export async function POST(req: Request) {
     const scoreCreator = (record: AirtableRecord): number => {
       // Use the initialAnalysis from above
       const analysis = initialAnalysis;
-      const fields = record.fields;
+      const profile = mapCreatorProfile(record);
       let score = 0;
 
       // Basic information
-      const fullName = String(fields['Wie heißt du?  (Vor- und Nachname)'] || '');
-      const gender = fields['Wie ist dein Geschlecht?'];
-      const socialLinks = String(fields['In welchem Netzwerk hast du Accounts und möchtest du aktiv sein?&nbsp; '] || '');
-      const reachText = String(fields['Wie groß ist deine Reichweite pro Netzwerk? '] || '');
-      const totalReach = calculateTotalReach(reachText);
+      const fullName = profile.fullName;
+      const gender = profile.gender;
+      const socialLinks = profile.socialLinks;
+      const reachText = profile.reachText;
+      const totalReach = profile.totalReach;
+      const searchableProfileText = [
+        profile.fullName,
+        profile.socialLinks,
+        profile.reachText,
+        profile.location,
+        profile.languages,
+        profile.topicsText,
+        profile.formatsText,
+        profile.portfolioText,
+        profile.availability,
+        profile.priceRange,
+      ].join(' ').toLowerCase();
 
       // 1. Gender match (highest priority)
       console.log(`[${requestId}] Gender filtering for ${fullName}: query wants "${analysis.gender}", creator is "${gender}"`);
@@ -492,7 +700,7 @@ export async function POST(req: Request) {
       // 4. Topic/niche match (check in bio or other fields)
       // This is a simplified approach - in a real system, you'd have better topic classification
       if (analysis.topics.length > 0) {
-        const creatorInfo = `${fullName} ${socialLinks} ${reachText}`.toLowerCase();
+        const creatorInfo = searchableProfileText;
 
         for (const topic of analysis.topics) {
           const topicKeywords = {
@@ -502,7 +710,14 @@ export async function POST(req: Request) {
             'fitness': ['fitness', 'sport', 'workout', 'training'],
             'food': ['essen', 'food', 'kochen', 'cooking', 'rezepte'],
             'lifestyle': ['lifestyle', 'leben'],
-            'tech': ['tech', 'technologie', 'gadgets']
+            'tech': ['tech', 'technologie', 'gadgets', 'software', 'app', 'saas'],
+            'family': ['family', 'familie', 'mama', 'papa', 'eltern', 'baby', 'kids'],
+            'gaming': ['gaming', 'games', 'zocken', 'streaming'],
+            'business': ['business', 'b2b', 'karriere', 'office', 'linkedin'],
+            'finance': ['finance', 'finanzen', 'versicherung', 'bank', 'geld'],
+            'health': ['health', 'gesundheit', 'wellness', 'pflege'],
+            'home': ['home', 'wohnen', 'interior', 'diy', 'haushalt'],
+            'automotive': ['auto', 'automotive', 'mobilität', 'car']
           };
 
           const keywords = topicKeywords[topic as keyof typeof topicKeywords] || [];
@@ -516,8 +731,50 @@ export async function POST(req: Request) {
         }
       }
 
-      // 5. Age match (if specified)
-      // Note: We don't have age data in this example, but in a real system you would check it
+      // 5. Age match (if the profile has age data mapped from Airtable/Tally)
+      if (analysis.ageRange.min !== null || analysis.ageRange.max !== null) {
+        if (profile.age === null) {
+          score -= 10;
+          console.log(`[${requestId}] ⚠ ${fullName} has no mapped age data - slight penalty`);
+        } else if (
+          (analysis.ageRange.min !== null && profile.age < analysis.ageRange.min) ||
+          (analysis.ageRange.max !== null && profile.age > analysis.ageRange.max)
+        ) {
+          score -= 60;
+          console.log(`[${requestId}] ⚠ ${fullName} outside requested age range (${profile.age})`);
+        } else {
+          score += 45;
+          console.log(`[${requestId}] ✓ Age match for ${fullName}: ${profile.age}`);
+        }
+      }
+
+      // 6. Location match
+      if (analysis.location) {
+        if (profile.location.toLowerCase().includes(analysis.location)) {
+          score += 35;
+        } else if (profile.location) {
+          score -= 15;
+        }
+      }
+
+      // 7. Price match
+      const creatorPrice = parsePriceValue(profile.priceRange);
+      if (creatorPrice !== null && (analysis.priceRange.min !== null || analysis.priceRange.max !== null)) {
+        if (
+          (analysis.priceRange.min !== null && creatorPrice < analysis.priceRange.min) ||
+          (analysis.priceRange.max !== null && creatorPrice > analysis.priceRange.max)
+        ) {
+          score -= 25;
+        } else {
+          score += 20;
+        }
+      }
+
+      // 8. Quality signals from mapped Tally/Airtable data
+      if (profile.portfolioText) score += 18;
+      if (profile.formatsText) score += 12;
+      if (profile.languages) score += 8;
+      if (profile.availability) score += 6;
 
       return score;
     };
@@ -529,8 +786,9 @@ export async function POST(req: Request) {
 
       const batchResults = await Promise.all(batch.map(async (record: AirtableRecord) => {
         try {
+          const profile = mapCreatorProfile(record);
           const fields = record.fields;
-          const fullName = String(fields['Wie heißt du?  (Vor- und Nachname)'] || '');
+          const fullName = profile.fullName;
 
           // Score this creator based on the query analysis
           const score = scoreCreator(record);
@@ -543,13 +801,13 @@ export async function POST(req: Request) {
 
           console.log(`[${requestId}] Creator ${fullName} scored ${score} points`);
 
-          const gender = fields['Wie ist dein Geschlecht?'];
-          const socialLinks = String(fields['In welchem Netzwerk hast du Accounts und möchtest du aktiv sein?&nbsp; '] || '');
-          const firstName = fullName.split(' ')[0];
-          const reachText = String(fields['Wie groß ist deine Reichweite pro Netzwerk? '] || '');
-          const totalReach = calculateTotalReach(reachText);
+          const gender = profile.gender;
+          const socialLinks = profile.socialLinks;
+          const firstName = profile.firstName;
+          const reachText = profile.reachText;
+          const totalReach = profile.totalReach;
 
-          const cachedImageUrl = fields['cached_image_url'] as string | undefined;
+          const cachedImageUrl = profile.imageUrl;
           let finalImage: string;
           let hasCustomImage: boolean;
 
@@ -585,7 +843,7 @@ export async function POST(req: Request) {
             totalReach: totalReach,
             hasCustomImage: hasCustomImage,
             networks: socialLinks.split('\n').filter(Boolean),
-            priceRange: String(fields.Price || ''),
+            priceRange: profile.priceRange,
             gender: gender, // Add gender for debugging
             score: score // Add AI score for sorting
           };
@@ -740,9 +998,12 @@ Antworte NUR mit einem JSON-Objekt in diesem exakten Format (keine zusätzlichen
 {
   "gender": "male" | "female" | "any",
   "platforms": ["tiktok", "instagram", "youtube", "facebook"],
-  "topics": ["beauty", "fashion", "travel", "fitness", "food", "lifestyle", "tech"],
+  "topics": ["beauty", "fashion", "travel", "fitness", "food", "lifestyle", "tech", "family", "gaming", "business", "finance", "health", "home", "pets", "automotive"],
   "minFollowers": 0,
   "maxFollowers": null,
+  "ageRange": {"min": null, "max": null},
+  "location": null,
+  "priceRange": {"min": null, "max": null},
   "keywords": ["relevante", "begriffe"]
 }
 
@@ -750,6 +1011,9 @@ Regeln:
 - Erkenne Synonyme: "Insta" = "instagram", "YT" = "youtube"
 - Interpretiere Kontext: "Beauty/Kosmetik" impliziert meist "female"
 - Extrahiere Reichweiten intelligent: "10k" = 10000, "1m" = 1000000
+- Extrahiere Alter: "ab 30" = {"min":30,"max":null}, "unter 25" = {"min":null,"max":25}
+- Extrahiere Orte: "Berlin", "Hamburg", "Deutschland", "NRW"
+- Extrahiere Budget/Preis: "bis 500 Euro" = {"min":null,"max":500}
 - WICHTIG: Explizite Geschlechts-Keywords haben IMMER Vorrang vor Topic-Defaults`
           },
           {
@@ -791,13 +1055,13 @@ Regeln:
           minFollowers: parsed.minFollowers || 0,
           maxFollowers: parsed.maxFollowers || null,
           ageRange: {
-            min: null,
-            max: null
+            min: parsed.ageRange?.min || null,
+            max: parsed.ageRange?.max || null
           },
-          location: null,
+          location: parsed.location || null,
           priceRange: {
-            min: null,
-            max: null
+            min: parsed.priceRange?.min || null,
+            max: parsed.priceRange?.max || null
           },
           keywords: parsed.keywords || []
         };
@@ -890,7 +1154,14 @@ function analyzeQueryWithAI(query: string, requestId: string): QueryAnalysis {
     { keywords: ['fitness', 'sport', 'workout', 'training'], topic: 'fitness' },
     { keywords: ['essen', 'food', 'kochen', 'cooking', 'rezepte'], topic: 'food' },
     { keywords: ['lifestyle', 'leben'], topic: 'lifestyle' },
-    { keywords: ['tech', 'technologie', 'gadgets'], topic: 'tech' }
+    { keywords: ['tech', 'technologie', 'gadgets', 'software', 'app', 'saas'], topic: 'tech' },
+    { keywords: ['family', 'familie', 'mama', 'papa', 'eltern', 'baby', 'kids'], topic: 'family' },
+    { keywords: ['gaming', 'games', 'zocken', 'streaming'], topic: 'gaming' },
+    { keywords: ['business', 'b2b', 'karriere', 'office', 'linkedin'], topic: 'business' },
+    { keywords: ['finance', 'finanzen', 'versicherung', 'bank', 'geld'], topic: 'finance' },
+    { keywords: ['health', 'gesundheit', 'wellness', 'pflege'], topic: 'health' },
+    { keywords: ['home', 'wohnen', 'interior', 'diy', 'haushalt'], topic: 'home' },
+    { keywords: ['auto', 'automotive', 'mobilität', 'car'], topic: 'automotive' }
   ];
 
   topics.forEach(topicObj => {
@@ -960,33 +1231,34 @@ function analyzeQueryWithAI(query: string, requestId: string): QueryAnalysis {
     }
   }
 
-  // Step 5: Extract age range - DISABLED for now since database has no age data
-  // TODO: Add age fields to database schema before enabling this
-  console.log(`[${requestId}] Age filtering disabled - no age data in database schema`);
-  
-  /*
   const agePatterns = [
-    /unter (\d+)/i,
-    /über (\d+)/i,
-    /zwischen (\d+) und (\d+)/i,
-    /(\d+)-(\d+) jahre/i
+    { type: 'min', pattern: /(?:ab|über|ueber|mindestens)\s*(\d{2})/i },
+    { type: 'max', pattern: /(?:unter|bis|maximal|höchstens|hoechstens)\s*(\d{2})/i },
+    { type: 'range', pattern: /(?:zwischen\s*)?(\d{2})\s*(?:-|bis|und)\s*(\d{2})/i }
   ];
 
-  for (const pattern of agePatterns) {
+  for (const { type, pattern } of agePatterns) {
     const match = queryLower.match(pattern);
     if (match) {
-      if (match[0].startsWith('unter')) {
-        analysis.ageRange.max = parseInt(match[1]);
-      } else if (match[0].startsWith('über')) {
-        analysis.ageRange.min = parseInt(match[1]);
-      } else if (match[1] && match[2]) {
-        analysis.ageRange.min = parseInt(match[1]);
-        analysis.ageRange.max = parseInt(match[2]);
+      if (type === 'range') {
+        analysis.ageRange.min = Number(match[1]);
+        analysis.ageRange.max = Number(match[2]);
+      } else if (type === 'min') {
+        analysis.ageRange.min = Number(match[1]);
+      } else if (type === 'max') {
+        analysis.ageRange.max = Number(match[1]);
       }
       break;
     }
   }
-  */
+
+  const knownLocations = ['berlin', 'hamburg', 'münchen', 'muenchen', 'köln', 'koeln', 'frankfurt', 'stuttgart', 'düsseldorf', 'duesseldorf', 'leipzig', 'nrw', 'deutschland', 'österreich', 'oesterreich', 'schweiz'];
+  analysis.location = knownLocations.find(location => queryLower.includes(location)) || null;
+
+  const priceMaxMatch = queryLower.match(/(?:bis|maximal|unter)\s*(\d{2,5})\s*(?:€|euro|eur)?/i);
+  const priceMinMatch = queryLower.match(/(?:ab|mindestens|über|ueber)\s*(\d{2,5})\s*(?:€|euro|eur)/i);
+  if (priceMaxMatch) analysis.priceRange.max = Number(priceMaxMatch[1]);
+  if (priceMinMatch) analysis.priceRange.min = Number(priceMinMatch[1]);
 
   // Step 6: Extract keywords
   // Remove common words and extract potential keywords
