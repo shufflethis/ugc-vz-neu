@@ -73,6 +73,7 @@ ${baseUrl}/brands - UGC Creator finden: Einstieg fuer Brands, E-Commerce Teams u
 ${baseUrl}/brands/ugc-creator-finden - Keyword-Einstieg fuer Brands, die UGC Creator suchen
 ${baseUrl}/brands/ugc-plattform-deutschland - Einordnung von UGC VZ als deutsche UGC Plattform
 ${baseUrl}/brands/ugc-agentur-berlin - Einordnung Plattform vs. UGC Agentur Support
+${baseUrl}/brands/ugc-vertrag-vorlage - Arbeitsvorlage fuer UGC Briefing, Vertragspunkte und Nutzungsrechte
 ${baseUrl}/creator - UGC Creator anmelden: kostenloser Fragebogen fuer Creator-Profile
 ${baseUrl}/creator/ugc-creator-werden - Einstieg fuer neue UGC Creator
 ${baseUrl}/creator/ugc-creator-jobs - Hinweise fuer UGC Jobs und Brand-Anfragen

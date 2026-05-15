@@ -122,8 +122,15 @@ async function sendLeadEmails({
       <p>wir haben deine UGC-Anfrage erhalten und pruefen sie jetzt.</p>
       <p><strong>Lead-ID:</strong> ${htmlEscape(leadId)}</p>
       <p><strong>Deine Suchanfrage:</strong> ${htmlEscape(searchQuery)}</p>
-      ${selectedCreators.length ? `<p><strong>Ausgewaehlte Creator:</strong> ${selectedCreators.map((creator) => htmlEscape(creator.name)).join(', ')}</p>` : ''}
-      <p>Naechster Schritt: Wir melden uns mit passenden Details oder Rueckfragen. Wenn Budget, Timing oder Nutzungsrechte wichtig sind, antworte einfach direkt auf diese E-Mail.</p>
+      ${selectedCreators.length ? `
+        <h2>Ausgewaehlte Creator und Kontaktinfos</h2>
+        <ol>${creatorListHtml}</ol>
+      ` : ''}
+      <h2>Vorlage fuer Briefing & Vertrag</h2>
+      <p>Hier findest du eine kompakte Vorlage mit Punkten zu Leistung, Verguetung, Timing, Nutzungsrechten und Abnahme:</p>
+      <p><a href="https://ugc-vz.de/brands/ugc-vertrag-vorlage">https://ugc-vz.de/brands/ugc-vertrag-vorlage</a></p>
+      <p><em>Hinweis: Die Vorlage ist eine praktische Arbeitsgrundlage und ersetzt keine Rechtsberatung.</em></p>
+      <p>Naechster Schritt: Kontaktiere die passenden Creator direkt oder antworte auf diese E-Mail, wenn du Hilfe bei Briefing, Auswahl oder Vertragsdetails brauchst.</p>
       <p>Viele Gruesse<br />UGC VZ</p>
     </div>
   `;

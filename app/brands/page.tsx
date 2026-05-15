@@ -134,8 +134,8 @@ export default function BrandsPage({ searchParams }: { searchParams?: { query?: 
                 {[
                   ['1', 'Demand eingeben', 'Du beschreibst kurz Produkt, Zielgruppe, Plattform und Content-Wunsch.'],
                   ['2', 'Creator-Liste ansehen', 'UGC VZ zeigt passende Profile aus der Datenbank an. Du klickst die relevanten Creator an.'],
-                  ['3', 'Anfrage senden', 'Deine Auswahl und Kontaktdaten werden an UGC VZ gesendet.'],
-                  ['4', 'Verbindung herstellen', 'UGC VZ prueft die Anfrage und kann dich mit passenden Creatorn oder optionalem Kampagnen-Support verbinden.'],
+                  ['3', 'E-Mail erhalten', 'Du bekommst eine Bestaetigung mit den ausgewaehlten Creatorn und verfuegbaren Kontakt-/Social-Daten.'],
+                  ['4', 'Direkt starten', 'Du kontaktierst die Creator direkt oder holst optional Support fuer Briefing, Vertrag und Kampagnen-Setup dazu.'],
                 ].map(([step, title, copy]) => (
                   <div key={step} className="flex gap-4">
                     <div className="w-9 h-9 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold shrink-0">{step}</div>
@@ -173,7 +173,8 @@ export default function BrandsPage({ searchParams }: { searchParams?: { query?: 
           <h2 className="text-3xl font-bold mb-6 text-center">Haeufige Fragen von Brands</h2>
           <div className="space-y-4">
             {[
-              ['Werden Creator automatisch angeschrieben?', 'Nein. Die Anfrage wird an UGC VZ gesendet. So bleibt der Prozess kontrolliert und es werden keine unpassenden Massenanfragen verschickt.'],
+              ['Bekomme ich die Kontaktinfos per E-Mail?', 'Ja. Nach der Anfrage senden wir dir eine E-Mail mit deiner Creator-Auswahl und den verfuegbaren Kontakt- oder Social-Daten aus dem Profil.'],
+              ['Werden Creator automatisch angeschrieben?', 'Standardmaessig bekommst du die Kontaktinfos und kannst direkt starten. Eine automatische Creator-Mail ist technisch vorbereitet, wird aber nur genutzt, wenn die Creator-Daten und Einwilligungen dafuer sauber sind.'],
               ['Kann ich auch eine UGC Agentur anfragen?', 'Ja. Wenn du mehr brauchst als reine Creator-Auswahl, kannst du in der Projektbeschreibung optional Strategie, Briefing, Produktion oder Kampagnensteuerung erwaehnen.'],
               ['Welche Branchen funktionieren?', 'Besonders gut funktionieren E-Commerce, Beauty, Food, Tech, Fashion, Apps, lokale Angebote und erklaerungsbeduerftige Produkte.'],
             ].map(([question, answer]) => (
@@ -199,6 +200,10 @@ export default function BrandsPage({ searchParams }: { searchParams?: { query?: 
             <Link href="/brands/ugc-agentur-berlin" className="bg-gray-900/40 border border-gray-800 rounded-lg p-5 hover:border-emerald-600 transition-colors">
               <h3 className="font-bold text-emerald-300 mb-2">UGC Agentur Berlin</h3>
               <p className="text-gray-300 text-sm">Plattform oder Agentur-Support einordnen.</p>
+            </Link>
+            <Link href="/brands/ugc-vertrag-vorlage" className="bg-gray-900/40 border border-gray-800 rounded-lg p-5 hover:border-emerald-600 transition-colors">
+              <h3 className="font-bold text-emerald-300 mb-2">UGC Vertrag Vorlage</h3>
+              <p className="text-gray-300 text-sm">Briefing- und Vertrags-Checkliste fuer Creator Deals.</p>
             </Link>
           </div>
         </section>

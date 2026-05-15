@@ -19,7 +19,8 @@ export async function GET() {
     '/brands',
     '/brands/ugc-creator-finden',
     '/brands/ugc-plattform-deutschland',
-    '/brands/ugc-agentur-berlin'
+    '/brands/ugc-agentur-berlin',
+    '/brands/ugc-vertrag-vorlage'
   ];
 
   // Blog-Posts von der API abrufen
