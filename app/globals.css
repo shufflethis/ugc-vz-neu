@@ -16,6 +16,7 @@
   --geo-violet-soft: #a870e0;
   --void: #060606;
   --grad-main: linear-gradient(135deg, #a8e06a 0%, #8b3fca 100%);
+  --grad-text: linear-gradient(120deg, #8b3fca 0%, #5f9128 100%);
   --grad-subtle: linear-gradient(135deg, rgba(168,224,106,0.10) 0%, rgba(139,63,202,0.10) 100%);
 }
 
@@ -25,9 +26,10 @@ body {
   font-family: var(--font-inter, 'Inter'), var(--font-sans, Arial, Helvetica, sans-serif);
 }
 
-/* Brand gradient text */
+/* Brand gradient text — violet→deep-green, kept AA-readable on white
+   (no bright lime: short words must not land in low-contrast lime) */
 .gradient-text {
-  background: var(--grad-main);
+  background: var(--grad-text);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -191,7 +193,7 @@ body {
 
 /* Animated gradient text */
 .gradient-text-animated {
-  background: linear-gradient(-45deg, #a8e06a, #8b3fca, #a870e0, #6fa82e);
+  background: linear-gradient(-45deg, #8b3fca, #5f9128, #6e35a8, #8b3fca);
   background-size: 400% 400%;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
