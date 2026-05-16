@@ -26,7 +26,7 @@
   font-size: 1.2rem;
   font-weight: 500;
   background-color: transparent;
-  color: #ffffff;
+  color: #171717;
   outline: none;
   transition: all 0.3s ease;
   min-height: 60px;
@@ -41,14 +41,14 @@
 }
 
 .searchInput:focus {
-  border-color: #1effb4; /* Emerald border on focus */
-  box-shadow: 0 0 0 3px rgba(30, 255, 180, 0.3), inset 0 2px 8px rgba(0, 0, 0, 0.5); /* Emerald glow on focus */
-  background-color: #1c1c1c; /* Slightly lighter background on focus for better contrast */
+  border-color: #8b3fca; /* Violet border on focus */
+  box-shadow: 0 0 0 3px rgba(139, 63, 202, 0.3), inset 0 2px 8px rgba(0, 0, 0, 0.05); /* Violet glow on focus */
+  background-color: #171717; /* Slightly lighter background on focus for better contrast */
 }
 
 .searchButton {
   padding: 15px 25px; /* Increased padding */
-  background: linear-gradient(45deg, #1effb4, #007bff); /* Emerald to blue gradient */
+  background: linear-gradient(45deg, #8b3fca, #8b3fca); /* Violet to blue gradient */
   color: white;
   border: none;
   border-radius: 12px; /* More rounded corners */
@@ -65,7 +65,7 @@
 }
 
 .searchButton:hover {
-  background: linear-gradient(45deg, #007bff, #1effb4); /* Reverse gradient on hover */
+  background: linear-gradient(45deg, #8b3fca, #8b3fca); /* Reverse gradient on hover */
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
   transform: translateY(-2px);
 }
@@ -115,8 +115,8 @@
 }
 
 .userBubble {
-  background-color: #1effb4; /* Emerald color for user bubble */
-  color: #111; /* Dark text for contrast */
+  background-color: #8b3fca; /* Violet color for user bubble */
+  color: #171717; /* Dark text for contrast */
   padding: 12px 18px; /* Increased padding */
   border-radius: 20px 20px 5px 20px; /* More organic shape */
   max-width: 75%; /* Slightly wider bubble */
@@ -133,18 +133,18 @@
   gap: 16px; /* Increased gap */
   text-align: center;
   padding: 20px;
-  background-color: #1a1a1a; /* Darker background */
+  background-color: #f7f7f5; /* Darker background */
   border-radius: 12px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5); /* More prominent shadow */
-  color: #e0e0e0; /* Lighter text color */
+  color: #171717;
   font-size: 1.1rem;
   font-weight: 600;
-  border: 1px solid rgba(30, 255, 180, 0.2); /* Subtle emerald border */
+  border: 1px solid rgba(139, 63, 202, 0.2); /* Subtle violet border */
 }
 
 .loadingText {
   font-weight: 600; /* Bolder text */
-  color: #e0e0e0;
+  color: #171717;
   font-size: 1.2rem;
 }
 
@@ -156,7 +156,7 @@
 .dot {
   width: 10px; /* Larger dots */
   height: 10px; /* Larger dots */
-  background-color: #1effb4; /* Emerald color */
+  background-color: #8b3fca; /* Violet color */
   border-radius: 50%;
   animation: dot-pulse 1.4s infinite ease-in-out; /* Use tailwind animation */
 }
@@ -223,18 +223,18 @@
 /* Removed @keyframes pulse as it's now in tailwind.config.js */
 
 .reasoningContainer {
-  background-color: #1a1a1a; /* Darker background */
+  background-color: #f7f7f5; /* Darker background */
   padding: 20px; /* Increased padding */
   border-radius: 12px; /* More rounded corners */
   margin-top: 20px; /* Increased margin */
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5); /* Prominent shadow */
-  border: 1px solid rgba(30, 255, 180, 0.2); /* Subtle emerald border */
+  border: 1px solid rgba(139, 63, 202, 0.2); /* Subtle violet border */
 }
 
 .reasoningContainer h3 {
   margin-top: 0;
   margin-bottom: 15px; /* Increased margin */
-  color: #1effb4; /* Emerald color for heading */
+  color: #8b3fca; /* Violet color for heading */
   font-size: 1.3rem; /* Larger heading */
   font-weight: 700; /* Bolder heading */
 }
@@ -244,14 +244,14 @@
   word-wrap: break-word;
   font-family: 'Roboto Mono', monospace; /* More modern monospace font */
   font-size: 1rem; /* Slightly larger font */
-  color: #e0e0e0; /* Lighter text color */
+  color: #171717;
   line-height: 1.6; /* Better readability */
 }
 
 .resultsHeader {
   text-align: center;
   margin-bottom: 30px; /* Increased margin */
-  color: #eee; /* Lighter text color */
+  color: #171717;
   font-size: 1.8rem; /* Larger font */
   font-weight: 700; /* Bolder font */
   text-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
@@ -266,20 +266,20 @@
 }
 
 .creatorCard {
-  background-color: #1a1a1a; /* Darker background */
+  background-color: #f7f7f5; /* Darker background */
   border-radius: 16px; /* More rounded corners */
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4); /* More prominent shadow */
   padding: 20px; /* Increased padding */
   text-align: center;
   cursor: pointer;
   transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out, border-color 0.3s ease-in-out; /* Added border-color transition */
-  border: 1px solid rgba(30, 255, 180, 0.1); /* Subtle emerald border */
+  border: 1px solid rgba(139, 63, 202, 0.1); /* Subtle violet border */
 }
 
 .creatorCard:hover {
   transform: translateY(-8px) scale(1.02); /* More pronounced hover effect */
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6); /* Stronger shadow on hover */
-  border-color: rgba(30, 255, 180, 0.5); /* More visible border on hover */
+  border-color: rgba(139, 63, 202, 0.5); /* More visible border on hover */
 }
 
 .creatorCard img {
@@ -288,21 +288,21 @@
   border-radius: 50%;
   object-fit: cover;
   margin-bottom: 15px; /* Increased margin */
-  border: 3px solid #1effb4; /* Emerald border for image */
-  box-shadow: 0 0 10px rgba(30, 255, 180, 0.5); /* Glow effect */
+  border: 3px solid #8b3fca; /* Violet border for image */
+  box-shadow: 0 0 10px rgba(139, 63, 202, 0.5); /* Glow effect */
 }
 
 .creatorCard h3 {
   margin: 0 0 8px 0; /* Increased margin */
   font-size: 1.3rem; /* Larger font */
-  color: #eee; /* Lighter text color */
+  color: #171717;
   font-weight: 600;
 }
 
 .creatorCard p {
   margin: 0 0 8px 0; /* Increased margin */
   font-size: 1rem; /* Larger font */
-  color: #bbb; /* Lighter text color */
+  color: #5a5a5a; /* Lighter text color */
 }
 
 .networks {
@@ -317,33 +317,33 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #333; /* Darker background */
-  color: #1effb4; /* Emerald color */
+  background-color: #efefec; /* Darker background */
+  color: #8b3fca; /* Violet color */
   border-radius: 50%; /* Circular shape for icons */
   font-size: 1.2rem; /* Larger font for icons */
   width: 40px; /* Larger width */
   height: 40px; /* Larger height */
   transition: all 0.2s ease-in-out;
-  box-shadow: 0 0 8px rgba(30, 255, 180, 0.3);
+  box-shadow: 0 0 8px rgba(139, 63, 202, 0.3);
 }
 
 .networkTag:hover {
   transform: scale(1.1);
-  color: #ffffff;
-  background-color: #1effb4;
-  box-shadow: 0 0 12px rgba(30, 255, 180, 0.7);
+  color: #171717;
+  background-color: #8b3fca;
+  box-shadow: 0 0 12px rgba(139, 63, 202, 0.7);
 }
 
 .price {
   font-weight: bold;
-  color: #1effb4; /* Emerald color */
+  color: #8b3fca; /* Violet color */
   font-size: 1.1rem; /* Larger font */
 }
 
 /* Add a style for selected cards */
 .selected {
-  border: 2px solid #1effb4; /* Emerald highlight for selected cards */
-  box-shadow: 0 0 15px rgba(30, 255, 180, 0.7); /* Stronger emerald glow */
+  border: 2px solid #8b3fca; /* Violet highlight for selected cards */
+  box-shadow: 0 0 15px rgba(139, 63, 202, 0.7); /* Stronger violet glow */
   transform: scale(1.03); /* Slightly larger when selected */
 }
 
@@ -353,8 +353,8 @@
   bottom: 0;
   left: 0;
   right: 0;
-  background: linear-gradient(to right, rgba(16, 64, 43, 0.95), rgba(13, 52, 79, 0.95));
-  border-top: 1px solid rgba(30, 255, 180, 0.3);
+  background: linear-gradient(to right, rgba(247, 247, 245, 0.97), rgba(247, 247, 245, 0.97));
+  border-top: 1px solid rgba(139, 63, 202, 0.3);
   padding: 16px;
   z-index: 100;
   box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.5);
@@ -378,12 +378,12 @@
 .selectedCount {
   font-size: 1.2rem;
   font-weight: 600;
-  color: #1effb4;
+  color: #8b3fca;
 }
 
 .selectedHint {
   font-size: 0.9rem;
-  color: #e0e0e0;
+  color: #171717;
 }
 
 .selectedCreatorsActions {
@@ -396,7 +396,7 @@
   background-color: transparent;
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 8px;
-  color: #e0e0e0;
+  color: #171717;
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -407,7 +407,7 @@
 
 .submitButton {
   padding: 8px 16px;
-  background: linear-gradient(to right, #1effb4, #007bff);
+  background: linear-gradient(to right, #8b3fca, #8b3fca);
   border: none;
   border-radius: 8px;
   color: white;
@@ -421,7 +421,7 @@
 
 .submitButton:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(30, 255, 180, 0.4);
+  box-shadow: 0 4px 12px rgba(139, 63, 202, 0.4);
 }
 
 .arrowIcon {
@@ -445,20 +445,20 @@
 }
 
 .modalContent {
-  background-color: #1a1a1a;
+  background-color: #f7f7f5;
   border-radius: 12px;
   padding: 24px;
   width: 100%;
   max-width: 500px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-  border: 1px solid rgba(30, 255, 180, 0.2);
+  border: 1px solid rgba(139, 63, 202, 0.2);
 }
 
 .modalTitle {
   font-size: 1.5rem;
   font-weight: 600;
   margin-bottom: 20px;
-  color: #e0e0e0;
+  color: #171717;
 }
 
 .formField {
@@ -468,19 +468,19 @@
 .formInput, .formTextarea {
   width: 100%;
   padding: 12px;
-  background-color: #2a2a2a;
-  border: 1px solid #444;
+  background-color: #f7f7f5;
+  border: 1px solid #e0e0e0;
   border-radius: 8px;
-  color: #e0e0e0;
+  color: #171717;
   margin-bottom: 16px;
   font-size: 1rem;
   transition: all 0.2s ease;
 }
 
 .formInput:focus, .formTextarea:focus {
-  border-color: #1effb4;
+  border-color: #8b3fca;
   outline: none;
-  box-shadow: 0 0 0 2px rgba(30, 255, 180, 0.2);
+  box-shadow: 0 0 0 2px rgba(139, 63, 202, 0.2);
 }
 
 .formTextarea {
@@ -509,7 +509,7 @@
 .modalCancelButton {
   padding: 10px 16px;
   background-color: transparent;
-  color: #999;
+  color: #5a5a5a;
   border: none;
   border-radius: 6px;
   cursor: pointer;
@@ -517,13 +517,13 @@
 }
 
 .modalCancelButton:hover:not(:disabled) {
-  color: #e0e0e0;
+  color: #171717;
 }
 
 .modalSubmitButton {
   padding: 10px 20px;
-  background-color: #1effb4;
-  color: #111;
+  background-color: #8b3fca;
+  color: #171717;
   border: none;
   border-radius: 6px;
   font-weight: 600;
@@ -535,7 +535,7 @@
 }
 
 .modalSubmitButton:hover:not(:disabled) {
-  background-color: #00e0a0;
+  background-color: #a870e0;
   transform: translateY(-2px);
 }
 

@@ -8,7 +8,7 @@ import LogoImage from '../../app/components/LogoImage';
 export default function Footer() {
   const [isContactPopupOpen, setIsContactPopupOpen] = useState(false);
   return (
-    <footer className="bg-[#1A1A1A] text-gray-300 py-16 border-t border-gray-800 mt-16 font-['Inter',sans-serif]">
+    <footer className="bg-void text-gray-300 py-16 border-t border-gray-800 mt-16 font-['Inter',sans-serif]">
       <div className="container mx-auto px-6 md:px-16 lg:px-24">
         {/* Desktop: 4 columns, Tablet: 2 columns, Mobile: 1 column */}
         <div className="footer-container grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 footer-grid-4 gap-8 lg:gap-12 mb-12">

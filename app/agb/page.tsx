@@ -6,7 +6,7 @@ import ResponsiveCTAButton from '@/src/components/ResponsiveCTAButton';
 
 export default function AGBPage() {
   return (
-    <div className="min-h-screen bg-[#0D0D0D] text-white">
+    <div className="min-h-screen bg-white text-ink">
       {/* Header */}
       <header className="py-6 px-4 sm:px-8 md:px-16 lg:px-24">
         <div className="container mx-auto flex justify-between items-center">
@@ -35,25 +35,25 @@ export default function AGBPage() {
             <h1 className="text-4xl sm:text-5xl font-bold mb-4">
               <span className="gradient-text">Allgemeine Geschäftsbedingungen</span>
             </h1>
-            <p className="text-xl text-gray-300">
+            <p className="text-xl text-ink-soft">
               Transparente Regelungen für eine faire Community
             </p>
           </div>
 
           {/* Das Wichtigste in Kürze */}
-          <div className="bg-gradient-to-r from-emerald-900/30 to-blue-900/30 rounded-2xl p-6 md:p-8 mb-12 border border-emerald-500/20">
+          <div className="surface-card rounded-2xl p-6 md:p-8 mb-12">
             <h2 className="text-2xl font-bold mb-4 flex items-center">
               💡 Das Wichtigste in Kürze
             </h2>
-            <p className="text-gray-300 text-lg leading-relaxed">
+            <p className="text-ink-soft text-lg leading-relaxed">
               UGC-VZ ist und bleibt kostenlos! Wir sind eine reine Vermittlungsplattform, die Creator und Unternehmen zusammenbringt.
               Alle Geschäfte wickelt ihr direkt miteinander ab – wir verdienen nichts daran.
             </p>
           </div>
 
           {/* Inhaltsverzeichnis */}
-          <div className="bg-gray-900/50 rounded-2xl p-6 md:p-8 mb-12 backdrop-blur-sm border border-gray-800">
-            <h2 className="text-2xl font-bold mb-6 flex items-center">
+          <div className="surface-card rounded-2xl p-6 md:p-8 mb-12">
+            <h2 className="text-2xl font-bold mb-6 flex items-center text-ink">
               📋 Inhaltsverzeichnis
             </h2>
             <div className="grid md:grid-cols-2 gap-3">
@@ -69,8 +69,8 @@ export default function AGBPage() {
                 "Technische Verfügbarkeit",
                 "Schlussbestimmungen"
               ].map((item, index) => (
-                <div key={index} className="flex items-center text-gray-300">
-                  <span className="text-teal-400 font-bold mr-3">{index + 1}</span>
+                <div key={index} className="flex items-center text-ink-soft">
+                  <span className="text-geo-violet font-bold mr-3">{index + 1}</span>
                   <span>{item}</span>
                 </div>
               ))}
@@ -81,21 +81,21 @@ export default function AGBPage() {
           <div className="space-y-12">
 
             {/* Section 1 */}
-            <section className="bg-gray-900/50 rounded-2xl p-6 md:p-8 backdrop-blur-sm border border-gray-800">
-              <h2 className="text-2xl font-bold mb-6 text-white">1. GELTUNGSBEREICH UND BEGRIFFSBESTIMMUNGEN</h2>
+            <section className="surface-card rounded-2xl p-6 md:p-8">
+              <h2 className="text-2xl font-bold mb-6 text-ink">1. GELTUNGSBEREICH UND BEGRIFFSBESTIMMUNGEN</h2>
 
               <div className="space-y-6">
                 <div>
-                  <h3 className="text-xl font-semibold mb-3 text-teal-400">1.1 Geltungsbereich</h3>
-                  <p className="text-gray-300">
+                  <h3 className="text-xl font-semibold mb-3 text-geo-violet">1.1 Geltungsbereich</h3>
+                  <p className="text-ink-soft">
                     Diese Allgemeinen Geschäftsbedingungen gelten für die Nutzung der Plattform UGC-VZ,
                     die von der track by track GmbH / famefact („Betreiber") betrieben wird.
                   </p>
                 </div>
 
                 <div>
-                  <h3 className="text-xl font-semibold mb-3 text-teal-400">1.2 Begriffsbestimmungen</h3>
-                  <ul className="text-gray-300 space-y-2">
+                  <h3 className="text-xl font-semibold mb-3 text-geo-violet">1.2 Begriffsbestimmungen</h3>
+                  <ul className="text-ink-soft space-y-2">
                     <li><strong>UGC-VZ:</strong> Das kostenlose Online-Verzeichnis für UGC Creator und Unternehmen</li>
                     <li><strong>Creator:</strong> Personen, die User Generated Content erstellen und sich auf der Plattform registrieren</li>
                     <li><strong>Unternehmen:</strong> Firmen, die nach UGC Creators suchen</li>
@@ -107,14 +107,14 @@ export default function AGBPage() {
             </section>
 
             {/* Section 2 */}
-            <section className="bg-gray-900/50 rounded-2xl p-6 md:p-8 backdrop-blur-sm border border-gray-800">
-              <h2 className="text-2xl font-bold mb-6 text-white">2. LEISTUNGSUMFANG UND KOSTENFREIHEIT</h2>
+            <section className="surface-card rounded-2xl p-6 md:p-8">
+              <h2 className="text-2xl font-bold mb-6 text-ink">2. LEISTUNGSUMFANG UND KOSTENFREIHEIT</h2>
 
               <div className="space-y-6">
                 <div>
-                  <h3 className="text-xl font-semibold mb-3 text-teal-400">2.1 Grundleistungen</h3>
-                  <p className="text-gray-300 mb-3">UGC-VZ ist eine kostenlose Vermittlungsplattform, die folgende Dienste anbietet:</p>
-                  <ul className="text-gray-300 space-y-2 list-disc list-inside">
+                  <h3 className="text-xl font-semibold mb-3 text-geo-violet">2.1 Grundleistungen</h3>
+                  <p className="text-ink-soft mb-3">UGC-VZ ist eine kostenlose Vermittlungsplattform, die folgende Dienste anbietet:</p>
+                  <ul className="text-ink-soft space-y-2 list-disc list-inside">
                     <li>Kostenlose Registrierung für UGC Creator</li>
                     <li>Kostenloses Durchsuchen der Creator-Profile für Unternehmen</li>
                     <li>Bereitstellung von Kontaktdaten zur direkten Kommunikation</li>
@@ -122,19 +122,19 @@ export default function AGBPage() {
                   </ul>
                 </div>
 
-                <div className="bg-emerald-900/20 rounded-lg p-4 border border-emerald-500/30">
-                  <h3 className="text-xl font-semibold mb-3 text-emerald-400 flex items-center">
+                <div className="surface-card rounded-lg p-4">
+                  <h3 className="text-xl font-semibold mb-3 text-geo-violet flex items-center">
                     💰 100% Kostenfrei
                   </h3>
-                  <p className="text-gray-300">
+                  <p className="text-ink-soft">
                     Die Nutzung von UGC-VZ ist für alle Parteien vollständig kostenfrei.
                     Es entstehen keine Registrierungs-, Nutzungs- oder Vermittlungsgebühren.
                   </p>
                 </div>
 
                 <div>
-                  <h3 className="text-xl font-semibold mb-3 text-teal-400">2.3 Rolle als Vermittler</h3>
-                  <p className="text-gray-300">
+                  <h3 className="text-xl font-semibold mb-3 text-geo-violet">2.3 Rolle als Vermittler</h3>
+                  <p className="text-ink-soft">
                     UGC-VZ fungiert ausschließlich als Vermittlungsplattform. Alle Geschäftsbeziehungen,
                     Verträge und Zahlungen werden direkt zwischen Creatorn und Unternehmen abgewickelt.
                   </p>
@@ -143,14 +143,14 @@ export default function AGBPage() {
             </section>
 
             {/* Section 3 */}
-            <section className="bg-gray-900/50 rounded-2xl p-6 md:p-8 backdrop-blur-sm border border-gray-800">
-              <h2 className="text-2xl font-bold mb-6 text-white">3. REGISTRIERUNG UND PROFILE</h2>
+            <section className="surface-card rounded-2xl p-6 md:p-8">
+              <h2 className="text-2xl font-bold mb-6 text-ink">3. REGISTRIERUNG UND PROFILE</h2>
 
               <div className="space-y-6">
                 <div>
-                  <h3 className="text-xl font-semibold mb-3 text-teal-400">3.1 Creator-Profile</h3>
-                  <p className="text-gray-300 mb-3">Creator können folgende Informationen hinterlegen:</p>
-                  <ul className="text-gray-300 space-y-2 list-disc list-inside">
+                  <h3 className="text-xl font-semibold mb-3 text-geo-violet">3.1 Creator-Profile</h3>
+                  <p className="text-ink-soft mb-3">Creator können folgende Informationen hinterlegen:</p>
+                  <ul className="text-ink-soft space-y-2 list-disc list-inside">
                     <li>Portfolio-Beispiele und Arbeitsproben</li>
                     <li>Kontaktdaten (Instagram, TikTok, E-Mail etc.)</li>
                     <li>Beschreibung ihrer Arbeitsweise und Spezialisierung</li>
@@ -159,8 +159,8 @@ export default function AGBPage() {
                 </div>
 
                 <div>
-                  <h3 className="text-xl font-semibold mb-3 text-teal-400">3.2 Datennutzung für Optimierung</h3>
-                  <p className="text-gray-300">
+                  <h3 className="text-xl font-semibold mb-3 text-geo-violet">3.2 Datennutzung für Optimierung</h3>
+                  <p className="text-ink-soft">
                     Die hinterlegten Portfolio-Daten können zur Optimierung des Matching-Prozesses und zur Verbesserung
                     unserer Suchalgorithmen verwendet werden. KI-gestützte Funktionen dienen als Such- und Sortierhilfe;
                     eine verbindliche Entscheidung über Aufträge oder Eignung von Creatorn findet nicht automatisiert statt.
@@ -168,8 +168,8 @@ export default function AGBPage() {
                 </div>
 
                 <div>
-                  <h3 className="text-xl font-semibold mb-3 text-teal-400">3.3 Kontaktaufnahme</h3>
-                  <p className="text-gray-300">
+                  <h3 className="text-xl font-semibold mb-3 text-geo-violet">3.3 Kontaktaufnahme</h3>
+                  <p className="text-ink-soft">
                     Unternehmen erhalten direkte Kontaktdaten (Social Media Accounts, E-Mail) der Creator
                     zur eigenständigen Kontaktaufnahme.
                   </p>
@@ -178,14 +178,14 @@ export default function AGBPage() {
             </section>
 
             {/* Section 4 */}
-            <section className="bg-gray-900/50 rounded-2xl p-6 md:p-8 backdrop-blur-sm border border-gray-800">
-              <h2 className="text-2xl font-bold mb-6 text-white">4. HAFTUNG UND VERANTWORTUNG</h2>
+            <section className="surface-card rounded-2xl p-6 md:p-8">
+              <h2 className="text-2xl font-bold mb-6 text-ink">4. HAFTUNG UND VERANTWORTUNG</h2>
 
               <div className="space-y-6">
                 <div>
-                  <h3 className="text-xl font-semibold mb-3 text-teal-400">4.1 Haftungsausschluss</h3>
-                  <p className="text-gray-300 mb-3">Der Betreiber haftet nicht für:</p>
-                  <ul className="text-gray-300 space-y-2 list-disc list-inside">
+                  <h3 className="text-xl font-semibold mb-3 text-geo-violet">4.1 Haftungsausschluss</h3>
+                  <p className="text-ink-soft mb-3">Der Betreiber haftet nicht für:</p>
+                  <ul className="text-ink-soft space-y-2 list-disc list-inside">
                     <li>Die Qualität oder Richtigkeit der Creator-Profile</li>
                     <li>Vertragsverhandlungen zwischen Creatorn und Unternehmen</li>
                     <li>Zahlungsabwicklungen zwischen den Parteien</li>
@@ -198,15 +198,15 @@ export default function AGBPage() {
                   <h3 className="text-xl font-semibold mb-3 text-yellow-400 flex items-center">
                     ⚠️ Eigenverantwortung
                   </h3>
-                  <p className="text-gray-300">
+                  <p className="text-ink-soft">
                     Alle Nutzer handeln in eigener Verantwortung. Verträge, Preisverhandlungen und Zahlungen
                     erfolgen direkt zwischen den Parteien ohne Beteiligung des Betreibers.
                   </p>
                 </div>
 
                 <div>
-                  <h3 className="text-xl font-semibold mb-3 text-teal-400">4.3 Meldung von Missbrauch</h3>
-                  <p className="text-gray-300">
+                  <h3 className="text-xl font-semibold mb-3 text-geo-violet">4.3 Meldung von Missbrauch</h3>
+                  <p className="text-ink-soft">
                     Nutzer können Missbrauch oder problematische Profile über die bereitgestellten Kontaktkanäle melden.
                   </p>
                 </div>
@@ -214,32 +214,32 @@ export default function AGBPage() {
             </section>
 
             {/* Section 5 */}
-            <section className="bg-gray-900/50 rounded-2xl p-6 md:p-8 backdrop-blur-sm border border-gray-800">
-              <h2 className="text-2xl font-bold mb-6 text-white">5. DATENSCHUTZ UND DATENVERARBEITUNG</h2>
+            <section className="surface-card rounded-2xl p-6 md:p-8">
+              <h2 className="text-2xl font-bold mb-6 text-ink">5. DATENSCHUTZ UND DATENVERARBEITUNG</h2>
 
               <div className="space-y-6">
                 <div>
-                  <h3 className="text-xl font-semibold mb-3 text-teal-400">5.1 Datenverarbeitung</h3>
-                  <p className="text-gray-300">
+                  <h3 className="text-xl font-semibold mb-3 text-geo-violet">5.1 Datenverarbeitung</h3>
+                  <p className="text-ink-soft">
                     Die Verarbeitung personenbezogener Daten erfolgt gemäß unserer Datenschutzerklärung
                     und den Bestimmungen der DSGVO.
                   </p>
                 </div>
 
                 <div>
-                  <h3 className="text-xl font-semibold mb-3 text-teal-400">5.2 KI-Tools</h3>
-                  <p className="text-gray-300">
+                  <h3 className="text-xl font-semibold mb-3 text-geo-violet">5.2 KI-Tools</h3>
+                  <p className="text-ink-soft">
                     Zur Optimierung der Plattform und des Matching-Prozesses können KI-Dienste eingesetzt werden.
                     Diese helfen insbesondere dabei, Suchanfragen von Unternehmen zu interpretieren und passende
                     Creator-Vorschläge zu sortieren.
                   </p>
                 </div>
 
-                <div className="bg-blue-900/20 rounded-lg p-4 border border-blue-500/30">
-                  <h3 className="text-xl font-semibold mb-3 text-blue-400 flex items-center">
+                <div className="surface-card rounded-lg p-4">
+                  <h3 className="text-xl font-semibold mb-3 text-geo-violet flex items-center">
                     Datenschutz und KI-Transparenz
                   </h3>
-                  <p className="text-gray-300">
+                  <p className="text-ink-soft">
                     An KI-Dienste wird grundsätzlich nur die Suchanfrage des Unternehmens übermittelt. Die vollständige
                     Creator-Datenbank wird nicht an KI-Dienste gesendet. Die finale Auswahl und Kontaktaufnahme liegt
                     beim anfragenden Unternehmen bzw. bei UGC-VZ im Rahmen der Vermittlung.
@@ -249,21 +249,21 @@ export default function AGBPage() {
             </section>
 
             {/* Section 6 */}
-            <section className="bg-gray-900/50 rounded-2xl p-6 md:p-8 backdrop-blur-sm border border-gray-800">
-              <h2 className="text-2xl font-bold mb-6 text-white">6. OPTIONALE AGENTUR-SERVICES</h2>
+            <section className="surface-card rounded-2xl p-6 md:p-8">
+              <h2 className="text-2xl font-bold mb-6 text-ink">6. OPTIONALE AGENTUR-SERVICES</h2>
 
               <div className="space-y-6">
                 <div>
-                  <h3 className="text-xl font-semibold mb-3 text-teal-400">6.1 Freiwillige Angebote</h3>
-                  <p className="text-gray-300">
+                  <h3 className="text-xl font-semibold mb-3 text-geo-violet">6.1 Freiwillige Angebote</h3>
+                  <p className="text-ink-soft">
                     Bei Interesse können optional Angebote der famefact-Agentur in Vermittlungs-E-Mails enthalten sein.
                     Die Inanspruchnahme ist vollständig freiwillig.
                   </p>
                 </div>
 
                 <div>
-                  <h3 className="text-xl font-semibold mb-3 text-teal-400">6.2 Keine Verpflichtung</h3>
-                  <p className="text-gray-300">
+                  <h3 className="text-xl font-semibold mb-3 text-geo-violet">6.2 Keine Verpflichtung</h3>
+                  <p className="text-ink-soft">
                     Weder Creator noch Unternehmen sind verpflichtet, Agentur-Services zu nutzen.
                     Die Plattform funktioniert vollständig unabhängig davon.
                   </p>
@@ -272,21 +272,21 @@ export default function AGBPage() {
             </section>
 
             {/* Section 7 */}
-            <section className="bg-gray-900/50 rounded-2xl p-6 md:p-8 backdrop-blur-sm border border-gray-800">
-              <h2 className="text-2xl font-bold mb-6 text-white">7. URHEBERRECHTE UND NUTZUNGSRECHTE</h2>
+            <section className="surface-card rounded-2xl p-6 md:p-8">
+              <h2 className="text-2xl font-bold mb-6 text-ink">7. URHEBERRECHTE UND NUTZUNGSRECHTE</h2>
 
               <div className="space-y-6">
                 <div>
-                  <h3 className="text-xl font-semibold mb-3 text-teal-400">7.1 Creator-Inhalte</h3>
-                  <p className="text-gray-300">
+                  <h3 className="text-xl font-semibold mb-3 text-geo-violet">7.1 Creator-Inhalte</h3>
+                  <p className="text-ink-soft">
                     Creator behalten alle Rechte an ihren hochgeladenen Inhalten. Mit dem Upload erteilen sie UGC-VZ
                     das Recht zur Darstellung auf der Plattform.
                   </p>
                 </div>
 
                 <div>
-                  <h3 className="text-xl font-semibold mb-3 text-teal-400">7.2 Plattform-Nutzung</h3>
-                  <p className="text-gray-300">
+                  <h3 className="text-xl font-semibold mb-3 text-geo-violet">7.2 Plattform-Nutzung</h3>
+                  <p className="text-ink-soft">
                     Der Betreiber darf anonymisierte Erfolgsbeispiele und Statistiken für Marketing-Zwecke verwenden,
                     ohne persönliche Daten preiszugeben.
                   </p>
@@ -295,20 +295,20 @@ export default function AGBPage() {
             </section>
 
             {/* Section 8 */}
-            <section className="bg-gray-900/50 rounded-2xl p-6 md:p-8 backdrop-blur-sm border border-gray-800">
-              <h2 className="text-2xl font-bold mb-6 text-white">8. ÄNDERUNGEN UND KÜNDIGUNG</h2>
+            <section className="surface-card rounded-2xl p-6 md:p-8">
+              <h2 className="text-2xl font-bold mb-6 text-ink">8. ÄNDERUNGEN UND KÜNDIGUNG</h2>
 
               <div className="space-y-6">
                 <div>
-                  <h3 className="text-xl font-semibold mb-3 text-teal-400">8.1 AGB-Änderungen</h3>
-                  <p className="text-gray-300">
+                  <h3 className="text-xl font-semibold mb-3 text-geo-violet">8.1 AGB-Änderungen</h3>
+                  <p className="text-ink-soft">
                     Änderungen dieser AGB werden den Nutzern per E-Mail mitgeteilt. Widerspruch ist binnen 30 Tagen möglich.
                   </p>
                 </div>
 
                 <div>
-                  <h3 className="text-xl font-semibold mb-3 text-teal-400">8.2 Account-Löschung</h3>
-                  <p className="text-gray-300">
+                  <h3 className="text-xl font-semibold mb-3 text-geo-violet">8.2 Account-Löschung</h3>
+                  <p className="text-ink-soft">
                     Nutzer können jederzeit die Löschung ihres Profils beantragen. Creator-Profile werden binnen 30 Tagen vollständig entfernt.
                   </p>
                 </div>
@@ -316,21 +316,21 @@ export default function AGBPage() {
             </section>
 
             {/* Section 9 */}
-            <section className="bg-gray-900/50 rounded-2xl p-6 md:p-8 backdrop-blur-sm border border-gray-800">
-              <h2 className="text-2xl font-bold mb-6 text-white">9. TECHNISCHE VERFÜGBARKEIT</h2>
+            <section className="surface-card rounded-2xl p-6 md:p-8">
+              <h2 className="text-2xl font-bold mb-6 text-ink">9. TECHNISCHE VERFÜGBARKEIT</h2>
 
               <div className="space-y-6">
                 <div>
-                  <h3 className="text-xl font-semibold mb-3 text-teal-400">9.1 Verfügbarkeit</h3>
-                  <p className="text-gray-300">
+                  <h3 className="text-xl font-semibold mb-3 text-geo-violet">9.1 Verfügbarkeit</h3>
+                  <p className="text-ink-soft">
                     Der Betreiber strebt eine hohe Verfügbarkeit der Plattform an, übernimmt jedoch keine Garantie
                     für ununterbrochene Erreichbarkeit.
                   </p>
                 </div>
 
                 <div>
-                  <h3 className="text-xl font-semibold mb-3 text-teal-400">9.2 Wartungsarbeiten</h3>
-                  <p className="text-gray-300">
+                  <h3 className="text-xl font-semibold mb-3 text-geo-violet">9.2 Wartungsarbeiten</h3>
+                  <p className="text-ink-soft">
                     Geplante Wartungsarbeiten werden nach Möglichkeit vorab angekündigt.
                   </p>
                 </div>
@@ -338,27 +338,27 @@ export default function AGBPage() {
             </section>
 
             {/* Section 10 */}
-            <section className="bg-gray-900/50 rounded-2xl p-6 md:p-8 backdrop-blur-sm border border-gray-800">
-              <h2 className="text-2xl font-bold mb-6 text-white">10. SCHLUSSBESTIMMUNGEN</h2>
+            <section className="surface-card rounded-2xl p-6 md:p-8">
+              <h2 className="text-2xl font-bold mb-6 text-ink">10. SCHLUSSBESTIMMUNGEN</h2>
 
               <div className="space-y-6">
                 <div>
-                  <h3 className="text-xl font-semibold mb-3 text-teal-400">10.1 Anwendbares Recht</h3>
-                  <p className="text-gray-300">
+                  <h3 className="text-xl font-semibold mb-3 text-geo-violet">10.1 Anwendbares Recht</h3>
+                  <p className="text-ink-soft">
                     Es gilt das Recht der Bundesrepublik Deutschland.
                   </p>
                 </div>
 
                 <div>
-                  <h3 className="text-xl font-semibold mb-3 text-teal-400">10.2 Gerichtsstand</h3>
-                  <p className="text-gray-300">
+                  <h3 className="text-xl font-semibold mb-3 text-geo-violet">10.2 Gerichtsstand</h3>
+                  <p className="text-ink-soft">
                     Gerichtsstand ist Berlin.
                   </p>
                 </div>
 
                 <div>
-                  <h3 className="text-xl font-semibold mb-3 text-teal-400">10.3 Salvatorische Klausel</h3>
-                  <p className="text-gray-300">
+                  <h3 className="text-xl font-semibold mb-3 text-geo-violet">10.3 Salvatorische Klausel</h3>
+                  <p className="text-ink-soft">
                     Sollten einzelne Bestimmungen unwirksam sein, bleiben die übrigen Bestimmungen davon unberührt.
                   </p>
                 </div>
@@ -371,7 +371,7 @@ export default function AGBPage() {
           <div className="text-center mt-12">
             <Link
               href="/"
-              className="bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-500 hover:to-blue-500 text-white font-semibold py-3 px-8 rounded-lg transition-all transform hover:scale-105 inline-flex items-center"
+              className="bg-geo-violet hover:bg-geo-violet-soft text-white font-semibold py-3 px-8 rounded-lg transition-all transform hover:scale-105 inline-flex items-center"
             >
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />

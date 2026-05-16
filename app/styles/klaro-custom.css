@@ -4,17 +4,17 @@
 .klaro .cookie-notice,
 .klaro .cookie-modal {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
-  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%) !important;
+  background: linear-gradient(135deg, #ffffff 0%, #f7f7f5 100%) !important;
   border: 1px solid #374151 !important;
   border-radius: 16px !important;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8) !important;
   backdrop-filter: blur(16px) !important;
-  color: #ffffff !important;
+  color: #171717 !important;
 }
 
 /* Cookie Notice (Banner) */
 .klaro .cookie-notice {
-  background: rgba(26, 26, 26, 0.95) !important;
+  background: rgba(255, 255, 255, 0.98) !important;
   border: 1px solid rgba(55, 65, 81, 0.5) !important;
   max-width: 500px !important;
   margin: 20px !important;
@@ -23,7 +23,7 @@
 
 /* Cookie Modal */
 .klaro .cookie-modal {
-  background: #1a1a1a;
+  background: #ffffff;
   max-width: 800px;
   max-height: 90vh;
   overflow-y: auto;
@@ -32,23 +32,23 @@
 /* Text Styling */
 .klaro .cookie-notice .cn-body,
 .klaro .cookie-modal .cm-body {
-  color: #e5e7eb;
+  color: #171717;
   line-height: 1.6;
 }
 
 .klaro .cookie-notice .cn-body p,
 .klaro .cookie-modal .cm-body p {
-  color: #d1d5db;
+  color: #5a5a5a;
   margin-bottom: 16px;
 }
 
 /* Titel */
 .klaro .cookie-modal .cm-header h1 {
-  color: #ffffff;
+  color: #171717;
   font-size: 24px;
   font-weight: 700;
   margin-bottom: 8px;
-  background: linear-gradient(135deg, #14b8a6 0%, #3b82f6 100%);
+  background: linear-gradient(135deg, #8b3fca 0%, #a870e0 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -69,30 +69,30 @@
 /* Primary Button (Akzeptieren) */
 .klaro .cm-btn.cm-btn-success,
 .klaro .cn-button.cn-accept-all {
-  background: linear-gradient(135deg, #059669 0%, #3b82f6 100%);
+  background: #8b3fca;
   color: white;
-  box-shadow: 0 4px 14px 0 rgba(5, 150, 105, 0.3);
+  box-shadow: 0 4px 14px 0 rgba(139, 63, 202, 0.3);
 }
 
 .klaro .cm-btn.cm-btn-success:hover,
 .klaro .cn-button.cn-accept-all:hover {
-  background: linear-gradient(135deg, #047857 0%, #2563eb 100%);
+  background: #a870e0;
   transform: translateY(-1px);
-  box-shadow: 0 6px 20px 0 rgba(5, 150, 105, 0.4);
+  box-shadow: 0 6px 20px 0 rgba(139, 63, 202, 0.4);
 }
 
 /* Secondary Button (Einstellungen) */
 .klaro .cm-btn.cm-btn-info,
 .klaro .cn-button.cn-learn-more {
   background: transparent;
-  color: #14b8a6;
-  border: 2px solid #14b8a6;
+  color: #5a5a5a;
+  border: 2px solid #9ca3af;
 }
 
 .klaro .cm-btn.cm-btn-info:hover,
 .klaro .cn-button.cn-learn-more:hover {
-  background: #14b8a6;
-  color: white;
+  background: #e5e7eb;
+  color: #171717;
   transform: translateY(-1px);
 }
 
@@ -112,22 +112,22 @@
 
 /* Service Items */
 .klaro .cm-app {
-  background: rgba(55, 65, 81, 0.3);
-  border: 1px solid rgba(75, 85, 99, 0.5);
+  background: rgba(247, 247, 245, 0.8);
+  border: 1px solid rgba(139, 63, 202, 0.15);
   border-radius: 12px;
   margin-bottom: 16px;
   padding: 20px;
 }
 
 .klaro .cm-app .cm-app-title {
-  color: #ffffff;
+  color: #171717;
   font-weight: 600;
   font-size: 16px;
   margin-bottom: 8px;
 }
 
 .klaro .cm-app .cm-app-description {
-  color: #d1d5db;
+  color: #5a5a5a;
   font-size: 14px;
   line-height: 1.5;
 }
@@ -149,7 +149,7 @@
 }
 
 .klaro .cm-app .cm-app-input input[type="checkbox"]:checked {
-  background: linear-gradient(135deg, #14b8a6 0%, #3b82f6 100%);
+  background: #8b3fca;
 }
 
 .klaro .cm-app .cm-app-input input[type="checkbox"]::before {
@@ -171,13 +171,13 @@
 
 /* Required Services */
 .klaro .cm-app.cm-app-required {
-  background: rgba(59, 130, 246, 0.1);
-  border-color: rgba(59, 130, 246, 0.3);
+  background: rgba(139, 63, 202, 0.05);
+  border-color: rgba(139, 63, 202, 0.2);
 }
 
 .klaro .cm-app.cm-app-required .cm-app-title::after {
   content: ' (Erforderlich)';
-  color: #60a5fa;
+  color: #8b3fca;
   font-size: 12px;
   font-weight: 400;
 }
@@ -190,7 +190,7 @@
 
 /* Close Button */
 .klaro .cm-modal .cm-close {
-  color: #9ca3af;
+  color: #5a5a5a;
   font-size: 24px;
   font-weight: bold;
   background: none;
@@ -202,14 +202,14 @@
 }
 
 .klaro .cm-modal .cm-close:hover {
-  color: #ffffff;
-  background: rgba(75, 85, 99, 0.5);
+  color: #171717;
+  background: rgba(0, 0, 0, 0.08);
 }
 
 /* Responsive Design */
 @media (max-width: 768px) {
   .klaro .cookie-notice {
-    background: rgba(26, 26, 26, 0.95) !important;
+    background: rgba(255, 255, 255, 0.98) !important;
     margin: 10px;
     padding: 20px;
     border-radius: 12px;
@@ -252,7 +252,7 @@
 .klaro .cm-btn:focus,
 .klaro .cn-button:focus,
 .klaro .cm-app-input input:focus {
-  outline: 2px solid #14b8a6;
+  outline: 2px solid #8b3fca;
   outline-offset: 2px;
 }
 
@@ -260,14 +260,14 @@
 .klaro .cookie-notice,
 .klaro .cn-notice,
 .klaro .cookie-notice-container {
-  background: rgba(26, 26, 26, 0.95) !important;
+  background: rgba(255, 255, 255, 0.98) !important;
   backdrop-filter: blur(16px) !important;
   opacity: 1 !important;
 }
 
 /* Spezifische Klaro-Klassen überschreiben */
 .klaro .cn-notice {
-  background: rgba(26, 26, 26, 0.95) !important;
+  background: rgba(255, 255, 255, 0.98) !important;
 }
 
 /* Alle möglichen Klaro-Banner-Klassen */
@@ -275,7 +275,7 @@ div[class*="klaro"] div[class*="notice"],
 div[class*="klaro"] div[class*="banner"],
 .klaro-notice,
 .klaro-banner {
-  background: rgba(26, 26, 26, 0.95) !important;
+  background: rgba(255, 255, 255, 0.98) !important;
   opacity: 1 !important;
 }
 
@@ -283,7 +283,7 @@ div[class*="klaro"] div[class*="banner"],
 [class*="cookie"],
 [class*="banner"],
 div[style*="background"] {
-  background: rgba(26, 26, 26, 0.95) !important;
+  background: rgba(255, 255, 255, 0.98) !important;
 }
 
 /* Spezifische z-index Regeln für bessere Sichtbarkeit */
@@ -301,7 +301,7 @@ div[style*="background"] {
 }
 
 .klaro .cm-powered-by a {
-  color: #14b8a6;
+  color: #8b3fca;
   text-decoration: none;
 }
 

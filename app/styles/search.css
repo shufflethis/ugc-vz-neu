@@ -116,7 +116,7 @@
   right: -26px;
   width: 26px;
   height: 25px;
-  background-color: #121212; /* Match your app background */
+  background-color: #f7f7f5; /* Match your app background */
   border-bottom-left-radius: 10px;
 }
 
@@ -146,7 +146,7 @@
   left: -26px;
   width: 26px;
   height: 25px;
-  background-color: #121212; /* Match your app background */
+  background-color: #f7f7f5; /* Match your app background */
   border-bottom-right-radius: 10px;
 }
 
