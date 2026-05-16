@@ -21,8 +21,8 @@ export default function ContactButton({
   const [isPopupOpen, setIsPopupOpen] = useState(false);
 
   const baseClasses = variant === 'primary'
-    ? "bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-500 hover:to-blue-500 text-white font-semibold py-3 px-8 rounded-lg transition-all transform hover:scale-105"
-    : "border-2 border-emerald-500 text-emerald-400 hover:bg-emerald-500 hover:text-white font-semibold py-3 px-8 rounded-lg transition-all transform hover:scale-105";
+    ? "bg-geo-violet hover:bg-geo-violet-soft text-white font-semibold py-3 px-8 rounded-lg transition-all transform hover:scale-105"
+    : "border-2 border-geo-violet text-geo-violet hover:bg-geo-violet hover:text-white font-semibold py-3 px-8 rounded-lg transition-all transform hover:scale-105";
 
   return (
     <>

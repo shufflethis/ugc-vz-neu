@@ -72,13 +72,13 @@ export default function CreatorCard({ creator, isSelected, onSelect, className }
   return (
       <div
         onClick={onSelect}
-        className={`bg-gray-900/30 backdrop-blur-sm rounded-2xl p-4 cursor-pointer transition-all hover:bg-gray-900/50 ${
-          isSelected ? 'ring-2 ring-emerald-500' : ''
+        className={`surface-card rounded-2xl p-4 cursor-pointer transition-all hover:shadow-md ${
+          isSelected ? 'ring-2 ring-geo-violet' : ''
         } ${className || ''}`}
       >
       <div className="flex flex-col items-center space-y-3">
         {/* Image section */}
-        <div className="relative w-24 h-24 rounded-full overflow-hidden border-2 border-gray-800">
+        <div className="relative w-24 h-24 rounded-full overflow-hidden border-2 border-hairline">
           <Image
             src={creator.image || (creator.gender === 'Weiblich' ? '/female-placeholder.webp' : '/placeholder.jpg')}
             alt={creator.name}
@@ -107,7 +107,7 @@ export default function CreatorCard({ creator, isSelected, onSelect, className }
             return (
               <span
                 key={i}
-                className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center text-emerald-400 hover:bg-emerald-500 hover:text-white transition-all duration-200 shadow-lg"
+                className="w-10 h-10 rounded-full bg-surface-2 flex items-center justify-center text-geo-violet hover:bg-geo-violet hover:text-white transition-all duration-200 shadow-lg"
               >
                 <FontAwesomeIcon
                   icon={icon}

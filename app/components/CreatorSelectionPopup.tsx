@@ -127,10 +127,10 @@ export default function CreatorSelectionPopup({
       >
         <div className="relative">
           {/* Drag indicator */}
-          <div className="absolute top-3 left-1/2 transform -translate-x-1/2 w-12 h-1 bg-gray-400 rounded-full opacity-60" />
+          <div className="absolute top-3 left-1/2 transform -translate-x-1/2 w-12 h-1 bg-ink-soft rounded-full opacity-60" />
           
           {/* Main popup content */}
-          <div className="bg-gradient-to-br from-white via-gray-50 to-gray-100 shadow-2xl border-t border-gray-200" 
+          <div className="bg-white shadow-2xl border-t border-hairline"
                style={{
                  borderTopLeftRadius: '24px',
                  borderTopRightRadius: '24px',
@@ -138,19 +138,19 @@ export default function CreatorSelectionPopup({
                }}>
             
             {/* Header */}
-            <div className="px-6 pt-8 pb-4 border-b border-gray-200/50">
+            <div className="px-6 pt-8 pb-4 border-b border-hairline">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-center space-x-4">
                   <div className="flex items-center space-x-3">
                     <div className="relative">
-                      <div className="w-4 h-4 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-full animate-pulse shadow-lg" />
-                      <div className="absolute inset-0 w-4 h-4 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-full animate-ping opacity-75" />
+                      <div className="w-4 h-4 bg-geo-violet rounded-full animate-pulse shadow-lg" />
+                      <div className="absolute inset-0 w-4 h-4 bg-geo-violet rounded-full animate-ping opacity-75" />
                     </div>
                     <div>
-                      <h3 className="text-2xl font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 bg-clip-text text-transparent">
+                      <h3 className="text-2xl font-bold text-ink">
                         {selectedCreators.length} Creator{selectedCreators.length !== 1 ? 's' : ''} ausgewählt
                       </h3>
-                      <p className="text-sm text-gray-600 mt-1">
+                      <p className="text-sm text-ink-soft mt-1">
                         Kostenlos anfragen, Kontaktinfos per E-Mail erhalten.
                       </p>
                     </div>
@@ -165,7 +165,7 @@ export default function CreatorSelectionPopup({
                         setShowForm(true);
                         trackUGCEvents.leadFormOpened('creator_selection', selectedCreators.length);
                       }}
-                      className="px-4 py-3 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-all font-semibold text-sm sm:text-base shadow-md"
+                      className="px-4 py-3 bg-geo-violet text-white rounded-xl hover:bg-geo-violet-soft transition-all font-semibold text-sm sm:text-base shadow-md"
                     >
                       Kostenlos Anfrage senden
                     </button>
@@ -173,7 +173,7 @@ export default function CreatorSelectionPopup({
                   {!showForm && (
                     <button
                       onClick={() => setIsMinimized(!isMinimized)}
-                      className="p-3 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-xl transition-all duration-200 group"
+                      className="p-3 text-ink-soft hover:text-ink hover:bg-surface rounded-xl transition-all duration-200 group"
                       title={isMinimized ? "Erweitern" : "Minimieren"}
                     >
                       <svg className={`w-5 h-5 transform transition-transform duration-200 ${isMinimized ? 'rotate-180' : ''}`} 
@@ -185,7 +185,7 @@ export default function CreatorSelectionPopup({
                   
                   <button
                     onClick={onClose}
-                    className="p-3 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-xl transition-all duration-200"
+                    className="p-3 text-ink-soft hover:text-ink hover:bg-surface rounded-xl transition-all duration-200"
                     title="Schließen"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -206,21 +206,21 @@ export default function CreatorSelectionPopup({
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                       {selectedCreatorDetails.map((creator) => (
                         <div key={creator.id} 
-                             className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200 group">
+                             className="bg-white rounded-2xl p-4 shadow-sm border border-hairline hover:shadow-md transition-all duration-200 group">
                           <div className="text-center">
                             <img
                               src={creator.image || (creator.gender === 'Weiblich' ? '/female-placeholder.webp' : '/placeholder.jpg')}
                               alt={creator.name}
-                              className="w-16 h-16 mx-auto rounded-full object-cover border-2 border-gray-200 group-hover:border-emerald-300 transition-colors"
+                              className="w-16 h-16 mx-auto rounded-full object-cover border-2 border-hairline group-hover:border-geo-violet transition-colors"
                               onError={(e) => {
                                 const target = e.target as HTMLImageElement;
                                 target.src = creator.gender === 'Weiblich' ? '/female-placeholder.webp' : '/placeholder.jpg';
                               }}
                             />
-                            <h4 className="text-sm font-semibold text-gray-900 mt-2 leading-tight">
+                            <h4 className="text-sm font-semibold text-ink mt-2 leading-tight">
                               {creator.name}
                             </h4>
-                            <p className="text-xs text-gray-600 mt-1 line-clamp-2">
+                            <p className="text-xs text-ink-soft mt-1 line-clamp-2">
                               {creator.reach}
                             </p>
                           </div>
@@ -229,13 +229,13 @@ export default function CreatorSelectionPopup({
                     </div>
 
                     {/* CTA Section */}
-                    <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 rounded-2xl p-6 border border-emerald-100">
+                    <div className="surface-card rounded-2xl p-6">
                       <div className="text-center space-y-4">
                         <div className="space-y-2">
-                          <h4 className="text-xl font-bold text-gray-900">
+                          <h4 className="text-xl font-bold text-ink">
                             Bereit für Ihr UGC-Projekt?
                           </h4>
-                          <p className="text-gray-600 text-sm max-w-md mx-auto">
+                          <p className="text-ink-soft text-sm max-w-md mx-auto">
                             Senden Sie Ihre Auswahl an UGC VZ. Wir pruefen die Anfrage und verbinden Sie mit den passenden Creatorn.
                           </p>
                         </div>
@@ -245,7 +245,7 @@ export default function CreatorSelectionPopup({
                             setShowForm(true);
                             trackUGCEvents.leadFormOpened('creator_selection', selectedCreators.length);
                           }}
-                          className="inline-flex items-center space-x-3 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 text-white px-8 py-4 rounded-2xl font-semibold text-lg hover:from-emerald-700 hover:via-teal-700 hover:to-emerald-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl group"
+                          className="inline-flex items-center space-x-3 bg-geo-violet text-white px-8 py-4 rounded-2xl font-semibold text-lg hover:bg-geo-violet-soft transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl group"
                         >
                           <svg className="w-6 h-6 group-hover:rotate-12 transition-transform duration-200" 
                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -261,10 +261,10 @@ export default function CreatorSelectionPopup({
                   /* Contact Form */
                   <div className="space-y-6">
                     <div className="text-center">
-                      <h4 className="text-xl font-bold text-gray-900 mb-2">
+                      <h4 className="text-xl font-bold text-ink mb-2">
                         Fast geschafft! 🎉
                       </h4>
-                      <p className="text-gray-600 text-sm">
+                      <p className="text-ink-soft text-sm">
                         Teilen Sie uns Ihre Kontaktdaten mit. Die Anfrage geht an UGC VZ und wird anschliessend weiterbearbeitet.
                       </p>
                     </div>
@@ -272,7 +272,7 @@ export default function CreatorSelectionPopup({
                     <form onSubmit={handleSubmit} className="space-y-4">
                       <div className="grid md:grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <label htmlFor="name" className="block text-sm font-semibold text-gray-700">
+                          <label htmlFor="name" className="block text-sm font-semibold text-ink">
                             Ihr Name *
                           </label>
                           <input
@@ -282,13 +282,13 @@ export default function CreatorSelectionPopup({
                             required
                             value={formData.name}
                             onChange={handleInputChange}
-                            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all text-sm"
+                            className="w-full px-4 py-3 bg-white border border-hairline rounded-xl text-ink placeholder-ink-soft focus:outline-none focus:ring-2 focus:ring-geo-violet focus:border-transparent transition-all text-sm"
                             placeholder="Max Mustermann"
                           />
                         </div>
 
                         <div className="space-y-2">
-                          <label htmlFor="email" className="block text-sm font-semibold text-gray-700">
+                          <label htmlFor="email" className="block text-sm font-semibold text-ink">
                             E-Mail Adresse *
                           </label>
                           <input
@@ -298,8 +298,8 @@ export default function CreatorSelectionPopup({
                             required
                             value={formData.email}
                             onChange={handleInputChange}
-                            className={`w-full px-4 py-3 bg-white border rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:border-transparent transition-all text-sm ${
-                              emailError ? 'border-red-300 focus:ring-red-500' : 'border-gray-200 focus:ring-emerald-500'
+                            className={`w-full px-4 py-3 bg-white border rounded-xl text-ink placeholder-ink-soft focus:outline-none focus:ring-2 focus:border-transparent transition-all text-sm ${
+                              emailError ? 'border-red-300 focus:ring-red-500' : 'border-hairline focus:ring-geo-violet'
                             }`}
                             placeholder="max@beispiel.de"
                           />
@@ -310,7 +310,7 @@ export default function CreatorSelectionPopup({
                       </div>
 
                       <div className="space-y-2">
-                        <label htmlFor="message" className="block text-sm font-semibold text-gray-700">
+                        <label htmlFor="message" className="block text-sm font-semibold text-ink">
                           Projektbeschreibung (optional)
                         </label>
                         <textarea
@@ -319,7 +319,7 @@ export default function CreatorSelectionPopup({
                           rows={3}
                           value={formData.message}
                           onChange={handleInputChange}
-                          className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all resize-none text-sm"
+                          className="w-full px-4 py-3 bg-white border border-hairline rounded-xl text-ink placeholder-ink-soft focus:outline-none focus:ring-2 focus:ring-geo-violet focus:border-transparent transition-all resize-none text-sm"
                           placeholder="Beschreiben Sie kurz Ihr UGC-Projekt, Budget oder besondere Anforderungen..."
                         />
                       </div>
@@ -328,14 +328,14 @@ export default function CreatorSelectionPopup({
                         <button
                           type="button"
                           onClick={() => setShowForm(false)}
-                          className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 hover:border-gray-400 transition-all font-semibold text-sm"
+                          className="flex-1 px-6 py-3 border border-hairline text-ink rounded-xl hover:bg-surface hover:border-ink-soft transition-all font-semibold text-sm"
                         >
                           ← Zurück
                         </button>
                         <button
                           type="submit"
                           disabled={isSubmitting}
-                          className="flex-1 px-6 py-3 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 text-white rounded-xl hover:from-emerald-700 hover:via-teal-700 hover:to-emerald-700 transition-all font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 text-sm"
+                          className="flex-1 px-6 py-3 bg-geo-violet text-white rounded-xl hover:bg-geo-violet-soft transition-all font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 text-sm"
                         >
                           {isSubmitting ? (
                             <>

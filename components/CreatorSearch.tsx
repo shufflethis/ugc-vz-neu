@@ -95,18 +95,18 @@ export default function CreatorSearch() {
 
   return (
     <div className="w-full space-y-8">
-      <div className="bg-gray-900/30 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-gray-800/50">
+      <div className="surface-card rounded-2xl p-6 shadow-xl">
         <form onSubmit={handleSubmit} className="space-y-4">
           <textarea
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             placeholder="Beschreibe deine Kampagne und was für einen Creator du suchst..."
-            className="w-full h-40 p-4 bg-gray-900/50 text-white rounded-xl focus:ring-2 focus:ring-emerald-500/50 focus:outline-none resize-none border border-gray-800/50 placeholder-gray-500"
+            className="w-full h-40 p-4 bg-white text-ink rounded-xl focus:ring-2 focus:ring-geo-violet/50 focus:outline-none resize-none border border-hairline placeholder-ink-soft"
           />
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full py-4 bg-gradient-to-r from-emerald-600 to-blue-600 text-white rounded-xl hover:from-emerald-500 hover:to-blue-500 transition-all disabled:opacity-50 font-medium text-lg"
+            className="w-full py-4 bg-geo-violet text-white rounded-xl hover:bg-geo-violet-soft transition-all disabled:opacity-50 font-medium text-lg"
           >
             {isLoading ? 'Suche läuft...' : 'Passende Creator finden'}
           </button>
@@ -116,8 +116,8 @@ export default function CreatorSearch() {
       {creators.length > 0 && (
         <div className="space-y-6">
           {/* CTA Banner */}
-          <div className="bg-gradient-to-r from-emerald-600/20 to-blue-600/20 backdrop-blur-sm rounded-xl p-4 border border-emerald-500/30">
-            <p className="text-center text-emerald-300 font-medium">
+          <div className="surface-card rounded-xl p-4">
+            <p className="text-center text-geo-violet font-medium">
               Wähle die Accounts aus, die auf den ersten Blick passen – wir senden automatisch die Kontaktdaten
             </p>
           </div>
@@ -136,22 +136,22 @@ export default function CreatorSearch() {
           </div>
           
           {selectedCreators.length > 0 && (
-            <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-emerald-900/90 to-blue-900/90 backdrop-blur-md border-t border-emerald-500/30 p-6 shadow-lg">
+            <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-hairline p-6 shadow-lg">
               <div className="container mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
                 <div className="flex flex-col items-center sm:items-start">
-                  <span className="text-emerald-300 font-medium text-lg">{selectedCreators.length} Creator ausgewählt</span>
-                  <span className="text-sm text-gray-300">Möchtest du diese Creator kontaktieren?</span>
+                  <span className="text-geo-violet font-medium text-lg">{selectedCreators.length} Creator ausgewählt</span>
+                  <span className="text-sm text-ink-soft">Möchtest du diese Creator kontaktieren?</span>
                 </div>
                 <div className="flex gap-3">
                   <button
                     onClick={() => setSelectedCreators([])}
-                    className="px-4 py-2 border border-gray-600 rounded-lg hover:bg-gray-800 transition-colors"
+                    className="px-4 py-2 border border-hairline rounded-lg hover:bg-surface transition-colors text-ink"
                   >
                     Abbrechen
                   </button>
                   <button
                     onClick={() => setShowContactForm(true)}
-                    className="bg-gradient-to-r from-emerald-600 to-blue-600 px-6 py-2 rounded-lg hover:from-emerald-500 hover:to-blue-500 transition-colors font-medium flex items-center gap-2"
+                    className="bg-geo-violet px-6 py-2 rounded-lg hover:bg-geo-violet-soft transition-colors font-medium flex items-center gap-2 text-white"
                   >
                     <span>Anfrage senden</span>
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -164,8 +164,8 @@ export default function CreatorSearch() {
           )}
           {showContactForm && (
             <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-              <div className="bg-gray-900 rounded-xl p-6 max-w-md w-full space-y-4">
-                <h3 className="text-xl font-semibold">Kontaktinformationen</h3>
+              <div className="bg-white rounded-xl p-6 max-w-md w-full space-y-4 border border-hairline">
+                <h3 className="text-xl font-semibold text-ink">Kontaktinformationen</h3>
                 <div className="space-y-1">
                   <input
                     type="email"
@@ -175,7 +175,7 @@ export default function CreatorSearch() {
                       setEmailError('');
                       setClientInfo(prev => ({ ...prev, email: e.target.value }));
                     }}
-                    className={`w-full p-2 bg-gray-800 rounded ${emailError ? 'border border-red-500' : ''}`}
+                    className={`w-full p-2 bg-white border rounded text-ink placeholder-ink-soft ${emailError ? 'border-red-500' : 'border-hairline'}`}
                   />
                   {emailError && <p className="text-red-500 text-sm">{emailError}</p>}
                 </div>
@@ -184,18 +184,18 @@ export default function CreatorSearch() {
                   placeholder="Name (optional)"
                   value={clientInfo.name || ''}
                   onChange={e => setClientInfo(prev => ({ ...prev, name: e.target.value }))}
-                  className="w-full p-2 bg-gray-800 rounded"
+                  className="w-full p-2 bg-white border border-hairline rounded text-ink placeholder-ink-soft"
                 />
                 <textarea
                   placeholder="Nachricht (optional)"
                   value={clientInfo.message || ''}
                   onChange={e => setClientInfo(prev => ({ ...prev, message: e.target.value }))}
-                  className="w-full p-2 bg-gray-800 rounded h-24 resize-none"
+                  className="w-full p-2 bg-white border border-hairline rounded h-24 resize-none text-ink placeholder-ink-soft"
                 />
                 <div className="flex justify-end gap-3">
                   <button
                     onClick={() => setShowContactForm(false)}
-                    className="px-4 py-2 text-gray-400 hover:text-white"
+                    className="px-4 py-2 text-ink-soft hover:text-ink"
                     disabled={submitLoading}
                   >
                     Abbrechen
@@ -203,7 +203,7 @@ export default function CreatorSearch() {
                   <button
                     onClick={handleSubmitSelection}
                     disabled={submitLoading}
-                    className="px-4 py-2 bg-emerald-600 rounded hover:bg-emerald-700 disabled:opacity-50 flex items-center gap-2"
+                    className="px-4 py-2 bg-geo-violet rounded hover:bg-geo-violet-soft text-white disabled:opacity-50 flex items-center gap-2"
                   >
                     {submitLoading ? (
                       <>

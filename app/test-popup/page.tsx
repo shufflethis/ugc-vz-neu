@@ -56,19 +56,19 @@ export default function TestPopupPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-8">
+    <div className="min-h-screen bg-surface text-ink p-8">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8 text-center">Creator Selection Popup Test</h1>
-        
+        <h1 className="text-3xl font-bold mb-8 text-center text-ink">Creator Selection Popup Test</h1>
+
         <div className="mb-8">
-          <h2 className="text-xl font-semibold mb-4">Verfügbare Creator:</h2>
+          <h2 className="text-xl font-semibold mb-4 text-ink">Verfügbare Creator:</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {mockCreators.map(creator => (
               <div
                 key={creator.id}
                 onClick={() => handleCreatorToggle(creator.id)}
-                className={`bg-gray-800 rounded-lg p-4 cursor-pointer transition-all hover:bg-gray-700 ${
-                  selectedCreators.includes(creator.id) ? 'ring-2 ring-emerald-500' : ''
+                className={`surface-card rounded-lg p-4 cursor-pointer transition-all hover:shadow-md ${
+                  selectedCreators.includes(creator.id) ? 'ring-2 ring-geo-violet' : ''
                 }`}
               >
                 <img
@@ -76,9 +76,9 @@ export default function TestPopupPage() {
                   alt={creator.name}
                   className="w-16 h-16 rounded-full mx-auto mb-3"
                 />
-                <h3 className="font-semibold text-center">{creator.name}</h3>
-                <p className="text-sm text-gray-400 text-center">{creator.reach}</p>
-                <p className="text-xs text-gray-500 text-center mt-1">{creator.priceRange}</p>
+                <h3 className="font-semibold text-center text-ink">{creator.name}</h3>
+                <p className="text-sm text-ink-soft text-center">{creator.reach}</p>
+                <p className="text-xs text-ink-soft text-center mt-1">{creator.priceRange}</p>
               </div>
             ))}
           </div>
@@ -94,9 +94,9 @@ export default function TestPopupPage() {
         </div>
 
         {/* Instructions */}
-        <div className="mt-12 bg-gray-800 rounded-lg p-6">
-          <h3 className="text-lg font-semibold mb-3">Test-Anweisungen:</h3>
-          <ol className="list-decimal list-inside space-y-2 text-gray-300">
+        <div className="mt-12 surface-card rounded-lg p-6">
+          <h3 className="text-lg font-semibold mb-3 text-ink">Test-Anweisungen:</h3>
+          <ol className="list-decimal list-inside space-y-2 text-ink-soft">
             <li>Klicke auf einen oder mehrere Creator, um sie auszuwählen</li>
             <li>Das moderne Popup erscheint automatisch am unteren Bildschirmrand</li>
             <li><strong>Wichtig:</strong> Du kannst weiterhin Creator auswählen/abwählen - kein grauer Overlay!</li>

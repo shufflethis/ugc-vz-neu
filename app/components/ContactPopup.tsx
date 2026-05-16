@@ -73,16 +73,16 @@ export default function ContactPopup({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-[#1A1A1A] rounded-2xl p-6 md:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-gray-700">
+      <div className="bg-white rounded-2xl p-6 md:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-hairline">
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
           <div>
-            <h2 className="text-2xl font-bold text-white mb-2">{title}</h2>
-            <p className="text-gray-300">{subtitle}</p>
+            <h2 className="text-2xl font-bold text-ink mb-2">{title}</h2>
+            <p className="text-ink-soft">{subtitle}</p>
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-white transition-colors p-2"
+            className="text-ink-soft hover:text-ink transition-colors p-2"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -94,7 +94,7 @@ export default function ContactPopup({
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid md:grid-cols-2 gap-4">
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-2">
+              <label htmlFor="name" className="block text-sm font-medium text-ink-soft mb-2">
                 Name *
               </label>
               <input
@@ -104,12 +104,12 @@ export default function ContactPopup({
                 required
                 value={formData.name}
                 onChange={handleInputChange}
-                className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                className="w-full px-4 py-3 bg-white border border-hairline rounded-lg text-ink placeholder-ink-soft focus:outline-none focus:ring-2 focus:ring-geo-violet focus:border-transparent"
                 placeholder="Ihr Name"
               />
             </div>
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
+              <label htmlFor="email" className="block text-sm font-medium text-ink-soft mb-2">
                 E-Mail *
               </label>
               <input
@@ -119,14 +119,14 @@ export default function ContactPopup({
                 required
                 value={formData.email}
                 onChange={handleInputChange}
-                className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                className="w-full px-4 py-3 bg-white border border-hairline rounded-lg text-ink placeholder-ink-soft focus:outline-none focus:ring-2 focus:ring-geo-violet focus:border-transparent"
                 placeholder="ihre@email.de"
               />
             </div>
           </div>
 
           <div>
-            <label htmlFor="company" className="block text-sm font-medium text-gray-300 mb-2">
+            <label htmlFor="company" className="block text-sm font-medium text-ink-soft mb-2">
               Unternehmen
             </label>
             <input
@@ -135,13 +135,13 @@ export default function ContactPopup({
               name="company"
               value={formData.company}
               onChange={handleInputChange}
-              className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+              className="w-full px-4 py-3 bg-white border border-hairline rounded-lg text-ink placeholder-ink-soft focus:outline-none focus:ring-2 focus:ring-geo-violet focus:border-transparent"
               placeholder="Ihr Unternehmen (optional)"
             />
           </div>
 
           <div>
-            <label htmlFor="subject" className="block text-sm font-medium text-gray-300 mb-2">
+            <label htmlFor="subject" className="block text-sm font-medium text-ink-soft mb-2">
               Betreff *
             </label>
             <select
@@ -150,7 +150,7 @@ export default function ContactPopup({
               required
               value={formData.subject}
               onChange={handleInputChange}
-              className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+              className="w-full px-4 py-3 bg-white border border-hairline rounded-lg text-ink focus:outline-none focus:ring-2 focus:ring-geo-violet focus:border-transparent"
             >
               <option value="">Bitte wählen...</option>
               <option value="Allgemeine Frage">Allgemeine Frage</option>
@@ -163,7 +163,7 @@ export default function ContactPopup({
           </div>
 
           <div>
-            <label htmlFor="message" className="block text-sm font-medium text-gray-300 mb-2">
+            <label htmlFor="message" className="block text-sm font-medium text-ink-soft mb-2">
               Nachricht *
             </label>
             <textarea
@@ -173,7 +173,7 @@ export default function ContactPopup({
               rows={5}
               value={formData.message}
               onChange={handleInputChange}
-              className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-none"
+              className="w-full px-4 py-3 bg-white border border-hairline rounded-lg text-ink placeholder-ink-soft focus:outline-none focus:ring-2 focus:ring-geo-violet focus:border-transparent resize-none"
               placeholder="Beschreiben Sie Ihr Anliegen..."
             />
           </div>
@@ -183,7 +183,7 @@ export default function ContactPopup({
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex-1 bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-500 hover:to-blue-500 disabled:from-gray-600 disabled:to-gray-600 text-white font-semibold py-3 px-6 rounded-lg transition-all transform hover:scale-105 disabled:transform-none disabled:cursor-not-allowed flex items-center justify-center"
+              className="flex-1 bg-geo-violet hover:bg-geo-violet-soft disabled:opacity-50 text-white font-semibold py-3 px-6 rounded-lg transition-all transform hover:scale-105 disabled:transform-none disabled:cursor-not-allowed flex items-center justify-center"
             >
               {isSubmitting ? (
                 <>
@@ -205,7 +205,7 @@ export default function ContactPopup({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 sm:flex-none border-2 border-gray-600 text-gray-300 hover:bg-gray-600 hover:text-white font-semibold py-3 px-6 rounded-lg transition-all"
+              className="flex-1 sm:flex-none border-2 border-geo-violet text-geo-violet hover:bg-geo-violet hover:text-white font-semibold py-3 px-6 rounded-lg transition-all"
             >
               Abbrechen
             </button>

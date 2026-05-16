@@ -70,10 +70,10 @@ const NoResults: React.FC<NoResultsProps> = ({ query }) => {
 
   return (
     <div className="text-center py-12 px-6 mb-24">
-      <div className="bg-gray-900/30 backdrop-blur-sm rounded-2xl p-8 border border-gray-800/50 max-w-2xl mx-auto">
+      <div className="surface-card rounded-2xl p-8 max-w-2xl mx-auto">
         <div className="mb-6">
           <svg
-            className="mx-auto h-16 w-16 text-gray-400"
+            className="mx-auto h-16 w-16 text-ink-soft"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -87,61 +87,61 @@ const NoResults: React.FC<NoResultsProps> = ({ query }) => {
           </svg>
         </div>
 
-        <h3 className="text-2xl font-semibold text-white mb-4">
+        <h3 className="text-2xl font-semibold text-ink mb-4">
           Leider keine Ergebnisse gefunden
         </h3>
 
-        <p className="text-gray-300 mb-6 leading-relaxed">
-          Für Ihre Suchanfrage <span className="text-emerald-400 font-medium">"{query}"</span> konnten wir keine passenden UGC Creator in unserer aktuellen Datenbank finden.
+        <p className="text-ink-soft mb-6 leading-relaxed">
+          Für Ihre Suchanfrage <span className="text-geo-violet font-medium">"{query}"</span> konnten wir keine passenden UGC Creator in unserer aktuellen Datenbank finden.
         </p>
 
-        <div className="bg-gradient-to-r from-emerald-600/20 to-blue-600/20 rounded-xl p-6 border border-emerald-500/30 mb-6">
-          <h4 className="text-lg font-medium text-emerald-300 mb-3">
+        <div className="surface-card rounded-xl p-6 mb-6">
+          <h4 className="text-lg font-medium text-geo-violet mb-3">
             Wir helfen Ihnen gerne weiter!
           </h4>
-          <p className="text-gray-300 mb-4 text-sm leading-relaxed">
+          <p className="text-ink-soft mb-4 text-sm leading-relaxed">
             Kontaktieren Sie uns - wir können die Anfrage manuell prüfen, weitere passende Creator recherchieren oder ergänzend KI-UGC-Ansätze für Ihre Kampagne vorschlagen.
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="flex flex-col text-left">
-              <label htmlFor="name" className="text-sm text-gray-300 mb-1">Name *</label>
-              <input 
-                type="text" 
-                id="name" 
+              <label htmlFor="name" className="text-sm text-ink-soft mb-1">Name *</label>
+              <input
+                type="text"
+                id="name"
                 value={clientInfo.name}
                 onChange={(e) => setClientInfo({...clientInfo, name: e.target.value})}
-                className="bg-gray-800/50 border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="bg-white border border-hairline rounded-lg px-4 py-2 text-ink placeholder-ink-soft focus:outline-none focus:ring-2 focus:ring-geo-violet"
                 required
               />
             </div>
 
             <div className="flex flex-col text-left">
-              <label htmlFor="email" className="text-sm text-gray-300 mb-1">E-Mail *</label>
+              <label htmlFor="email" className="text-sm text-ink-soft mb-1">E-Mail *</label>
               <input
                 type="email"
                 id="email"
                 value={clientInfo.email}
                 onChange={(e) => setClientInfo({...clientInfo, email: e.target.value})}
-                className="bg-gray-800/50 border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="bg-white border border-hairline rounded-lg px-4 py-2 text-ink placeholder-ink-soft focus:outline-none focus:ring-2 focus:ring-geo-violet"
                 required
               />
             </div>
             
             <div className="flex flex-col text-left">
-              <label htmlFor="message" className="text-sm text-gray-300 mb-1">Nachricht</label>
-              <textarea 
-                id="message" 
+              <label htmlFor="message" className="text-sm text-ink-soft mb-1">Nachricht</label>
+              <textarea
+                id="message"
                 value={clientInfo.message}
                 onChange={(e) => setClientInfo({...clientInfo, message: e.target.value})}
                 rows={3}
-                className="bg-gray-800/50 border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="bg-white border border-hairline rounded-lg px-4 py-2 text-ink placeholder-ink-soft focus:outline-none focus:ring-2 focus:ring-geo-violet"
               ></textarea>
             </div>
             
             <button 
               type="submit"
-              className="w-full inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-emerald-600 to-blue-600 text-white rounded-lg hover:from-emerald-500 hover:to-blue-500 transition-all font-medium"
+              className="w-full inline-flex items-center justify-center px-6 py-3 bg-geo-violet text-white rounded-lg hover:bg-geo-violet-soft transition-all font-medium"
               disabled={submitLoading}
             >
               {submitLoading ? 'Wird gesendet...' : 'Go'}
@@ -150,8 +150,8 @@ const NoResults: React.FC<NoResultsProps> = ({ query }) => {
         </div>
 
         <div className="text-left">
-          <h5 className="text-sm font-medium text-gray-400 mb-3">Versuchen Sie es mit:</h5>
-          <ul className="text-sm text-gray-400 space-y-1">
+          <h5 className="text-sm font-medium text-ink-soft mb-3">Versuchen Sie es mit:</h5>
+          <ul className="text-sm text-ink-soft space-y-1">
             <li>• Anderen Suchbegriffen oder Branchen</li>
             <li>• Weniger spezifischen Kriterien</li>
             <li>• Alternativen Plattformen (TikTok, Instagram, YouTube)</li>
