@@ -136,7 +136,7 @@ function cleanContent(html: string): string {
     // Füge Styling zu Überschriften hinzu
     $content('h1, h2, h3, h4, h5, h6').each((_, heading) => {
       const $heading = $content(heading);
-      $heading.addClass('font-bold mb-4 mt-8 text-white');
+      $heading.addClass('font-bold mb-4 mt-8 text-ink');
 
       const tagName = (heading as any).name || (heading as any).tagName || '';
       if (tagName === 'h1') $heading.addClass('text-3xl');
@@ -146,11 +146,11 @@ function cleanContent(html: string): string {
     });
 
     // Füge Styling zu Paragraphen hinzu
-    $content('p').addClass('mb-4 text-gray-200 leading-relaxed');
+    $content('p').addClass('mb-4 text-ink-soft leading-relaxed');
 
     // Füge Styling zu Listen hinzu
-    $content('ul').addClass('list-disc list-inside mb-4 text-gray-200');
-    $content('ol').addClass('list-decimal list-inside mb-4 text-gray-200');
+    $content('ul').addClass('list-disc list-inside mb-4 text-ink-soft');
+    $content('ol').addClass('list-decimal list-inside mb-4 text-ink-soft');
     $content('li').addClass('mb-2');
 
     return $content.html() || '';
@@ -214,9 +214,9 @@ async function fetchSinglePost(slug: string): Promise<BlogPost | null> {
           for (const faq of block.faqs) {
             if (faq.question && faq.answer) {
               contentBlocks.push(`
-                <div class="faq-item mb-6 p-6 bg-gray-900/30 rounded-lg border border-gray-800/50">
-                  <h3 class="text-lg font-semibold mb-3 text-emerald-300">${faq.question}</h3>
-                  <div class="text-gray-200 leading-relaxed">${faq.answer}</div>
+                <div class="faq-item mb-6 p-6 bg-surface rounded-lg border border-hairline">
+                  <h3 class="text-lg font-semibold mb-3 text-geo-violet">${faq.question}</h3>
+                  <div class="text-ink-soft leading-relaxed">${faq.answer}</div>
                 </div>
               `);
             }
@@ -246,10 +246,10 @@ async function fetchSinglePost(slug: string): Promise<BlogPost | null> {
           <p class="text-lg mb-6">Unser Artikel zu "${title}" wird derzeit überarbeitet und in Kürze mit umfassenden Inhalten aktualisiert.</p>
           <p class="mb-4">In der Zwischenzeit empfehlen wir Ihnen, unsere anderen Artikel zu entdecken:</p>
           <ul class="list-disc list-inside mb-6">
-            <li><a href="/wissen/ugc-qualitaet-vs-quantitaet-was-ist-wichtiger" class="text-emerald-400 hover:text-emerald-300 underline">UGC-Qualität vs. Quantität: Was ist wichtiger?</a></li>
-            <li><a href="/wissen" class="text-emerald-400 hover:text-emerald-300 underline">Alle Artikel im Überblick</a></li>
+            <li><a href="/wissen/ugc-qualitaet-vs-quantitaet-was-ist-wichtiger" class="text-geo-violet hover:text-geo-violet-soft underline">UGC-Qualität vs. Quantität: Was ist wichtiger?</a></li>
+            <li><a href="/wissen" class="text-geo-violet hover:text-geo-violet-soft underline">Alle Artikel im Überblick</a></li>
           </ul>
-          <p class="text-sm text-gray-400">Haben Sie Fragen zu diesem Thema? <a href="mailto:hi@ugc-vz.de" class="text-emerald-400 hover:text-emerald-300 underline">Kontaktieren Sie uns gerne!</a></p>
+          <p class="text-sm text-ink-soft">Haben Sie Fragen zu diesem Thema? <a href="mailto:hi@ugc-vz.de" class="text-geo-violet hover:text-geo-violet-soft underline">Kontaktieren Sie uns gerne!</a></p>
         </div>
       `;
     }
@@ -383,7 +383,7 @@ async function fetchSinglePost(slug: string): Promise<BlogPost | null> {
           if (isBrokenExternal) {
             // Ersetze den Link durch seinen Text (entferne nur das <a>-Tag, behalte den Inhalt)
             const linkText = $link.text();
-            $link.replaceWith(`<span class="text-gray-300">${linkText}</span>`);
+            $link.replaceWith(`<span class="text-ink-soft">${linkText}</span>`);
           }
         }
       });
@@ -433,7 +433,7 @@ async function fetchSinglePost(slug: string): Promise<BlogPost | null> {
       // Füge Styling zu Überschriften hinzu
       $('h1, h2, h3, h4, h5, h6').each((_, heading) => {
         const $heading = $(heading);
-        $heading.addClass('font-bold mb-4 mt-8 text-white');
+        $heading.addClass('font-bold mb-4 mt-8 text-ink');
 
         const tagName = (heading as any).name || (heading as any).tagName || '';
         if (tagName === 'h1') $heading.addClass('text-3xl');
@@ -443,18 +443,18 @@ async function fetchSinglePost(slug: string): Promise<BlogPost | null> {
       });
 
       // Füge Styling zu Paragraphen hinzu
-      $('p').addClass('mb-4 text-gray-200 leading-relaxed');
+      $('p').addClass('mb-4 text-ink-soft leading-relaxed');
 
       // Füge Styling zu Listen hinzu
-      $('ul').addClass('list-disc list-inside mb-4 text-gray-200');
-      $('ol').addClass('list-decimal list-inside mb-4 text-gray-200');
+      $('ul').addClass('list-disc list-inside mb-4 text-ink-soft');
+      $('ol').addClass('list-decimal list-inside mb-4 text-ink-soft');
       $('li').addClass('mb-2');
 
       // Füge Styling zu starken Texten hinzu
-      $('strong, b').addClass('text-white font-semibold');
+      $('strong, b').addClass('text-ink font-semibold');
 
       // Füge Styling zu Links hinzu
-      $('a').addClass('text-emerald-400 hover:text-emerald-300 underline');
+      $('a').addClass('text-geo-violet hover:text-geo-violet-soft underline');
 
       content = $.html();
     }

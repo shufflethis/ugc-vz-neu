@@ -77,40 +77,38 @@ export default function SimpleCookieBanner() {
     <>
       {/* Cookie Banner */}
       {showBanner && !showSettings && (
-        <div className="fixed bottom-0 left-0 right-0 z-[10001] p-4 shadow-2xl border-t border-gray-700"
+        <div className="fixed bottom-0 left-0 right-0 z-[10001] p-4 shadow-lg border-t border-hairline bg-white"
              style={{
-               background: 'rgb(26, 26, 26)',
-               backdropFilter: 'blur(16px)',
                zIndex: '999999'
              }}>
-          <div className="max-w-6xl mx-auto" style={{ background: 'rgb(26, 26, 26)' }}>
-            <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4" style={{ background: 'rgb(26, 26, 26)' }}>
-              <div className="flex-1" style={{ background: 'rgb(26, 26, 26)' }}>
-                <h3 className="text-lg font-semibold text-white mb-2">
+          <div className="max-w-6xl mx-auto">
+            <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-ink mb-2">
                   🍪 Cookie-Einstellungen für UGC-VZ
                 </h3>
-                <p className="text-gray-300 text-sm leading-relaxed">
+                <p className="text-ink-soft text-sm leading-relaxed">
                   Wir verwenden Cookies und ähnliche Technologien, um Ihnen die bestmögliche Erfahrung auf unserer UGC Creator Plattform zu bieten.
                   Einige sind für die Funktionalität erforderlich, andere helfen uns dabei, die Website zu verbessern.
                 </p>
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-3 min-w-fit" style={{ background: 'rgb(26, 26, 26)' }}>
+              <div className="flex flex-col sm:flex-row gap-3 min-w-fit">
                 <button
                   onClick={openSettings}
-                  className="px-4 py-2 text-sm border border-gray-600 text-gray-300 hover:text-white hover:border-gray-500 rounded-lg transition-colors"
+                  className="px-4 py-2 text-sm border border-hairline text-ink hover:bg-hairline rounded-lg transition-colors"
                 >
                   Einstellungen
                 </button>
                 <button
                   onClick={declineAll}
-                  className="px-4 py-2 text-sm border border-gray-600 text-gray-300 hover:text-white hover:border-gray-500 rounded-lg transition-colors"
+                  className="px-4 py-2 text-sm bg-surface-2 text-ink hover:bg-hairline rounded-lg transition-colors"
                 >
                   Nur notwendige
                 </button>
                 <button
                   onClick={acceptAll}
-                  className="px-6 py-2 text-sm bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-500 hover:to-blue-500 text-white font-semibold rounded-lg transition-all"
+                  className="px-6 py-2 text-sm bg-geo-violet hover:bg-geo-violet-soft text-white font-semibold rounded-lg transition-all"
                 >
                   Alle akzeptieren
                 </button>
@@ -123,18 +121,14 @@ export default function SimpleCookieBanner() {
       {/* Cookie Settings Modal */}
       {showSettings && (
         <div className="fixed inset-0 z-[10002] flex items-center justify-center p-4 backdrop-blur-sm"
-             style={{ background: 'rgba(0, 0, 0, 0.8)' }}>
-          <div className="border border-gray-700/50 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
-               style={{
-                 background: 'rgba(26, 26, 26, 0.95)',
-                 backdropFilter: 'blur(16px)'
-               }}>
+             style={{ background: 'rgba(0, 0, 0, 0.4)' }}>
+          <div className="bg-white border border-hairline rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-xl">
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-white">Cookie-Einstellungen</h2>
+                <h2 className="text-2xl font-bold text-ink">Cookie-Einstellungen</h2>
                 <button
                   onClick={closeSettings}
-                  className="text-gray-400 hover:text-white transition-colors"
+                  className="text-ink-soft hover:text-ink transition-colors"
                 >
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -144,50 +138,50 @@ export default function SimpleCookieBanner() {
 
               <div className="space-y-6">
                 {/* Essential Cookies */}
-                <div className="border border-gray-700/50 rounded-lg p-4">
+                <div className="border border-hairline rounded-lg p-4">
                   <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-lg font-semibold text-white">Essentielle Cookies</h3>
+                    <h3 className="text-lg font-semibold text-ink">Essentielle Cookies</h3>
                     <input
                       type="checkbox"
                       id="essential"
                       checked={true}
                       disabled={true}
-                      className="w-5 h-5 text-emerald-600 bg-gray-700 border-gray-600 rounded focus:ring-emerald-500"
+                      className="w-5 h-5 text-geo-violet bg-white border-hairline rounded focus:ring-geo-violet"
                     />
                   </div>
-                  <p className="text-gray-300 text-sm">
+                  <p className="text-ink-soft text-sm">
                     Diese Cookies sind für die Grundfunktionen der Website erforderlich und können nicht deaktiviert werden.
                   </p>
                 </div>
 
                 {/* Analytics Cookies */}
-                <div className="border border-gray-700/50 rounded-lg p-4">
+                <div className="border border-hairline rounded-lg p-4">
                   <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-lg font-semibold text-white">Analyse & Performance</h3>
+                    <h3 className="text-lg font-semibold text-ink">Analyse & Performance</h3>
                     <input
                       type="checkbox"
                       id="analytics"
                       defaultChecked={false}
-                      className="w-5 h-5 text-emerald-600 bg-gray-700 border-gray-600 rounded focus:ring-emerald-500"
+                      className="w-5 h-5 text-geo-violet bg-white border-hairline rounded focus:ring-geo-violet"
                     />
                   </div>
-                  <p className="text-gray-300 text-sm">
+                  <p className="text-ink-soft text-sm">
                     Diese Cookies helfen uns zu verstehen, wie Besucher mit unserer Website interagieren.
                   </p>
                 </div>
 
                 {/* Marketing Cookies */}
-                <div className="border border-gray-700/50 rounded-lg p-4">
+                <div className="border border-hairline rounded-lg p-4">
                   <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-lg font-semibold text-white">Marketing & Werbung</h3>
+                    <h3 className="text-lg font-semibold text-ink">Marketing & Werbung</h3>
                     <input
                       type="checkbox"
                       id="marketing"
                       defaultChecked={false}
-                      className="w-5 h-5 text-emerald-600 bg-gray-700 border-gray-600 rounded focus:ring-emerald-500"
+                      className="w-5 h-5 text-geo-violet bg-white border-hairline rounded focus:ring-geo-violet"
                     />
                   </div>
-                  <p className="text-gray-300 text-sm">
+                  <p className="text-ink-soft text-sm">
                     Diese Cookies werden verwendet, um Ihnen relevante Werbung und Inhalte zu zeigen.
                   </p>
                 </div>
@@ -196,32 +190,32 @@ export default function SimpleCookieBanner() {
               <div className="flex flex-col sm:flex-row gap-3 mt-8">
                 <button
                   onClick={declineAll}
-                  className="flex-1 px-4 py-3 border border-gray-600 text-gray-300 hover:text-white hover:border-gray-500 rounded-lg transition-colors"
+                  className="flex-1 px-4 py-3 bg-surface-2 text-ink hover:bg-hairline rounded-lg transition-colors"
                 >
                   Nur notwendige
                 </button>
                 <button
                   onClick={acceptSelected}
-                  className="flex-1 px-4 py-3 bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-500 hover:to-blue-500 text-white font-semibold rounded-lg transition-all"
+                  className="flex-1 px-4 py-3 bg-geo-violet hover:bg-geo-violet-soft text-white font-semibold rounded-lg transition-all"
                 >
                   Auswahl speichern
                 </button>
                 <button
                   onClick={acceptAll}
-                  className="flex-1 px-4 py-3 bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-500 hover:to-blue-500 text-white font-semibold rounded-lg transition-all"
+                  className="flex-1 px-4 py-3 bg-geo-violet hover:bg-geo-violet-soft text-white font-semibold rounded-lg transition-all"
                 >
                   Alle akzeptieren
                 </button>
               </div>
 
-              <div className="mt-6 pt-4 border-t border-gray-700/50">
-                <p className="text-xs text-gray-400 text-center">
+              <div className="mt-6 pt-4 border-t border-hairline">
+                <p className="text-xs text-ink-soft text-center">
                   Weitere Informationen finden Sie in unserer{' '}
-                  <a href="/datenschutz" className="text-emerald-400 hover:text-emerald-300 transition-colors">
+                  <a href="/datenschutz" className="text-geo-violet hover:text-geo-violet-soft transition-colors">
                     Datenschutzerklärung
                   </a>{' '}
                   und{' '}
-                  <a href="/cookies" className="text-emerald-400 hover:text-emerald-300 transition-colors">
+                  <a href="/cookies" className="text-geo-violet hover:text-geo-violet-soft transition-colors">
                     Cookie-Richtlinie
                   </a>.
                 </p>
