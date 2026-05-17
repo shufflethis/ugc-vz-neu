@@ -3,6 +3,8 @@ const nextConfig = {
   // Disable static optimization for problematic pages during build
   experimental: {
     missingSuspenseWithCSRBailout: false,
+    cpus: 1,
+    workerThreads: false,
   },
 
   // Disable static generation to fix React context issues
