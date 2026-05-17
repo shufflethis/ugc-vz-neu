@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { Metadata } from 'next';
 import ResponsiveCTAButton from '@/src/components/ResponsiveCTAButton';
 import LogoImage from '../components/LogoImage';
@@ -36,6 +37,23 @@ export const metadata: Metadata = {
     canonical: 'https://ugc-vz.de/about',
   },
 };
+
+const team = [
+  { slug: 'tobias', name: 'Tobias', role: 'Gründer & CEO', bio: 'Treibt die Vision von UGC-VZ voran: ein Verzeichnis, das Marken und authentische Creator ohne Umwege zusammenbringt.' },
+  { slug: 'gorden', name: 'Gorden', role: 'Co-Founder', bio: 'Verantwortet Partnerschaften und sorgt dafür, dass UGC-VZ für Creator wie für Brands kostenlos bleibt.' },
+  { slug: 'robert', name: 'Robert', role: 'Lead Creator Relations', bio: 'Betreut die Creator-Community und hilft Talenten, mit dem richtigen Profil entdeckt zu werden.' },
+  { slug: 'sascha', name: 'Sascha', role: 'Senior UGC-Strategie', bio: 'Entwickelt Content-Strategien, die aus Produkten Geschichten machen, denen Menschen wirklich vertrauen.' },
+  { slug: 'marcel', name: 'Marcel', role: 'Head of Performance & UGC-Ads', bio: 'Weiß, welcher Creator-Content auf Paid Social tatsächlich konvertiert – und welcher nur schön aussieht.' },
+  { slug: 'annie', name: 'Annie', role: 'Head of Content', bio: 'Sorgt dafür, dass jedes Format authentisch bleibt – vom Unboxing bis zum ehrlichen Testimonial.' },
+  { slug: 'sophie', name: 'Sophie', role: 'Creator Relations Managerin', bio: 'Erste Ansprechpartnerin für Creator und begleitet sie vom Profil bis zum ersten Brand-Match.' },
+  { slug: 'jane', name: 'Jane', role: 'Senior Creative Direction', bio: 'Gibt UGC-Kampagnen visuellen Feinschliff, ohne die ungeschliffene Echtheit zu verlieren.' },
+  { slug: 'patrick', name: 'Patrick', role: 'Senior Campaign Manager', bio: 'Bringt Brands und Creator in Projekten zusammen und hält Kampagnen zuverlässig on track.' },
+  { slug: 'lea', name: 'Lea', role: 'Community & Creator Support', bio: 'Hält die Creator-Community lebendig und beantwortet alle Fragen rund ums Profil.' },
+  { slug: 'jan', name: 'Jan', role: 'Head of Tech & Plattform', bio: 'Hält das Verzeichnis schnell, stabil und für beide Seiten einfach bedienbar.' },
+  { slug: 'thomas', name: 'Thomas', role: 'Head of Sound', bio: 'Kümmert sich darum, dass UGC-Videos auch akustisch im Kopf hängen bleiben.' },
+  { slug: 'ansgar', name: 'Ansgar', role: 'Fotografie & Video', bio: 'Setzt Creator und Produkte ins richtige Licht – natürlich, nie gestellt.' },
+  { slug: 'ella', name: 'Ella', role: 'Feel-Good-Managerin', bio: 'Bürohund mit Dauer-Wuff für gute Laune zwischen den Drehs.' },
+];
 
 export default function AboutPage() {
   const breadcrumbs = [
@@ -157,6 +175,37 @@ export default function AboutPage() {
                 Gleichzeitig sehen wir täglich, dass viele großartige Projekte an unserem Agentur-Desk vorbeigehen, weil sie "zu klein" erscheinen.
                 <span className="text-geo-violet font-semibold"> Das wollten wir ändern.</span>
               </p>
+            </div>
+          </section>
+
+          {/* Team Section */}
+          <section className="mb-16">
+            <h2 className="text-3xl font-bold mb-4 text-center">
+              Das Team hinter <span className="gradient-text">UGC-VZ</span>
+            </h2>
+            <p className="text-lg text-ink-soft leading-relaxed text-center max-w-3xl mx-auto mb-10">
+              Menschen aus der famefact-Agentur, die täglich mit Creators und Brands arbeiten – und genau wissen,
+              was authentischen User Generated Content ausmacht.
+            </p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
+              {team.map((member) => (
+                <div key={member.slug} className="surface-card rounded-2xl overflow-hidden flex flex-col">
+                  <div className="relative aspect-[4/5] w-full bg-geo-violet/5">
+                    <Image
+                      src={`/team/${member.slug}.webp`}
+                      alt={`${member.name} – ${member.role} bei UGC-VZ`}
+                      fill
+                      sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                      className="object-cover object-top"
+                    />
+                  </div>
+                  <div className="p-4 flex flex-col flex-1">
+                    <h3 className="text-lg font-bold text-ink">{member.name}</h3>
+                    <p className="text-sm font-semibold text-geo-violet mb-2">{member.role}</p>
+                    <p className="text-sm text-ink-soft leading-relaxed">{member.bio}</p>
+                  </div>
+                </div>
+              ))}
             </div>
           </section>
 
