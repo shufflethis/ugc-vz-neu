@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 
 // Make sure the search.css is imported in your main page or layout
 import './styles/search.css';
@@ -41,31 +42,75 @@ export default function Home() {
         </div>
       </header>
 
-      <main className="flex-grow flex flex-col items-center justify-center text-center px-4">
-        <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 text-ink">
-          UGC Creator finden oder als <span className="gradient-text">Creator anmelden</span>
-        </h1>
-        <p className="text-lg sm:text-xl text-ink-soft max-w-2xl mb-12">
-          UGC VZ ist die kostenlose Plattform fuer User Generated Content in Deutschland. Brands beschreiben ihre Kampagne und finden passende Creator aus 370+ echten Profilen. Creator fuellen den Fragebogen aus und werden fuer passende Anfragen sichtbar.
-        </p>
-        <div className="flex flex-col sm:flex-row gap-4 mb-10">
-          <Link
-            href="/brands"
-            className="bg-geo-violet hover:bg-geo-violet-soft text-white font-semibold py-3 px-6 rounded-lg transition-all"
-          >
-            Creator fuer Kampagne finden
-          </Link>
-          <Link
-            href="/creator"
-            className="border border-geo-violet text-geo-violet hover:bg-geo-violet hover:text-white font-semibold py-3 px-6 rounded-lg transition-all"
-          >
-            Als UGC Creator anmelden
-          </Link>
-        </div>
+      <main className="flex-grow flex flex-col w-full">
+        {/* Full-width Hero Section */}
+        <section className="relative w-full min-h-[85vh] flex flex-col items-center justify-center pt-20 pb-32 overflow-visible">
+          
+          {/* Background Image */}
+          <div className="absolute inset-0 z-0">
+            <Image 
+              src="/ugc-tool.webp"
+              alt="UGC VZ Plattform Background"
+              fill
+              className="object-cover object-center"
+              priority
+            />
+            {/* Dark & Blurry Overlay */}
+            <div className="absolute inset-0 bg-slate-900/75 backdrop-blur-sm"></div>
+          </div>
 
-        <div id="search" className="w-full max-w-2xl mx-auto scroll-mt-24">
-          <SearchBox />
-        </div>
+          {/* Foreground Content */}
+          <div className="relative z-10 flex flex-col items-center text-center max-w-5xl mx-auto w-full px-4 sm:px-8 mt-12">
+            
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 text-white text-sm font-semibold mb-8 border border-white/20 backdrop-blur-md shadow-lg">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-400"></span>
+              </span>
+              Vermutlich das größte kostenfreie UGC Verzeichnis
+            </div>
+            
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-[4.5rem] font-extrabold mb-6 text-white leading-[1.1] tracking-tight shadow-sm">
+              UGC Creator finden oder als <br className="hidden md:block" /><span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-300 to-geo-violet-soft">Creator anmelden</span>
+            </h1>
+            
+            <p className="text-lg sm:text-xl md:text-2xl text-gray-200 max-w-3xl mb-12 leading-relaxed">
+              Die kostenlose Plattform für User Generated Content in Deutschland. Brands beschreiben ihre Kampagne und finden passende Creator aus 370+ echten Profilen.
+            </p>
+            
+            <div className="flex flex-col sm:flex-row gap-4 mb-8 w-full sm:w-auto">
+              <Link
+                href="/brands"
+                className="bg-geo-violet hover:bg-geo-violet-soft text-white font-semibold py-4 px-10 rounded-xl transition-all shadow-xl shadow-geo-violet/40 flex items-center justify-center gap-2 group text-lg"
+              >
+                Creator finden
+                <svg className="w-6 h-6 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
+              </Link>
+              <Link
+                href="/creator"
+                className="bg-white/10 hover:bg-white/20 border border-white/30 text-white font-semibold py-4 px-10 rounded-xl transition-all flex items-center justify-center backdrop-blur-md text-lg"
+              >
+                Als Creator anmelden
+              </Link>
+            </div>
+          </div>
+
+          {/* SearchBox Overlapping the bottom edge */}
+          <div id="search" className="w-full max-w-5xl mx-auto scroll-mt-24 relative z-20 mt-auto translate-y-32 px-4 sm:px-8">
+            <div className="absolute inset-4 sm:-inset-1 bg-gradient-to-r from-geo-violet/40 via-teal-400/40 to-geo-violet/40 blur-xl -z-10 rounded-[2.5rem]"></div>
+            <div className="bg-white/95 backdrop-blur-2xl rounded-[2rem] shadow-2xl border border-white p-6 sm:p-10">
+              <h2 className="text-2xl sm:text-3xl font-bold text-center mb-8 text-ink">
+                Passende UGC Creator <span className="text-geo-violet">direkt finden</span>
+              </h2>
+              <SearchBox />
+            </div>
+          </div>
+        </section>
+        
+        {/* Spacer to account for overlapping search box */}
+        <div className="h-40 w-full bg-white"></div>
       </main>
 
       {/* Trust Elements Section */}

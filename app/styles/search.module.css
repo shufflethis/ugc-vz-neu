@@ -43,7 +43,7 @@
 .searchInput:focus {
   border-color: #8b3fca; /* Violet border on focus */
   box-shadow: 0 0 0 3px rgba(139, 63, 202, 0.3), inset 0 2px 8px rgba(0, 0, 0, 0.05); /* Violet glow on focus */
-  background-color: #171717; /* Slightly lighter background on focus for better contrast */
+  background-color: #ffffff; /* Light background on focus */
 }
 
 .searchButton {

@@ -192,7 +192,7 @@ export default function SearchBox({ initialQuery = '' }: SearchBoxProps) {
             }
           }}
           placeholder="z.B. Kosmetik, unter 35 Jahre, TikTok..."
-          className={styles.searchInput}
+          className={`${styles.searchInput} text-slate-900 bg-white placeholder-slate-500`}
           disabled={isLoading}
           rows={1}
         />
