@@ -14,8 +14,8 @@ Stand: 16. Juli 2026
 - Die Suche liest Neon als Hauptquelle, zeigt maximal 24 Top-Treffer und nutzt Airtable nur noch als technischen Fallback.
 - Brand-Leads, Match-Snapshots und Resend-Zustellereignisse werden dauerhaft in Neon protokolliert.
 - Creator-Benachrichtigungen bleiben über `SEND_CREATOR_OUTREACH_EMAILS` kontrolliert; historische Kontakte werden ohne explizite Projektbenachrichtigungs-Freigabe nicht automatisch angeschrieben.
-- Im bestehenden Kunden-Sheet gibt es nun `Creator Vorschläge` für Mitarbeitende und einen `Neon Sync`-Tab mit einem geprüften Snapshot aller 416 aktiven Profile. Die bestehende Datentabelle wurde nicht verändert.
-- Der token-geschützte CSV-Export für den automatischen Neon-Spiegel ist auf `ugc-vz.de` live. Er exportiert ausschließlich Felder aus `creator_search_public`; Google Sheets benötigt noch eine einmalige Editor-Freigabe im Tab `Sync aktivieren`, bevor die Importformel in `Neon Sync` übernommen wird.
+- Im bestehenden Kunden-Sheet gibt es nun `Creator Vorschläge` für Mitarbeitende und einen automatisch aktualisierten `Neon Sync`-Tab mit allen 416 aktiven Profilen. Die bestehende Datentabelle wurde nicht verändert.
+- Der token-geschützte CSV-Export für den automatischen Neon-Spiegel ist auf `ugc-vz.de` live. Er exportiert ausschließlich Felder aus `creator_search_public`; die einmalige Google-Freigabe ist erfolgt und die Importformel läuft fehlerfrei in `Neon Sync!A2`.
 
 ## Bestandsaufnahme
 
