@@ -63,7 +63,7 @@ export default function ClientWissenContent({ posts }: ClientWissenContentProps)
       {filteredPosts.length === 0 && searchTerm && (
         <div className="text-center py-16">
           <div className="surface-card rounded-xl p-8 max-w-md mx-auto">
-            <p className="text-ink-soft">Keine Artikel gefunden für "{searchTerm}"</p>
+            <p className="text-ink-soft">Keine Artikel gefunden für &ldquo;{searchTerm}&rdquo;</p>
             <button
               onClick={() => setSearchTerm('')}
               className="mt-4 text-geo-violet hover:text-geo-violet-soft transition-colors"

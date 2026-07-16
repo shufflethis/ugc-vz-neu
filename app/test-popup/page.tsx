@@ -103,7 +103,7 @@ export default function TestPopupPage() {
             <li>Das Popup bleibt offen, auch wenn du weitere Creator auswählst</li>
             <li>Nutze den Minimieren-Button (Pfeil) um das Popup zu verkleinern</li>
             <li>Fülle das Formular aus (Name, Email, optional Message)</li>
-            <li>Klicke auf "Anfrage senden" - nur die Auswahl wird zurückgesetzt</li>
+            <li>Klicke auf &ldquo;Anfrage senden&rdquo; - nur die Auswahl wird zurückgesetzt</li>
             <li>Das X setzt die Auswahl zurück und schließt das Popup</li>
           </ol>
           

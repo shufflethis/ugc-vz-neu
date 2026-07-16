@@ -1,0 +1,13 @@
+.git
+.claude
+.playwright-mcp
+.remember
+.next
+node_modules
+TRASH
+.env*
+*.tsbuildinfo
+qa-*.jpeg
+docs
+scripts
+db

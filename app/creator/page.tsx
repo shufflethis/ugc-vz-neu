@@ -3,8 +3,9 @@ import Image from 'next/image';
 import Link from 'next/link';
 import BreadcrumbSchema from '../components/BreadcrumbSchema';
 import JsonLdScript from '../wissen/[slug]/JsonLdScript';
+import CreatorRegistrationForm from './CreatorRegistrationForm';
 
-const creatorFormUrl = 'https://tally.so/r/w25dBp';
+const creatorFormUrl = '#creator-form';
 
 export const metadata: Metadata = {
   title: 'UGC Creator anmelden',
@@ -23,7 +24,11 @@ export const metadata: Metadata = {
   },
 };
 
-export default function CreatorPage() {
+export default function CreatorPage({
+  searchParams,
+}: {
+  searchParams?: { verified?: string; invalid?: string; error?: string };
+}) {
   const breadcrumbs = [
     { name: 'Home', url: 'https://ugc-vz.de' },
     { name: 'UGC Creator anmelden', url: 'https://ugc-vz.de/creator' },
@@ -87,17 +92,21 @@ export default function CreatorPage() {
             Trage dich bei UGC VZ ein, wenn du Content fuer Marken produzierst. Dein Profil hilft uns, dich bei passenden Anfragen von Brands, Agenturen und Marketing-Teams zu beruecksichtigen.
           </p>
           <p className="text-sm text-ink-soft max-w-2xl mx-auto leading-relaxed mb-8">
-            Mit dem Fragebogen hinterlegst du Profil-, Portfolio- und Kontaktdaten fuer passende Brand-Anfragen. Deine Daten koennen ausgewaehlten Unternehmen fuer Kontaktaufnahme und Projektabstimmung angezeigt oder per E-Mail uebermittelt werden. Eine Loeschung oder Korrektur ist jederzeit per E-Mail an hi@ugc-vz.de moeglich.
+            Lege dein Profil direkt bei UGC VZ an. Öffentliche Profilangaben helfen Brands bei der Auswahl; deine E-Mail bleibt privat und wird nur für Bestätigung und konkrete Projektanfragen verwendet. Eine Löschung oder Korrektur ist jederzeit möglich.
           </p>
           <Link
             href={creatorFormUrl}
-            target="_blank"
-            rel="noopener noreferrer"
             className="inline-flex bg-geo-violet hover:bg-geo-violet-soft text-white font-semibold py-4 px-8 rounded-lg transition-all"
           >
-            Fragebogen ausfuellen
+            Kostenloses Profil anlegen
           </Link>
         </section>
+
+        <CreatorRegistrationForm
+          verified={searchParams?.verified === '1'}
+          invalid={searchParams?.invalid === '1'}
+          failed={searchParams?.error === '1'}
+        />
 
         <section className="max-w-6xl mx-auto grid md:grid-cols-3 gap-6 mb-16">
           {[
@@ -121,8 +130,6 @@ export default function CreatorPage() {
               </p>
               <Link
                 href={creatorFormUrl}
-                target="_blank"
-                rel="noopener noreferrer"
                 className="inline-flex bg-geo-violet hover:bg-geo-violet-soft text-white font-semibold py-3 px-6 rounded-lg transition-all"
               >
                 Profil anlegen

@@ -19,7 +19,13 @@ interface CreatorSelectionPopupProps {
   creators: Creator[];
   isVisible: boolean;
   onClose: () => void;
-  onSubmit: (clientInfo: { name: string; email: string; message: string }) => Promise<void>;
+  onSubmit: (clientInfo: {
+    name: string;
+    email: string;
+    message: string;
+    website: string;
+    submissionId: string;
+  }) => Promise<void>;
 }
 
 export default function CreatorSelectionPopup({
@@ -32,8 +38,10 @@ export default function CreatorSelectionPopup({
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    message: ''
+    message: '',
+    website: ''
   });
+  const [submissionId, setSubmissionId] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [emailError, setEmailError] = useState('');
   const [isMinimized, setIsMinimized] = useState(true);
@@ -41,13 +49,18 @@ export default function CreatorSelectionPopup({
 
   // Reset form when popup closes
   useEffect(() => {
+    if (isVisible && !submissionId) {
+      setSubmissionId(globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`);
+    }
+
     if (!isVisible) {
       setShowForm(false);
       setIsMinimized(true);
-      setFormData({ name: '', email: '', message: '' });
+      setFormData({ name: '', email: '', message: '', website: '' });
+      setSubmissionId('');
       setEmailError('');
     }
-  }, [isVisible]);
+  }, [isVisible, submissionId]);
 
   const selectedCreatorDetails = creators.filter(creator => 
     selectedCreators.includes(creator.id)
@@ -88,10 +101,10 @@ export default function CreatorSelectionPopup({
     setIsSubmitting(true);
     
     try {
-      await onSubmit(formData);
+      await onSubmit({ ...formData, submissionId });
       
-      setFormData({ name: '', email: '', message: '' });
-      toast.success('Ihre Anfrage wurde erfolgreich gesendet! Wir melden uns bald bei Ihnen.');
+      setFormData({ name: '', email: '', message: '', website: '' });
+      toast.success('Geschafft! Die Creator-Kontakte sind per E-Mail auf dem Weg.');
       onClose();
     } catch (error) {
       trackUGCEvents.leadFormError('creator_selection', 'submit_failed');
@@ -265,11 +278,26 @@ export default function CreatorSelectionPopup({
                         Fast geschafft! 🎉
                       </h4>
                       <p className="text-ink-soft text-sm">
-                        Teilen Sie uns Ihre Kontaktdaten mit. Die Anfrage geht an UGC VZ und wird anschliessend weiterbearbeitet.
+                        Tragen Sie Ihre E-Mail ein. Die ausgewählten Kontakte und Preisangaben werden automatisch versendet.
                       </p>
                     </div>
 
                     <form onSubmit={handleSubmit} className="space-y-4">
+                      <div
+                        aria-hidden="true"
+                        style={{ position: 'absolute', left: '-10000px', width: 1, height: 1, overflow: 'hidden' }}
+                      >
+                        <label htmlFor="ugc-company-website">Website</label>
+                        <input
+                          type="text"
+                          id="ugc-company-website"
+                          name="website"
+                          tabIndex={-1}
+                          autoComplete="off"
+                          value={formData.website}
+                          onChange={handleInputChange}
+                        />
+                      </div>
                       <div className="grid md:grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <label htmlFor="name" className="block text-sm font-semibold text-ink">

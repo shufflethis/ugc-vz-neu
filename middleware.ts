@@ -15,12 +15,13 @@ export function middleware(request: NextRequest) {
   // Content Security Policy - optimiert für UGC-VZ
   const cspHeader = `
     default-src 'self';
-    script-src 'self' 'unsafe-inline' 'unsafe-eval'
+    script-src 'self' 'unsafe-inline' ${process.env.NODE_ENV === 'development' ? "'unsafe-eval'" : ''}
       https://www.googletagmanager.com
       https://www.google-analytics.com
       https://ssl.google-analytics.com
       https://cdn.kiprotect.com
-      https://analytics.google.com;
+      https://analytics.google.com
+      https://analytics.polymarkt.de;
     style-src 'self' 'unsafe-inline'
       https://fonts.googleapis.com
       https://cdn.kiprotect.com;
@@ -30,7 +31,7 @@ export function middleware(request: NextRequest) {
       https://p16-sign-va.tiktokcdn.com
       https://p16-sign.tiktokcdn-us.com
       https://scontent.cdninstagram.com
-      https://instagram.*.fbcdn.net
+      https://*.fbcdn.net
       https://yt3.ggpht.com
       https://yt3.googleusercontent.com
       https://via.placeholder.com
@@ -47,7 +48,8 @@ export function middleware(request: NextRequest) {
       https://hooks.slack.com
       https://api.airtable.com
       https://region1.google-analytics.com
-      https://region1.analytics.google.com;
+      https://region1.analytics.google.com
+      https://analytics.polymarkt.de;
     frame-src 'none';
     object-src 'none';
     base-uri 'self';
@@ -62,7 +64,7 @@ export function middleware(request: NextRequest) {
   response.headers.set('X-Content-Type-Options', 'nosniff')
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
   response.headers.set('X-XSS-Protection', '1; mode=block')
-  response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
+  response.headers.set('Permissions-Policy', 'camera=(), microphone=(self), geolocation=()')
   
   // HSTS (HTTP Strict Transport Security) - nur für HTTPS
   if (request.nextUrl.protocol === 'https:') {

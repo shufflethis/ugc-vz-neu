@@ -172,7 +172,7 @@ export default function AboutPage() {
                 Wir wissen aus erster Hand, wie kraftvoll authentischer User Generated Content ist.
               </p>
               <p className="text-lg text-ink-soft leading-relaxed">
-                Gleichzeitig sehen wir täglich, dass viele großartige Projekte an unserem Agentur-Desk vorbeigehen, weil sie "zu klein" erscheinen.
+                Gleichzeitig sehen wir täglich, dass viele großartige Projekte an unserem Agentur-Desk vorbeigehen, weil sie &ldquo;zu klein&rdquo; erscheinen.
                 <span className="text-geo-violet font-semibold"> Das wollten wir ändern.</span>
               </p>
             </div>
@@ -275,9 +275,7 @@ export default function AboutPage() {
                   Creator finden
                 </Link>
                 <Link
-                  href="https://tally.so/r/w25dBp"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  href="/creator#creator-form"
                   className="border border-geo-violet text-geo-violet hover:bg-geo-violet hover:text-white font-semibold py-3 px-8 rounded-lg transition-all transform hover:scale-105"
                 >
                   Creator werden

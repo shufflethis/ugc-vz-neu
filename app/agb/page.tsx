@@ -89,7 +89,7 @@ export default function AGBPage() {
                   <h3 className="text-xl font-semibold mb-3 text-geo-violet">1.1 Geltungsbereich</h3>
                   <p className="text-ink-soft">
                     Diese Allgemeinen Geschäftsbedingungen gelten für die Nutzung der Plattform UGC-VZ,
-                    die von der track by track GmbH / famefact („Betreiber") betrieben wird.
+                    die von der track by track GmbH / famefact (&bdquo;Betreiber&ldquo;) betrieben wird.
                   </p>
                 </div>
 

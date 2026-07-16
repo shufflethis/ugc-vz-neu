@@ -222,9 +222,7 @@ export default function Home() {
                 Jetzt Creator finden
               </Link>
               <Link
-                href="https://tally.so/r/w25dBp"
-                target="_blank"
-                rel="noopener noreferrer"
+                href="/creator#creator-form"
                 className="border-2 border-geo-violet text-geo-violet hover:bg-geo-violet hover:text-white font-semibold py-4 px-8 rounded-lg transition-all transform hover:scale-105"
               >
                 Als Creator registrieren

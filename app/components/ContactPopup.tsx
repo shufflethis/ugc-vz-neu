@@ -21,8 +21,10 @@ export default function ContactPopup({
     email: '',
     company: '',
     subject: '',
-    message: ''
+    message: '',
+    website: ''
   });
+  const [submissionId, setSubmissionId] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -36,6 +38,10 @@ export default function ContactPopup({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    const requestSubmissionId = submissionId
+      || globalThis.crypto?.randomUUID?.()
+      || `${Date.now()}-${Math.random()}`;
+    if (!submissionId) setSubmissionId(requestSubmissionId);
 
     try {
       const response = await fetch('/api/submit-request', {
@@ -45,19 +51,28 @@ export default function ContactPopup({
         },
         body: JSON.stringify({
           type: 'contact',
-          ...formData
+          creatorIds: [],
+          clientInfo: {
+            ...formData,
+            requestType: 'general_contact',
+            submissionId: requestSubmissionId,
+            sourcePath: typeof window !== 'undefined' ? window.location.pathname : undefined,
+            sourceUrl: typeof window !== 'undefined' ? window.location.href : undefined,
+          }
         }),
       });
 
       if (response.ok) {
-        toast.success('Ihre Nachricht wurde erfolgreich gesendet! Wir melden uns bald bei Ihnen.');
+        toast.success('Ihre Nachricht wurde gesendet. Eine Bestätigung ist per E-Mail unterwegs.');
         setFormData({
           name: '',
           email: '',
           company: '',
           subject: '',
-          message: ''
+          message: '',
+          website: ''
         });
+        setSubmissionId('');
         onClose();
       } else {
         throw new Error('Fehler beim Senden');
@@ -92,6 +107,21 @@ export default function ContactPopup({
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-6">
+          <div
+            aria-hidden="true"
+            style={{ position: 'absolute', left: '-10000px', width: 1, height: 1, overflow: 'hidden' }}
+          >
+            <label htmlFor="contact-company-website">Website</label>
+            <input
+              type="text"
+              id="contact-company-website"
+              name="website"
+              tabIndex={-1}
+              autoComplete="off"
+              value={formData.website}
+              onChange={handleInputChange}
+            />
+          </div>
           <div className="grid md:grid-cols-2 gap-4">
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-ink-soft mb-2">

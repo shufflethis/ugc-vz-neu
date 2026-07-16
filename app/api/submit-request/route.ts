@@ -1,38 +1,154 @@
+import { createHash, randomUUID, timingSafeEqual } from 'crypto';
 import { NextResponse } from 'next/server';
 import { IncomingWebhook } from '@slack/webhook';
 import Airtable from 'airtable';
 import { Resend } from 'resend';
+import { getDatabase, isDatabaseConfigured } from '@/app/lib/database';
+import {
+  type DeliveryResult,
+  type LeadClientInfo,
+  type LeadKind,
+  type RenderedEmail,
+  type SelectedCreator,
+  renderBrandMatchEmail,
+  renderContactAcknowledgementEmail,
+  renderCreatorOutreachEmail,
+  renderInternalLeadEmail,
+  renderNoResultsEmail,
+} from '@/app/lib/lead-email';
 
-type SelectedCreator = {
-  name: string;
-  reach: string;
-  networks: string;
-  contactEmail?: string;
-  socialLinks?: string;
+export const maxDuration = 30;
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
+const MAX_CREATORS_PER_REQUEST = 10;
+const MAX_BODY_BYTES = 30_000;
+const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
+
+type RateLimitEntry = { count: number; resetAt: number };
+type CreatorOutreachSummary = {
+  enabled: boolean;
+  eligible: number;
+  queued: number;
+  failed: number;
+  skippedNoEmail: number;
+  skippedDaily: number;
+  skippedLimit: number;
+};
+type EmailDispatchResult = {
+  brand: DeliveryResult;
+  internal: DeliveryResult;
+  creators: DeliveryResult[];
+  creatorOutreach: CreatorOutreachSummary;
 };
 
-const htmlEscape = (value: unknown) =>
-  String(value || '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
+const globalRateLimit = globalThis as typeof globalThis & {
+  __ugcLeadRateLimit?: Map<string, RateLimitEntry>;
+  __ugcCreatorOutreachDay?: Map<string, string>;
+};
+
+const rateLimitStore = globalRateLimit.__ugcLeadRateLimit
+  ?? (globalRateLimit.__ugcLeadRateLimit = new Map<string, RateLimitEntry>());
+const creatorOutreachDays = globalRateLimit.__ugcCreatorOutreachDay
+  ?? (globalRateLimit.__ugcCreatorOutreachDay = new Map<string, string>());
+
+const allowedOrigins = new Set([
+  'https://ugc-vz.de',
+  'https://www.ugc-vz.de',
+  'http://localhost:3000',
+  'http://localhost:3001',
+]);
+
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const plainText = (value: unknown, maxLength = 500) =>
-  String(value || '').replace(/\s+/g, ' ').trim().substring(0, maxLength);
+  String(value ?? '').replace(/\s+/g, ' ').trim().slice(0, maxLength);
 
-const getFirstField = (fields: Record<string, any>, candidates: string[]) => {
+const multilineText = (value: unknown, maxLength = 1_500) =>
+  String(value ?? '')
+    .replace(/\r\n/g, '\n')
+    .replace(/\u0000/g, '')
+    .trim()
+    .slice(0, maxLength);
+
+const slackEscape = (value: unknown) =>
+  plainText(value, 1_000)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+
+const asRecord = (value: unknown): Record<string, unknown> =>
+  value && typeof value === 'object' && !Array.isArray(value)
+    ? value as Record<string, unknown>
+    : {};
+
+const normalizeKey = (value: string) =>
+  value.toLowerCase().replace(/&nbsp;|[\s?:()_\-]/g, '');
+
+const stringifyField = (value: unknown): string => {
+  if (Array.isArray(value)) {
+    return value.map(stringifyField).filter(Boolean).join('\n');
+  }
+
+  if (value && typeof value === 'object') {
+    const field = value as Record<string, unknown>;
+    if (field.url) return String(field.url);
+    if (field.filename) return String(field.filename);
+    return Object.values(field).map(stringifyField).filter(Boolean).join(' ');
+  }
+
+  return String(value ?? '').trim();
+};
+
+const getFieldValue = (fields: Record<string, unknown>, candidates: string[]) => {
   for (const candidate of candidates) {
-    const value = fields[candidate];
-    if (typeof value === 'string' && value.trim()) return value.trim();
+    const value = stringifyField(fields[candidate]);
+    if (value) return value;
+  }
+
+  const normalizedCandidates = candidates.map(normalizeKey).filter((value) => value.length >= 4);
+  for (const [key, rawValue] of Object.entries(fields)) {
+    const normalizedKey = normalizeKey(key);
+    if (normalizedCandidates.some((candidate) => normalizedKey.includes(candidate) || candidate.includes(normalizedKey))) {
+      const value = stringifyField(rawValue);
+      if (value) return value;
+    }
   }
 
   return '';
 };
 
-const getCreatorEmail = (fields: Record<string, any>) =>
-  getFirstField(fields, [
+const creatorFields = {
+  name: [
+    'Wie heißt du?  (Vor- und Nachname)',
+    'Wie heißt du? (Vor- und Nachname)',
+    'Name',
+    'Vor- und Nachname',
+    'Vollständiger Name',
+  ],
+  reach: [
+    'Wie groß ist deine Reichweite pro Netzwerk? ',
+    'Wie groß ist deine Reichweite pro Netzwerk?',
+    'Reichweite',
+    'Follower je Netzwerk',
+  ],
+  networks: [
+    'In welchem Netzwerk hast du Accounts und möchtest du aktiv sein?&nbsp; ',
+    'In welchem Netzwerk hast du Accounts und möchtest du aktiv sein?',
+    'Netzwerke',
+    'Plattformen',
+  ],
+  price: [
+    'Price',
+    'Preis',
+    'Preisrange',
+    'Preisvorstellung',
+    'Rate',
+    'Rates',
+    'Was kostet ein Video bei dir?',
+    'Arbeitest du kostenlos?',
+  ],
+  email: [
     'E-Mail',
     'Email',
     'E-Mail Adresse',
@@ -42,408 +158,717 @@ const getCreatorEmail = (fields: Record<string, any>) =>
     'Deine E-Mail-Adresse',
     'Wie lautet deine E-Mail-Adresse?',
     'Wie lautet deine E-Mail Adresse?',
-  ]);
-
-const getCreatorSocialLinks = (fields: Record<string, any>) =>
-  getFirstField(fields, [
-    'In welchem Netzwerk hast du Accounts und möchtest du aktiv sein?&nbsp; ',
+  ],
+  socialLinks: [
     'Social Links',
     'Social Media Links',
-    'Instagram',
-    'TikTok',
-  ]);
+    'Social-Media-Links',
+    'Profil-Links',
+    'Instagram Link',
+    'TikTok Link',
+    'Portfolio',
+    'In welchem Netzwerk hast du Accounts und möchtest du aktiv sein?&nbsp; ',
+  ],
+};
 
-async function sendLeadEmails({
+function isValidApiKey(supplied: string | null, expected: string | undefined) {
+  if (!supplied || !expected) return false;
+  const suppliedBuffer = Buffer.from(supplied);
+  const expectedBuffer = Buffer.from(expected);
+  return suppliedBuffer.length === expectedBuffer.length
+    && timingSafeEqual(suppliedBuffer, expectedBuffer);
+}
+
+function getOrigin(value: string | null) {
+  if (!value) return null;
+  try {
+    return new URL(value).origin;
+  } catch {
+    return null;
+  }
+}
+
+function isTrustedBrowserRequest(req: Request) {
+  const originHeader = req.headers.get('origin');
+  const origin = getOrigin(originHeader);
+  const refererOrigin = getOrigin(req.headers.get('referer'));
+  const requestOrigin = getOrigin(req.url);
+  const fetchSite = req.headers.get('sec-fetch-site');
+  const isAllowed = (candidate: string | null) => Boolean(
+    candidate
+    && (allowedOrigins.has(candidate) || candidate === requestOrigin),
+  );
+
+  if (fetchSite === 'cross-site') return false;
+  if (originHeader) return isAllowed(origin);
+  return isAllowed(refererOrigin);
+}
+
+function consumeRateLimit(key: string, limit: number) {
+  const now = Date.now();
+
+  if (rateLimitStore.size > 5_000) {
+    for (const [storedKey, entry] of rateLimitStore.entries()) {
+      if (entry.resetAt <= now) rateLimitStore.delete(storedKey);
+    }
+  }
+
+  const current = rateLimitStore.get(key);
+
+  if (!current || current.resetAt <= now) {
+    rateLimitStore.set(key, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    return { allowed: true, retryAfter: 0 };
+  }
+
+  if (current.count >= limit) {
+    return {
+      allowed: false,
+      retryAfter: Math.max(1, Math.ceil((current.resetAt - now) / 1_000)),
+    };
+  }
+
+  current.count += 1;
+  return { allowed: true, retryAfter: 0 };
+}
+
+function hashRateLimitValue(value: string) {
+  return createHash('sha256').update(value).digest('hex').slice(0, 24);
+}
+
+function getClientIp(req: Request) {
+  const forwarded = req.headers.get('x-forwarded-for');
+  return plainText(forwarded?.split(',')[0] || req.headers.get('x-real-ip') || 'unknown', 80);
+}
+
+function createLeadId(submissionId?: string) {
+  const safeSubmissionId = plainText(submissionId, 100);
+  const source = /^[a-zA-Z0-9_-]{8,100}$/.test(safeSubmissionId)
+    ? safeSubmissionId
+    : randomUUID();
+  const digest = createHash('sha256').update(source).digest('hex').slice(0, 12).toUpperCase();
+  return `UGC-${digest}`;
+}
+
+function normalizeRequestBody(rawBody: unknown) {
+  const body = asRecord(rawBody);
+  const rawClient = Object.keys(asRecord(body.clientInfo)).length
+    ? asRecord(body.clientInfo)
+    : body.type === 'contact'
+      ? { ...body, requestType: 'general_contact' }
+      : {};
+
+  const requestType = plainText(rawClient.requestType, 40);
+  const kind: LeadKind = requestType === 'no_results_found'
+    ? 'no_results'
+    : requestType === 'general_contact' || body.type === 'contact'
+      ? 'general_contact'
+      : 'creator_match';
+
+  const clientInfo: LeadClientInfo = {
+    name: plainText(rawClient.name, 100),
+    email: plainText(rawClient.email, 160).toLowerCase(),
+    company: plainText(rawClient.company, 120),
+    subject: plainText(rawClient.subject, 160),
+    message: multilineText(rawClient.message, 1_500),
+    searchQuery: multilineText(rawClient.searchQuery, 500),
+    noResultsQuery: multilineText(rawClient.noResultsQuery, 500),
+    sourceUrl: plainText(rawClient.sourceUrl, 500),
+    sourcePath: plainText(rawClient.sourcePath, 200),
+    submissionId: plainText(rawClient.submissionId, 100),
+    website: plainText(rawClient.website, 200),
+  };
+
+  const creatorIds = Array.isArray(body.creatorIds)
+    ? [...new Set(body.creatorIds.map((id) => plainText(id, 50)).filter(Boolean))]
+    : [];
+
+  return { kind, clientInfo, creatorIds };
+}
+
+async function fetchSelectedCreators(creatorIds: string[]): Promise<SelectedCreator[]> {
+  const neonIds = creatorIds.filter((id) => /^UGC-[A-F0-9]{10}$/.test(id));
+  const airtableIds = creatorIds.filter((id) => /^rec[a-zA-Z0-9]{3,32}$/.test(id));
+  if (neonIds.length + airtableIds.length !== creatorIds.length) {
+    throw new Error('Invalid creator ID format');
+  }
+
+  const creatorsById = new Map<string, SelectedCreator>();
+
+  if (neonIds.length) {
+    if (!isDatabaseConfigured()) throw new Error('Creator database is not configured');
+    const sql = getDatabase();
+    const placeholders = neonIds.map((_, index) => `$${index + 1}`).join(', ');
+    const rows = await sql.query(`
+      SELECT
+        v.public_id,
+        v.display_name,
+        v.reach_text,
+        v.rate_text,
+        v.social_links,
+        array_to_string(v.networks, ', ') AS network_names,
+        CASE
+          WHEN c.project_notifications_enabled AND c.notification_paused_at IS NULL THEN c.email
+          ELSE NULL
+        END AS contact_email
+      FROM creator_search_public v
+      LEFT JOIN creator_private_contacts c ON c.creator_id = v.id
+      WHERE v.public_id IN (${placeholders})
+    `, neonIds);
+
+    for (const row of rows as any[]) {
+      creatorsById.set(String(row.public_id), {
+        id: String(row.public_id),
+        name: plainText(row.display_name, 100) || 'UGC Creator',
+        reach: multilineText(row.reach_text, 300),
+        networks: plainText(row.network_names, 300),
+        priceRange: multilineText(row.rate_text, 200),
+        contactEmail: emailRegex.test(String(row.contact_email || '')) ? String(row.contact_email).slice(0, 160) : '',
+        socialLinks: multilineText(row.social_links, 500),
+      });
+    }
+
+    if (rows.length !== neonIds.length) throw new Error('One or more creator profiles are unavailable');
+  }
+
+  if (airtableIds.length) {
+    const airtableApiKey = process.env.AIRTABLE_API_KEY;
+    if (!airtableApiKey) throw new Error('AIRTABLE_API_KEY is not configured');
+
+    const base = new Airtable({ apiKey: airtableApiKey })
+      .base(process.env.AIRTABLE_BASE_ID || 'appbpBRQkSWkdwTT5');
+    const tableName = process.env.AIRTABLE_TABLE_NAME || 'tblXbhX5gIB47BjBr';
+
+    await Promise.all(airtableIds.map(async (id) => {
+      const record = await base(tableName).find(id);
+      const fields = record.fields as Record<string, unknown>;
+      const networks = getFieldValue(fields, creatorFields.networks).slice(0, 300);
+      const rawSocialLinks = getFieldValue(fields, creatorFields.socialLinks).slice(0, 500);
+      const extractedEmail = getFieldValue(fields, creatorFields.email).match(/[^\s,;<>]+@[^\s,;<>]+\.[^\s,;<>]+/)?.[0] || '';
+      const socialLinks = rawSocialLinks === networks && !/https?:\/\//i.test(rawSocialLinks)
+        ? ''
+        : rawSocialLinks;
+
+      creatorsById.set(id, {
+        id: record.id,
+        name: getFieldValue(fields, creatorFields.name).slice(0, 100) || 'UGC Creator',
+        reach: getFieldValue(fields, creatorFields.reach).slice(0, 300),
+        networks,
+        priceRange: getFieldValue(fields, creatorFields.price).slice(0, 200),
+        contactEmail: emailRegex.test(extractedEmail) ? extractedEmail.slice(0, 160) : '',
+        socialLinks,
+      });
+    }));
+  }
+
+  return creatorIds.map((id) => {
+    const creator = creatorsById.get(id);
+    if (!creator) throw new Error('Creator profile not found');
+    return creator;
+  });
+}
+
+async function persistLead({
   leadId,
+  kind,
   clientInfo,
   selectedCreators,
-  isNoResultsRequest,
 }: {
   leadId: string;
-  clientInfo: any;
+  kind: LeadKind;
+  clientInfo: LeadClientInfo;
   selectedCreators: SelectedCreator[];
-  isNoResultsRequest: boolean;
 }) {
+  if (!isDatabaseConfigured()) return null;
+
+  try {
+    const sql = getDatabase();
+    const [lead] = await sql.query(`
+      INSERT INTO brand_leads (
+        public_id, name, email, company, search_query, message, source_url, status
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, 'submitted')
+      ON CONFLICT (public_id) DO UPDATE SET
+        name = EXCLUDED.name,
+        email = EXCLUDED.email,
+        company = EXCLUDED.company,
+        search_query = EXCLUDED.search_query,
+        message = EXCLUDED.message,
+        source_url = EXCLUDED.source_url,
+        updated_at = now()
+      RETURNING id
+    `, [
+      leadId,
+      clientInfo.name,
+      clientInfo.email,
+      clientInfo.company || null,
+      clientInfo.searchQuery || clientInfo.noResultsQuery || clientInfo.subject || kind,
+      clientInfo.message || null,
+      clientInfo.sourceUrl || null,
+    ]);
+
+    for (let index = 0; index < selectedCreators.length; index += 1) {
+      const creator = selectedCreators[index];
+      await sql.query(`
+        INSERT INTO lead_creator_matches (
+          lead_id, creator_id, creator_public_id, creator_snapshot, rank
+        ) VALUES (
+          $1,
+          (SELECT id FROM creator_profiles WHERE public_id = $2 LIMIT 1),
+          $2,
+          $3::jsonb,
+          $4
+        )
+        ON CONFLICT (lead_id, creator_public_id) DO UPDATE SET
+          creator_id = EXCLUDED.creator_id,
+          creator_snapshot = EXCLUDED.creator_snapshot,
+          rank = EXCLUDED.rank
+      `, [lead.id, creator.id, JSON.stringify({
+        name: creator.name,
+        reach: creator.reach,
+        networks: creator.networks,
+        priceRange: creator.priceRange,
+        socialLinks: creator.socialLinks,
+        hasContactEmail: Boolean(creator.contactEmail),
+      }), index + 1]);
+    }
+
+    return String(lead.id);
+  } catch (error) {
+    console.error(`[${leadId}] Could not persist lead`, error instanceof Error ? error.message : 'unknown error');
+    return null;
+  }
+}
+
+async function persistInitialDelivery({
+  databaseLeadId,
+  leadId,
+  clientInfo,
+  delivery,
+}: {
+  databaseLeadId: string | null;
+  leadId: string;
+  clientInfo: LeadClientInfo;
+  delivery: EmailDispatchResult;
+}) {
+  if (!databaseLeadId || !isDatabaseConfigured()) return;
+
+  try {
+    const sql = getDatabase();
+    const recipientHash = createHash('sha256').update(clientInfo.email.toLowerCase()).digest('hex');
+    for (const [audience, result] of [
+      ['brand', delivery.brand],
+      ['internal', delivery.internal],
+    ] as const) {
+      await sql.query(`
+        INSERT INTO email_events (
+          lead_id, resend_email_id, audience, event_type, recipient_hash, metadata
+        ) VALUES ($1, $2, $3, $4, $5, $6::jsonb)
+      `, [
+        databaseLeadId,
+        result.id || null,
+        audience,
+        result.status,
+        audience === 'brand' ? recipientHash : null,
+        JSON.stringify({ lead_id: leadId, error: result.error || null }),
+      ]);
+    }
+
+    await sql.query(`
+      UPDATE brand_leads
+      SET status = $2, updated_at = now()
+      WHERE id = $1
+    `, [databaseLeadId, delivery.brand.status === 'queued' ? 'brand_email_queued' : 'brand_email_failed']);
+  } catch (error) {
+    console.error(`[${leadId}] Could not persist initial email status`, error instanceof Error ? error.message : 'unknown error');
+  }
+}
+
+function emailTags(
+  kind: LeadKind,
+  audience: 'brand' | 'internal' | 'creator',
+  leadId: string,
+  creatorId?: string,
+) {
+  return [
+    { name: 'category', value: kind },
+    { name: 'audience', value: audience },
+    { name: 'lead_id', value: leadId },
+    ...(creatorId ? [{ name: 'creator_id', value: creatorId }] : []),
+  ];
+}
+
+async function sendEmail({
+  resend,
+  from,
+  to,
+  replyTo,
+  email,
+  tags,
+  idempotencyKey,
+}: {
+  resend: Resend;
+  from: string;
+  to: string;
+  replyTo: string;
+  email: RenderedEmail;
+  tags: { name: string; value: string }[];
+  idempotencyKey: string;
+}): Promise<DeliveryResult> {
+  try {
+    const response = await resend.emails.send({
+      from,
+      to,
+      replyTo,
+      subject: email.subject,
+      html: email.html,
+      text: email.text,
+      tags,
+    }, { idempotencyKey });
+
+    if (response.error) {
+      return {
+        status: 'failed',
+        error: `${response.error.name}: ${plainText(response.error.message, 180)}`,
+      };
+    }
+
+    return { status: 'queued', id: response.data.id };
+  } catch (error) {
+    return {
+      status: 'failed',
+      error: error instanceof Error ? plainText(error.message, 180) : 'Unbekannter Resend-Fehler',
+    };
+  }
+}
+
+async function dispatchLeadEmails({
+  leadId,
+  kind,
+  clientInfo,
+  selectedCreators,
+}: {
+  leadId: string;
+  kind: LeadKind;
+  clientInfo: LeadClientInfo;
+  selectedCreators: SelectedCreator[];
+}): Promise<EmailDispatchResult> {
   const resendApiKey = process.env.RESEND_API_KEY;
   if (!resendApiKey) {
-    console.warn('RESEND_API_KEY is not configured - skipping email notifications');
-    return;
+    return {
+      brand: { status: 'not_configured', error: 'RESEND_API_KEY fehlt' },
+      internal: { status: 'not_configured', error: 'RESEND_API_KEY fehlt' },
+      creators: [],
+      creatorOutreach: {
+        enabled: false,
+        eligible: 0,
+        queued: 0,
+        failed: 0,
+        skippedNoEmail: selectedCreators.length,
+        skippedDaily: 0,
+        skippedLimit: 0,
+      },
+    };
   }
 
   const resend = new Resend(resendApiKey);
   const from = process.env.RESEND_FROM || 'UGC VZ <hi@ugc-vz.de>';
   const internalEmail = process.env.UGC_INTERNAL_EMAIL || 'hi@ugc-vz.de';
-  const replyTo = clientInfo.email || internalEmail;
-  const creatorListHtml = selectedCreators.length
-    ? selectedCreators.map((creator) => `
-      <li>
-        <strong>${htmlEscape(creator.name)}</strong><br />
-        Reichweite: ${htmlEscape(creator.reach || 'nicht angegeben')}<br />
-        Netzwerke: ${htmlEscape(creator.networks || 'nicht angegeben')}
-        ${creator.contactEmail ? `<br />Creator-E-Mail: ${htmlEscape(creator.contactEmail)}` : ''}
-        ${creator.socialLinks ? `<br />Social/Kontakt: ${htmlEscape(creator.socialLinks)}` : ''}
-      </li>
-    `).join('')
-    : '<li>Keine Creator ausgewaehlt.</li>';
+  const brandEmail = kind === 'creator_match'
+    ? renderBrandMatchEmail({ leadId, clientInfo, selectedCreators, internalEmail })
+    : kind === 'no_results'
+      ? renderNoResultsEmail({ leadId, clientInfo })
+      : renderContactAcknowledgementEmail({ leadId, clientInfo });
 
-  const searchQuery = clientInfo.searchQuery || clientInfo.noResultsQuery || 'Nicht angegeben';
-  const sourceUrl = clientInfo.sourceUrl || 'Nicht angegeben';
-  const message = clientInfo.message || 'Keine Nachricht';
-
-  const internalSubject = isNoResultsRequest
-    ? `[UGC VZ] No-Results Lead ${leadId}: ${plainText(searchQuery, 80)}`
-    : `[UGC VZ] Brand Lead ${leadId}: ${selectedCreators.length} Creator ausgewaehlt`;
-
-  const internalHtml = `
-    <div style="font-family:Arial,sans-serif;line-height:1.5;color:#111">
-      <h1>${isNoResultsRequest ? 'No-Results Anfrage' : 'Neue UGC Creator Anfrage'}</h1>
-      <p><strong>Lead-ID:</strong> ${htmlEscape(leadId)}</p>
-      <p><strong>Naechster Schritt:</strong> ${isNoResultsRequest
-        ? 'Demand pruefen, passende Creator manuell recherchieren oder Brand mit Alternative kontaktieren.'
-        : 'Creator-Auswahl pruefen, Kontaktdaten/Verfuegbarkeit klaeren und Brand zeitnah antworten.'}</p>
-      <h2>Brand</h2>
-      <p>
-        <strong>Name:</strong> ${htmlEscape(clientInfo.name || 'Nicht angegeben')}<br />
-        <strong>E-Mail:</strong> ${htmlEscape(clientInfo.email || 'Nicht angegeben')}<br />
-        <strong>Quelle:</strong> ${htmlEscape(sourceUrl)}
-      </p>
-      <h2>Demand</h2>
-      <p><strong>Suchanfrage:</strong> ${htmlEscape(searchQuery)}</p>
-      <p><strong>Nachricht:</strong><br />${htmlEscape(message)}</p>
-      <h2>Upsell-Hinweis</h2>
-      <p>Brand hat in der Bestaetigungsmail die Option bekommen, mit "Bitte abwickeln" Unterstuetzung fuer Creator-Koordination, Briefing, Rechte, Feedback, Produktion/Filming und Asset-Uebergabe anzufragen.</p>
-      <h2>Ausgewaehlte Creator</h2>
-      <ol>${creatorListHtml}</ol>
-    </div>
-  `;
-
-  const brandHtml = `
-    <div style="font-family:Arial,sans-serif;line-height:1.5;color:#111">
-      <h1>Deine Anfrage ist bei UGC VZ angekommen</h1>
-      <p>Hi ${htmlEscape(clientInfo.name || '')},</p>
-      <p>wir haben deine UGC-Anfrage erhalten und pruefen sie jetzt.</p>
-      <p><strong>Lead-ID:</strong> ${htmlEscape(leadId)}</p>
-      <p><strong>Deine Suchanfrage:</strong> ${htmlEscape(searchQuery)}</p>
-      ${selectedCreators.length ? `
-        <h2>Ausgewaehlte Creator und Kontaktinfos</h2>
-        <ol>${creatorListHtml}</ol>
-      ` : ''}
-      <h2>Vorlage fuer Briefing & Vertrag</h2>
-      <p>Hier findest du eine kompakte Vorlage mit Punkten zu Leistung, Verguetung, Timing, Nutzungsrechten und Abnahme:</p>
-      <p><a href="https://ugc-vz.de/brands/ugc-vertrag-vorlage">https://ugc-vz.de/brands/ugc-vertrag-vorlage</a></p>
-      <p><em>Hinweis: Die Vorlage ist eine praktische Arbeitsgrundlage und ersetzt keine Rechtsberatung.</em></p>
-      <h2>Optional: Wir koennen die Abwicklung uebernehmen</h2>
-      <p>Wenn du dir den Overhead sparen willst, kann UGC VZ bzw. das Team dahinter die naechsten Schritte fuer dich organisieren: Creator-Koordination, Briefing, Timings, Rechteklaerung, Feedback-Schleifen, Produktion/Filming und finale Asset-Uebergabe.</p>
-      <p>Zusätzlich koennen wir bei Bedarf KI-UGC-Kampagnen oder hybride Setups aus echten Creatorn und KI-Assets mitdenken, zum Beispiel fuer schnelle Varianten, Hooks, Voiceover oder skalierbare Creative-Tests.</p>
-      <p>Antworte einfach auf diese E-Mail mit <strong>"Bitte abwickeln"</strong> oder beschreibe kurz Budget, Timing und gewuenschte Assets. Dann melden wir uns mit einem passenden Vorschlag.</p>
-      <p>Naechster Schritt: Kontaktiere die passenden Creator direkt oder antworte auf diese E-Mail, wenn du Hilfe bei Briefing, Auswahl oder Vertragsdetails brauchst.</p>
-      <p>Viele Gruesse<br />UGC VZ</p>
-    </div>
-  `;
-
-  const emailTasks = [
-    resend.emails.send({
-      from,
-      to: internalEmail,
-      replyTo,
-      subject: internalSubject,
-      html: internalHtml,
-    }),
-  ];
-
-  if (clientInfo.email) {
-    emailTasks.push(resend.emails.send({
-      from,
-      to: clientInfo.email,
-      replyTo: internalEmail,
-      subject: `UGC VZ Anfrage erhalten (${leadId})`,
-      html: brandHtml,
-    }));
-  }
-
-  const shouldEmailCreators = process.env.SEND_CREATOR_OUTREACH_EMAILS === 'true';
-  if (shouldEmailCreators && !isNoResultsRequest) {
-    selectedCreators
-      .filter((creator) => creator.contactEmail)
-      .forEach((creator) => {
-        emailTasks.push(resend.emails.send({
-          from,
-          to: creator.contactEmail as string,
-          replyTo,
-          subject: `UGC Anfrage ueber UGC VZ (${leadId})`,
-          html: `
-            <div style="font-family:Arial,sans-serif;line-height:1.5;color:#111">
-              <h1>Neue moegliche UGC Anfrage</h1>
-              <p>Hi ${htmlEscape(creator.name)},</p>
-              <p>eine Brand hat dich bei UGC VZ fuer eine Anfrage ausgewaehlt.</p>
-              <p><strong>Suchanfrage:</strong> ${htmlEscape(searchQuery)}</p>
-              <p><strong>Nachricht der Brand:</strong><br />${htmlEscape(message)}</p>
-              <p>Bitte antworte direkt, wenn du Interesse und Verfuegbarkeit hast.</p>
-            </div>
-          `,
-        }));
-      });
-  }
-
-  const results = await Promise.allSettled(emailTasks);
-  results.forEach((result, index) => {
-    if (result.status === 'rejected') {
-      console.error(`Resend email ${index} failed:`, result.reason);
-    }
+  const brand = await sendEmail({
+    resend,
+    from,
+    to: clientInfo.email,
+    replyTo: internalEmail,
+    email: brandEmail,
+    tags: emailTags(kind, 'brand', leadId),
+    idempotencyKey: `ugc-vz/brand/${leadId}`,
   });
+
+  // Brand and internal lead reporting have priority over optional growth mails,
+  // especially while the Resend free quota is shared by all recipients.
+  const internal = await sendEmail({
+    resend,
+    from,
+    to: internalEmail,
+    replyTo: clientInfo.email,
+    email: renderInternalLeadEmail({
+      leadId,
+      kind,
+      clientInfo,
+      selectedCreators,
+      brandDelivery: brand,
+    }),
+    tags: emailTags(kind, 'internal', leadId),
+    idempotencyKey: `ugc-vz/internal/${leadId}`,
+  });
+
+  const shouldEmailCreators = process.env.SEND_CREATOR_OUTREACH_EMAILS === 'true'
+    && kind === 'creator_match';
+  const configuredMax = Number.parseInt(process.env.CREATOR_OUTREACH_MAX_PER_LEAD || '8', 10);
+  const maxPerLead = Number.isFinite(configuredMax)
+    ? Math.max(0, Math.min(MAX_CREATORS_PER_REQUEST, configuredMax))
+    : 8;
+  const withEmail = selectedCreators.filter((creator) => creator.contactEmail);
+  const limitedCreators = withEmail.slice(0, maxPerLead);
+  const today = new Date().toISOString().slice(0, 10);
+
+  if (creatorOutreachDays.size > 5_000) {
+    for (const [creatorId, notifiedDay] of creatorOutreachDays.entries()) {
+      if (notifiedDay !== today) creatorOutreachDays.delete(creatorId);
+    }
+  }
+
+  const creators: DeliveryResult[] = [];
+  let skippedDaily = 0;
+  if (shouldEmailCreators) {
+    for (const creator of limitedCreators) {
+      if (creatorOutreachDays.get(creator.id) === today) {
+        skippedDaily += 1;
+        continue;
+      }
+
+      const result = await sendEmail({
+        resend,
+        from,
+        to: creator.contactEmail as string,
+        replyTo: clientInfo.email,
+        email: renderCreatorOutreachEmail({
+          leadId,
+          creator,
+          clientInfo,
+          internalEmail,
+        }),
+        tags: emailTags(kind, 'creator', leadId, creator.id),
+        // Resend provides the durable second layer for the one-mail-per-day
+        // frequency cap when separate Vercel instances handle requests.
+        idempotencyKey: `ugc-vz/creator/${creator.id}/${today}`,
+      });
+      creators.push(result);
+      if (result.status === 'queued') creatorOutreachDays.set(creator.id, today);
+
+      // Resend starts at five API requests/second. Keep optional outreach below
+      // that rate without delaying the customer-facing message.
+      await new Promise((resolve) => setTimeout(resolve, 225));
+    }
+  }
+
+  const creatorOutreach: CreatorOutreachSummary = {
+    enabled: shouldEmailCreators,
+    eligible: limitedCreators.length,
+    queued: creators.filter((result) => result.status === 'queued').length,
+    failed: creators.filter((result) => result.status === 'failed').length,
+    skippedNoEmail: selectedCreators.length - withEmail.length,
+    skippedDaily,
+    skippedLimit: Math.max(0, withEmail.length - limitedCreators.length),
+  };
+
+  return { brand, internal, creators, creatorOutreach };
+}
+
+async function sendSlackNotification({
+  leadId,
+  kind,
+  clientInfo,
+  selectedCreators,
+  delivery,
+}: {
+  leadId: string;
+  kind: LeadKind;
+  clientInfo: LeadClientInfo;
+  selectedCreators: SelectedCreator[];
+  delivery: EmailDispatchResult;
+}) {
+  const webhookUrl = process.env.SLACK_WEBHOOK_URL;
+  if (!webhookUrl) return false;
+
+  const webhook = new IncomingWebhook(webhookUrl);
+  const kindLabel = kind === 'creator_match'
+    ? 'Creator-Anfrage'
+    : kind === 'no_results'
+      ? 'Anfrage ohne Treffer'
+      : 'Kontaktanfrage';
+  const brandStatus = delivery.brand.status === 'queued'
+    ? `✅ Brand-Mail von Resend angenommen${delivery.brand.id ? ` (${delivery.brand.id})` : ''}`
+    : `❌ Brand-Mail ${delivery.brand.status}${delivery.brand.error ? `: ${delivery.brand.error}` : ''}`;
+  const outreach = delivery.creatorOutreach;
+  const creatorMailStatus = outreach.enabled
+    ? `📨 Creator-Mails: ${outreach.queued} angenommen, ${outreach.failed} fehlgeschlagen, ${outreach.skippedNoEmail} ohne E-Mail, ${outreach.skippedDaily} heute bereits informiert${outreach.skippedLimit ? `, ${outreach.skippedLimit} wegen Versandlimit zurückgestellt` : ''}`
+    : `⏸️ Creator-Mails deaktiviert · ${outreach.eligible} mit E-Mail versandfähig, ${outreach.skippedNoEmail} ohne hinterlegte E-Mail`;
+  const creatorSummary = selectedCreators.length
+    ? selectedCreators.map((creator) => `• *${slackEscape(creator.name)}* · ${slackEscape(creator.priceRange || 'Preis offen')}\n  ${slackEscape(creator.contactEmail || creator.socialLinks || 'kein direkter Kontakt')}`).join('\n')
+    : 'Keine Creator ausgewählt.';
+  const query = clientInfo.searchQuery || clientInfo.noResultsQuery || clientInfo.subject || 'Nicht angegeben';
+
+  await webhook.send({
+    text: `UGC VZ ${kindLabel} ${leadId}: ${brandStatus}`,
+    blocks: [
+      {
+        type: 'header' as const,
+        text: {
+          type: 'plain_text' as const,
+          text: `🎯 UGC VZ ${kindLabel} ${leadId}`,
+          emoji: true,
+        },
+      },
+      {
+        type: 'section' as const,
+        text: { type: 'mrkdwn' as const, text: `*Versandstatus*\n${slackEscape(brandStatus)}\n${slackEscape(creatorMailStatus)}` },
+      },
+      {
+        type: 'section' as const,
+        fields: [
+          { type: 'mrkdwn' as const, text: `*Kontakt*\n${slackEscape(clientInfo.name)}\n${slackEscape(clientInfo.email)}` },
+          { type: 'mrkdwn' as const, text: `*Quelle*\n${slackEscape(clientInfo.sourceUrl || 'Nicht angegeben')}` },
+        ],
+      },
+      {
+        type: 'section' as const,
+        text: { type: 'mrkdwn' as const, text: `*Suche/Thema*\n${slackEscape(query)}\n\n*Nachricht*\n${slackEscape(clientInfo.message || 'Keine Nachricht')}` },
+      },
+      {
+        type: 'section' as const,
+        text: { type: 'mrkdwn' as const, text: `*Creator*\n${creatorSummary.slice(0, 2_800)}` },
+      },
+      {
+        type: 'context' as const,
+        elements: [{
+          type: 'mrkdwn' as const,
+          text: delivery.brand.status === 'queued'
+            ? 'Die finale Zustellung bzw. ein Bounce wird über den Resend-Webhook gemeldet.'
+            : 'Bitte Resend-Konfiguration bzw. Empfängeradresse prüfen.',
+        }],
+      },
+    ],
+  });
+
+  return true;
 }
 
 export async function POST(req: Request) {
+  const expectedApiKey = process.env.SUBMIT_REQUEST_API_KEY;
+  const suppliedApiKey = req.headers.get('x-api-key');
+  const authorized = isValidApiKey(suppliedApiKey, expectedApiKey) || isTrustedBrowserRequest(req);
+
+  if (!authorized) {
+    return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const contentLength = Number(req.headers.get('content-length') || 0);
+  if (contentLength > MAX_BODY_BYTES) {
+    return NextResponse.json({ success: false, error: 'Request body too large' }, { status: 413 });
+  }
+
   try {
-    const leadId = `UGC-${Date.now().toString(36).toUpperCase()}`;
-    // Basis-Authentifizierung über API-Key oder Referer-Check
-    const referer = req.headers.get('referer');
-    const apiKey = req.headers.get('x-api-key');
-    const expectedApiKey = process.env.SUBMIT_REQUEST_API_KEY;
+    const rawBodyText = await req.text();
+    if (Buffer.byteLength(rawBodyText, 'utf8') > MAX_BODY_BYTES) {
+      return NextResponse.json({ success: false, error: 'Request body too large' }, { status: 413 });
+    }
 
-    // Prüfe ob Request von der eigenen Domain kommt oder gültigen API-Key hat
-    const isValidReferer = referer && (
-      referer.includes('ugc-vz.de') ||
-      referer.includes('localhost:3000') ||
-      referer.includes('localhost:3001')
-    );
-    const isValidApiKey = expectedApiKey && apiKey === expectedApiKey;
+    let rawBody: unknown;
+    try {
+      rawBody = JSON.parse(rawBodyText);
+    } catch {
+      return NextResponse.json({ success: false, error: 'Invalid JSON body' }, { status: 400 });
+    }
 
-    if (!isValidReferer && !isValidApiKey) {
-      console.log('Unauthorized submit request attempt from:', referer);
+    const { kind, clientInfo, creatorIds } = normalizeRequestBody(rawBody);
+
+    if (clientInfo.website) {
+      return NextResponse.json({ success: false, error: 'Invalid request' }, { status: 400 });
+    }
+
+    if (!clientInfo.name) {
+      return NextResponse.json({ success: false, error: 'Name is required' }, { status: 400 });
+    }
+
+    if (!emailRegex.test(clientInfo.email)) {
+      return NextResponse.json({ success: false, error: 'Invalid email format' }, { status: 400 });
+    }
+
+    if (kind === 'creator_match' && (creatorIds.length === 0 || creatorIds.length > MAX_CREATORS_PER_REQUEST)) {
+      return NextResponse.json({ success: false, error: 'Select between 1 and 10 creators' }, { status: 400 });
+    }
+
+    const ipKey = `ip:${hashRateLimitValue(getClientIp(req))}`;
+    const emailKey = `email:${hashRateLimitValue(clientInfo.email)}`;
+    const ipLimit = consumeRateLimit(ipKey, 20);
+    const emailLimit = consumeRateLimit(emailKey, 5);
+    if (!ipLimit.allowed || !emailLimit.allowed) {
+      const retryAfter = Math.max(ipLimit.retryAfter, emailLimit.retryAfter);
       return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
-        { status: 401 }
+        { success: false, error: 'Zu viele Anfragen. Bitte später erneut versuchen.' },
+        { status: 429, headers: { 'Retry-After': String(retryAfter) } },
       );
     }
 
-    const { creatorIds, clientInfo } = await req.json();
+    const leadId = createLeadId(clientInfo.submissionId);
+    const selectedCreators = kind === 'creator_match'
+      ? await fetchSelectedCreators(creatorIds)
+      : [];
 
-    // Input-Validierung
-    // Prüfe, ob es sich um eine Anfrage ohne Ergebnisse handelt
-    const isNoResultsRequest = clientInfo && clientInfo.requestType === 'no_results_found';
-    
-    // Validiere Creator IDs nur, wenn es keine "Keine Ergebnisse"-Anfrage ist
-    if (!isNoResultsRequest && (!creatorIds || !Array.isArray(creatorIds) || creatorIds.length === 0)) {
-      return NextResponse.json(
-        { success: false, error: 'Invalid creator IDs' },
-        { status: 400 }
-      );
-    }
-
-    // Validiere Client-Info
-    if (!clientInfo) {
-      return NextResponse.json(
-        { success: false, error: 'Invalid client info' },
-        { status: 400 }
-      );
-    }
-    
-    // Bei normalen Anfragen (mit Creator-Auswahl) ist E-Mail erforderlich
-    if (!isNoResultsRequest) {
-      if (!clientInfo.email || typeof clientInfo.email !== 'string') {
-        return NextResponse.json(
-          { success: false, error: 'Invalid client info: email required' },
-          { status: 400 }
-        );
-      }
-
-      // Email-Format validieren
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(clientInfo.email)) {
-        return NextResponse.json(
-          { success: false, error: 'Invalid email format' },
-          { status: 400 }
-        );
-      }
-    } else {
-      // Bei "Keine Ergebnisse"-Anfragen ist der Name erforderlich
-      if (!clientInfo.name || typeof clientInfo.name !== 'string' || !clientInfo.name.trim()) {
-        return NextResponse.json(
-          { success: false, error: 'Name is required for no-results requests' },
-          { status: 400 }
-        );
-      }
-
-      if (!clientInfo.email || typeof clientInfo.email !== 'string') {
-        return NextResponse.json(
-          { success: false, error: 'Email is required for no-results requests' },
-          { status: 400 }
-        );
-      }
-    }
-
-    console.log('Selected creator IDs:', creatorIds);
-    console.log('Is no results request:', isNoResultsRequest);
-
-    let selectedCreators: SelectedCreator[] = [];
-    
-    // Nur bei normalen Anfragen (mit Creator-Auswahl) Airtable abfragen
-    if (!isNoResultsRequest && creatorIds && creatorIds.length > 0) {
-      // Initialize Airtable base inside the function
-      const airtableApiKey = process.env.AIRTABLE_API_KEY;
-      if (!airtableApiKey) {
-        throw new Error('AIRTABLE_API_KEY is not defined in environment variables');
-      }
-      const base = new Airtable({ apiKey: airtableApiKey }).base(process.env.AIRTABLE_BASE_ID || 'appbpBRQkSWkdwTT5');
-
-      // Fetch full details of selected creators mit Sanitization
-      selectedCreators = await Promise.all(
-        creatorIds.map(async (id: string) => {
-          // Validiere Creator ID Format
-          if (typeof id !== 'string' || id.length > 50) {
-            throw new Error('Invalid creator ID format');
-          }
-
-          const record = await base(process.env.AIRTABLE_TABLE_NAME || 'tblXbhX5gIB47BjBr').find(id);
-          const fields = record.fields as Record<string, any>;
-          return {
-            name: String(fields['Wie heißt du?  (Vor- und Nachname)'] || '').substring(0, 100),
-            reach: String(fields['Wie groß ist deine Reichweite pro Netzwerk? '] || '').substring(0, 200),
-            networks: String(fields['In welchem Netzwerk hast du Accounts und möchtest du aktiv sein?&nbsp; '] || '').substring(0, 200),
-            contactEmail: getCreatorEmail(fields).substring(0, 120),
-            socialLinks: getCreatorSocialLinks(fields).substring(0, 300),
-          };
-        })
-      );
-
-      console.log('Selected creators:', selectedCreators);
-    }
-
-    await sendLeadEmails({
+    const databaseLeadId = await persistLead({
       leadId,
+      kind,
       clientInfo,
-      selectedCreators: isNoResultsRequest ? [] : selectedCreators,
-      isNoResultsRequest,
+      selectedCreators,
     });
 
-    const webhookUrl = process.env.SLACK_WEBHOOK_URL;
-    if (!webhookUrl) {
-      console.warn('SLACK_WEBHOOK_URL is not defined - Creator request will be logged but not sent to Slack');
-      console.log('Creator request received:', {
-        creatorIds: isNoResultsRequest ? [] : creatorIds,
-        clientInfo: {
-          name: clientInfo.name,
-          email: clientInfo.email,
-          message: clientInfo.message
-        },
-        selectedCreators: isNoResultsRequest ? [] : selectedCreators
+    const delivery = await dispatchLeadEmails({
+      leadId,
+      kind,
+      clientInfo,
+      selectedCreators,
+    });
+
+    await persistInitialDelivery({
+      databaseLeadId,
+      leadId,
+      clientInfo,
+      delivery,
+    });
+
+    try {
+      await sendSlackNotification({
+        leadId,
+        kind,
+        clientInfo,
+        selectedCreators,
+        delivery,
       });
-      return NextResponse.json({ success: true, note: 'Request logged, but Slack webhook not configured' });
-    }
-    const webhook = new IncomingWebhook(webhookUrl);
-    
-    // Unterschiedliche Slack-Nachrichten für normale Anfragen und "Keine Ergebnisse"-Anfragen
-    if (isNoResultsRequest) {
-      // Slack-Nachricht für "Keine Ergebnisse"-Anfragen
-      await webhook.send({
-        blocks: [
-          {
-            type: "header" as const,
-            text: {
-              type: "plain_text" as const,
-              text: `❓ Anfrage ohne Treffer ${leadId}`,
-              emoji: true
-            }
-          },
-          {
-            type: "section" as const,
-            fields: [
-              {
-                type: "mrkdwn" as const,
-                text: `*Name:*\n${clientInfo.name?.substring(0, 100) || 'Nicht angegeben'}`
-              },
-              {
-                type: "mrkdwn" as const,
-                text: `*Email:*\n${clientInfo.email?.substring(0, 100) || 'Nicht angegeben'}`
-              }
-            ]
-          },
-          {
-            type: "section" as const,
-            text: {
-              type: "mrkdwn" as const,
-              text: "*Nächster Schritt:*\nDemand prüfen, passende Creator manuell recherchieren oder mit Alternative antworten."
-            }
-          },
-          {
-            type: "section" as const,
-            text: {
-              type: "mrkdwn" as const,
-              text: `*Suchanfrage ohne Ergebnisse:*\n${clientInfo.noResultsQuery || 'Nicht angegeben'}`
-            }
-          },
-          {
-            type: "section" as const,
-            text: {
-              type: "mrkdwn" as const,
-              text: `*Nachricht:*\n${clientInfo.message?.substring(0, 500) || 'Keine Nachricht'}`
-            }
-          }
-        ]
-      });
-    } else {
-      // Ursprüngliche Slack-Nachricht für normale Anfragen
-      await webhook.send({
-        blocks: [
-          {
-            type: "header" as const,
-            text: {
-              type: "plain_text" as const,
-              text: `🎯 Neue UGC Creator Anfrage ${leadId}`,
-              emoji: true
-            }
-          },
-          {
-            type: "section" as const,
-            text: {
-              type: "mrkdwn" as const,
-              text: "*Nächster Schritt:*\nCreator-Auswahl prüfen, Kontaktdaten/Verfügbarkeit klären und Brand zeitnah antworten."
-            }
-          },
-          {
-            type: "section" as const,
-            fields: [
-              {
-                type: "mrkdwn" as const,
-                text: `*Kunde:*\n${clientInfo.name?.substring(0, 100) || 'Nicht angegeben'}`
-              },
-              {
-                type: "mrkdwn" as const,
-                text: `*Email:*\n${clientInfo.email?.substring(0, 100) || 'Nicht angegeben'}`
-              }
-            ]
-          },
-          {
-            type: "section" as const,
-            text: {
-              type: "mrkdwn" as const,
-              text: `*Suchanfrage:*\n${clientInfo.searchQuery || 'Nicht angegeben'}\n\n*Quelle:*\n${clientInfo.sourceUrl || 'Nicht angegeben'}`
-            }
-          },
-          {
-            type: "section" as const,
-            text: {
-              type: "mrkdwn" as const,
-              text: "*Ausgewählte Creator:*\n" + selectedCreators.map(creator =>
-                `• *${creator.name}*\n  Reichweite: ${creator.reach}\n  Netzwerke: ${creator.networks}${creator.contactEmail ? `\n  E-Mail: ${creator.contactEmail}` : ''}${creator.socialLinks ? `\n  Kontakt/Social: ${creator.socialLinks}` : ''}`
-              ).join('\n\n')
-            }
-          },
-          ...(clientInfo.message ? [{
-            type: "section" as const,
-            text: {
-              type: "mrkdwn" as const,
-              text: `*Nachricht:*\n${clientInfo.message.substring(0, 500)}`
-            }
-          }] : [])
-        ]
-      });
+    } catch (error) {
+      console.error(`[${leadId}] Slack notification failed`, error);
     }
 
-    return NextResponse.json({ success: true, leadId });
+    if (delivery.internal.status !== 'queued') {
+      console.error(`[${leadId}] Internal email notification failed: ${delivery.internal.error || delivery.internal.status}`);
+    }
+
+    if (delivery.brand.status !== 'queued') {
+      console.error(`[${leadId}] Brand email failed: ${delivery.brand.error || delivery.brand.status}`);
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Die Bestätigungs-E-Mail konnte nicht versendet werden. Bitte erneut versuchen.',
+          leadId,
+        },
+        { status: 502 },
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      leadId,
+      delivery: 'queued',
+    });
   } catch (error) {
-    console.error('Slack notification error:', error);
-    return NextResponse.json({ error: 'Failed to send notification' }, { status: 500 });
+    console.error('UGC VZ submit-request failed', error);
+    return NextResponse.json(
+      { success: false, error: 'Anfrage konnte nicht verarbeitet werden' },
+      { status: 500 },
+    );
   }
 }

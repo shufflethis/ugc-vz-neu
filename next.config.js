@@ -1,3 +1,21 @@
+const isDevelopment = process.env.NODE_ENV !== 'production';
+
+const contentSecurityPolicy = [
+  "default-src 'self'",
+  `script-src 'self' 'unsafe-inline'${isDevelopment ? " 'unsafe-eval'" : ''} https://www.googletagmanager.com https://www.google-analytics.com https://ssl.google-analytics.com https://cdn.kiprotect.com https://analytics.google.com https://analytics.polymarkt.de`,
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.kiprotect.com",
+  "img-src 'self' data: blob: https://wp.ugc-vz.de http://wp.ugc-vz.de https://p16-sign-va.tiktokcdn.com https://p16-sign.tiktokcdn-us.com https://scontent.cdninstagram.com https://*.fbcdn.net https://yt3.ggpht.com https://yt3.googleusercontent.com https://via.placeholder.com https://www.gravatar.com https://www.google-analytics.com",
+  "font-src 'self' https://fonts.gstatic.com https://cdn.kiprotect.com",
+  "connect-src 'self' https://wp.ugc-vz.de http://wp.ugc-vz.de https://www.google-analytics.com https://analytics.google.com https://region1.google-analytics.com https://region1.analytics.google.com https://analytics.polymarkt.de",
+  "media-src 'self'",
+  "frame-src 'none'",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "frame-ancestors 'none'",
+  'upgrade-insecure-requests',
+].join('; ');
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Disable static optimization for problematic pages during build
@@ -166,6 +184,37 @@ const nextConfig = {
   // Sicherheits-Header für alle Routen
   async headers() {
     return [
+      {
+        // Also apply to cached/static HTML responses. Middleware headers alone
+        // are not guaranteed to survive every CDN cache path on Vercel.
+        source: '/:path*',
+        headers: [
+          {
+            key: 'Content-Security-Policy',
+            value: contentSecurityPolicy,
+          },
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY',
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin',
+          },
+          {
+            key: 'Permissions-Policy',
+            value: 'camera=(), microphone=(self), geolocation=()',
+          },
+          {
+            key: 'Strict-Transport-Security',
+            value: 'max-age=63072000; includeSubDomains; preload',
+          },
+        ],
+      },
       {
         // API-Routen
         source: '/api/:path*',

@@ -12,8 +12,10 @@ const NoResults: React.FC<NoResultsProps> = ({ query }) => {
   const [clientInfo, setClientInfo] = useState({
     name: '',
     email: '',
-    message: ''
+    message: '',
+    website: ''
   });
+  const [submissionId, setSubmissionId] = useState('');
   const [submitLoading, setSubmitLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -32,6 +34,10 @@ const NoResults: React.FC<NoResultsProps> = ({ query }) => {
     }
 
     setSubmitLoading(true);
+    const requestSubmissionId = submissionId
+      || globalThis.crypto?.randomUUID?.()
+      || `${Date.now()}-${Math.random()}`;
+    if (!submissionId) setSubmissionId(requestSubmissionId);
 
     try {
       const res = await fetch('/api/submit-request', {
@@ -41,6 +47,7 @@ const NoResults: React.FC<NoResultsProps> = ({ query }) => {
           creatorIds: [], // Leere Liste, da keine Creator gefunden wurden
           clientInfo: {
             ...clientInfo,
+            submissionId: requestSubmissionId,
             noResultsQuery: query, // Die Suchanfrage, die keine Ergebnisse lieferte
             requestType: 'no_results_found', // Markierung, dass es sich um eine Anfrage ohne Ergebnisse handelt
             sourcePath: typeof window !== 'undefined' ? window.location.pathname : undefined,
@@ -55,7 +62,8 @@ const NoResults: React.FC<NoResultsProps> = ({ query }) => {
       }
 
       toast.success('Ihre Anfrage wurde erfolgreich gesendet!');
-      setClientInfo({ name: '', email: '', message: '' });
+      setClientInfo({ name: '', email: '', message: '', website: '' });
+      setSubmissionId('');
       setSubmitLoading(false);
 
       // Track successful contact form submission
@@ -92,7 +100,7 @@ const NoResults: React.FC<NoResultsProps> = ({ query }) => {
         </h3>
 
         <p className="text-ink-soft mb-6 leading-relaxed">
-          Für Ihre Suchanfrage <span className="text-geo-violet font-medium">"{query}"</span> konnten wir keine passenden UGC Creator in unserer aktuellen Datenbank finden.
+          Für Ihre Suchanfrage <span className="text-geo-violet font-medium">&ldquo;{query}&rdquo;</span> konnten wir keine passenden UGC Creator in unserer aktuellen Datenbank finden.
         </p>
 
         <div className="surface-card rounded-xl p-6 mb-6">
@@ -104,6 +112,20 @@ const NoResults: React.FC<NoResultsProps> = ({ query }) => {
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            <div
+              aria-hidden="true"
+              style={{ position: 'absolute', left: '-10000px', width: 1, height: 1, overflow: 'hidden' }}
+            >
+              <label htmlFor="no-results-website">Website</label>
+              <input
+                type="text"
+                id="no-results-website"
+                tabIndex={-1}
+                autoComplete="off"
+                value={clientInfo.website}
+                onChange={(e) => setClientInfo({ ...clientInfo, website: e.target.value })}
+              />
+            </div>
             <div className="flex flex-col text-left">
               <label htmlFor="name" className="text-sm text-ink-soft mb-1">Name *</label>
               <input

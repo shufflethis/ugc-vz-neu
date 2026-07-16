@@ -3,6 +3,7 @@ import Airtable from 'airtable';
 import fs from 'fs';
 import path from 'path';
 import { getProfileImage } from '@/utils/profileImage';
+import { getDatabase, isDatabaseConfigured } from '@/app/lib/database';
 
 // Define a proper type for processed creators
 type ProcessedCreator = {
@@ -30,6 +31,8 @@ export const runtime = 'nodejs';
 // Add caching for Airtable results
 let cachedRecords: AirtableRecord[] | null = null;
 let lastFetch: number = 0;
+let cachedNeonRecords: AirtableRecord[] | null = null;
+let lastNeonFetch: number = 0;
 const CACHE_DURATION = 300000; // 5 minutes cache for better performance
 
 const BLOCKED_CREATOR_IMAGE_RECORD_IDS = new Set([
@@ -102,6 +105,7 @@ const fieldCandidates = {
     'Rate',
     'Rates',
     'Was kostet ein Video bei dir?',
+    'Arbeitest du kostenlos?',
   ],
   age: [
     'Alter',
@@ -254,6 +258,38 @@ const mapCreatorProfile = (record: AirtableRecord): CreatorProfile => {
     availability: getFieldValue(fields, fieldCandidates.availability),
     imageUrl: getFieldValue(fields, fieldCandidates.image),
   };
+};
+
+const fetchNeonCreatorRecords = async (): Promise<AirtableRecord[]> => {
+  const sql = getDatabase();
+  const rows = await sql.query(`
+    SELECT
+      public_id, display_name, birth_year, gender, city, special_traits,
+      industries, topics, preferred_content, equipment, rate_text, reach_text,
+      total_reach, profile_image_url, social_links, portfolio_links, networks
+    FROM creator_search_public
+    ORDER BY profile_quality_score DESC, total_reach DESC, display_name ASC
+    LIMIT 1000
+  `);
+  const currentYear = new Date().getFullYear();
+
+  return rows.map((row: any) => ({
+    id: String(row.public_id),
+    fields: {
+      'Wie heißt du?  (Vor- und Nachname)': String(row.display_name || ''),
+      'Wie ist dein Geschlecht?': String(row.gender || ''),
+      'In welchem Netzwerk hast du Accounts und möchtest du aktiv sein?&nbsp; ': String(row.social_links || ''),
+      'Wie groß ist deine Reichweite pro Netzwerk? ': String(row.reach_text || ''),
+      'Arbeitest du kostenlos?': String(row.rate_text || ''),
+      'Alter': row.birth_year ? String(currentYear - Number(row.birth_year)) : '',
+      'Standort': String(row.city || ''),
+      'Themen': [row.topics, row.industries, row.special_traits].filter(Boolean).join(' '),
+      'Content-Formate': String(row.preferred_content || ''),
+      'Portfolio': String(row.portfolio_links || ''),
+      'Ausrüstung': String(row.equipment || ''),
+      'cached_image_url': String(row.profile_image_url || ''),
+    },
+  }));
 };
 
 const applyDeterministicQueryOverrides = (analysis: QueryAnalysis, query: string, requestId: string): QueryAnalysis => {
@@ -477,8 +513,24 @@ export async function POST(req: Request) {
     // Use cached records if available for better performance
     const now = Date.now();
     const forceFresh = initialAnalysis.gender !== 'any' || initialAnalysis.platforms.length > 0; // Keep explicit filters precise
+    let neonRecords: AirtableRecord[] | null = null;
 
-    if (usingMockData) {
+    if (isDatabaseConfigured()) {
+      try {
+        if (!cachedNeonRecords || now - lastNeonFetch > CACHE_DURATION) {
+          cachedNeonRecords = await fetchNeonCreatorRecords();
+          lastNeonFetch = now;
+        }
+        neonRecords = cachedNeonRecords;
+        console.log(`[${requestId}] Using ${neonRecords.length} active creator profiles from Neon`);
+      } catch (databaseError) {
+        console.error(`[${requestId}] Neon creator search failed; falling back to Airtable`, databaseError);
+      }
+    }
+
+    if (neonRecords) {
+      // Neon is the canonical source. Airtable remains a temporary fail-safe only.
+    } else if (usingMockData) {
       console.log(`[${requestId}] Using mock data instead of Airtable`);
       cachedRecords = getMockAirtableRecords();
       console.log(`[${requestId}] Created ${cachedRecords.length} mock records`);
@@ -618,13 +670,14 @@ export async function POST(req: Request) {
 
     // Reuse the initial analysis for filtering
     console.log(`[${requestId}] Using initial analysis for filtering`);
+    const searchRecords = neonRecords || cachedRecords || [];
 
     // Process creators in batches with AI-based filtering
     // Dynamic batch size: 25% of total records, min 10, max 50
-    const BATCH_SIZE = Math.max(10, Math.min(50, Math.ceil(cachedRecords.length / 4)));
+    const BATCH_SIZE = Math.max(10, Math.min(50, Math.ceil(searchRecords.length / 4)));
     const results = [];
 
-    console.log(`[${requestId}] Processing ${cachedRecords.length} creators with AI filtering in batches of ${BATCH_SIZE}`);
+    console.log(`[${requestId}] Processing ${searchRecords.length} creators with deterministic scoring in batches of ${BATCH_SIZE}`);
 
     // Create a scoring function based on the query analysis
     const scoreCreator = (record: AirtableRecord): number => {
@@ -820,9 +873,9 @@ export async function POST(req: Request) {
     };
 
     // Process creators with AI scoring
-    for (let i = 0; i < cachedRecords.length; i += BATCH_SIZE) {
-      const batch = cachedRecords.slice(i, i + BATCH_SIZE);
-      console.log(`[${requestId}] Processing batch ${Math.floor(i/BATCH_SIZE) + 1}/${Math.ceil(cachedRecords.length/BATCH_SIZE)}`);
+    for (let i = 0; i < searchRecords.length; i += BATCH_SIZE) {
+      const batch = searchRecords.slice(i, i + BATCH_SIZE);
+      console.log(`[${requestId}] Processing batch ${Math.floor(i/BATCH_SIZE) + 1}/${Math.ceil(searchRecords.length/BATCH_SIZE)}`);
 
       const batchResults = await Promise.all(batch.map(async (record: AirtableRecord) => {
         try {
@@ -907,9 +960,9 @@ export async function POST(req: Request) {
       await new Promise(resolve => setTimeout(resolve, 10));
     }
 
-    // Filter out nulls and creators with 0 reach
+    // Reach is optional for UGC production. A creator can be relevant without an audience.
     const validCreators = results.filter((creator): creator is ProcessedCreator & { score: number } => {
-      return creator !== null && creator.totalReach > 0;
+      return creator !== null;
     });
 
     console.log(`[${requestId}] Found ${validCreators.length} valid creators after AI filtering`);
@@ -950,14 +1003,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const creatorsWithRealImages = genderFilteredCreators.filter(creator => creator.hasCustomImage);
-    const displayCreators = creatorsWithRealImages.length > 0 ? creatorsWithRealImages : genderFilteredCreators;
-
-    if (creatorsWithRealImages.length > 0 && creatorsWithRealImages.length < genderFilteredCreators.length) {
-      console.log(
-        `[${requestId}] Hiding ${genderFilteredCreators.length - creatorsWithRealImages.length} creators without real images from visible results`
-      );
-    }
+    const displayCreators = genderFilteredCreators.slice(0, 24);
 
     // Remove helper properties before sending (but keep gender for frontend placeholder logic)
     const finalCreators = displayCreators.map(({ hasCustomImage, totalReach, score, ...rest }) => rest);
@@ -968,6 +1014,7 @@ export async function POST(req: Request) {
     return NextResponse.json({
       success: true,
       creators: finalCreators,
+      totalCount: genderFilteredCreators.length,
       query: query,
       reasoning: reasoning,
       analysis: {

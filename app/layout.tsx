@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { GeistSans } from 'geist/font/sans'
 import { GeistMono } from 'geist/font/mono'
 import { Inter } from 'next/font/google'
+import Script from 'next/script';
 import "./globals.css";
 import Footer from "@/src/components/FooterNew";
 import SimpleCookieBanner from "@/src/components/SimpleCookieBanner";
@@ -254,7 +255,7 @@ export default function RootLayout({
             `
           }}
         />
-        <script src="https://cdn.kiprotect.com/klaro/latest/klaro-no-css.min.js"></script>
+        <Script src="https://cdn.kiprotect.com/klaro/latest/klaro-no-css.min.js" strategy="beforeInteractive" />
         <script
           dangerouslySetInnerHTML={{
             __html: `

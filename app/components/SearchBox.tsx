@@ -117,7 +117,13 @@ export default function SearchBox({ initialQuery = '' }: SearchBoxProps) {
   const [showContactForm, setShowContactForm] = useState(false);
 
   // Handle form submission
-  const handleSubmitSelection = async (clientInfo: { name: string; email: string; message: string }) => {
+  const handleSubmitSelection = async (clientInfo: {
+    name: string;
+    email: string;
+    message: string;
+    website: string;
+    submissionId: string;
+  }) => {
     if (selectedCreators.length === 0) return;
 
     try {

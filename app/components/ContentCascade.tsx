@@ -321,7 +321,7 @@ export default function ContentCascade() {
                 <h4 className="text-2xl font-bold mb-4">Für Creator</h4>
                 <p className="text-lg mb-6">Erstell dein Profil. Lass dich von passenden Brands finden. Kostenlos.</p>
                 <Link
-                  href="https://tally.so/r/w25dBp"
+                  href="/creator#creator-form"
                   className="inline-block bg-white text-geo-violet px-8 py-4 rounded-full font-bold text-lg hover:bg-gray-100 transition-colors duration-300"
                 >
                   Mitmachen →

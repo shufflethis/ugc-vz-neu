@@ -72,7 +72,7 @@ export default function DatenschutzPage() {
                       <h4 className="text-lg font-medium mb-2 text-ink">Wer ist verantwortlich für die Datenerfassung?</h4>
                       <p className="text-ink-soft">
                         Die Datenverarbeitung auf UGC-VZ erfolgt durch die track by track GmbH.
-                        Kontaktdaten finden Sie im Abschnitt „Hinweis zur Verantwortlichen Stelle".
+                        Kontaktdaten finden Sie im Abschnitt &bdquo;Hinweis zur Verantwortlichen Stelle&ldquo;.
                       </p>
                     </div>
 
@@ -205,13 +205,18 @@ export default function DatenschutzPage() {
                     Wir sammeln die Informationen, die Sie aktiv in unserem Registrierungsformular angeben:
                   </p>
                   <ul className="text-ink-soft space-y-2 list-disc list-inside ml-4">
-                    <li>Name, Alter und Kontaktdaten</li>
+                    <li>Name, Künstlername, Geburtsjahr bzw. Altersgruppe, Region und Kontaktdaten</li>
                     <li>Social Media Profile (Instagram, TikTok, etc.)</li>
                     <li>Portfolio-Beispiele und Arbeitsproben</li>
                     <li>Erfahrungen und Spezialisierungen</li>
                     <li>Technische Ausrüstung und Präferenzen</li>
                     <li>Verfügbarkeit und Preisvorstellungen</li>
                   </ul>
+                  <p className="text-ink-soft mt-3">
+                    Im aktuellen Registrierungsformular fragen wir keine vollständige Privatanschrift und kein
+                    vollständiges Geburtsdatum ab. Öffentliche Profilangaben und private Kontaktdaten werden technisch
+                    getrennt gespeichert.
+                  </p>
                 </div>
 
                 <div>
@@ -272,9 +277,9 @@ export default function DatenschutzPage() {
                   </p>
                   <ul className="text-ink-soft space-y-2 list-disc list-inside ml-4">
                     <li>Vercel für Hosting und technische Auslieferung der Website</li>
-                    <li>Tally für Creator- und Anfrageformulare</li>
-                    <li>Airtable für die Verwaltung der Creator-Datenbank</li>
-                    <li>Resend für transaktionale E-Mails an anfragende Unternehmen</li>
+                    <li>Neon für die PostgreSQL-Datenbank und getrennte Speicherung von Profil- und Kontaktdaten</li>
+                    <li>Resend für Bestätigungs-, Anfrage- und transaktionale E-Mails an Creator und Unternehmen</li>
+                    <li>Tally und Airtable zeitweise für historische Registrierungen, Datenmigration und technischen Rückfallbetrieb</li>
                     <li>Slack für interne Benachrichtigungen und Mitschnitte von Anfragen</li>
                     <li>OpenRouter für KI-gestützte Analyse von Suchanfragen</li>
                   </ul>
