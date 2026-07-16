@@ -16,6 +16,7 @@ Stand: 16. Juli 2026
 - Creator-Benachrichtigungen bleiben über `SEND_CREATOR_OUTREACH_EMAILS` kontrolliert; historische Kontakte werden ohne explizite Projektbenachrichtigungs-Freigabe nicht automatisch angeschrieben.
 - Im bestehenden Kunden-Sheet gibt es nun `Creator Vorschläge` für Mitarbeitende und einen automatisch aktualisierten `Neon Sync`-Tab mit allen 416 aktiven Profilen. Die bestehende Datentabelle wurde nicht verändert.
 - Der token-geschützte CSV-Export für den automatischen Neon-Spiegel ist auf `ugc-vz.de` live. Er exportiert ausschließlich Felder aus `creator_search_public`; die einmalige Google-Freigabe ist erfolgt und die Importformel läuft fehlerfrei in `Neon Sync!A2`.
+- Im nur dem Eigentümer freigegebenen Rohdaten-Spreadsheet gibt es zusätzlich `Intern – Kontakte` mit allen 435 Neon-Profilen, 252 Kontakt-E-Mails und den operativen Einwilligungsständen. Der getrennt token-geschützte Export enthält keine Anschrift und kein vollständiges Geburtsdatum; die automatische Aktualisierung wird nach der einmaligen Google-Freigabe aktiviert.
 
 ## Bestandsaufnahme
 

@@ -11,6 +11,7 @@
     "test:lead-flow": "node scripts/test-lead-flow.mjs",
     "test:creator-registration": "node --import tsx scripts/test-creator-registration.ts",
     "test:creator-export": "node --import tsx scripts/test-creator-export.ts",
+    "test:private-creator-export": "node --import tsx scripts/test-private-creator-export.ts",
     "db:migrate": "node scripts/migrate-neon.mjs",
     "db:import-creators": "node scripts/import-google-sheet-creators.mjs",
     "db:audit": "node scripts/audit-neon.mjs",
