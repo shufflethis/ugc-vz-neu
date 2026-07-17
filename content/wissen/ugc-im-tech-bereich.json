@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "source": {
+    "system": "wordpress",
+    "id": 2329,
+    "link": "https://ugc-vz.de/ugc-im-tech-bereich/"
+  },
+  "slug": "ugc-im-tech-bereich",
+  "title": "UGC im Tech-Bereich",
+  "excerpt": "SearchGPT 404",
+  "contentHtml": "<p>SearchGPT 404</p>",
+  "publishedAt": "2025-11-23T11:02:23Z",
+  "modifiedAt": "2025-11-23T11:08:10Z",
+  "authorId": "gorden-wuebbe",
+  "categories": [
+    "Allgemein"
+  ],
+  "featuredImage": "/wp-content/uploads/2025/11/ugc-im-tech-bereich_1763895729136.webp",
+  "featuredImageAlt": "UGC im Tech-Bereich",
+  "faqs": [],
+  "redirectTo": null,
+  "contentStatus": "gone",
+  "wordCount": 2,
+  "indexable": false,
+  "checksum": "f671af96bcc131b658ea81217d38dcd4b09f03b581c763be590cc04893868cd3"
+}

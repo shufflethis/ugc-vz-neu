@@ -6,17 +6,17 @@ Stand: 16. Juli 2026
 
 - Neon-Ressource `ugc-vz-db` im Tarif `free_v3`, Region Frankfurt, ist mit Vercel verbunden.
 - Drei Migrationen sind ausgerollt; die bestehenden Quelltabs in Google Sheets bleiben unverändert und wurden um getrennte Arbeitstabs ergänzt.
-- 469 Quellzeilen wurden zu 435 Profilen dedupliziert: 416 aktiv, 19 quarantänisiert.
-- 252 private Kontaktzeilen, 127 Newsletter-Freigaben und 533 getrennte Einwilligungsereignisse wurden übernommen.
+- Der Audit vom 17. Juli 2026 weist 469 Quellzeilen und 437 deduplizierte Profile aus: 418 aktiv, 19 quarantänisiert.
+- 254 private Kontaktzeilen und 128 Newsletter-Freigaben sind getrennt gespeichert.
 - Vollständige Privatanschriften und vollständige Geburtsdaten wurden nicht in Neon importiert.
 - Die öffentliche Such-View enthält 26 Profilspalten und keine E-Mail-, Telefon-, Einwilligungs- oder Tokenfelder.
 - Native dreistufige Creator-Anmeldung mit Entwurfsspeicherung, E-Mail-Verifikation und getrennten Einwilligungen ist implementiert.
-- Die Suche liest Neon als Hauptquelle, zeigt maximal 24 Top-Treffer und nutzt Airtable nur noch als technischen Fallback.
+- Die Suche liest ausschließlich Neon und zeigt maximal 24 Top-Treffer. Es gibt keinen Mock- oder Airtable-Fallback.
 - Brand-Leads, Match-Snapshots und Resend-Zustellereignisse werden dauerhaft in Neon protokolliert.
 - Creator-Benachrichtigungen bleiben über `SEND_CREATOR_OUTREACH_EMAILS` kontrolliert; historische Kontakte werden ohne explizite Projektbenachrichtigungs-Freigabe nicht automatisch angeschrieben.
-- Im bestehenden Kunden-Sheet gibt es nun `Creator Vorschläge` für Mitarbeitende und einen automatisch aktualisierten `Neon Sync`-Tab mit allen 416 aktiven Profilen. Die bestehende Datentabelle wurde nicht verändert.
+- Im bestehenden Kunden-Sheet gibt es `Creator Vorschläge` für Mitarbeitende und einen automatisch aktualisierten `Neon Sync`-Tab mit allen 418 aktiven Profilen. Die bestehende Datentabelle wurde nicht verändert.
 - Der token-geschützte CSV-Export für den automatischen Neon-Spiegel ist auf `ugc-vz.de` live. Er exportiert ausschließlich Felder aus `creator_search_public`; die einmalige Google-Freigabe ist erfolgt und die Importformel läuft fehlerfrei in `Neon Sync!A2`.
-- Im nur dem Eigentümer freigegebenen Rohdaten-Spreadsheet gibt es zusätzlich `Intern – Kontakte` mit allen 435 Neon-Profilen, 252 Kontakt-E-Mails und den operativen Einwilligungsständen. Der getrennt token-geschützte Export enthält keine Anschrift und kein vollständiges Geburtsdatum; die automatische Aktualisierung wird nach der einmaligen Google-Freigabe aktiviert.
+- Im nur dem Eigentümer freigegebenen Rohdaten-Spreadsheet gibt es zusätzlich `Intern – Kontakte` mit allen 437 Neon-Profilen und den operativen Kontaktdaten sowie Einwilligungsständen. Der getrennt token-geschützte Export enthält keine Anschrift und kein vollständiges Geburtsdatum.
 
 ## Bestandsaufnahme
 
@@ -24,7 +24,7 @@ Stand: 16. Juli 2026
 | --- | ---: | ---: | --- |
 | Google Sheet `UGC-VZ Creator Datenbank` | 281 | 33 | Tally-Rohdaten inklusive Submission-ID, Zeitstempel, E-Mail, Telefon, Anschrift und Einwilligungen |
 | Google Sheet `UGC-Creator-Datenbank für Kunden` | 188 | 21 | älterer Profilbestand ohne E-Mail-, Kontakt- und Einwilligungsfelder |
-| aktuell von der Website verwendetes Airtable | 164 | 23 | unvollständiger Teilbestand ohne E-Mail- und dediziertes Preisfeld |
+| historischer Airtable-Teilbestand | 164 | 23 | nicht mehr Teil der produktiven Laufzeit |
 
 Die zwei Sheets enthalten zusammen 469 Zeilen. 15 Zeilen des älteren Sheets
 lassen sich bereits über normalisierte Namen einem aktuellen Tally-Datensatz
@@ -138,22 +138,13 @@ Geburtsdatum werden nicht mehr standardmäßig abgefragt.
 
 ## Migration und Rollout
 
-1. Neon-Free-Projekt an Vercel anbinden und RLS-Schema ausrollen.
-2. Beide Sheets in Staging-Tabellen importieren.
-3. Daten normalisieren, automatisch sichere Dubletten verbinden und unsichere
-   Fälle in eine Review-Queue stellen.
-4. Test-/Spam-Zeilen und Datensätze ohne belastbare Rechtsgrundlage
-   quarantänisieren.
-5. Für 249 eindeutige Profile liegen gültige E-Mail plus Datenschutz-Zustimmung
-   vor. Vor einem kontrollierten Claim-/Profilpflege-Lauf werden Zweck und
-   damaliger Einwilligungstext nochmals geprüft; Newsletter gehen ausschließlich
-   an die 130 separat eingewilligten Adressen.
-6. Suche im Shadow Mode gegen Airtable und Postgres vergleichen.
-7. Website-Lesezugriffe auf Postgres umstellen.
-8. Natives Onboarding veröffentlichen und Tally anschließend read-only
-   archivieren.
-9. Creator-Auswahlmails kontrolliert aktivieren und Bounce-/Complaint-Rate
-   überwachen.
+1. Neon-Free-Projekt ist an Vercel angebunden und das RLS-Schema ist ausgerollt.
+2. Beide historischen Sheets sind importiert und dedupliziert.
+3. Unsichere Fälle liegen in der Review-Queue, Test-/Spam-Zeilen sind quarantänisiert.
+4. Website-Suche und natives Onboarding verwenden Neon produktiv.
+5. Google Sheets bleiben getrennte, token-geschützte Arbeitsansichten.
+6. Creator-Auswahlmails werden erst nach operativer Freigabe aktiviert; Bounce-
+   und Complaint-Rate sind dann zu überwachen.
 
 ## LLM-Einsatz
 

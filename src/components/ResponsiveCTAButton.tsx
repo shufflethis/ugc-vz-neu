@@ -9,7 +9,7 @@ interface ResponsiveCTAButtonProps {
 }
 
 export default function ResponsiveCTAButton({
-  href = "https://tally.so/r/w25dBp",
+  href = "/creator",
   className = ""
 }: ResponsiveCTAButtonProps) {
 
@@ -21,8 +21,6 @@ export default function ResponsiveCTAButton({
   return (
     <Link
       href={href}
-      target="_blank"
-      rel="noopener noreferrer"
       onClick={handleClick}
       className={`
         bg-geo-violet hover:bg-geo-violet-soft
@@ -33,7 +31,7 @@ export default function ResponsiveCTAButton({
         ${className}
       `}
     >
-      Jetzt mitmachen
+      Als Creator anmelden
     </Link>
   );
 }

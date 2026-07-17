@@ -279,10 +279,24 @@ export default function DatenschutzPage() {
                     <li>Vercel für Hosting und technische Auslieferung der Website</li>
                     <li>Neon für die PostgreSQL-Datenbank und getrennte Speicherung von Profil- und Kontaktdaten</li>
                     <li>Resend für Bestätigungs-, Anfrage- und transaktionale E-Mails an Creator und Unternehmen</li>
-                    <li>Tally und Airtable zeitweise für historische Registrierungen, Datenmigration und technischen Rückfallbetrieb</li>
+                    <li>Google Sheets als geschützte Arbeitsansicht für berechtigte Mitarbeitende</li>
                     <li>Slack für interne Benachrichtigungen und Mitschnitte von Anfragen</li>
                     <li>OpenRouter für KI-gestützte Analyse von Suchanfragen</li>
+                    <li>Google Ireland Limited für die optionale Reichweitenmessung mit Google Analytics</li>
                   </ul>
+                  <div className="surface-card rounded-lg p-4 mt-5">
+                    <p className="text-ink-soft mb-3">
+                      Google Analytics wird ausschließlich nach Ihrer aktiven Einwilligung geladen. Ohne Einwilligung
+                      wird das Analytics-Script nicht abgerufen und es wird kein Analyse-Request an Google gesendet.
+                      Rechtsgrundlage ist Art. 6 Abs. 1 lit. a DSGVO. Sie können die Einwilligung jederzeit über die
+                      Cookie-Einstellungen widerrufen.
+                    </p>
+                    <p className="text-ink-soft">
+                      Bei US-amerikanischen Dienstleistern kann eine Verarbeitung in den USA stattfinden. Soweit
+                      erforderlich, stützt sich die Übermittlung auf einen Angemessenheitsbeschluss, eine gültige
+                      Zertifizierung des Empfängers oder geeignete Garantien wie EU-Standardvertragsklauseln.
+                    </p>
+                  </div>
                 </div>
               </div>
             </section>

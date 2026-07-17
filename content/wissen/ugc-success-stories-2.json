@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "source": {
+    "system": "wordpress",
+    "id": 2400,
+    "link": "https://ugc-vz.de/ugc-success-stories-2/"
+  },
+  "slug": "ugc-success-stories-2",
+  "title": "UGC-Success Stories",
+  "excerpt": "SearchGPT 404",
+  "contentHtml": "<p>SearchGPT 404</p>",
+  "publishedAt": "2025-11-29T23:02:31Z",
+  "modifiedAt": "2025-11-29T23:02:31Z",
+  "authorId": "gorden-wuebbe",
+  "categories": [
+    "Allgemein"
+  ],
+  "featuredImage": "/placeholder-blog.svg",
+  "featuredImageAlt": "UGC-Success Stories",
+  "faqs": [],
+  "redirectTo": null,
+  "contentStatus": "gone",
+  "wordCount": 2,
+  "indexable": false,
+  "checksum": "3f6307a706bd01373e07d2edfecbf5cf6a51e9e661c5879dc02ad8360f49a75a"
+}

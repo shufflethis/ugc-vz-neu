@@ -2,11 +2,11 @@ const isDevelopment = process.env.NODE_ENV !== 'production';
 
 const contentSecurityPolicy = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline'${isDevelopment ? " 'unsafe-eval'" : ''} https://www.googletagmanager.com https://www.google-analytics.com https://ssl.google-analytics.com https://cdn.kiprotect.com https://analytics.google.com https://analytics.polymarkt.de`,
-  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.kiprotect.com",
-  "img-src 'self' data: blob: https://wp.ugc-vz.de http://wp.ugc-vz.de https://p16-sign-va.tiktokcdn.com https://p16-sign.tiktokcdn-us.com https://scontent.cdninstagram.com https://*.fbcdn.net https://yt3.ggpht.com https://yt3.googleusercontent.com https://via.placeholder.com https://www.gravatar.com https://www.google-analytics.com",
-  "font-src 'self' https://fonts.gstatic.com https://cdn.kiprotect.com",
-  "connect-src 'self' https://wp.ugc-vz.de http://wp.ugc-vz.de https://www.google-analytics.com https://analytics.google.com https://region1.google-analytics.com https://region1.analytics.google.com https://analytics.polymarkt.de",
+  `script-src 'self' 'unsafe-inline'${isDevelopment ? " 'unsafe-eval'" : ''} https://www.googletagmanager.com https://www.google-analytics.com https://ssl.google-analytics.com https://analytics.google.com`,
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob: https://p16-sign-va.tiktokcdn.com https://p16-sign.tiktokcdn-us.com https://scontent.cdninstagram.com https://*.fbcdn.net https://yt3.ggpht.com https://yt3.googleusercontent.com https://www.gravatar.com https://www.google-analytics.com",
+  "font-src 'self'",
+  "connect-src 'self' https://www.google-analytics.com https://analytics.google.com https://region1.google-analytics.com https://region1.analytics.google.com",
   "media-src 'self'",
   "frame-src 'none'",
   "object-src 'none'",
@@ -23,24 +23,13 @@ const nextConfig = {
     missingSuspenseWithCSRBailout: false,
     cpus: 1,
     workerThreads: false,
+    webpackBuildWorker: false,
   },
 
-  // Disable static generation to fix React context issues
-  output: 'standalone',
   trailingSlash: false,
 
   images: {
     remotePatterns: [
-      // WordPress Backend (HTTPS bevorzugt)
-      {
-        protocol: 'https',
-        hostname: 'wp.ugc-vz.de',
-      },
-      // Fallback für WordPress Backend (falls HTTPS nicht verfügbar)
-      {
-        protocol: 'http',
-        hostname: 'wp.ugc-vz.de',
-      },
       // TikTok Profile Images
       {
         protocol: 'https',

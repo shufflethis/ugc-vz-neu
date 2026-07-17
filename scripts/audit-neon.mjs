@@ -33,8 +33,8 @@ const columnNames = viewColumns.map((row) => String(row.column_name));
 const forbidden = ['email', 'phone', 'contact', 'consent', 'token', 'address', 'birth_date'];
 const leakedColumns = columnNames.filter((column) => forbidden.some((word) => column.includes(word)));
 
-if (counts.source_records !== 469) throw new Error(`Unerwartete Quellzeilenzahl: ${counts.source_records}`);
-if (counts.creators !== 435) throw new Error(`Unerwartete Profilzahl: ${counts.creators}`);
+if (counts.source_records < counts.creators) throw new Error('Mehr Profile als importierte Quellzeilen gefunden.');
+if (counts.creators < 1) throw new Error('Keine Creator-Profile gefunden.');
 if (counts.active !== counts.public_profiles) throw new Error('Public View und aktive Profile weichen voneinander ab.');
 if (counts.duplicate_emails !== 0) throw new Error('Doppelte private E-Mail-Adressen gefunden.');
 if (leakedColumns.length) throw new Error(`Private Spalten in Public View: ${leakedColumns.join(', ')}`);

@@ -5,10 +5,12 @@ import Image from 'next/image';
 import Link from 'next/link';
 import ContactButton from '../components/ContactButton';
 
-import { BlogPost } from '../lib/wordpress-api';
+import type { ContentPostSummary } from '../lib/content-repository';
+
+export type ContentPostCard = ContentPostSummary & { authorName: string };
 
 interface ClientWissenContentProps {
-  posts: BlogPost[];
+  posts: ContentPostCard[];
 }
 
 
@@ -27,9 +29,9 @@ export default function ClientWissenContent({ posts }: ClientWissenContentProps)
 
   // Filter posts: nur Posts mit echten Bildern zeigen (keine Platzhalter)
   const postsWithImages = posts.filter(post => 
-    post.image && 
-    post.image !== '/placeholder-blog.svg' && 
-    !post.image.includes('placeholder')
+    post.featuredImage &&
+    post.featuredImage !== '/placeholder-blog.svg' &&
+    !post.featuredImage.includes('placeholder')
   );
 
   const filteredPosts = postsWithImages.filter(post =>
@@ -79,13 +81,13 @@ export default function ClientWissenContent({ posts }: ClientWissenContentProps)
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {filteredPosts.map((post) => (
             <article
-              key={post.id}
+              key={post.slug}
               className="surface-card rounded-2xl overflow-hidden hover:border-geo-violet/30 transition-all duration-300 group"
             >
               {/* Featured Image */}
               <div className="relative h-48 overflow-hidden">
                 <Image
-                  src={post.image}
+                  src={post.featuredImage}
                   alt={post.title}
                   fill
                   className="object-cover group-hover:scale-105 transition-transform duration-300"
@@ -125,8 +127,8 @@ export default function ClientWissenContent({ posts }: ClientWissenContentProps)
 
                 {/* Meta */}
                 <div className="flex items-center justify-between text-xs text-ink-soft">
-                  <span>{post.author}</span>
-                  <span>{formatDate(post.date)}</span>
+                  <span>{post.authorName}</span>
+                  <span>{formatDate(post.publishedAt)}</span>
                 </div>
 
                 {/* Read More Button */}

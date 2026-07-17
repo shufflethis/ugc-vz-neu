@@ -1,0 +1,27 @@
+{
+  "generatedAt": "2026-07-17T16:52:01.692Z",
+  "source": "https://wp.ugc-vz.de/wp-json/wp/v2",
+  "postsExpected": 678,
+  "postsExported": 678,
+  "indexablePosts": 64,
+  "redirectedPosts": 0,
+  "gonePosts": 614,
+  "contentBytes": 1447505,
+  "featuredMediaIds": 638,
+  "mediaMetadataFound": 638,
+  "mediaDownloaded": 638,
+  "mediaBytes": 17377068,
+  "missingMedia": [],
+  "authors": [
+    {
+      "id": "gorden-wuebbe",
+      "name": "Gorden Wübbe",
+      "url": "/about",
+      "sameAs": [
+        "https://www.linkedin.com/in/wuebbe/"
+      ],
+      "sourceWordPressId": 2
+    }
+  ],
+  "categoryCount": 1
+}

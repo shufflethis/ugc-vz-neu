@@ -1,225 +1,139 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+
+const CONSENT_KEY = 'ugc-vz-cookie-consent';
+const GA_ID = 'G-CE33NMGRD2';
+
+type Consent = { essential: true; analytics: boolean; timestamp: number };
+type AnalyticsWindow = Window & typeof globalThis & {
+  dataLayer?: unknown[];
+  gtag?: (...args: unknown[]) => void;
+  showCookieSettings?: () => void;
+  resetCookieConsent?: () => void;
+  [key: `ga-disable-${string}`]: boolean | undefined;
+};
+
+function readConsent(): Consent | null {
+  try {
+    const value = localStorage.getItem(CONSENT_KEY);
+    if (!value) return null;
+    const parsed = JSON.parse(value) as Partial<Consent>;
+    return { essential: true, analytics: parsed.analytics === true, timestamp: Number(parsed.timestamp || 0) };
+  } catch {
+    return null;
+  }
+}
+
+function enableAnalytics() {
+  const analyticsWindow = window as AnalyticsWindow;
+  analyticsWindow[`ga-disable-${GA_ID}`] = false;
+  analyticsWindow.dataLayer = analyticsWindow.dataLayer || [];
+  analyticsWindow.gtag = analyticsWindow.gtag || ((...args: unknown[]) => analyticsWindow.dataLayer?.push(args));
+  analyticsWindow.gtag('consent', 'default', { analytics_storage: 'granted', ad_storage: 'denied' });
+  analyticsWindow.gtag('js', new Date());
+  analyticsWindow.gtag('config', GA_ID, { anonymize_ip: true, cookie_flags: 'SameSite=None;Secure' });
+  if (!document.querySelector(`script[data-ugc-analytics="${GA_ID}"]`)) {
+    const script = document.createElement('script');
+    script.async = true;
+    script.src = `https://www.googletagmanager.com/gtag/js?id=${GA_ID}`;
+    script.dataset.ugcAnalytics = GA_ID;
+    document.head.appendChild(script);
+  }
+}
+
+function disableAnalytics() {
+  const analyticsWindow = window as AnalyticsWindow;
+  analyticsWindow[`ga-disable-${GA_ID}`] = true;
+  analyticsWindow.gtag?.('consent', 'update', { analytics_storage: 'denied', ad_storage: 'denied' });
+  for (const cookie of document.cookie.split(';')) {
+    const name = cookie.split('=')[0]?.trim();
+    if (!name || !/^_ga|^_gid|^_gat/.test(name)) continue;
+    document.cookie = `${name}=; Max-Age=0; Path=/; SameSite=Lax`;
+    document.cookie = `${name}=; Max-Age=0; Path=/; Domain=.ugc-vz.de; SameSite=Lax`;
+  }
+}
 
 export default function SimpleCookieBanner() {
   const [showBanner, setShowBanner] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [analytics, setAnalytics] = useState(false);
 
   useEffect(() => {
-    // Prüfe ob Cookie-Einwilligung bereits gegeben wurde
-    const consent = localStorage.getItem('ugc-vz-cookie-consent');
-    if (!consent) {
-      setShowBanner(true);
+    const consent = readConsent();
+    if (!consent) setShowBanner(true);
+    else {
+      setAnalytics(consent.analytics);
+      if (consent.analytics) enableAnalytics();
     }
-  }, []);
-
-  const acceptAll = () => {
-    localStorage.setItem('ugc-vz-cookie-consent', JSON.stringify({
-      essential: true,
-      analytics: true,
-      marketing: true,
-      timestamp: Date.now()
-    }));
-    setShowBanner(false);
-    setShowSettings(false);
-  };
-
-  const acceptSelected = () => {
-    const essential = (document.getElementById('essential') as HTMLInputElement)?.checked || true;
-    const analytics = (document.getElementById('analytics') as HTMLInputElement)?.checked || false;
-    const marketing = (document.getElementById('marketing') as HTMLInputElement)?.checked || false;
-
-    localStorage.setItem('ugc-vz-cookie-consent', JSON.stringify({
-      essential,
-      analytics,
-      marketing,
-      timestamp: Date.now()
-    }));
-    setShowBanner(false);
-    setShowSettings(false);
-  };
-
-  const declineAll = () => {
-    localStorage.setItem('ugc-vz-cookie-consent', JSON.stringify({
-      essential: true,
-      analytics: false,
-      marketing: false,
-      timestamp: Date.now()
-    }));
-    setShowBanner(false);
-    setShowSettings(false);
-  };
-
-  const openSettings = () => {
-    setShowSettings(true);
-  };
-
-  const closeSettings = () => {
-    setShowSettings(false);
-  };
-
-  // Funktion um Banner von außen zu öffnen
-  useEffect(() => {
-    (window as any).showCookieSettings = () => {
+    const analyticsWindow = window as AnalyticsWindow;
+    analyticsWindow.showCookieSettings = () => {
+      const current = readConsent();
+      setAnalytics(current?.analytics === true);
       setShowSettings(true);
     };
-
-    (window as any).resetCookieConsent = () => {
-      localStorage.removeItem('ugc-vz-cookie-consent');
+    analyticsWindow.resetCookieConsent = () => {
+      localStorage.removeItem(CONSENT_KEY);
+      disableAnalytics();
+      setAnalytics(false);
+      setShowSettings(false);
       setShowBanner(true);
     };
   }, []);
+
+  function saveConsent(allowAnalytics: boolean) {
+    const consent: Consent = { essential: true, analytics: allowAnalytics, timestamp: Date.now() };
+    localStorage.setItem(CONSENT_KEY, JSON.stringify(consent));
+    setAnalytics(allowAnalytics);
+    if (allowAnalytics) enableAnalytics();
+    else disableAnalytics();
+    setShowBanner(false);
+    setShowSettings(false);
+  }
 
   if (!showBanner && !showSettings) return null;
 
   return (
     <>
-      {/* Cookie Banner */}
       {showBanner && !showSettings && (
-        <div className="fixed bottom-0 left-0 right-0 z-[10001] p-4 shadow-lg border-t border-hairline bg-white"
-             style={{
-               zIndex: '999999'
-             }}>
-          <div className="max-w-6xl mx-auto">
-            <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-              <div className="flex-1">
-                <h3 className="text-lg font-semibold text-ink mb-2">
-                  🍪 Cookie-Einstellungen für UGC-VZ
-                </h3>
-                <p className="text-ink-soft text-sm leading-relaxed">
-                  Wir verwenden Cookies und ähnliche Technologien, um Ihnen die bestmögliche Erfahrung auf unserer UGC Creator Plattform zu bieten.
-                  Einige sind für die Funktionalität erforderlich, andere helfen uns dabei, die Website zu verbessern.
-                </p>
-              </div>
-
-              <div className="flex flex-col sm:flex-row gap-3 min-w-fit">
-                <button
-                  onClick={openSettings}
-                  className="px-4 py-2 text-sm border border-hairline text-ink hover:bg-hairline rounded-lg transition-colors"
-                >
-                  Einstellungen
-                </button>
-                <button
-                  onClick={declineAll}
-                  className="px-4 py-2 text-sm bg-surface-2 text-ink hover:bg-hairline rounded-lg transition-colors"
-                >
-                  Nur notwendige
-                </button>
-                <button
-                  onClick={acceptAll}
-                  className="px-6 py-2 text-sm bg-geo-violet hover:bg-geo-violet-soft text-white font-semibold rounded-lg transition-all"
-                >
-                  Alle akzeptieren
-                </button>
-              </div>
+        <div className="fixed inset-x-0 bottom-0 z-[10001] border-t border-hairline bg-white p-4 shadow-lg" role="dialog" aria-label="Cookie-Einstellungen">
+          <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-4 lg:flex-row lg:items-center">
+            <div className="flex-1">
+              <h2 className="mb-2 text-lg font-semibold text-ink">Datenschutz-Einstellungen</h2>
+              <p className="text-sm leading-relaxed text-ink-soft">Notwendige Speicherung hält die Website funktionsfähig. Google Analytics wird ausschließlich nach deiner freiwilligen Zustimmung geladen.</p>
+            </div>
+            <div className="flex min-w-fit flex-col gap-3 sm:flex-row">
+              <button onClick={() => setShowSettings(true)} className="rounded-lg border border-hairline px-4 py-2 text-sm text-ink hover:bg-hairline">Einstellungen</button>
+              <button onClick={() => saveConsent(false)} className="rounded-lg bg-surface-2 px-4 py-2 text-sm text-ink hover:bg-hairline">Nur notwendige</button>
+              <button onClick={() => saveConsent(true)} className="rounded-lg bg-geo-violet px-6 py-2 text-sm font-semibold text-white hover:bg-geo-violet-soft">Analyse erlauben</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Cookie Settings Modal */}
       {showSettings && (
-        <div className="fixed inset-0 z-[10002] flex items-center justify-center p-4 backdrop-blur-sm"
-             style={{ background: 'rgba(0, 0, 0, 0.4)' }}>
-          <div className="bg-white border border-hairline rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-xl">
+        <div className="fixed inset-0 z-[10002] flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="consent-title">
+          <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-hairline bg-white shadow-xl">
             <div className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-ink">Cookie-Einstellungen</h2>
-                <button
-                  onClick={closeSettings}
-                  className="text-ink-soft hover:text-ink transition-colors"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
+              <div className="mb-6 flex items-center justify-between">
+                <h2 id="consent-title" className="text-2xl font-bold text-ink">Datenschutz-Einstellungen</h2>
+                <button onClick={() => setShowSettings(false)} aria-label="Einstellungen schließen" className="text-ink-soft hover:text-ink">✕</button>
               </div>
-
-              <div className="space-y-6">
-                {/* Essential Cookies */}
-                <div className="border border-hairline rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-lg font-semibold text-ink">Essentielle Cookies</h3>
-                    <input
-                      type="checkbox"
-                      id="essential"
-                      checked={true}
-                      disabled={true}
-                      className="w-5 h-5 text-geo-violet bg-white border-hairline rounded focus:ring-geo-violet"
-                    />
-                  </div>
-                  <p className="text-ink-soft text-sm">
-                    Diese Cookies sind für die Grundfunktionen der Website erforderlich und können nicht deaktiviert werden.
-                  </p>
+              <div className="space-y-5">
+                <div className="rounded-lg border border-hairline p-4">
+                  <div className="mb-2 flex items-center justify-between"><h3 className="font-semibold text-ink">Notwendige Speicherung</h3><input type="checkbox" checked disabled aria-label="Notwendige Speicherung aktiv" /></div>
+                  <p className="text-sm text-ink-soft">Speichert deine Auswahl und ermöglicht grundlegende Website-Funktionen.</p>
                 </div>
-
-                {/* Analytics Cookies */}
-                <div className="border border-hairline rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-lg font-semibold text-ink">Analyse & Performance</h3>
-                    <input
-                      type="checkbox"
-                      id="analytics"
-                      defaultChecked={false}
-                      className="w-5 h-5 text-geo-violet bg-white border-hairline rounded focus:ring-geo-violet"
-                    />
-                  </div>
-                  <p className="text-ink-soft text-sm">
-                    Diese Cookies helfen uns zu verstehen, wie Besucher mit unserer Website interagieren.
-                  </p>
-                </div>
-
-                {/* Marketing Cookies */}
-                <div className="border border-hairline rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-lg font-semibold text-ink">Marketing & Werbung</h3>
-                    <input
-                      type="checkbox"
-                      id="marketing"
-                      defaultChecked={false}
-                      className="w-5 h-5 text-geo-violet bg-white border-hairline rounded focus:ring-geo-violet"
-                    />
-                  </div>
-                  <p className="text-ink-soft text-sm">
-                    Diese Cookies werden verwendet, um Ihnen relevante Werbung und Inhalte zu zeigen.
-                  </p>
+                <div className="rounded-lg border border-hairline p-4">
+                  <div className="mb-2 flex items-center justify-between"><label htmlFor="analytics-consent" className="font-semibold text-ink">Google Analytics</label><input id="analytics-consent" type="checkbox" checked={analytics} onChange={(event) => setAnalytics(event.target.checked)} /></div>
+                  <p className="text-sm text-ink-soft">Wird erst nach Zustimmung geladen und hilft uns, die Nutzung der Website zu verstehen. Die Auswahl ist freiwillig und jederzeit widerrufbar.</p>
                 </div>
               </div>
-
-              <div className="flex flex-col sm:flex-row gap-3 mt-8">
-                <button
-                  onClick={declineAll}
-                  className="flex-1 px-4 py-3 bg-surface-2 text-ink hover:bg-hairline rounded-lg transition-colors"
-                >
-                  Nur notwendige
-                </button>
-                <button
-                  onClick={acceptSelected}
-                  className="flex-1 px-4 py-3 bg-geo-violet hover:bg-geo-violet-soft text-white font-semibold rounded-lg transition-all"
-                >
-                  Auswahl speichern
-                </button>
-                <button
-                  onClick={acceptAll}
-                  className="flex-1 px-4 py-3 bg-geo-violet hover:bg-geo-violet-soft text-white font-semibold rounded-lg transition-all"
-                >
-                  Alle akzeptieren
-                </button>
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                <button onClick={() => saveConsent(false)} className="flex-1 rounded-lg bg-surface-2 px-4 py-3 text-ink hover:bg-hairline">Nur notwendige</button>
+                <button onClick={() => saveConsent(analytics)} className="flex-1 rounded-lg bg-geo-violet px-4 py-3 font-semibold text-white hover:bg-geo-violet-soft">Auswahl speichern</button>
               </div>
-
-              <div className="mt-6 pt-4 border-t border-hairline">
-                <p className="text-xs text-ink-soft text-center">
-                  Weitere Informationen finden Sie in unserer{' '}
-                  <a href="/datenschutz" className="text-geo-violet hover:text-geo-violet-soft transition-colors">
-                    Datenschutzerklärung
-                  </a>{' '}
-                  und{' '}
-                  <a href="/cookies" className="text-geo-violet hover:text-geo-violet-soft transition-colors">
-                    Cookie-Richtlinie
-                  </a>.
-                </p>
-              </div>
+              <p className="mt-6 border-t border-hairline pt-4 text-center text-xs text-ink-soft">Weitere Informationen in der <a href="/datenschutz" className="text-geo-violet">Datenschutzerklärung</a> und <a href="/cookies" className="text-geo-violet">Cookie-Richtlinie</a>.</p>
             </div>
           </div>
         </div>

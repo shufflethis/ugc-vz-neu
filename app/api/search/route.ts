@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import Airtable from 'airtable';
 import fs from 'fs';
 import path from 'path';
 import { getProfileImage } from '@/utils/profileImage';
@@ -19,7 +18,7 @@ type ProcessedCreator = {
   score?: number; // AI-based relevance score
 };
 
-interface AirtableRecord {
+interface CreatorRecord {
   id: string;
   fields: Record<string, any>;
 }
@@ -28,10 +27,7 @@ export const maxDuration = 30; // Reduced to 30 seconds for Vercel
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-// Add caching for Airtable results
-let cachedRecords: AirtableRecord[] | null = null;
-let lastFetch: number = 0;
-let cachedNeonRecords: AirtableRecord[] | null = null;
+let cachedNeonRecords: CreatorRecord[] | null = null;
 let lastNeonFetch: number = 0;
 const CACHE_DURATION = 300000; // 5 minutes cache for better performance
 
@@ -234,7 +230,7 @@ const normalizeGenderValue = (gender?: string) => {
   return 'any';
 };
 
-const mapCreatorProfile = (record: AirtableRecord): CreatorProfile => {
+const mapCreatorProfile = (record: CreatorRecord): CreatorProfile => {
   const fields = record.fields;
   const fullName = getFieldValue(fields, fieldCandidates.fullName);
   const socialLinks = getFieldValue(fields, fieldCandidates.socialLinks);
@@ -260,7 +256,7 @@ const mapCreatorProfile = (record: AirtableRecord): CreatorProfile => {
   };
 };
 
-const fetchNeonCreatorRecords = async (): Promise<AirtableRecord[]> => {
+const fetchNeonCreatorRecords = async (): Promise<CreatorRecord[]> => {
   const sql = getDatabase();
   const rows = await sql.query(`
     SELECT
@@ -314,65 +310,8 @@ const applyDeterministicQueryOverrides = (analysis: QueryAnalysis, query: string
   return analysis;
 };
 
-// Helper function to create mock Airtable records for testing
-function getMockAirtableRecords(): AirtableRecord[] {
-  return [
-    {
-      id: 'rec1',
-      fields: {
-        'Wie heißt du?  (Vor- und Nachname)': 'Anna Müller',
-        'Wie ist dein Geschlecht?': 'Weiblich',
-        'In welchem Netzwerk hast du Accounts und möchtest du aktiv sein?&nbsp; ': 'Instagram\nTikTok',
-        'Wie groß ist deine Reichweite pro Netzwerk? ': 'Instagram: 25k\nTikTok: 40k',
-        'Price': '500-1000€'
-      }
-    },
-    {
-      id: 'rec2',
-      fields: {
-        'Wie heißt du?  (Vor- und Nachname)': 'Max Schmidt',
-        'Wie ist dein Geschlecht?': 'Männlich',
-        'In welchem Netzwerk hast du Accounts und möchtest du aktiv sein?&nbsp; ': 'Instagram\nYouTube',
-        'Wie groß ist deine Reichweite pro Netzwerk? ': 'Instagram: 15k\nYouTube: 50k',
-        'Price': '1000-2000€'
-      }
-    },
-    {
-      id: 'rec3',
-      fields: {
-        'Wie heißt du?  (Vor- und Nachname)': 'Sophie Weber',
-        'Wie ist dein Geschlecht?': 'Weiblich',
-        'In welchem Netzwerk hast du Accounts und möchtest du aktiv sein?&nbsp; ': 'TikTok\nInstagram',
-        'Wie groß ist deine Reichweite pro Netzwerk? ': 'TikTok: 100k\nInstagram: 35k',
-        'Price': '2000-3000€'
-      }
-    },
-    {
-      id: 'rec4',
-      fields: {
-        'Wie heißt du?  (Vor- und Nachname)': 'Luca Bauer',
-        'Wie ist dein Geschlecht?': 'Männlich',
-        'In welchem Netzwerk hast du Accounts und möchtest du aktiv sein?&nbsp; ': 'TikTok\nInstagram',
-        'Wie groß ist deine Reichweite pro Netzwerk? ': 'TikTok: 80k\nInstagram: 30k',
-        'Price': '800-1500€'
-      }
-    },
-    {
-      id: 'rec5',
-      fields: {
-        'Wie heißt du?  (Vor- und Nachname)': 'René Fischer',
-        'Wie ist dein Geschlecht?': 'Männlich',
-        'In welchem Netzwerk hast du Accounts und möchtest du aktiv sein?&nbsp; ': 'TikTok\nYouTube',
-        'Wie groß ist deine Reichweite pro Netzwerk? ': 'TikTok: 120k\nYouTube: 45k',
-        'Price': '1500-2500€'
-      }
-    }
-  ];
-}
-
-// Fix the duplicate minFollowers declaration first
-// Fix the duplicate minFollowers declaration
 export async function POST(req: Request) {
+  const startedAt = Date.now();
   // Extract request ID from headers for better logging
   const requestId = req.headers.get('x-request-id') || Date.now().toString();
   const isTestRequest = req.headers.get('x-test-request') === 'true';
@@ -429,41 +368,13 @@ export async function POST(req: Request) {
 
     // Check timeout before proceeding
     if (Date.now() - startTime > TIMEOUT_MS) {
-      console.warn(`[${requestId}] Request timeout before Airtable initialization`);
+      console.warn(`[${requestId}] Request timeout before creator lookup`);
       return NextResponse.json({
         success: false,
         error: 'Request timeout',
         message: 'Request took too long to process'
       }, { status: 504 });
     }
-
-    // Initialize Airtable base inside the function
-    const airtableApiKey = process.env.AIRTABLE_API_KEY;
-    let base: any = null;
-    let usingMockData = false;
-
-    if (!airtableApiKey) {
-      console.error(`[${requestId}] AIRTABLE_API_KEY is not defined in environment variables`);
-      console.log(`[${requestId}] Will use mock data due to missing API key`);
-      usingMockData = true;
-    } else {
-      console.log(`[${requestId}] Initializing Airtable connection...`);
-      try {
-        base = new Airtable({ apiKey: airtableApiKey }).base(process.env.AIRTABLE_BASE_ID || 'appbpBRQkSWkdwTT5');
-        console.log(`[${requestId}] Airtable connection initialized successfully`);
-      } catch (airtableError) {
-        console.error(`[${requestId}] Failed to initialize Airtable:`, airtableError);
-        console.log(`[${requestId}] Will use mock data due to Airtable initialization error`);
-        usingMockData = true;
-      }
-    }
-
-
-
-    // Generate reasoning explanation
-    console.log(`[${requestId}] Generating reasoning for query: "${query}"`);
-    const reasoning = generateReasoning(query);
-    console.log(`[${requestId}] Reasoning generated successfully, length: ${reasoning.length} characters`);
 
     console.log(`[${requestId}] Analyzing query with AI: "${query}"`);
 
@@ -488,6 +399,7 @@ export async function POST(req: Request) {
     }
 
     initialAnalysis = applyDeterministicQueryOverrides(initialAnalysis, query, requestId);
+    const reasoning = generateReasoning(initialAnalysis);
 
     // Extract filters from AI analysis
     const isMaleQuery = initialAnalysis.gender === 'male';
@@ -510,167 +422,33 @@ export async function POST(req: Request) {
     // const minFollowers = followerMatch ? parseInt(followerMatch[1]) : 0;
     // console.log('Minimum followers:', minFollowers);
 
-    // Use cached records if available for better performance
+    // Neon is the only production source. Never return fabricated creators.
     const now = Date.now();
-    const forceFresh = initialAnalysis.gender !== 'any' || initialAnalysis.platforms.length > 0; // Keep explicit filters precise
-    let neonRecords: AirtableRecord[] | null = null;
-
-    if (isDatabaseConfigured()) {
-      try {
-        if (!cachedNeonRecords || now - lastNeonFetch > CACHE_DURATION) {
-          cachedNeonRecords = await fetchNeonCreatorRecords();
-          lastNeonFetch = now;
-        }
-        neonRecords = cachedNeonRecords;
-        console.log(`[${requestId}] Using ${neonRecords.length} active creator profiles from Neon`);
-      } catch (databaseError) {
-        console.error(`[${requestId}] Neon creator search failed; falling back to Airtable`, databaseError);
-      }
+    if (!isDatabaseConfigured()) {
+      console.error(`[${requestId}] Creator database is not configured`);
+      return NextResponse.json({
+        success: false,
+        error: 'Creator database unavailable',
+        message: 'Die Creator-Suche ist vorübergehend nicht verfügbar.',
+      }, { status: 503 });
     }
 
-    if (neonRecords) {
-      // Neon is the canonical source. Airtable remains a temporary fail-safe only.
-    } else if (usingMockData) {
-      console.log(`[${requestId}] Using mock data instead of Airtable`);
-      cachedRecords = getMockAirtableRecords();
-      console.log(`[${requestId}] Created ${cachedRecords.length} mock records`);
-    } else if (forceFresh || !cachedRecords || now - lastFetch > CACHE_DURATION) {
-      console.log(`[${requestId}] Fetching fresh records from Airtable...`);
-
-      try {
-        // Build Airtable filter formula based on query analysis
-        let filterFormula = '';
-        
-        // Apply gender filter if specified
-        if (initialAnalysis.gender === 'male') {
-          filterFormula = "{Wie ist dein Geschlecht?} = 'Männlich'";
-          console.log(`[${requestId}] Applying Airtable gender filter: Male`);
-        } else if (initialAnalysis.gender === 'female') {
-          filterFormula = "{Wie ist dein Geschlecht?} = 'Weiblich'";
-          console.log(`[${requestId}] Applying Airtable gender filter: Female`);
-        }
-        
-        // Apply platform filter if specified
-        if (initialAnalysis.platforms.length > 0) {
-          const platformFilters = initialAnalysis.platforms.map(platform => {
-            const platformName = platform.charAt(0).toUpperCase() + platform.slice(1);
-            return `FIND('${platformName}', {In welchem Netzwerk hast du Accounts und möchtest du aktiv sein?})`;
-          });
-          
-          const platformFormula = platformFilters.length > 1 
-            ? `OR(${platformFilters.join(', ')})` 
-            : platformFilters[0];
-          
-          filterFormula = filterFormula 
-            ? `AND(${filterFormula}, ${platformFormula})` 
-            : platformFormula;
-          
-          console.log(`[${requestId}] Applying Airtable platform filter: ${initialAnalysis.platforms.join(', ')}`);
-        }
-        
-        console.log(`[${requestId}] Final Airtable filter formula: ${filterFormula || 'none (fetching all records)'}`);
-
-        // Create a direct fetch promise
-        console.log(`[${requestId}] Creating Airtable fetch promise...`);
-
-        // Test if we can access the table
-        try {
-          console.log(`[${requestId}] Testing Airtable table access...`);
-          // Test table access by trying to get records from the main table
-          if (base) {
-            const testRecords = await base(process.env.AIRTABLE_TABLE_NAME || 'tblXbhX5gIB47BjBr').select({ maxRecords: 1 }).firstPage();
-            console.log(`[${requestId}] Successfully accessed table, found ${testRecords.length} records`);
-          }
-        } catch (tableError) {
-          console.error(`[${requestId}] Error accessing tables:`, tableError);
-        }
-
-        // Force a direct Airtable fetch to ensure we get fresh data
-        const fetchPromise = new Promise<AirtableRecord[]>((resolve, reject) => {
-          console.log(`[${requestId}] Starting Airtable fetch with filters...`);
-
-          try {
-            if (!base) {
-              reject(new Error('Airtable base not initialized'));
-              return;
-            }
-
-            const selectOptions: any = {
-              maxRecords: 100 // Reduced from 200 since we're filtering server-side
-            };
-            
-            // Only add filter if we have one
-            if (filterFormula) {
-              selectOptions.filterByFormula = filterFormula;
-            }
-
-            base(process.env.AIRTABLE_TABLE_NAME || 'tblXbhX5gIB47BjBr').select(selectOptions).firstPage((err: any, records: any) => {
-              if (err) {
-                console.error(`[${requestId}] Airtable firstPage error:`, err);
-                reject(err);
-                return;
-              }
-
-              console.log(`[${requestId}] Airtable firstPage success with filters, records:`, records?.length || 0);
-              resolve(records ? [...records] as AirtableRecord[] : []);
-            });
-          } catch (selectError) {
-            console.error(`[${requestId}] Error in select:`, selectError);
-            reject(selectError);
-          }
-        });
-
-        // Set a timeout for the Airtable fetch
-        const timeoutPromise = new Promise<AirtableRecord[]>((_, reject) =>
-          setTimeout(() => {
-            console.log(`[${requestId}] Airtable fetch timeout after 20 seconds`);
-            reject(new Error('Airtable timeout'));
-          }, 20000)
-        );
-
-        // Race the fetch against the timeout
-        console.log(`[${requestId}] Waiting for Airtable fetch or timeout...`);
-        cachedRecords = await Promise.race([
-          fetchPromise,
-          timeoutPromise
-        ]);
-
-        console.log(`[${requestId}] Successfully fetched ${cachedRecords.length} records from Airtable`);
-
-        // Log a sample record for debugging
-        if (cachedRecords.length > 0) {
-          const sampleRecord = cachedRecords[0];
-          console.log(`[${requestId}] Sample record:`, {
-            id: sampleRecord.id,
-            name: sampleRecord.fields['Wie heißt du?  (Vor- und Nachname)'],
-            networks: sampleRecord.fields['In welchem Netzwerk hast du Accounts und möchtest du aktiv sein?&nbsp; '],
-            reach: sampleRecord.fields['Wie groß ist deine Reichweite pro Netzwerk? ']
-          });
-        } else {
-          console.warn(`[${requestId}] No records returned from Airtable`);
-
-          // Use mock data for testing if no records are returned
-          console.log(`[${requestId}] Using mock data for testing`);
-          cachedRecords = getMockAirtableRecords();
-          console.log(`[${requestId}] Created ${cachedRecords.length} mock records`);
-        }
-
-        lastFetch = now;
-      } catch (airtableError) {
-        console.error(`[${requestId}] Error fetching from Airtable:`, airtableError);
-
-        // Use mock data for testing if Airtable fetch fails
-        console.log(`[${requestId}] Using mock data due to Airtable error`);
-        cachedRecords = getMockAirtableRecords();
-        console.log(`[${requestId}] Created ${cachedRecords.length} mock records`);
+    try {
+      if (!cachedNeonRecords || now - lastNeonFetch > CACHE_DURATION) {
+        cachedNeonRecords = await fetchNeonCreatorRecords();
+        lastNeonFetch = now;
       }
-    } else {
-      console.log(`[${requestId}] Using ${cachedRecords.length} cached records from previous fetch`);
+    } catch (databaseError) {
+      console.error(`[${requestId}] Neon creator search failed`, databaseError);
+      return NextResponse.json({
+        success: false,
+        error: 'Creator database unavailable',
+        message: 'Die Creator-Suche ist vorübergehend nicht verfügbar.',
+      }, { status: 503 });
     }
 
-    // Reuse the initial analysis for filtering
-    console.log(`[${requestId}] Using initial analysis for filtering`);
-    const searchRecords = neonRecords || cachedRecords || [];
+    const searchRecords = cachedNeonRecords;
+    console.log(`[${requestId}] Using ${searchRecords.length} active creator profiles from Neon`);
 
     // Process creators in batches with AI-based filtering
     // Dynamic batch size: 25% of total records, min 10, max 50
@@ -680,7 +458,7 @@ export async function POST(req: Request) {
     console.log(`[${requestId}] Processing ${searchRecords.length} creators with deterministic scoring in batches of ${BATCH_SIZE}`);
 
     // Create a scoring function based on the query analysis
-    const scoreCreator = (record: AirtableRecord): number => {
+    const scoreCreator = (record: CreatorRecord): number => {
       // Use the initialAnalysis from above
       const analysis = initialAnalysis;
       const profile = mapCreatorProfile(record);
@@ -824,7 +602,7 @@ export async function POST(req: Request) {
         }
       }
 
-      // 5. Age match (if the profile has age data mapped from Airtable/Tally)
+      // 5. Age match from the canonical creator profile
       if (analysis.ageRange.min !== null || analysis.ageRange.max !== null) {
         if (profile.age === null) {
           score -= 10;
@@ -863,7 +641,7 @@ export async function POST(req: Request) {
         }
       }
 
-      // 8. Quality signals from mapped Tally/Airtable data
+      // 8. Quality signals from the canonical creator profile
       if (profile.portfolioText) score += 18;
       if (profile.formatsText) score += 12;
       if (profile.languages) score += 8;
@@ -877,7 +655,7 @@ export async function POST(req: Request) {
       const batch = searchRecords.slice(i, i + BATCH_SIZE);
       console.log(`[${requestId}] Processing batch ${Math.floor(i/BATCH_SIZE) + 1}/${Math.ceil(searchRecords.length/BATCH_SIZE)}`);
 
-      const batchResults = await Promise.all(batch.map(async (record: AirtableRecord) => {
+      const batchResults = await Promise.all(batch.map(async (record: CreatorRecord) => {
         try {
           const profile = mapCreatorProfile(record);
           const fields = record.fields;
@@ -1029,19 +807,11 @@ export async function POST(req: Request) {
         keywords: initialAnalysis.keywords
       },
       timestamp: new Date().toISOString(),
-      processingTime: Date.now() - new Date(requestId).getTime()
+      processingTime: Date.now() - startedAt
     });
 
   } catch (error: any) {
     console.error(`[${requestId}] Search error:`, error);
-
-    // Determine appropriate status code
-    let statusCode = 500;
-    if (error.message === 'Airtable timeout') {
-      statusCode = 504; // Gateway Timeout
-    } else if (error.message.includes('AIRTABLE_API_KEY')) {
-      statusCode = 503; // Service Unavailable
-    }
 
     return NextResponse.json({
       success: false,
@@ -1050,7 +820,7 @@ export async function POST(req: Request) {
       timestamp: new Date().toISOString(),
       requestId: requestId
     }, {
-      status: statusCode
+      status: 500
     });
   }
 }
@@ -1389,10 +1159,7 @@ function analyzeQueryWithAI(query: string, requestId: string): QueryAnalysis {
 }
 
 // Generate structured reasoning explanation based on AI analysis
-function generateReasoning(query: string): string {
-  // Use the AI analysis to generate reasoning
-  const analysis = analyzeQueryWithAI(query, Date.now().toString());
-
+function generateReasoning(analysis: QueryAnalysis): string {
   // Build structured reasoning text
   let reasoning = "";
 

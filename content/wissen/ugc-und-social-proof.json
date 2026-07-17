@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "source": {
+    "system": "wordpress",
+    "id": 2375,
+    "link": "https://ugc-vz.de/ugc-und-social-proof/"
+  },
+  "slug": "ugc-und-social-proof",
+  "title": "UGC und Social Proof",
+  "excerpt": "SearchGPT 404",
+  "contentHtml": "<p>SearchGPT 404</p>",
+  "publishedAt": "2025-11-27T11:03:29Z",
+  "modifiedAt": "2025-11-27T11:05:54Z",
+  "authorId": "gorden-wuebbe",
+  "categories": [
+    "Allgemein"
+  ],
+  "featuredImage": "/wp-content/uploads/2025/11/ugc-und-social-proof_1764241407843.webp",
+  "featuredImageAlt": "UGC und Social Proof",
+  "faqs": [],
+  "redirectTo": null,
+  "contentStatus": "gone",
+  "wordCount": 2,
+  "indexable": false,
+  "checksum": "9018a27fae47ac6548bd85ca063047b42b35f905c83d87b626d74c250d838240"
+}

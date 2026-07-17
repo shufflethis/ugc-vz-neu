@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "source": {
+    "system": "wordpress",
+    "id": 2395,
+    "link": "https://ugc-vz.de/ugc-faqs-fuer-creator/"
+  },
+  "slug": "ugc-faqs-fuer-creator",
+  "title": "UGC-FAQs für Creator",
+  "excerpt": "SearchGPT 404",
+  "contentHtml": "<p>SearchGPT 404</p>",
+  "publishedAt": "2025-11-29T11:04:01Z",
+  "modifiedAt": "2025-11-29T11:08:28Z",
+  "authorId": "gorden-wuebbe",
+  "categories": [
+    "Allgemein"
+  ],
+  "featuredImage": "/wp-content/uploads/2025/11/ugc-faqs-f-r-creator_1764414226031.webp",
+  "featuredImageAlt": "UGC-FAQs für Creator",
+  "faqs": [],
+  "redirectTo": null,
+  "contentStatus": "gone",
+  "wordCount": 2,
+  "indexable": false,
+  "checksum": "f69e902ebdb0d545b97c0a1ac506b293f50f61490ddfa0ba66f4f453e59260ae"
+}

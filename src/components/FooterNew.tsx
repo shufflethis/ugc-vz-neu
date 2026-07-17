@@ -41,7 +41,7 @@ export default function Footer() {
             <h3 className="text-lg font-semibold text-white mb-6">Unternehmen</h3>
             <ul className="space-y-3">
               <li><Link href="/about" className="text-gray-400 hover:text-white transition-colors duration-200 text-sm">Über uns</Link></li>
-              <li><Link href="https://tally.so/r/w25dBp" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors duration-200 text-sm">Mitmachen</Link></li>
+              <li><Link href="/creator" className="text-gray-400 hover:text-white transition-colors duration-200 text-sm">Als Creator anmelden</Link></li>
             </ul>
           </div>
 

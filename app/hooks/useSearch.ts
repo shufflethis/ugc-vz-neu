@@ -38,9 +38,7 @@ export const useSearch = () => {
     const requestId = Date.now().toString();
 
     try {
-      // Try main API first, fallback to simple API if it fails
-      const trySearch = async (apiEndpoint: string) => {
-        return fetch(apiEndpoint, {
+      const response = await fetch('/api/search', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -54,25 +52,9 @@ export const useSearch = () => {
             isTest: false
           })
         });
-      };
 
-      // Try main API first
-      const response = await trySearch('/api/search');
-      let data;
-
-      if (response.ok) {
-        data = await response.json();
-      } else if (response.status === 503 || response.status === 504) {
-        // Try fallback API for 503/504 errors
-        const fallbackResponse = await trySearch('/api/search-simple');
-        if (fallbackResponse.ok) {
-          data = await fallbackResponse.json();
-        } else {
-          throw new Error(`Both APIs failed. Main: ${response.status}, Fallback: ${fallbackResponse.status}`);
-        }
-      } else {
-        throw new Error(`API failed with status: ${response.status}`);
-      }
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || `API failed with status: ${response.status}`);
 
       if (data.success) {
         const creatorCount = data.creators?.length || 0;
@@ -93,33 +75,6 @@ export const useSearch = () => {
       setIsLoading(false);
     }
 
-    // Fetch reasoning separately
-    try {
-      const reasoningResponse = await fetch('/api/reasoning', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Request-ID': requestId,
-          'Cache-Control': 'no-cache, no-store'
-        },
-        body: JSON.stringify({
-          query: queryToUse,
-          requestId: requestId,
-          timestamp: new Date().toISOString(),
-          isTest: false
-        })
-      });
-
-      if (reasoningResponse.ok) {
-        const reasoningData = await reasoningResponse.json();
-        if (reasoningData && reasoningData.success) {
-          setReasoning(reasoningData.reasoning);
-        }
-      }
-    } catch (error) {
-      // Reasoning is optional, don't show error to user
-      console.error('Error fetching reasoning:', error);
-    }
   };
 
   const toggleCreatorSelection = (creatorId: string) => {

@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "source": {
+    "system": "wordpress",
+    "id": 2307,
+    "link": "https://ugc-vz.de/ugc-recht-was-ist-zu-beachten/"
+  },
+  "slug": "ugc-recht-was-ist-zu-beachten",
+  "title": "UGC-Recht: Was ist zu beachten?",
+  "excerpt": "SearchGPT 404",
+  "contentHtml": "<p>SearchGPT 404</p>",
+  "publishedAt": "2025-11-21T11:02:22Z",
+  "modifiedAt": "2025-11-21T11:02:22Z",
+  "authorId": "gorden-wuebbe",
+  "categories": [
+    "Allgemein"
+  ],
+  "featuredImage": "/placeholder-blog.svg",
+  "featuredImageAlt": "UGC-Recht: Was ist zu beachten?",
+  "faqs": [],
+  "redirectTo": null,
+  "contentStatus": "gone",
+  "wordCount": 2,
+  "indexable": false,
+  "checksum": "add101b41bd86934e68f1848b273df3aedf8290dd29f5854af53aa70d165f6b0"
+}

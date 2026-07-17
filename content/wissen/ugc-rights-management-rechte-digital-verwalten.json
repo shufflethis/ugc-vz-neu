@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "source": {
+    "system": "wordpress",
+    "id": 283,
+    "link": "https://ugc-vz.de/ugc-rights-management-rechte-digital-verwalten/"
+  },
+  "slug": "ugc-rights-management-rechte-digital-verwalten",
+  "title": "UGC-Rights-Management: Rechte digital verwalten",
+  "excerpt": "UGC VZ 404",
+  "contentHtml": "<p>UGC VZ 404</p>",
+  "publishedAt": "2025-06-01T21:06:35Z",
+  "modifiedAt": "2025-06-01T21:09:29Z",
+  "authorId": "gorden-wuebbe",
+  "categories": [
+    "Allgemein"
+  ],
+  "featuredImage": "/wp-content/uploads/2025/06/ugc-rights-management-rechte-digital-verwalten-20250601-230802.webp",
+  "featuredImageAlt": "UGC-Rights-Management: Rechte digital verwalten",
+  "faqs": [],
+  "redirectTo": null,
+  "contentStatus": "gone",
+  "wordCount": 3,
+  "indexable": false,
+  "checksum": "06328d485ee7606c9485b160e8c33569c0b8364a12083be49716c86702a778ac"
+}

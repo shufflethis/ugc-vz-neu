@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "source": {
+    "system": "wordpress",
+    "id": 2369,
+    "link": "https://ugc-vz.de/ugc-trends-2025-2/"
+  },
+  "slug": "ugc-trends-2025-2",
+  "title": "UGC-Trends 2025",
+  "excerpt": "SearchGPT 404",
+  "contentHtml": "<p>SearchGPT 404</p>",
+  "publishedAt": "2025-11-26T23:02:33Z",
+  "modifiedAt": "2025-11-26T23:05:38Z",
+  "authorId": "gorden-wuebbe",
+  "categories": [
+    "Allgemein"
+  ],
+  "featuredImage": "/wp-content/uploads/2025/11/ugc-trends-2025_1764198152326.webp",
+  "featuredImageAlt": "UGC-Trends 2025",
+  "faqs": [],
+  "redirectTo": null,
+  "contentStatus": "gone",
+  "wordCount": 2,
+  "indexable": false,
+  "checksum": "09d28db7aa531a943f7e554848a7641287a07b7bd4301aef6f6cc93fdc58903a"
+}

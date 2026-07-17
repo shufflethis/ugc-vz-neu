@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test:lead-email": "tsx scripts/test-lead-email.ts",
+    "test:lead-email": "node --import tsx scripts/test-lead-email.ts",
     "test:lead-flow": "node scripts/test-lead-flow.mjs",
     "test:creator-registration": "node --import tsx scripts/test-creator-registration.ts",
     "test:creator-export": "node --import tsx scripts/test-creator-export.ts",
@@ -15,9 +15,8 @@
     "db:migrate": "node scripts/migrate-neon.mjs",
     "db:import-creators": "node scripts/import-google-sheet-creators.mjs",
     "db:audit": "node scripts/audit-neon.mjs",
-    "scrape-images": "tsx scripts/scrape-creator-images.ts",
-    "scrape-images:force": "tsx scripts/scrape-creator-images.ts --force",
-    "scrape-images:hyperbrowser": "tsx scripts/scrape-images-hyperbrowser.ts"
+    "content:audit": "node scripts/audit-content.mjs",
+    "content:export-wordpress": "node scripts/export-wordpress-content.mjs"
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^6.7.2",
@@ -29,12 +28,10 @@
     "@shadcn/ui": "^0.0.4",
     "@slack/webhook": "^7.0.4",
     "@types/cheerio": "^0.22.35",
-    "airtable": "^0.12.2",
     "axios": "^1.8.1",
     "cheerio": "^1.0.0",
     "framer-motion": "^10.18.0",
     "geist": "^1.3.1",
-    "klaro": "^0.7.21",
     "lucide-react": "^0.511.0",
     "next": "14.2.35",
     "react": "^18",

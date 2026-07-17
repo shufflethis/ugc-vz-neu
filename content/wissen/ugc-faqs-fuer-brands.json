@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "source": {
+    "system": "wordpress",
+    "id": 2392,
+    "link": "https://ugc-vz.de/ugc-faqs-fuer-brands/"
+  },
+  "slug": "ugc-faqs-fuer-brands",
+  "title": "UGC-FAQs für Brands",
+  "excerpt": "SearchGPT 404",
+  "contentHtml": "<p>SearchGPT 404</p>",
+  "publishedAt": "2025-11-29T00:52:37Z",
+  "modifiedAt": "2025-11-29T00:55:07Z",
+  "authorId": "gorden-wuebbe",
+  "categories": [
+    "Allgemein"
+  ],
+  "featuredImage": "/wp-content/uploads/2025/11/ugc-faqs-f-r-brands_1764377555595.webp",
+  "featuredImageAlt": "UGC-FAQs für Brands",
+  "faqs": [],
+  "redirectTo": null,
+  "contentStatus": "gone",
+  "wordCount": 2,
+  "indexable": false,
+  "checksum": "a8014ccba046b4b43722e923bb93b74d6fb2a32db5ab38831d8260afddc8469f"
+}

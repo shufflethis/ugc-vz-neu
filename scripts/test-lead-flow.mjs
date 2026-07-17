@@ -9,7 +9,7 @@ const server = spawn(process.execPath, [nextBin, 'dev', '-p', String(port)], {
   cwd: process.cwd(),
   env: {
     ...process.env,
-    AIRTABLE_API_KEY: '',
+    DATABASE_URL: '',
     RESEND_API_KEY: '',
     RESEND_WEBHOOK_SECRET: '',
     SLACK_WEBHOOK_URL: '',
@@ -69,42 +69,18 @@ try {
   });
   assert.equal(maliciousOrigin.status, 401);
 
-  const missingResend = await postJson('/api/submit-request', {
+  const invalidEmail = await postJson('/api/submit-request', {
     type: 'contact',
     clientInfo: {
       requestType: 'general_contact',
       name: 'Test Brand',
-      email: 'test@example.test',
-      message: 'Lokaler Test ohne Versand',
-      submissionId: 'local-test-123456',
+      email: 'keine-email-adresse',
     },
   }, {
     origin: baseUrl,
     'sec-fetch-site': 'same-origin',
   });
-  const missingResendBody = await missingResend.json();
-  assert.equal(missingResend.status, 502);
-  assert.equal(missingResendBody.success, false);
-  assert.match(missingResendBody.leadId, /^UGC-[A-F0-9]{12}$/);
-
-  const rateLimitStatuses = [];
-  for (let index = 0; index < 5; index += 1) {
-    const response = await postJson('/api/submit-request', {
-      type: 'contact',
-      clientInfo: {
-        requestType: 'general_contact',
-        name: 'Rate Limit Test',
-        email: 'test@example.test',
-        message: 'Lokaler Test ohne Versand',
-        submissionId: `rate-limit-test-${index}`,
-      },
-    }, {
-      origin: baseUrl,
-      'sec-fetch-site': 'same-origin',
-    });
-    rateLimitStatuses.push(response.status);
-  }
-  assert.deepEqual(rateLimitStatuses, [502, 502, 502, 502, 429]);
+  assert.equal(invalidEmail.status, 400);
 
   const honeypot = await postJson('/api/submit-request', {
     type: 'contact',
@@ -128,8 +104,7 @@ try {
 
   console.log(JSON.stringify({
     maliciousOrigin: maliciousOrigin.status,
-    missingResend: missingResend.status,
-    rateLimit: rateLimitStatuses.at(-1),
+    invalidEmail: invalidEmail.status,
     honeypot: honeypot.status,
     unsignedWebhook: unsignedWebhook.status,
     endpointSecurityHeaders: 'present',

@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "source": {
+    "system": "wordpress",
+    "id": 2426,
+    "link": "https://ugc-vz.de/ugc-content-repurposing/"
+  },
+  "slug": "ugc-content-repurposing",
+  "title": "UGC-Content-Repurposing",
+  "excerpt": "SearchGPT 404",
+  "contentHtml": "<p>SearchGPT 404</p>",
+  "publishedAt": "2025-12-02T00:52:50Z",
+  "modifiedAt": "2025-12-02T00:58:33Z",
+  "authorId": "gorden-wuebbe",
+  "categories": [
+    "Allgemein"
+  ],
+  "featuredImage": "/wp-content/uploads/2025/12/ugc-content-repurposing_1764636767345.webp",
+  "featuredImageAlt": "UGC-Content-Repurposing",
+  "faqs": [],
+  "redirectTo": null,
+  "contentStatus": "gone",
+  "wordCount": 2,
+  "indexable": false,
+  "checksum": "83c530bf590d1117f408089d906f68b1c891069c8a9e7fafe98e326f0c18236e"
+}

@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "source": {
+    "system": "wordpress",
+    "id": 2131,
+    "link": "https://ugc-vz.de/wer-postet-ugc-content-2/"
+  },
+  "slug": "wer-postet-ugc-content-2",
+  "title": "Wer postet UGC Content?",
+  "excerpt": "SearchGPT 404",
+  "contentHtml": "<p>SearchGPT 404</p>",
+  "publishedAt": "2025-10-24T10:02:54Z",
+  "modifiedAt": "2025-10-24T10:05:32Z",
+  "authorId": "gorden-wuebbe",
+  "categories": [
+    "Allgemein"
+  ],
+  "featuredImage": "/wp-content/uploads/2025/10/wer-postet-ugc-content_1761300173088.webp",
+  "featuredImageAlt": "Wer postet UGC Content?",
+  "faqs": [],
+  "redirectTo": null,
+  "contentStatus": "gone",
+  "wordCount": 2,
+  "indexable": false,
+  "checksum": "849bbc98cf65be7af3f60c02ba9b0f5f711918a4ea6a321f71ea0716540da0a7"
+}

@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "source": {
+    "system": "wordpress",
+    "id": 2438,
+    "link": "https://ugc-vz.de/ugc-content-lebenszyklus/"
+  },
+  "slug": "ugc-content-lebenszyklus",
+  "title": "UGC-Content-Lebenszyklus",
+  "excerpt": "SearchGPT 404",
+  "contentHtml": "<p>SearchGPT 404</p>",
+  "publishedAt": "2025-12-03T00:52:32Z",
+  "modifiedAt": "2025-12-03T00:58:16Z",
+  "authorId": "gorden-wuebbe",
+  "categories": [
+    "Allgemein"
+  ],
+  "featuredImage": "/wp-content/uploads/2025/12/ugc-content-lebenszyklus_1764723150116.webp",
+  "featuredImageAlt": "UGC-Content-Lebenszyklus",
+  "faqs": [],
+  "redirectTo": null,
+  "contentStatus": "gone",
+  "wordCount": 2,
+  "indexable": false,
+  "checksum": "24da3b84a2207308ea251c5e97a82281a11c95ca75bb24f57640707cbd7d88c5"
+}

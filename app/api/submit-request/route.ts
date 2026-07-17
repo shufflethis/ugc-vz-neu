@@ -1,7 +1,6 @@
 import { createHash, randomUUID, timingSafeEqual } from 'crypto';
 import { NextResponse } from 'next/server';
 import { IncomingWebhook } from '@slack/webhook';
-import Airtable from 'airtable';
 import { Resend } from 'resend';
 import { getDatabase, isDatabaseConfigured } from '@/app/lib/database';
 import {
@@ -81,95 +80,6 @@ const asRecord = (value: unknown): Record<string, unknown> =>
   value && typeof value === 'object' && !Array.isArray(value)
     ? value as Record<string, unknown>
     : {};
-
-const normalizeKey = (value: string) =>
-  value.toLowerCase().replace(/&nbsp;|[\s?:()_\-]/g, '');
-
-const stringifyField = (value: unknown): string => {
-  if (Array.isArray(value)) {
-    return value.map(stringifyField).filter(Boolean).join('\n');
-  }
-
-  if (value && typeof value === 'object') {
-    const field = value as Record<string, unknown>;
-    if (field.url) return String(field.url);
-    if (field.filename) return String(field.filename);
-    return Object.values(field).map(stringifyField).filter(Boolean).join(' ');
-  }
-
-  return String(value ?? '').trim();
-};
-
-const getFieldValue = (fields: Record<string, unknown>, candidates: string[]) => {
-  for (const candidate of candidates) {
-    const value = stringifyField(fields[candidate]);
-    if (value) return value;
-  }
-
-  const normalizedCandidates = candidates.map(normalizeKey).filter((value) => value.length >= 4);
-  for (const [key, rawValue] of Object.entries(fields)) {
-    const normalizedKey = normalizeKey(key);
-    if (normalizedCandidates.some((candidate) => normalizedKey.includes(candidate) || candidate.includes(normalizedKey))) {
-      const value = stringifyField(rawValue);
-      if (value) return value;
-    }
-  }
-
-  return '';
-};
-
-const creatorFields = {
-  name: [
-    'Wie heißt du?  (Vor- und Nachname)',
-    'Wie heißt du? (Vor- und Nachname)',
-    'Name',
-    'Vor- und Nachname',
-    'Vollständiger Name',
-  ],
-  reach: [
-    'Wie groß ist deine Reichweite pro Netzwerk? ',
-    'Wie groß ist deine Reichweite pro Netzwerk?',
-    'Reichweite',
-    'Follower je Netzwerk',
-  ],
-  networks: [
-    'In welchem Netzwerk hast du Accounts und möchtest du aktiv sein?&nbsp; ',
-    'In welchem Netzwerk hast du Accounts und möchtest du aktiv sein?',
-    'Netzwerke',
-    'Plattformen',
-  ],
-  price: [
-    'Price',
-    'Preis',
-    'Preisrange',
-    'Preisvorstellung',
-    'Rate',
-    'Rates',
-    'Was kostet ein Video bei dir?',
-    'Arbeitest du kostenlos?',
-  ],
-  email: [
-    'E-Mail',
-    'Email',
-    'E-Mail Adresse',
-    'E-Mail-Adresse',
-    'Email Adresse',
-    'Deine E-Mail',
-    'Deine E-Mail-Adresse',
-    'Wie lautet deine E-Mail-Adresse?',
-    'Wie lautet deine E-Mail Adresse?',
-  ],
-  socialLinks: [
-    'Social Links',
-    'Social Media Links',
-    'Social-Media-Links',
-    'Profil-Links',
-    'Instagram Link',
-    'TikTok Link',
-    'Portfolio',
-    'In welchem Netzwerk hast du Accounts und möchtest du aktiv sein?&nbsp; ',
-  ],
-};
 
 function isValidApiKey(supplied: string | null, expected: string | undefined) {
   if (!supplied || !expected) return false;
@@ -287,8 +197,7 @@ function normalizeRequestBody(rawBody: unknown) {
 
 async function fetchSelectedCreators(creatorIds: string[]): Promise<SelectedCreator[]> {
   const neonIds = creatorIds.filter((id) => /^UGC-[A-F0-9]{10}$/.test(id));
-  const airtableIds = creatorIds.filter((id) => /^rec[a-zA-Z0-9]{3,32}$/.test(id));
-  if (neonIds.length + airtableIds.length !== creatorIds.length) {
+  if (neonIds.length !== creatorIds.length) {
     throw new Error('Invalid creator ID format');
   }
 
@@ -330,36 +239,6 @@ async function fetchSelectedCreators(creatorIds: string[]): Promise<SelectedCrea
     if (rows.length !== neonIds.length) throw new Error('One or more creator profiles are unavailable');
   }
 
-  if (airtableIds.length) {
-    const airtableApiKey = process.env.AIRTABLE_API_KEY;
-    if (!airtableApiKey) throw new Error('AIRTABLE_API_KEY is not configured');
-
-    const base = new Airtable({ apiKey: airtableApiKey })
-      .base(process.env.AIRTABLE_BASE_ID || 'appbpBRQkSWkdwTT5');
-    const tableName = process.env.AIRTABLE_TABLE_NAME || 'tblXbhX5gIB47BjBr';
-
-    await Promise.all(airtableIds.map(async (id) => {
-      const record = await base(tableName).find(id);
-      const fields = record.fields as Record<string, unknown>;
-      const networks = getFieldValue(fields, creatorFields.networks).slice(0, 300);
-      const rawSocialLinks = getFieldValue(fields, creatorFields.socialLinks).slice(0, 500);
-      const extractedEmail = getFieldValue(fields, creatorFields.email).match(/[^\s,;<>]+@[^\s,;<>]+\.[^\s,;<>]+/)?.[0] || '';
-      const socialLinks = rawSocialLinks === networks && !/https?:\/\//i.test(rawSocialLinks)
-        ? ''
-        : rawSocialLinks;
-
-      creatorsById.set(id, {
-        id: record.id,
-        name: getFieldValue(fields, creatorFields.name).slice(0, 100) || 'UGC Creator',
-        reach: getFieldValue(fields, creatorFields.reach).slice(0, 300),
-        networks,
-        priceRange: getFieldValue(fields, creatorFields.price).slice(0, 200),
-        contactEmail: emailRegex.test(extractedEmail) ? extractedEmail.slice(0, 160) : '',
-        socialLinks,
-      });
-    }));
-  }
-
   return creatorIds.map((id) => {
     const creator = creatorsById.get(id);
     if (!creator) throw new Error('Creator profile not found');
@@ -378,11 +257,10 @@ async function persistLead({
   clientInfo: LeadClientInfo;
   selectedCreators: SelectedCreator[];
 }) {
-  if (!isDatabaseConfigured()) return null;
+  if (!isDatabaseConfigured()) throw new Error('Lead database is not configured');
 
-  try {
-    const sql = getDatabase();
-    const [lead] = await sql.query(`
+  const sql = getDatabase();
+  const [lead] = await sql.query(`
       INSERT INTO brand_leads (
         public_id, name, email, company, search_query, message, source_url, status
       ) VALUES ($1, $2, $3, $4, $5, $6, $7, 'submitted')
@@ -405,37 +283,36 @@ async function persistLead({
       clientInfo.sourceUrl || null,
     ]);
 
-    for (let index = 0; index < selectedCreators.length; index += 1) {
-      const creator = selectedCreators[index];
-      await sql.query(`
-        INSERT INTO lead_creator_matches (
-          lead_id, creator_id, creator_public_id, creator_snapshot, rank
-        ) VALUES (
-          $1,
-          (SELECT id FROM creator_profiles WHERE public_id = $2 LIMIT 1),
-          $2,
-          $3::jsonb,
-          $4
-        )
-        ON CONFLICT (lead_id, creator_public_id) DO UPDATE SET
-          creator_id = EXCLUDED.creator_id,
-          creator_snapshot = EXCLUDED.creator_snapshot,
-          rank = EXCLUDED.rank
-      `, [lead.id, creator.id, JSON.stringify({
+  if (selectedCreators.length) {
+    const matches = selectedCreators.map((creator, index) => ({
+      public_id: creator.id,
+      snapshot: {
         name: creator.name,
         reach: creator.reach,
         networks: creator.networks,
         priceRange: creator.priceRange,
         socialLinks: creator.socialLinks,
         hasContactEmail: Boolean(creator.contactEmail),
-      }), index + 1]);
-    }
+      },
+      rank: index + 1,
+    }));
 
-    return String(lead.id);
-  } catch (error) {
-    console.error(`[${leadId}] Could not persist lead`, error instanceof Error ? error.message : 'unknown error');
-    return null;
+    await sql.query(`
+        INSERT INTO lead_creator_matches (
+          lead_id, creator_id, creator_public_id, creator_snapshot, rank
+        )
+        SELECT $1, profile.id, match.public_id, match.snapshot, match.rank
+        FROM jsonb_to_recordset($2::jsonb)
+          AS match(public_id text, snapshot jsonb, rank smallint)
+        LEFT JOIN creator_profiles profile ON profile.public_id = match.public_id
+        ON CONFLICT (lead_id, creator_public_id) DO UPDATE SET
+          creator_id = EXCLUDED.creator_id,
+          creator_snapshot = EXCLUDED.creator_snapshot,
+          rank = EXCLUDED.rank
+      `, [lead.id, JSON.stringify(matches)]);
   }
+
+  return String(lead.id);
 }
 
 async function persistInitialDelivery({
@@ -454,29 +331,47 @@ async function persistInitialDelivery({
   try {
     const sql = getDatabase();
     const recipientHash = createHash('sha256').update(clientInfo.email.toLowerCase()).digest('hex');
-    for (const [audience, result] of [
-      ['brand', delivery.brand],
-      ['internal', delivery.internal],
-    ] as const) {
-      await sql.query(`
-        INSERT INTO email_events (
-          lead_id, resend_email_id, audience, event_type, recipient_hash, metadata
-        ) VALUES ($1, $2, $3, $4, $5, $6::jsonb)
-      `, [
-        databaseLeadId,
-        result.id || null,
-        audience,
-        result.status,
-        audience === 'brand' ? recipientHash : null,
-        JSON.stringify({ lead_id: leadId, error: result.error || null }),
-      ]);
-    }
+    const events = ([
+      ['brand', delivery.brand, recipientHash],
+      ['internal', delivery.internal, null],
+    ] as const).map(([audience, result, hash]) => ({
+      resend_email_id: result.id || null,
+      audience,
+      event_type: result.status,
+      recipient_hash: hash,
+      metadata: { lead_id: leadId, error: result.error || null },
+    }));
 
     await sql.query(`
-      UPDATE brand_leads
-      SET status = $2, updated_at = now()
-      WHERE id = $1
-    `, [databaseLeadId, delivery.brand.status === 'queued' ? 'brand_email_queued' : 'brand_email_failed']);
+      WITH updated_lead AS (
+        UPDATE brand_leads
+        SET status = $2, updated_at = now()
+        WHERE id = $1
+        RETURNING id
+      )
+      INSERT INTO email_events (
+        lead_id, resend_email_id, audience, event_type, recipient_hash, metadata
+      )
+      SELECT
+        updated_lead.id,
+        event.resend_email_id,
+        event.audience,
+        event.event_type,
+        event.recipient_hash,
+        event.metadata
+      FROM updated_lead
+      CROSS JOIN jsonb_to_recordset($3::jsonb) AS event(
+        resend_email_id text,
+        audience text,
+        event_type text,
+        recipient_hash text,
+        metadata jsonb
+      )
+    `, [
+      databaseLeadId,
+      delivery.brand.status === 'queued' ? 'brand_email_queued' : 'brand_email_failed',
+      JSON.stringify(events),
+    ]);
   } catch (error) {
     console.error(`[${leadId}] Could not persist initial email status`, error instanceof Error ? error.message : 'unknown error');
   }

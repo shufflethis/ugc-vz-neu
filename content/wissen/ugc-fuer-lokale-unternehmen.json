@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "source": {
+    "system": "wordpress",
+    "id": 2352,
+    "link": "https://ugc-vz.de/ugc-fuer-lokale-unternehmen/"
+  },
+  "slug": "ugc-fuer-lokale-unternehmen",
+  "title": "UGC für lokale Unternehmen",
+  "excerpt": "SearchGPT 404",
+  "contentHtml": "<p>SearchGPT 404</p>",
+  "publishedAt": "2025-11-25T11:03:46Z",
+  "modifiedAt": "2025-11-25T11:06:33Z",
+  "authorId": "gorden-wuebbe",
+  "categories": [
+    "Allgemein"
+  ],
+  "featuredImage": "/wp-content/uploads/2025/11/ugc-f-r-lokale-unternehmen_1764068625465.webp",
+  "featuredImageAlt": "UGC für lokale Unternehmen",
+  "faqs": [],
+  "redirectTo": null,
+  "contentStatus": "gone",
+  "wordCount": 2,
+  "indexable": false,
+  "checksum": "73ff9b084bab52820b7cbf34994520d18f75c5edca8a51a07fa4a3002f2d67a8"
+}

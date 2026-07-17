@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "source": {
+    "system": "wordpress",
+    "id": 2349,
+    "link": "https://ugc-vz.de/ugc-und-community-building/"
+  },
+  "slug": "ugc-und-community-building",
+  "title": "UGC und Community Building",
+  "excerpt": "SearchGPT 404",
+  "contentHtml": "<p>SearchGPT 404</p>",
+  "publishedAt": "2025-11-25T00:54:00Z",
+  "modifiedAt": "2025-11-25T01:02:01Z",
+  "authorId": "gorden-wuebbe",
+  "categories": [
+    "Allgemein"
+  ],
+  "featuredImage": "/wp-content/uploads/2025/11/ugc-und-community-building_1764032036794.webp",
+  "featuredImageAlt": "UGC und Community Building",
+  "faqs": [],
+  "redirectTo": null,
+  "contentStatus": "gone",
+  "wordCount": 2,
+  "indexable": false,
+  "checksum": "870807e6e0b25c5944f569caafa2951ad8d7d15cf20de326416dd96863430321"
+}

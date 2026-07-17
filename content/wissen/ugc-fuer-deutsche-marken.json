@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "source": {
+    "system": "wordpress",
+    "id": 2405,
+    "link": "https://ugc-vz.de/ugc-fuer-deutsche-marken/"
+  },
+  "slug": "ugc-fuer-deutsche-marken",
+  "title": "UGC für deutsche Marken",
+  "excerpt": "SearchGPT 404",
+  "contentHtml": "<p>SearchGPT 404</p>",
+  "publishedAt": "2025-11-30T11:02:48Z",
+  "modifiedAt": "2025-11-30T11:09:34Z",
+  "authorId": "gorden-wuebbe",
+  "categories": [
+    "Allgemein"
+  ],
+  "featuredImage": "/wp-content/uploads/2025/11/ugc-f-r-deutsche-marken_1764500553428.webp",
+  "featuredImageAlt": "UGC für deutsche Marken",
+  "faqs": [],
+  "redirectTo": null,
+  "contentStatus": "gone",
+  "wordCount": 2,
+  "indexable": false,
+  "checksum": "b541e7ae2586170db1fd8e5fa44a7c73ca97614a0ea425b8cc0f301742540343"
+}

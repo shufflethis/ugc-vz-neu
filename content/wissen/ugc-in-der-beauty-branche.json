@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "source": {
+    "system": "wordpress",
+    "id": 2318,
+    "link": "https://ugc-vz.de/ugc-in-der-beauty-branche/"
+  },
+  "slug": "ugc-in-der-beauty-branche",
+  "title": "UGC in der Beauty-Branche",
+  "excerpt": "SearchGPT 404",
+  "contentHtml": "<p>SearchGPT 404</p>",
+  "publishedAt": "2025-11-22T11:03:02Z",
+  "modifiedAt": "2025-11-22T11:08:25Z",
+  "authorId": "gorden-wuebbe",
+  "categories": [
+    "Allgemein"
+  ],
+  "featuredImage": "/placeholder-blog.svg",
+  "featuredImageAlt": "UGC in der Beauty-Branche",
+  "faqs": [],
+  "redirectTo": null,
+  "contentStatus": "gone",
+  "wordCount": 2,
+  "indexable": false,
+  "checksum": "994c9903dd527703a698eab42393dbdc5e587c5ee450352f10e543305ee1013b"
+}

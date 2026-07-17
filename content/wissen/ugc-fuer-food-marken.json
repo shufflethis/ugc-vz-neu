@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "source": {
+    "system": "wordpress",
+    "id": 2326,
+    "link": "https://ugc-vz.de/ugc-fuer-food-marken/"
+  },
+  "slug": "ugc-fuer-food-marken",
+  "title": "UGC für Food-Marken",
+  "excerpt": "SearchGPT 404",
+  "contentHtml": "<p>SearchGPT 404</p>",
+  "publishedAt": "2025-11-23T00:53:14Z",
+  "modifiedAt": "2025-11-23T00:57:19Z",
+  "authorId": "gorden-wuebbe",
+  "categories": [
+    "Allgemein"
+  ],
+  "featuredImage": "/wp-content/uploads/2025/11/ugc-f-r-food-marken_1763859191569.webp",
+  "featuredImageAlt": "UGC für Food-Marken",
+  "faqs": [],
+  "redirectTo": null,
+  "contentStatus": "gone",
+  "wordCount": 2,
+  "indexable": false,
+  "checksum": "69a3946192880128f188dbb552d25e72e4c2218c59cb254f52e16b67a6fc1bd9"
+}

@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "source": {
+    "system": "wordpress",
+    "id": 2332,
+    "link": "https://ugc-vz.de/ugc-fuer-fashion-brands/"
+  },
+  "slug": "ugc-fuer-fashion-brands",
+  "title": "UGC für Fashion-Brands",
+  "excerpt": "SearchGPT 404",
+  "contentHtml": "<p>SearchGPT 404</p>",
+  "publishedAt": "2025-11-23T12:20:48Z",
+  "modifiedAt": "2025-11-23T12:28:31Z",
+  "authorId": "gorden-wuebbe",
+  "categories": [
+    "Allgemein"
+  ],
+  "featuredImage": "/wp-content/uploads/2025/11/ugc-f-r-fashion-brands_1763900443224.webp",
+  "featuredImageAlt": "UGC für Fashion-Brands",
+  "faqs": [],
+  "redirectTo": null,
+  "contentStatus": "gone",
+  "wordCount": 2,
+  "indexable": false,
+  "checksum": "7d21fc7fdfe882f328e3e3732e4e41183a029ad9adc26e3a508832fcf81c89c2"
+}

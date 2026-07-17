@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "source": {
+    "system": "wordpress",
+    "id": 2312,
+    "link": "https://ugc-vz.de/dsgvo-konformer-ugc-content/"
+  },
+  "slug": "dsgvo-konformer-ugc-content",
+  "title": "DSGVO-konformer UGC Content",
+  "excerpt": "SearchGPT 404",
+  "contentHtml": "<p>SearchGPT 404</p>",
+  "publishedAt": "2025-11-21T23:01:47Z",
+  "modifiedAt": "2025-11-21T23:04:35Z",
+  "authorId": "gorden-wuebbe",
+  "categories": [
+    "Allgemein"
+  ],
+  "featuredImage": "/wp-content/uploads/2025/11/dsgvo-konformer-ugc-content_1763766106147.webp",
+  "featuredImageAlt": "DSGVO-konformer UGC Content",
+  "faqs": [],
+  "redirectTo": null,
+  "contentStatus": "gone",
+  "wordCount": 2,
+  "indexable": false,
+  "checksum": "aac06b1c27d4b979cbc82d980d3adc34e645bc7e7e6adadf5d233d6315b2d6a3"
+}

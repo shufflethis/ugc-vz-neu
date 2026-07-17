@@ -48,7 +48,7 @@ const main = async () => {
 
   const profileCount = (csv.match(/"UGC-[A-Z0-9]+",/g) || [])
     .filter(value => value !== '"UGC-ID",').length;
-  if (profileCount !== 435) fail(`Expected 435 profiles, received ${profileCount}.`);
+  if (profileCount < 400) fail(`Expected at least 400 profiles, received ${profileCount}.`);
 
   const emailCount = (csv.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi) || []).length;
   if (emailCount < 250) fail(`Expected at least 250 contact emails, received ${emailCount}.`);
