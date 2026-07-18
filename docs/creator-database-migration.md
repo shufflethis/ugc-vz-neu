@@ -1,22 +1,22 @@
 # Creator-Datenbank und Tally-Ablösung
 
-Stand: 16. Juli 2026
+Stand: 18. Juli 2026
 
 ## Umsetzungsstand
 
 - Neon-Ressource `ugc-vz-db` im Tarif `free_v3`, Region Frankfurt, ist mit Vercel verbunden.
 - Drei Migrationen sind ausgerollt; die bestehenden Quelltabs in Google Sheets bleiben unverändert und wurden um getrennte Arbeitstabs ergänzt.
-- Der Audit vom 17. Juli 2026 weist 469 Quellzeilen und 437 deduplizierte Profile aus: 418 aktiv, 19 quarantänisiert.
-- 254 private Kontaktzeilen und 128 Newsletter-Freigaben sind getrennt gespeichert.
+- Der Audit vom 18. Juli 2026 weist 469 historische Quellzeilen und 438 deduplizierte Profile aus: 419 aktiv, 19 quarantänisiert.
+- 255 private Kontaktzeilen und 129 Newsletter-Freigaben sind getrennt gespeichert.
 - Vollständige Privatanschriften und vollständige Geburtsdaten wurden nicht in Neon importiert.
 - Die öffentliche Such-View enthält 26 Profilspalten und keine E-Mail-, Telefon-, Einwilligungs- oder Tokenfelder.
 - Native dreistufige Creator-Anmeldung mit Entwurfsspeicherung, E-Mail-Verifikation und getrennten Einwilligungen ist implementiert.
 - Die Suche liest ausschließlich Neon und zeigt maximal 24 Top-Treffer. Es gibt keinen Mock- oder Airtable-Fallback.
 - Brand-Leads, Match-Snapshots und Resend-Zustellereignisse werden dauerhaft in Neon protokolliert.
 - Creator-Benachrichtigungen bleiben über `SEND_CREATOR_OUTREACH_EMAILS` kontrolliert; historische Kontakte werden ohne explizite Projektbenachrichtigungs-Freigabe nicht automatisch angeschrieben.
-- Im bestehenden Kunden-Sheet gibt es `Creator Vorschläge` für Mitarbeitende und einen automatisch aktualisierten `Neon Sync`-Tab mit allen 418 aktiven Profilen. Die bestehende Datentabelle wurde nicht verändert.
+- Im bestehenden Kunden-Sheet gibt es `Creator Vorschläge` für Mitarbeitende und einen automatisch aktualisierten `Neon Sync`-Tab mit allen 419 aktiven Profilen. Die bestehende Datentabelle wurde nicht verändert.
 - Der token-geschützte CSV-Export für den automatischen Neon-Spiegel ist auf `ugc-vz.de` live. Er exportiert ausschließlich Felder aus `creator_search_public`; die einmalige Google-Freigabe ist erfolgt und die Importformel läuft fehlerfrei in `Neon Sync!A2`.
-- Im nur dem Eigentümer freigegebenen Rohdaten-Spreadsheet gibt es zusätzlich `Intern – Kontakte` mit allen 437 Neon-Profilen und den operativen Kontaktdaten sowie Einwilligungsständen. Der getrennt token-geschützte Export enthält keine Anschrift und kein vollständiges Geburtsdatum.
+- Im nur dem Eigentümer freigegebenen Rohdaten-Spreadsheet gibt es zusätzlich `Intern – Kontakte` mit allen 438 Neon-Profilen und den operativen Kontaktdaten sowie Einwilligungsständen. Der getrennt token-geschützte Export enthält keine Anschrift und kein vollständiges Geburtsdatum.
 
 ## Bestandsaufnahme
 
