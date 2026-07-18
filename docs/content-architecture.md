@@ -51,8 +51,18 @@ dauerhaft entfernten Artikeln den Slug aus der Published-Liste entfernen und in
 
 ## Alt-Host
 
-Nach dem DNS-Cutover nimmt dasselbe Vercel-Projekt auch `wp.ugc-vz.de` an.
-Veröffentlichte alte Slugs leiten permanent auf `/wissen/<slug>` weiter,
-Upload-Pfade bleiben direkt abrufbar und alle übrigen Backend-/Platzhalterpfade
-liefern 410. Das frühere WordPress darf erst nach dieser Live-Prüfung abgeschaltet
-werden.
+Der DNS-Cutover wurde am 18. Juli 2026 abgeschlossen. `wp.ugc-vz.de` zeigt auf
+dasselbe Vercel-Projekt wie die Hauptdomain. Veröffentlichte alte Slugs leiten
+permanent auf `/wissen/<slug>` weiter, Upload-Pfade bleiben direkt abrufbar und
+alle übrigen Backend- und Platzhalterpfade liefern 410 mit `noindex`.
+
+Der Produktionscrawl nach dem Cutover hat alle 64 veröffentlichten Slugs, alle
+614 entfernten Slugs und alle 638 Medienpfade geprüft. Alle 1.316 Prüfungen waren
+erfolgreich. Die öffentliche Auflösung wurde zusätzlich über Cloudflare, Google
+und Quad9 gegen `76.76.21.21` bestätigt.
+
+Der frühere VPS-Webcontainer `wp16-ugcvz` ist gestoppt. Seine Mounts, sein
+Docker-Volume und die Daten in der gemeinsam genutzten MariaDB bleiben zunächst
+als Rollback-Archiv erhalten. Die gemeinsam genutzte Datenbank und der Caddy-
+Proxy dürfen nicht zusammen mit dem UGC-VZ-Container abgeschaltet werden, weil
+weitere Websites davon abhängen.
