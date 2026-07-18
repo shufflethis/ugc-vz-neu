@@ -40,11 +40,23 @@ function gone(request: NextRequest) {
 }
 
 export function middleware(request: NextRequest) {
-  const hostname = request.headers.get('host')?.split(':')[0]?.toLowerCase() || '';
+  // Vercel may keep the deployment hostname in `Host` while preserving the
+  // public custom domain in `x-forwarded-host` or the request URL. Check all
+  // authoritative host representations so the retired WordPress subdomain is
+  // handled consistently on preview IP tests and on the real HTTPS domain.
+  const hostCandidates = [
+    request.headers.get('x-forwarded-host'),
+    request.headers.get('host'),
+    request.nextUrl.hostname,
+  ]
+    .flatMap(value => (value || '').split(','))
+    .map(value => value.trim().split(':')[0]?.toLowerCase())
+    .filter(Boolean);
+  const isWordPressHost = hostCandidates.includes('wp.ugc-vz.de');
   const pathname = request.nextUrl.pathname;
   const normalizedSlug = pathname.replace(/^\/+|\/+$/g, '');
 
-  if (hostname === 'wp.ugc-vz.de') {
+  if (isWordPressHost) {
     if (pathname.startsWith('/wp-content/uploads/')) return applySecurityHeaders(NextResponse.next(), request);
     if (!normalizedSlug) return NextResponse.redirect('https://ugc-vz.de', 308);
     if (publishedSlugs.has(normalizedSlug)) return NextResponse.redirect(`https://ugc-vz.de/wissen/${normalizedSlug}`, 308);
