@@ -4,9 +4,17 @@
 
 Reihenfolge nach Wirkung pro Aufwand. Die Sofortmaßnahmen sind zusammen an einem halben Tag erledigt und heben den Score spürbar.
 
+> **Stand 21.07.2026:** Die Sofortmaßnahmen 1–4 sind umgesetzt und produktiv
+> (Commit `d4ded11`, Merge `da800c2`). Live verifiziert: Das initiale
+> Seitengewicht der Startseite sank von 32.637 KB auf **292 KB (−99,1 %)**,
+> alle sechs Titel tragen das Markensuffix genau einmal, die elf Unterseiten
+> melden ihre eigene `og:url` und behalten ihr `og:image`. Punkt 4 entfiel —
+> der gemeldete Jahreszahl-Widerspruch existierte nicht.
+> Offen ab Punkt 5.
+
 ---
 
-## Sofort (diese Woche)
+## Sofort (diese Woche) — erledigt
 
 ### 1. Video-Preload abschalten — 31,7 MB pro Seitenaufruf
 
