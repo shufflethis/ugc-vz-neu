@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import manifestJson from '@/content/wissen/index.json';
 import authorsJson from '@/content/authors.json';
+import relatedJson from '@/content/wissen/related.json';
 
 export const POSTS_PER_PAGE = 30;
 
@@ -65,6 +66,23 @@ export function getPostsPage(page: number) {
 
 export function getPostSummary(slug: string) {
   return summaryBySlug.get(slug) || null;
+}
+
+/**
+ * Thematisch verwandte Artikel, vorberechnet von scripts/build-related-articles.mjs.
+ * Filtert defensiv gegen das Manifest: Ein Verweis auf einen zurueckgezogenen Slug
+ * waere ein Link auf HTTP 410. Nach dem Zurueckziehen eines Artikels also entweder
+ * das Script neu laufen lassen oder auf diesen Filter vertrauen.
+ */
+export function getRelatedPosts(slug: string, limit = 3): ContentPostSummary[] {
+  const slugs = (relatedJson as Record<string, string[]>)[slug] || [];
+  return slugs
+    .map((s) => summaryBySlug.get(s))
+    .filter(
+      (post): post is ContentPostSummary =>
+        Boolean(post) && post!.indexable && post!.contentStatus === 'published',
+    )
+    .slice(0, limit);
 }
 
 export function getContentPost(slug: string): ContentPost | null {

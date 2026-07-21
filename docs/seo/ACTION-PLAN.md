@@ -10,7 +10,19 @@ Reihenfolge nach Wirkung pro Aufwand. Die Sofortmaßnahmen sind zusammen an eine
 > alle sechs Titel tragen das Markensuffix genau einmal, die elf Unterseiten
 > melden ihre eigene `og:url` und behalten ihr `og:image`. Punkt 4 entfiel —
 > der gemeldete Jahreszahl-Widerspruch existierte nicht.
-> Offen ab Punkt 5.
+> **Punkt 5 (interne Verlinkung) ist umgesetzt:** Alle 64 Artikel verweisen auf
+> je 3 thematisch verwandte Artikel, jeder Artikel hat mindestens 2 eingehende
+> Verweise. Im redaktionellen Linkgraph ohne Navigation und Footer sind damit
+> 70 der 87 Seiten erreichbar (vorher 14) — GOAL-Kriterium erfüllt.
+>
+> **Punkt 7 (Preise) technisch umgesetzt:** Verbindlich ist 150–2.500 € pro
+> Video. `/brands/ugc-creator-preise` führt diese Werte jetzt als Referenz mit
+> Format- und Faktorentabelle. Zwei Artikel widersprechen noch — die
+> Konfliktstellen stehen in [OFFENE-FAKTEN.md](./OFFENE-FAKTEN.md) Abschnitt D.
+>
+> **Punkt 6 (Money-Pages) wartet auf Fakten** — siehe
+> [OFFENE-FAKTEN.md](./OFFENE-FAKTEN.md). Ohne echten Input entstünde
+> generischer Fülltext, den Google als scaled content abuse abwertet.
 
 ---
 
