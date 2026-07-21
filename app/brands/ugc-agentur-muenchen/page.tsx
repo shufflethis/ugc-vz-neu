@@ -1,11 +1,12 @@
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/utils/seo-metadata';
 import Link from 'next/link';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
+  path: '/brands/ugc-agentur-muenchen',
   title: 'UGC Agentur Muenchen oder Creator-Plattform?',
   description: 'UGC Agentur Muenchen gesucht? UGC VZ verbindet Brands mit passenden UGC Creatorn und optionaler Kampagnen-Unterstuetzung.',
-  alternates: { canonical: 'https://ugc-vz.de/brands/ugc-agentur-muenchen' },
-};
+});
 
 export default function UGCAgenturMuenchenPage() {
   return (

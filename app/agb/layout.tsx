@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'AGB | UGC VZ',
+  title: 'AGB',
   description: 'Allgemeine Geschäftsbedingungen der UGC VZ Plattform für die Vermittlung von UGC Creators.',
   alternates: {
     canonical: 'https://ugc-vz.de/agb',

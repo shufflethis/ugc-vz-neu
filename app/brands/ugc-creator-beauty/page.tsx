@@ -1,12 +1,13 @@
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/utils/seo-metadata';
 import Link from 'next/link';
 import SearchBox from '../../components/SearchBox';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
+  path: '/brands/ugc-creator-beauty',
   title: 'UGC Creator fuer Beauty Brands',
   description: 'Beauty UGC Creator finden: Produktdemo, Routine, Testimonial oder Social Ad fuer Kosmetik-, Pflege- und Beauty-Marken.',
-  alternates: { canonical: 'https://ugc-vz.de/brands/ugc-creator-beauty' },
-};
+});
 
 export default function UGCCreatorBeautyPage() {
   return (

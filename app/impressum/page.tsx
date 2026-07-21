@@ -4,7 +4,7 @@ import ResponsiveCTAButton from '@/src/components/ResponsiveCTAButton';
 import LogoImage from '../components/LogoImage';
 
 export const metadata: Metadata = {
-  title: 'Impressum | UGC VZ',
+  title: 'Impressum',
   description: 'Impressum der UGC VZ Plattform - track by track GmbH, Berlin. Angaben gemäß § 5 DDG.',
   alternates: {
     canonical: 'https://ugc-vz.de/impressum',

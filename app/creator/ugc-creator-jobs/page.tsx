@@ -1,11 +1,12 @@
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/utils/seo-metadata';
 import Link from 'next/link';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
+  path: '/creator/ugc-creator-jobs',
   title: 'UGC Creator Jobs',
   description: 'UGC Creator Jobs finden: Wie Brands Creator suchen, welche Profilangaben helfen und wie du dich kostenlos bei UGC VZ eintraegst.',
-  alternates: { canonical: 'https://ugc-vz.de/creator/ugc-creator-jobs' },
-};
+});
 
 export default function UGCCreatorJobsPage() {
   return (

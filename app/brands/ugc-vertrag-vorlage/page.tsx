@@ -1,11 +1,12 @@
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/utils/seo-metadata';
 import Link from 'next/link';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
+  path: '/brands/ugc-vertrag-vorlage',
   title: 'UGC Vertrag Vorlage',
   description: 'Praktische UGC Vertrags- und Briefing-Vorlage fuer Brands: Leistung, Verguetung, Nutzungsrechte, Abnahme und Timing klaeren.',
-  alternates: { canonical: 'https://ugc-vz.de/brands/ugc-vertrag-vorlage' },
-};
+});
 
 export default function UGCVertragVorlagePage() {
   return (

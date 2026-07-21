@@ -17,7 +17,7 @@ interface FAQSection {
 }
 
 export const metadata: Metadata = {
-  title: 'FAQ – Häufig gestellte Fragen | UGC VZ',
+  title: 'FAQ – Häufig gestellte Fragen',
   description: 'Antworten auf die wichtigsten Fragen rund um UGC-VZ: Kostenlose Creator-Vermittlung, Registrierung, Ablauf für Creator und Unternehmen.',
   keywords: 'UGC VZ FAQ, UGC Creator Fragen, Creator Vermittlung FAQ, UGC Kosten, Creator registrieren',
   openGraph: {
