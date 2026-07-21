@@ -1,11 +1,12 @@
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/utils/seo-metadata';
 import Link from 'next/link';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
+  path: '/brands/ugc-plattform-deutschland',
   title: 'UGC Plattform Deutschland',
   description: 'UGC VZ ist eine kostenlose UGC Plattform fuer Deutschland: Creator entdecken, Profile auswaehlen und Kampagnen-Anfragen starten.',
-  alternates: { canonical: 'https://ugc-vz.de/brands/ugc-plattform-deutschland' },
-};
+});
 
 export default function UGCPlattformDeutschlandPage() {
   return (

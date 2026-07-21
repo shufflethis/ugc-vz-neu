@@ -7,7 +7,7 @@ import BreadcrumbSchema from '../components/BreadcrumbSchema';
 import HomePageSchema from '../components/HomePageSchema';
 
 export const metadata: Metadata = {
-  title: 'Über uns – Das kostenlose Creator-Verzeichnis | UGC VZ',
+  title: 'Über uns – Das kostenlose Creator-Verzeichnis',
   description: 'UGC-VZ ist mehr als nur ein Verzeichnis – wir sind die Brücke zwischen talentierten UGC Creators und Unternehmen. Komplett kostenlos für beide Seiten.',
   keywords: 'UGC VZ, Über uns, Creator Verzeichnis, famefact, Social Media Agentur, User Generated Content',
   openGraph: {

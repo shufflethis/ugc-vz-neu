@@ -1,11 +1,12 @@
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/utils/seo-metadata';
 import Link from 'next/link';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
+  path: '/brands/ugc-agentur-hamburg',
   title: 'UGC Agentur Hamburg oder Creator-Plattform?',
   description: 'UGC Agentur Hamburg gesucht? UGC VZ hilft beim Finden passender Creator und bietet optional Support fuer Kampagnen-Abwicklung.',
-  alternates: { canonical: 'https://ugc-vz.de/brands/ugc-agentur-hamburg' },
-};
+});
 
 export default function UGCAgenturHamburgPage() {
   return (

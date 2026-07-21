@@ -243,10 +243,13 @@ export default function Home() {
               Schau dir an, wie einfach es ist, den perfekten Creator für deine Kampagne zu finden
             </p>
             <div className="relative rounded-xl overflow-hidden shadow-2xl">
-              <video 
+              <video
                 className="w-full h-auto"
                 controls
-                preload="auto"
+                preload="none"
+                poster="/ugc-creator-finden-poster.webp"
+                width={1280}
+                height={720}
                 playsInline
                 controlsList="nodownload"
               >

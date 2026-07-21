@@ -4,7 +4,7 @@ import { Metadata } from 'next';
 import ResponsiveCTAButton from '@/src/components/ResponsiveCTAButton';
 
 export const metadata: Metadata = {
-  title: 'Datenschutz | UGC VZ',
+  title: 'Datenschutz',
   description: 'Datenschutzerklärung der UGC VZ Plattform. Informationen zur Verarbeitung Ihrer personenbezogenen Daten.',
   alternates: {
     canonical: 'https://ugc-vz.de/datenschutz',

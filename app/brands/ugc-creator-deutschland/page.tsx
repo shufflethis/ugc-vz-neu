@@ -1,12 +1,13 @@
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/utils/seo-metadata';
 import Link from 'next/link';
 import SearchBox from '../../components/SearchBox';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
+  path: '/brands/ugc-creator-deutschland',
   title: 'UGC Creator Deutschland finden',
   description: 'UGC Creator in Deutschland finden: echte Profile, deutsche Sprache, passende Themen und kostenlose Anfrage ueber UGC VZ.',
-  alternates: { canonical: 'https://ugc-vz.de/brands/ugc-creator-deutschland' },
-};
+});
 
 export default function UGCCreatorDeutschlandPage() {
   return (

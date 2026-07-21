@@ -1,11 +1,12 @@
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/utils/seo-metadata';
 import Link from 'next/link';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
+  path: '/creator/ugc-creator-werden',
   title: 'UGC Creator werden',
   description: 'UGC Creator werden in Deutschland: Was du brauchst, wie du dein Portfolio aufbaust und wie du dich kostenlos bei UGC VZ anmeldest.',
-  alternates: { canonical: 'https://ugc-vz.de/creator/ugc-creator-werden' },
-};
+});
 
 export default function UGCCreatorWerdenPage() {
   return (

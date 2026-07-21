@@ -1,12 +1,13 @@
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/utils/seo-metadata';
 import Link from 'next/link';
 import SearchBox from '../../components/SearchBox';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
+  path: '/brands/ugc-creator-preise',
   title: 'UGC Creator Preise in Deutschland',
   description: 'UGC Creator Preise einschaetzen: typische Faktoren, Budgetrahmen und kostenlose Creator-Suche fuer Brands in Deutschland.',
-  alternates: { canonical: 'https://ugc-vz.de/brands/ugc-creator-preise' },
-};
+});
 
 export default function UGCCreatorPreisePage() {
   return (
