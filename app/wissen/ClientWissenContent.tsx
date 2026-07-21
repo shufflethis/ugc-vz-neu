@@ -135,6 +135,7 @@ export default function ClientWissenContent({ posts }: ClientWissenContentProps)
                 <div className="mt-4">
                   <Link
                     href={`/wissen/${post.slug}`}
+                    aria-label={`${post.title} – weiterlesen`}
                     className="inline-flex items-center text-geo-violet hover:text-geo-violet-soft transition-colors text-sm font-medium"
                   >
                     Weiterlesen

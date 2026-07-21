@@ -12,6 +12,7 @@ import {
   getAuthor,
   getContentPost,
   getPublishedPosts,
+  getRelatedPosts,
 } from '../../lib/content-repository';
 
 export const dynamicParams = false;
@@ -104,6 +105,7 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
       acceptedAnswer: { '@type': 'Answer', text: faq.answer },
     })),
   } : null;
+  const relatedPosts = getRelatedPosts(post.slug);
 
   return (
     <div className="min-h-screen bg-white text-ink">
@@ -156,6 +158,26 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
           <div className="prose prose-lg max-w-none" dangerouslySetInnerHTML={{ __html: post.contentHtml }} />
         </article>
       </main>
+
+      {relatedPosts.length > 0 && (
+        <section className="px-4 sm:px-8 md:px-16 lg:px-24 pb-16 bg-white">
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-2xl font-bold mb-6">Weiterführende Artikel</h2>
+            <div className="grid md:grid-cols-3 gap-6">
+              {relatedPosts.map((related) => (
+                <Link
+                  key={related.slug}
+                  href={`/wissen/${related.slug}`}
+                  className="surface-card rounded-lg p-6 hover:border-geo-violet transition-colors"
+                >
+                  <h3 className="text-lg font-bold text-geo-violet mb-2 leading-snug">{related.title}</h3>
+                  <p className="text-ink-soft text-sm leading-relaxed line-clamp-3">{related.excerpt}</p>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       <section className="px-4 sm:px-8 md:px-16 lg:px-24 py-16 grad-subtle">
         <div className="max-w-4xl mx-auto text-center">
