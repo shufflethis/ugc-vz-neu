@@ -14,9 +14,10 @@ und 410-Antworten.
 - HSTS auf HTTPS-Antworten
 - API-Antworten standardmäßig ohne Cache
 
-Google Analytics ist in `script-src` und `connect-src` erlaubt, wird aber erst
-nach Einwilligung dynamisch geladen. Es gibt keine Browser-Freigaben für
-WordPress, Airtable, Tally, Klaro oder Plausible.
+Für die cookielose Reichweitenmessung ist ausschließlich
+`https://analytics.polymarkt.de` in `script-src` und `connect-src` erlaubt. Es
+gibt keine Browser-Freigaben für Google Analytics, WordPress, Airtable, Tally
+oder Klaro.
 
 Nach Änderungen mindestens Homepage, einen Artikel, ein Bild, eine API-Antwort
 und eine 410-URL im Preview auf Header und Funktion prüfen.

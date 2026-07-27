@@ -7,14 +7,14 @@ const goneSlugs = new Set(goneSlugsJson as string[]);
 const publishedSlugs = new Set(publishedSlugsJson as string[]);
 
 function applySecurityHeaders(response: NextResponse, request: NextRequest) {
-  const analyticsSources = 'https://www.googletagmanager.com https://www.google-analytics.com https://ssl.google-analytics.com https://analytics.google.com https://region1.google-analytics.com https://region1.analytics.google.com';
+  const analyticsSource = 'https://analytics.polymarkt.de';
   const csp = [
     "default-src 'self'",
-    `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === 'development' ? " 'unsafe-eval'" : ''} ${analyticsSources}`,
+    `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === 'development' ? " 'unsafe-eval'" : ''} ${analyticsSource}`,
     "style-src 'self' 'unsafe-inline'",
-    "img-src 'self' data: blob: https://p16-sign-va.tiktokcdn.com https://p16-sign.tiktokcdn-us.com https://scontent.cdninstagram.com https://*.fbcdn.net https://yt3.ggpht.com https://yt3.googleusercontent.com https://www.gravatar.com https://www.google-analytics.com",
+    "img-src 'self' data: blob: https://p16-sign-va.tiktokcdn.com https://p16-sign.tiktokcdn-us.com https://scontent.cdninstagram.com https://*.fbcdn.net https://yt3.ggpht.com https://yt3.googleusercontent.com https://www.gravatar.com",
     "font-src 'self'",
-    `connect-src 'self' ${analyticsSources}`,
+    `connect-src 'self' ${analyticsSource}`,
     "media-src 'self'",
     "frame-src 'none'",
     "object-src 'none'",

@@ -282,14 +282,13 @@ export default function DatenschutzPage() {
                     <li>Google Sheets als geschützte Arbeitsansicht für berechtigte Mitarbeitende</li>
                     <li>Slack für interne Benachrichtigungen und Mitschnitte von Anfragen</li>
                     <li>OpenRouter für KI-gestützte Analyse von Suchanfragen</li>
-                    <li>Google Ireland Limited für die optionale Reichweitenmessung mit Google Analytics</li>
+                    <li>Plausible Analytics über analytics.polymarkt.de für die datenschutzfreundliche Reichweitenmessung</li>
                   </ul>
                   <div className="surface-card rounded-lg p-4 mt-5">
                     <p className="text-ink-soft mb-3">
-                      Google Analytics wird ausschließlich nach Ihrer aktiven Einwilligung geladen. Ohne Einwilligung
-                      wird das Analytics-Script nicht abgerufen und es wird kein Analyse-Request an Google gesendet.
-                      Rechtsgrundlage ist Art. 6 Abs. 1 lit. a DSGVO. Sie können die Einwilligung jederzeit über die
-                      Cookie-Einstellungen widerrufen.
+                      Plausible Analytics erfasst ausschließlich zusammengefasste Nutzungsstatistiken. Dabei werden
+                      keine Analyse-Cookies, dauerhaften Identifikatoren oder geräteübergreifenden Besucherprofile
+                      verwendet. Die Messdaten werden weder für Werbung noch für individuelles Tracking eingesetzt.
                     </p>
                     <p className="text-ink-soft">
                       Bei US-amerikanischen Dienstleistern kann eine Verarbeitung in den USA stattfinden. Soweit

@@ -1,28 +1,19 @@
-# Google Analytics und Einwilligung
+# Plausible Analytics
 
-UGC VZ verwendet GA4 mit der Mess-ID `G-CE33NMGRD2`. Das Google-Script ist nicht
-im Server-HTML enthalten. `SimpleCookieBanner` lädt `gtag.js` erst, nachdem eine
-Person Analyse ausdrücklich aktiviert hat.
+UGC VZ verwendet ausschließlich die cookielose Plausible-Integration über
+`analytics.polymarkt.de`. Das globale Layout lädt das bereitgestellte Script und
+initialisiert die Plausible-Queue direkt im `<head>`.
 
-## Zustände
-
-- keine Entscheidung: kein Google-Request und kein Analyse-Cookie
-- abgelehnt: kein Loader, bestehende `_ga*`-Cookies werden entfernt
-- akzeptiert: Loader wird dynamisch ergänzt und Analytics-Events sind erlaubt
-- spätere Änderung: über `/cookies` oder `window.showCookieSettings()`
-
-Der Zustand liegt lokal unter `ugc-vz-cookie-consent`. Es gibt keinen Klaro-
-Fallback und kein paralleles Plausible-Tracking.
+Es gibt keine GA4-Mess-ID, keinen Google-Loader und keinen Analyse-Consent im
+lokalen Speicher. Interaktionsereignisse werden über `window.plausible` als
+Plausible Custom Events gesendet.
 
 ## Prüfung
 
-1. Browserdaten für die Domain löschen.
-2. Seite laden und im Netzwerk-Tab nach `google-analytics` und `googletagmanager`
-   filtern. Vor einer Entscheidung darf kein Request erscheinen.
-3. Analyse ablehnen und erneut laden. Es darf weiterhin kein Request erscheinen.
-4. Analyse aktivieren. Erst jetzt darf `gtag/js?id=G-CE33NMGRD2` geladen werden.
-5. Einstellungen wieder öffnen, Analyse deaktivieren und `_ga*`-Cookies prüfen.
+1. Seite laden und im Netzwerk-Tab nach `analytics.polymarkt.de` filtern.
+2. Der Script-Request und anschließend ein Pageview-Request müssen erfolgreich sein.
+3. Nach `google-analytics`, `googletagmanager`, `gtag` und `_ga` suchen; es darf
+   keine aktive Integration oder Analyse-Cookies geben.
+4. Ein getracktes UI-Element auslösen und den passenden Plausible-Event-Request prüfen.
 
-Die Datenschutzerklärung beschreibt Zweck, Anbieter, Speicherdauer,
-Drittlandtransfer und Widerrufsmöglichkeit. Änderungen am Tracking erfordern
-eine erneute technische und rechtliche Prüfung.
+Änderungen am Tracking erfordern eine erneute technische und rechtliche Prüfung.

@@ -3,7 +3,6 @@ import { GeistSans } from 'geist/font/sans'
 import { GeistMono } from 'geist/font/mono'
 import "./globals.css";
 import Footer from "@/src/components/FooterNew";
-import SimpleCookieBanner from "@/src/components/SimpleCookieBanner";
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -82,12 +81,18 @@ export default function RootLayout({
         <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
         <meta name="apple-mobile-web-app-title" content="UGC-VZ" />
         <link rel="manifest" href="/site.webmanifest" />
-
+        {/* Privacy-friendly analytics by Plausible */}
+        <script async src="https://analytics.polymarkt.de/js/pa-PUMsAuyv9o4MglSBuGfwG.js" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              'window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};plausible.init()',
+          }}
+        />
       </head>
       <body className="flex flex-col min-h-screen">
         <main className="flex-grow">{children}</main>
         <Footer />
-        <SimpleCookieBanner />
         <ToastContainer position="top-center" autoClose={3000} hideProgressBar={false} />
       </body>
     </html>

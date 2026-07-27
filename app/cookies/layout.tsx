@@ -1,8 +1,8 @@
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Cookie-Richtlinie',
-  description: 'Cookie-Richtlinie der UGC VZ Plattform. Informationen über die verwendeten Cookies und Ihre Einstellungsmöglichkeiten.',
+  title: 'Cookies und Reichweitenmessung',
+  description: 'Informationen zur cookielosen Reichweitenmessung mit Plausible Analytics auf UGC VZ.',
   alternates: {
     canonical: 'https://ugc-vz.de/cookies',
   },

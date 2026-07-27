@@ -12,7 +12,7 @@ produktiven Laufzeit und lösche ihre Secrets erst nach geprüftem Cutover.
 Betreibe Creator-Suche, Registrierung, Brand-Leads und Versand effizient und
 idempotent über Neon und Resend. Erhalte die geschützten Google-Sheets-
 Arbeitsansichten, einschließlich privater Kontaktdaten für berechtigte
-Mitarbeitende. Lade Analytics erst nach ausdrücklicher Einwilligung. Führe
+Mitarbeitende. Nutze ausschließlich cookielose Plausible-Reichweitenmessung. Führe
 TypeScript-, Datenbank-, Export-, E-Mail-, Build-, Crawl- und Live-Tests aus,
 dokumentiere den Ist-Stand und deploye nach erfolgreicher Prüfung auf das
 bestehende Vercel-Projekt. Nutze keine neue kostenpflichtige Infrastruktur und
@@ -30,5 +30,5 @@ keine neue Dependency.
 - Ein Lead wird vor dem Versand gespeichert, Resend-Aufrufe sind idempotent.
 - Öffentlicher Export enthält keine privaten Felder; geschützter interner Export
   enthält operative Kontaktdaten und Einwilligungsstände.
-- Google Analytics stellt vor Einwilligung keine Netzwerkverbindung her.
+- Plausible ist die einzige aktive Analytics-Integration und setzt keine Cookies.
 - Preview- und Produktionsbuild sind erfolgreich, die Live-Routen sind geprüft.
