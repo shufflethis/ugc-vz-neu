@@ -18,6 +18,7 @@ import {
   renderNoResultsEmail,
   isInternalRequest,
 } from '@/app/lib/lead-email';
+import { renderInternalMatchEmail } from '@/app/lib/internal-dossier-email';
 
 export const maxDuration = 30;
 export const dynamic = 'force-dynamic';
@@ -36,6 +37,9 @@ type CreatorOutreachSummary = {
   skippedNoEmail: number;
   skippedDaily: number;
   skippedLimit: number;
+  // Interne Recherchen loesen keine Creator-Mails aus. Ohne eigenes Feld sae-
+  // he das in der Statusmail wie ein Fehlschlag aus.
+  skippedInternal: number;
 };
 type EmailDispatchResult = {
   brand: DeliveryResult;
@@ -560,11 +564,13 @@ async function dispatchLeadEmails({
   kind,
   clientInfo,
   selectedCreators,
+  isInternal,
 }: {
   leadId: string;
   kind: LeadKind;
   clientInfo: LeadClientInfo;
   selectedCreators: SelectedCreator[];
+  isInternal: boolean;
 }): Promise<EmailDispatchResult> {
   const resendApiKey = process.env.RESEND_API_KEY;
   if (!resendApiKey) {
@@ -580,6 +586,7 @@ async function dispatchLeadEmails({
         skippedNoEmail: selectedCreators.length,
         skippedDaily: 0,
         skippedLimit: 0,
+        skippedInternal: 0,
       },
     };
   }
@@ -588,7 +595,9 @@ async function dispatchLeadEmails({
   const from = process.env.RESEND_FROM || 'UGC VZ <hi@ugc-vz.de>';
   const internalEmail = process.env.UGC_INTERNAL_EMAIL || 'hi@ugc-vz.de';
   const brandEmail = kind === 'creator_match'
-    ? renderBrandMatchEmail({ leadId, clientInfo, selectedCreators, internalEmail })
+    ? (isInternal
+      ? renderInternalMatchEmail({ leadId, clientInfo, selectedCreators, internalEmail })
+      : renderBrandMatchEmail({ leadId, clientInfo, selectedCreators, internalEmail }))
     : kind === 'no_results'
       ? renderNoResultsEmail({ leadId, clientInfo })
       : renderContactAcknowledgementEmail({ leadId, clientInfo });
@@ -621,8 +630,12 @@ async function dispatchLeadEmails({
     idempotencyKey: `ugc-vz/internal/${leadId}`,
   });
 
+  // Interne Recherche ist keine Brand-Anfrage. Wuerden hier Creator-Mails
+  // rausgehen, bekaemen Creator ein Interessenssignal fuer eine Anfrage, die
+  // keine ist.
   const shouldEmailCreators = process.env.SEND_CREATOR_OUTREACH_EMAILS === 'true'
-    && kind === 'creator_match';
+    && kind === 'creator_match'
+    && !isInternal;
   const configuredMax = Number.parseInt(process.env.CREATOR_OUTREACH_MAX_PER_LEAD || '8', 10);
   const maxPerLead = Number.isFinite(configuredMax)
     ? Math.max(0, Math.min(MAX_CREATORS_PER_REQUEST, configuredMax))
@@ -679,6 +692,7 @@ async function dispatchLeadEmails({
     skippedNoEmail: selectedCreators.length - withEmail.length,
     skippedDaily,
     skippedLimit: Math.max(0, withEmail.length - limitedCreators.length),
+    skippedInternal: isInternal ? selectedCreators.length : 0,
   };
 
   return { brand, internal, creators, creatorOutreach };
@@ -690,29 +704,33 @@ async function sendSlackNotification({
   clientInfo,
   selectedCreators,
   delivery,
+  isInternal,
 }: {
   leadId: string;
   kind: LeadKind;
   clientInfo: LeadClientInfo;
   selectedCreators: SelectedCreator[];
   delivery: EmailDispatchResult;
+  isInternal: boolean;
 }) {
   const webhookUrl = process.env.SLACK_WEBHOOK_URL;
   if (!webhookUrl) return false;
 
   const webhook = new IncomingWebhook(webhookUrl);
-  const kindLabel = kind === 'creator_match'
+  const kindLabel = `${isInternal ? '[INTERN] ' : ''}${kind === 'creator_match'
     ? 'Creator-Anfrage'
     : kind === 'no_results'
       ? 'Anfrage ohne Treffer'
-      : 'Kontaktanfrage';
+      : 'Kontaktanfrage'}`;
   const brandStatus = delivery.brand.status === 'queued'
     ? `✅ Brand-Mail von Resend angenommen${delivery.brand.id ? ` (${delivery.brand.id})` : ''}`
     : `❌ Brand-Mail ${delivery.brand.status}${delivery.brand.error ? `: ${delivery.brand.error}` : ''}`;
   const outreach = delivery.creatorOutreach;
-  const creatorMailStatus = outreach.enabled
-    ? `📨 Creator-Mails: ${outreach.queued} angenommen, ${outreach.failed} fehlgeschlagen, ${outreach.skippedNoEmail} ohne E-Mail, ${outreach.skippedDaily} heute bereits informiert${outreach.skippedLimit ? `, ${outreach.skippedLimit} wegen Versandlimit zurückgestellt` : ''}`
-    : `⏸️ Creator-Mails deaktiviert · ${outreach.eligible} mit E-Mail versandfähig, ${outreach.skippedNoEmail} ohne hinterlegte E-Mail`;
+  const creatorMailStatus = isInternal
+    ? `🔒 Interne Recherche · ${outreach.skippedInternal} Creator nicht benachrichtigt`
+    : outreach.enabled
+      ? `📨 Creator-Mails: ${outreach.queued} angenommen, ${outreach.failed} fehlgeschlagen, ${outreach.skippedNoEmail} ohne E-Mail, ${outreach.skippedDaily} heute bereits informiert${outreach.skippedLimit ? `, ${outreach.skippedLimit} wegen Versandlimit zurückgestellt` : ''}`
+      : `⏸️ Creator-Mails deaktiviert · ${outreach.eligible} mit E-Mail versandfähig, ${outreach.skippedNoEmail} ohne hinterlegte E-Mail`;
   const creatorSummary = selectedCreators.length
     ? selectedCreators.map((creator) => `• *${slackEscape(creator.name)}* · ${slackEscape(creator.priceRange || 'Preis offen')}\n  ${slackEscape(creator.contactEmail || creator.socialLinks || 'kein direkter Kontakt')}`).join('\n')
     : 'Keine Creator ausgewählt.';
@@ -839,6 +857,7 @@ export async function POST(req: Request) {
       kind,
       clientInfo,
       selectedCreators,
+      isInternal,
     });
 
     await persistInitialDelivery({
@@ -855,6 +874,7 @@ export async function POST(req: Request) {
         clientInfo,
         selectedCreators,
         delivery,
+        isInternal,
       });
     } catch (error) {
       console.error(`[${leadId}] Slack notification failed`, error);
