@@ -5,6 +5,8 @@ import { Resend } from 'resend';
 import { getDatabase, isDatabaseConfigured } from '@/app/lib/database';
 import {
   type DeliveryResult,
+  type InternalCreatorDetails,
+  type InternalSocialAccount,
   type LeadClientInfo,
   type LeadKind,
   type RenderedEmail,
@@ -14,7 +16,9 @@ import {
   renderCreatorOutreachEmail,
   renderInternalLeadEmail,
   renderNoResultsEmail,
+  isInternalRequest,
 } from '@/app/lib/lead-email';
+import { renderInternalMatchEmail } from '@/app/lib/internal-dossier-email';
 
 export const maxDuration = 30;
 export const dynamic = 'force-dynamic';
@@ -33,6 +37,9 @@ type CreatorOutreachSummary = {
   skippedNoEmail: number;
   skippedDaily: number;
   skippedLimit: number;
+  // Interne Recherchen loesen keine Creator-Mails aus. Ohne eigenes Feld sae-
+  // he das in der Statusmail wie ein Fehlschlag aus.
+  skippedInternal: number;
 };
 type EmailDispatchResult = {
   brand: DeliveryResult;
@@ -195,7 +202,128 @@ function normalizeRequestBody(rawBody: unknown) {
   return { kind, clientInfo, creatorIds };
 }
 
-async function fetchSelectedCreators(creatorIds: string[]): Promise<SelectedCreator[]> {
+const PUBLIC_CREATOR_COLUMNS = `
+        v.public_id,
+        v.display_name,
+        v.reach_text,
+        v.rate_text,
+        v.social_links,
+        array_to_string(v.networks, ', ') AS network_names`;
+
+// Der interne Pfad hebt das Notification-Gate auf: Mitarbeiter sehen den
+// Kontakt auch bei pausierten Creatorn, bekommen den Zustand aber als Feld
+// mitgeliefert und in der Mail als Warnung angezeigt.
+const INTERNAL_CREATOR_COLUMNS = `${PUBLIC_CREATOR_COLUMNS},
+        v.birth_year,
+        v.gender,
+        v.city,
+        v.country_code,
+        v.height_cm,
+        v.special_traits,
+        v.experience_since,
+        v.industries,
+        v.topics,
+        v.skin_type,
+        v.pet_context,
+        v.children_context,
+        v.preferred_content,
+        v.equipment,
+        v.total_reach,
+        v.portfolio_links,
+        v.profile_quality_score,
+        c.email AS contact_email,
+        c.phone,
+        c.contact_text,
+        c.email_verified_at,
+        COALESCE(c.project_notifications_enabled, false) AS notifications_enabled,
+        c.notification_paused_at,
+        COALESCE(s.accounts, '[]'::json) AS social_accounts`;
+
+const PUBLIC_CONTACT_COLUMN = `,
+        CASE
+          WHEN c.project_notifications_enabled AND c.notification_paused_at IS NULL THEN c.email
+          ELSE NULL
+        END AS contact_email`;
+
+const INTERNAL_SOCIAL_JOIN = `
+      LEFT JOIN LATERAL (
+        SELECT json_agg(json_build_object(
+          'platform', a.platform,
+          'handle', a.handle,
+          'url', a.url,
+          'followers', a.followers,
+          'isPrimary', a.is_primary
+        ) ORDER BY a.is_primary DESC, a.followers DESC NULLS LAST) AS accounts
+        FROM creator_social_accounts a
+        WHERE a.creator_id = v.id
+      ) s ON true`;
+
+const approximateAge = (birthYear: number | null) =>
+  birthYear ? new Date().getFullYear() - birthYear : null;
+
+// new Date(...).toISOString() wirft einen RangeError bei einem invaliden
+// Datum. Der fliegt sonst bis in den catch der POST-Funktion und macht aus
+// einem Metadatum einen verlorenen Lead – widerspricht dem Prinzip, das
+// oben schon fuer is_internal durchgesetzt wird: der Lead ist das Wertvolle.
+const isoDateOrNull = (value: unknown): string | null => {
+  if (!value) return null;
+  const parsed = new Date(value as string);
+  return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString();
+};
+
+const mapSocialAccounts = (value: unknown): InternalSocialAccount[] => {
+  const raw = typeof value === 'string' ? JSON.parse(value) : value;
+  if (!Array.isArray(raw)) return [];
+
+  return raw
+    .filter((entry) => entry && typeof entry.url === 'string')
+    .map((entry) => ({
+      platform: plainText(entry.platform, 40) || 'other',
+      handle: plainText(entry.handle, 80),
+      url: plainText(entry.url, 300),
+      followers: Number.isFinite(Number(entry.followers)) && entry.followers !== null
+        ? Number(entry.followers)
+        : null,
+      isPrimary: Boolean(entry.isPrimary),
+    }));
+};
+
+const mapInternalDetails = (row: any): InternalCreatorDetails => {
+  const birthYear = row.birth_year === null || row.birth_year === undefined
+    ? null
+    : Number(row.birth_year);
+
+  return {
+    birthYear,
+    approxAge: approximateAge(birthYear),
+    gender: plainText(row.gender, 40),
+    city: plainText(row.city, 80),
+    countryCode: plainText(row.country_code, 2),
+    heightCm: row.height_cm === null || row.height_cm === undefined ? null : Number(row.height_cm),
+    phone: plainText(row.phone, 40),
+    contactText: multilineText(row.contact_text, 400),
+    emailVerifiedAt: isoDateOrNull(row.email_verified_at),
+    notificationsPaused: !row.notifications_enabled || Boolean(row.notification_paused_at),
+    socialAccounts: mapSocialAccounts(row.social_accounts),
+    portfolioLinks: multilineText(row.portfolio_links, 600),
+    totalReach: Number(row.total_reach) || 0,
+    industries: multilineText(row.industries, 400),
+    topics: multilineText(row.topics, 400),
+    preferredContent: multilineText(row.preferred_content, 400),
+    equipment: multilineText(row.equipment, 400),
+    experienceSince: plainText(row.experience_since, 80),
+    specialTraits: multilineText(row.special_traits, 400),
+    skinType: plainText(row.skin_type, 80),
+    petContext: multilineText(row.pet_context, 200),
+    childrenContext: multilineText(row.children_context, 200),
+    profileQualityScore: Number(row.profile_quality_score) || 0,
+  };
+};
+
+async function fetchSelectedCreators(
+  creatorIds: string[],
+  { internal }: { internal: boolean },
+): Promise<SelectedCreator[]> {
   const neonIds = creatorIds.filter((id) => /^UGC-[A-F0-9]{10}$/.test(id));
   if (neonIds.length !== creatorIds.length) {
     throw new Error('Invalid creator ID format');
@@ -209,18 +337,9 @@ async function fetchSelectedCreators(creatorIds: string[]): Promise<SelectedCrea
     const placeholders = neonIds.map((_, index) => `$${index + 1}`).join(', ');
     const rows = await sql.query(`
       SELECT
-        v.public_id,
-        v.display_name,
-        v.reach_text,
-        v.rate_text,
-        v.social_links,
-        array_to_string(v.networks, ', ') AS network_names,
-        CASE
-          WHEN c.project_notifications_enabled AND c.notification_paused_at IS NULL THEN c.email
-          ELSE NULL
-        END AS contact_email
+        ${internal ? INTERNAL_CREATOR_COLUMNS : `${PUBLIC_CREATOR_COLUMNS}${PUBLIC_CONTACT_COLUMN}`}
       FROM creator_search_public v
-      LEFT JOIN creator_private_contacts c ON c.creator_id = v.id
+      LEFT JOIN creator_private_contacts c ON c.creator_id = v.id${internal ? INTERNAL_SOCIAL_JOIN : ''}
       WHERE v.public_id IN (${placeholders})
     `, neonIds);
 
@@ -228,11 +347,12 @@ async function fetchSelectedCreators(creatorIds: string[]): Promise<SelectedCrea
       creatorsById.set(String(row.public_id), {
         id: String(row.public_id),
         name: plainText(row.display_name, 100) || 'UGC Creator',
-        reach: multilineText(row.reach_text, 300),
+        reach: multilineText(row.reach_text, internal ? 1_500 : 300),
         networks: plainText(row.network_names, 300),
-        priceRange: multilineText(row.rate_text, 200),
+        priceRange: multilineText(row.rate_text, internal ? 1_500 : 200),
         contactEmail: emailRegex.test(String(row.contact_email || '')) ? String(row.contact_email).slice(0, 160) : '',
         socialLinks: multilineText(row.social_links, 500),
+        ...(internal ? { internal: mapInternalDetails(row) } : {}),
       });
     }
 
@@ -251,11 +371,13 @@ async function persistLead({
   kind,
   clientInfo,
   selectedCreators,
+  isInternal,
 }: {
   leadId: string;
   kind: LeadKind;
   clientInfo: LeadClientInfo;
   selectedCreators: SelectedCreator[];
+  isInternal: boolean;
 }) {
   if (!isDatabaseConfigured()) throw new Error('Lead database is not configured');
 
@@ -283,6 +405,18 @@ async function persistLead({
       clientInfo.sourceUrl || null,
     ]);
 
+  // is_internal stammt aus Migration 004. Läuft ein Deploy der Migration voraus,
+  // degradiert das Feature hier zu einem fehlenden Marker statt zu einer
+  // fehlgeschlagenen Anfrage – der Lead selbst darf dadurch nie verloren gehen.
+  try {
+    await sql.query(
+      `UPDATE brand_leads SET is_internal = $2 WHERE id = $1`,
+      [lead.id, isInternal],
+    );
+  } catch (error) {
+    console.error(`Konnte is_internal für Lead ${lead.id} nicht setzen:`, error);
+  }
+
   if (selectedCreators.length) {
     const matches = selectedCreators.map((creator, index) => ({
       public_id: creator.id,
@@ -292,6 +426,11 @@ async function persistLead({
         networks: creator.networks,
         priceRange: creator.priceRange,
         socialLinks: creator.socialLinks,
+        // Achtung: Das Notification-Gate ist im internen Pfad aufgehoben, also
+        // ist hasContactEmail bei internen Leads auch fuer pausierte Creator
+        // true. Aktuell folgenlos, weil shouldEmailCreators fuer interne
+        // Anfragen hart false ist – aber kein verlaessliches Signal fuer
+        // spaeteren Outreach, der auf diesem Feld aufbaut.
         hasContactEmail: Boolean(creator.contactEmail),
       },
       rank: index + 1,
@@ -440,11 +579,13 @@ async function dispatchLeadEmails({
   kind,
   clientInfo,
   selectedCreators,
+  isInternal,
 }: {
   leadId: string;
   kind: LeadKind;
   clientInfo: LeadClientInfo;
   selectedCreators: SelectedCreator[];
+  isInternal: boolean;
 }): Promise<EmailDispatchResult> {
   const resendApiKey = process.env.RESEND_API_KEY;
   if (!resendApiKey) {
@@ -460,6 +601,7 @@ async function dispatchLeadEmails({
         skippedNoEmail: selectedCreators.length,
         skippedDaily: 0,
         skippedLimit: 0,
+        skippedInternal: 0,
       },
     };
   }
@@ -468,7 +610,9 @@ async function dispatchLeadEmails({
   const from = process.env.RESEND_FROM || 'UGC VZ <hi@ugc-vz.de>';
   const internalEmail = process.env.UGC_INTERNAL_EMAIL || 'hi@ugc-vz.de';
   const brandEmail = kind === 'creator_match'
-    ? renderBrandMatchEmail({ leadId, clientInfo, selectedCreators, internalEmail })
+    ? (isInternal
+      ? renderInternalMatchEmail({ leadId, clientInfo, selectedCreators, internalEmail })
+      : renderBrandMatchEmail({ leadId, clientInfo, selectedCreators, internalEmail }))
     : kind === 'no_results'
       ? renderNoResultsEmail({ leadId, clientInfo })
       : renderContactAcknowledgementEmail({ leadId, clientInfo });
@@ -501,8 +645,12 @@ async function dispatchLeadEmails({
     idempotencyKey: `ugc-vz/internal/${leadId}`,
   });
 
+  // Interne Recherche ist keine Brand-Anfrage. Wuerden hier Creator-Mails
+  // rausgehen, bekaemen Creator ein Interessenssignal fuer eine Anfrage, die
+  // keine ist.
   const shouldEmailCreators = process.env.SEND_CREATOR_OUTREACH_EMAILS === 'true'
-    && kind === 'creator_match';
+    && kind === 'creator_match'
+    && !isInternal;
   const configuredMax = Number.parseInt(process.env.CREATOR_OUTREACH_MAX_PER_LEAD || '8', 10);
   const maxPerLead = Number.isFinite(configuredMax)
     ? Math.max(0, Math.min(MAX_CREATORS_PER_REQUEST, configuredMax))
@@ -559,6 +707,7 @@ async function dispatchLeadEmails({
     skippedNoEmail: selectedCreators.length - withEmail.length,
     skippedDaily,
     skippedLimit: Math.max(0, withEmail.length - limitedCreators.length),
+    skippedInternal: isInternal ? selectedCreators.length : 0,
   };
 
   return { brand, internal, creators, creatorOutreach };
@@ -570,31 +719,46 @@ async function sendSlackNotification({
   clientInfo,
   selectedCreators,
   delivery,
+  isInternal,
 }: {
   leadId: string;
   kind: LeadKind;
   clientInfo: LeadClientInfo;
   selectedCreators: SelectedCreator[];
   delivery: EmailDispatchResult;
+  isInternal: boolean;
 }) {
   const webhookUrl = process.env.SLACK_WEBHOOK_URL;
   if (!webhookUrl) return false;
 
   const webhook = new IncomingWebhook(webhookUrl);
-  const kindLabel = kind === 'creator_match'
+  const kindLabel = `${isInternal ? '[INTERN] ' : ''}${kind === 'creator_match'
     ? 'Creator-Anfrage'
     : kind === 'no_results'
       ? 'Anfrage ohne Treffer'
-      : 'Kontaktanfrage';
+      : 'Kontaktanfrage'}`;
   const brandStatus = delivery.brand.status === 'queued'
     ? `✅ Brand-Mail von Resend angenommen${delivery.brand.id ? ` (${delivery.brand.id})` : ''}`
     : `❌ Brand-Mail ${delivery.brand.status}${delivery.brand.error ? `: ${delivery.brand.error}` : ''}`;
   const outreach = delivery.creatorOutreach;
-  const creatorMailStatus = outreach.enabled
-    ? `📨 Creator-Mails: ${outreach.queued} angenommen, ${outreach.failed} fehlgeschlagen, ${outreach.skippedNoEmail} ohne E-Mail, ${outreach.skippedDaily} heute bereits informiert${outreach.skippedLimit ? `, ${outreach.skippedLimit} wegen Versandlimit zurückgestellt` : ''}`
-    : `⏸️ Creator-Mails deaktiviert · ${outreach.eligible} mit E-Mail versandfähig, ${outreach.skippedNoEmail} ohne hinterlegte E-Mail`;
+  const creatorMailStatus = isInternal
+    ? `🔒 Interne Recherche · ${outreach.skippedInternal} Creator nicht benachrichtigt`
+    : outreach.enabled
+      ? `📨 Creator-Mails: ${outreach.queued} angenommen, ${outreach.failed} fehlgeschlagen, ${outreach.skippedNoEmail} ohne E-Mail, ${outreach.skippedDaily} heute bereits informiert${outreach.skippedLimit ? `, ${outreach.skippedLimit} wegen Versandlimit zurückgestellt` : ''}`
+      : `⏸️ Creator-Mails deaktiviert · ${outreach.eligible} mit E-Mail versandfähig, ${outreach.skippedNoEmail} ohne hinterlegte E-Mail`;
+  // Die interne Query hebt das Notification-Gate auf und liefert ungekuerzte
+  // Preistexte (1500 statt 200 Zeichen). Die Slack-Zusammenfassung darf diese
+  // angereicherten Felder nicht ungefiltert uebernehmen, sonst landen Kontakt-
+  // adressen pausierter Creator und lange Preistexte in einem Kanal, der
+  // nicht das famefact-Postfach ist.
   const creatorSummary = selectedCreators.length
-    ? selectedCreators.map((creator) => `• *${slackEscape(creator.name)}* · ${slackEscape(creator.priceRange || 'Preis offen')}\n  ${slackEscape(creator.contactEmail || creator.socialLinks || 'kein direkter Kontakt')}`).join('\n')
+    ? selectedCreators.map((creator) => {
+      const price = isInternal ? plainText(creator.priceRange, 200) : creator.priceRange;
+      const contact = isInternal
+        ? 'Kontaktdaten im Dossier'
+        : (creator.contactEmail || creator.socialLinks || 'kein direkter Kontakt');
+      return `• *${slackEscape(creator.name)}* · ${slackEscape(price || 'Preis offen')}\n  ${slackEscape(contact)}`;
+    }).join('\n')
     : 'Keine Creator ausgewählt.';
   const query = clientInfo.searchQuery || clientInfo.noResultsQuery || clientInfo.subject || 'Nicht angegeben';
 
@@ -701,8 +865,9 @@ export async function POST(req: Request) {
     }
 
     const leadId = createLeadId(clientInfo.submissionId);
+    const isInternal = isInternalRequest(clientInfo.email);
     const selectedCreators = kind === 'creator_match'
-      ? await fetchSelectedCreators(creatorIds)
+      ? await fetchSelectedCreators(creatorIds, { internal: isInternal })
       : [];
 
     const databaseLeadId = await persistLead({
@@ -710,6 +875,7 @@ export async function POST(req: Request) {
       kind,
       clientInfo,
       selectedCreators,
+      isInternal,
     });
 
     const delivery = await dispatchLeadEmails({
@@ -717,6 +883,7 @@ export async function POST(req: Request) {
       kind,
       clientInfo,
       selectedCreators,
+      isInternal,
     });
 
     await persistInitialDelivery({
@@ -733,6 +900,7 @@ export async function POST(req: Request) {
         clientInfo,
         selectedCreators,
         delivery,
+        isInternal,
       });
     } catch (error) {
       console.error(`[${leadId}] Slack notification failed`, error);

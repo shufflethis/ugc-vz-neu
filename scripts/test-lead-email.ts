@@ -1,12 +1,14 @@
 import assert from 'node:assert/strict';
 import { writeFileSync } from 'node:fs';
 import {
+  isInternalRequest,
   renderBrandMatchEmail,
   renderCreatorOutreachEmail,
   renderInternalLeadEmail,
   type LeadClientInfo,
   type SelectedCreator,
 } from '../app/lib/lead-email';
+import { renderInternalMatchEmail } from '../app/lib/internal-dossier-email';
 
 const clientInfo: LeadClientInfo = {
   name: 'Beispiel Brand',
@@ -76,6 +78,207 @@ assert.match(creator.html, /keine Vermittlungsgebühr oder Provision/);
 assert.match(creator.html, /Benachrichtigungen pausieren/);
 assert.ok(Buffer.byteLength(brand.html) > 8_000);
 
+// Domainerkennung: das Ziel-Postfach ist die einzige Authentifizierung,
+// deshalb muss der Suffix-Anker exakt sitzen.
+assert.equal(isInternalRequest('info@famefact.com'), true);
+assert.equal(isInternalRequest('Name@FameFact.com'), true);
+assert.equal(isInternalRequest('  info@famefact.com  '), true);
+assert.equal(isInternalRequest('angreifer@famefact.com.evil.de'), false);
+assert.equal(isInternalRequest('x@notfamefact.com'), false);
+assert.equal(isInternalRequest('famefact.com@gmail.com'), false);
+assert.equal(isInternalRequest('info@sub.famefact.com'), false);
+assert.equal(isInternalRequest(''), false);
+
+const internalCreators: SelectedCreator[] = [{
+  id: 'UGC-A1B2C3D4E5',
+  name: 'Anna Beispiel',
+  reach: 'TikTok: 42k, Instagram: 12k',
+  networks: 'TikTok, Instagram',
+  priceRange: '500–800 € pro Video, Nutzungsrechte 3 Monate inklusive',
+  contactEmail: 'anna@example.test',
+  socialLinks: 'https://instagram.com/anna',
+  internal: {
+    birthYear: 1998,
+    approxAge: 28,
+    gender: 'weiblich',
+    city: 'Berlin',
+    countryCode: 'DE',
+    heightCm: 172,
+    phone: '+49 170 1234567',
+    contactText: 'Am besten per WhatsApp erreichbar',
+    emailVerifiedAt: '2026-03-01T10:00:00.000Z',
+    notificationsPaused: false,
+    socialAccounts: [
+      { platform: 'tiktok', handle: '@annabeispiel', url: 'https://tiktok.com/@annabeispiel', followers: 42000, isPrimary: true },
+      { platform: 'instagram', handle: '@anna', url: 'https://instagram.com/anna', followers: 12000, isPrimary: false },
+    ],
+    portfolioLinks: 'https://example.test/portfolio',
+    totalReach: 54000,
+    industries: 'Beauty, Food',
+    topics: 'Skincare-Routinen',
+    preferredContent: 'Testimonials, Unboxing',
+    equipment: 'iPhone 15 Pro, Ringlicht',
+    experienceSince: '2021',
+    specialTraits: 'Zwillinge im Haushalt',
+    skinType: 'Mischhaut',
+    petContext: 'Hund',
+    childrenContext: 'Zwei Kinder',
+    profileQualityScore: 87,
+  },
+}, {
+  id: 'UGC-F6G7H8I9J0',
+  name: 'Pausierter Creator',
+  reach: '',
+  networks: 'TikTok',
+  priceRange: '',
+  contactEmail: 'pausiert@example.test',
+  socialLinks: '',
+  internal: {
+    birthYear: null,
+    approxAge: null,
+    gender: '',
+    city: '',
+    countryCode: 'DE',
+    heightCm: null,
+    phone: '',
+    contactText: '',
+    emailVerifiedAt: null,
+    notificationsPaused: true,
+    socialAccounts: [],
+    portfolioLinks: '',
+    totalReach: 0,
+    industries: '',
+    topics: '',
+    preferredContent: '',
+    equipment: '',
+    experienceSince: '',
+    specialTraits: '',
+    skinType: '',
+    petContext: '',
+    childrenContext: '',
+    profileQualityScore: 12,
+  },
+}, {
+  id: 'UGC-K1L2M3N4O5',
+  name: 'Anna "<script>alert(1)</script>"',
+  reach: 'TikTok: 5k',
+  networks: 'TikTok',
+  priceRange: '200 €',
+  contactEmail: 'payload@example.test',
+  socialLinks: '',
+  internal: {
+    birthYear: 2000,
+    approxAge: 26,
+    gender: 'divers',
+    city: '<b>x',
+    countryCode: 'DE',
+    heightCm: 165,
+    phone: '+49 176 5559999',
+    contactText: '<img src=x onerror=alert(1)>',
+    emailVerifiedAt: null,
+    notificationsPaused: false,
+    socialAccounts: [
+      { platform: 'tiktok', handle: '<script>', url: 'javascript:alert(1)', followers: 5000, isPrimary: true },
+    ],
+    portfolioLinks: '',
+    totalReach: 5000,
+    industries: 'Test',
+    topics: 'Test',
+    preferredContent: 'Test',
+    equipment: 'Test',
+    experienceSince: '2022',
+    specialTraits: 'Test',
+    skinType: '',
+    petContext: '',
+    childrenContext: '',
+    profileQualityScore: 50,
+  },
+}];
+
+const dossier = renderInternalMatchEmail({
+  leadId: 'UGC-PREVIEW123',
+  clientInfo: { ...clientInfo, name: 'Team famefact', email: 'info@famefact.com' },
+  selectedCreators: internalCreators,
+  internalEmail: 'hi@ugc-vz.de',
+});
+
+// Entscheidungsdaten muessen sichtbar sein
+assert.match(dossier.subject, /\[INTERN\]/);
+assert.match(dossier.html, /\+49 170 1234567/);
+assert.match(dossier.html, /ca\. 28 Jahre/);
+assert.match(dossier.html, /42\.000/);
+assert.match(dossier.html, /Berlin/);
+assert.match(dossier.html, /Nutzungsrechte 3 Monate inklusive/);
+assert.match(dossier.html, /tel:\+491701234567/);
+assert.match(dossier.html, /Am besten per WhatsApp erreichbar/);
+assert.match(dossier.html, /Mischhaut/);
+assert.match(dossier.html, /Zwillinge im Haushalt/);
+assert.match(dossier.text, /\+49 170 1234567/);
+
+// Pausierte Creator: Kontakt sichtbar, aber deutlich markiert
+assert.match(dossier.html, /Benachrichtigungen pausiert/);
+assert.match(dossier.html, /pausiert@example\.test/);
+
+// Leere Felder werden ausgelassen statt als "Nicht angegeben" gerendert
+assert.doesNotMatch(dossier.html, /Hauttyp<\/td>\s*<td[^>]*><\/td>/);
+assert.doesNotMatch(dossier.html, /Nicht angegeben/);
+// Hauttyp nur bei Creator 1 befuellt – Creator 2 und 3 lassen das Feld leer.
+assert.equal((dossier.html.match(/Hauttyp/g) || []).length, 1);
+
+// Escaping: Creator-kontrollierter Text darf nie roh ins HTML durchschlagen.
+assert.doesNotMatch(dossier.html, /<script>/);
+assert.match(dossier.html, /&lt;script&gt;/);
+// htmlEscape kodiert Tags, entfernt aber nicht die Zeichenkette "onerror=" –
+// eine rohe Substring-Suche waere hier ein Fehlalarm auf bereits inertem
+// Text. Deshalb kontextgenau pruefen: die Payload darf nie als lebendes
+// Markup auftauchen, wohl aber als kodierter Text.
+assert.doesNotMatch(dossier.html, /<img src=x onerror=alert\(1\)>/);
+assert.match(dossier.html, /&lt;img src=x onerror=alert\(1\)&gt;/);
+
+// Nur http/https-URLs werden als klickbarer Link gerendert; ein
+// "javascript:"-Schema darf nie in einem href landen, der Account bleibt
+// aber sichtbar – nur ohne aktivierbaren Link.
+assert.doesNotMatch(dossier.html, /href="javascript:/);
+assert.match(dossier.html, /5\.000 Follower/);
+
+// Kein Marketing im internen Dossier
+assert.doesNotMatch(dossier.html, /geo-agentur/);
+assert.doesNotMatch(dossier.html, /Kampagnen-Support/);
+
+// Die externe Brand-Mail darf keine Privatdaten enthalten, auch nicht wenn
+// derselbe Creator-Datensatz mit befuelltem internal-Feld durchgereicht wird.
+const brandWithInternalData = renderBrandMatchEmail({
+  leadId: 'UGC-PREVIEW123',
+  clientInfo,
+  selectedCreators: internalCreators,
+  internalEmail: 'hi@ugc-vz.de',
+});
+assert.doesNotMatch(brandWithInternalData.html, /\+49 170 1234567/);
+// birthYear wird von keinem Renderer je ausgegeben (nur approxAge) – eine
+// Pruefung auf "1998" kann also nie fehlschlagen. specialTraits dagegen wird
+// vom Dossier-Renderer tatsaechlich ausgegeben (siehe assert.match im
+// Dossier-Block oben), ist also die leakagefaehige Probe.
+assert.doesNotMatch(brandWithInternalData.html, /Zwillinge im Haushalt/);
+assert.doesNotMatch(brandWithInternalData.html, /Mischhaut/);
+assert.doesNotMatch(brandWithInternalData.text, /\+49 170 1234567/);
+
+// Die interne Statusmail (renderInternalLeadEmail) ist nicht das Dossier:
+// contactEmail und priceRange aus dem gelockerten internen Query-Pfad
+// duerfen nicht 1:1 durchschlagen, auch nicht fuer pausierte Creator.
+const internalStatusMail = renderInternalLeadEmail({
+  leadId: 'UGC-PREVIEW123',
+  kind: 'creator_match',
+  clientInfo: { ...clientInfo, name: 'Team famefact', email: 'info@famefact.com' },
+  selectedCreators: internalCreators,
+  brandDelivery: { status: 'queued', id: 'resend-preview' },
+});
+assert.doesNotMatch(internalStatusMail.html, /anna@example\.test/);
+assert.doesNotMatch(internalStatusMail.html, /pausiert@example\.test/);
+assert.doesNotMatch(internalStatusMail.text, /anna@example\.test/);
+assert.doesNotMatch(internalStatusMail.text, /pausiert@example\.test/);
+assert.equal((internalStatusMail.html.match(/Kontaktdaten im Dossier/g) || []).length, 3);
+assert.equal((internalStatusMail.text.match(/Kontaktdaten im Dossier/g) || []).length, 3);
+
 writeFileSync('/tmp/ugc-creator-email-preview.html', creator.html, 'utf8');
 
 console.log(JSON.stringify({
@@ -84,5 +287,6 @@ console.log(JSON.stringify({
   brandTextBytes: Buffer.byteLength(brand.text),
   internalHtmlBytes: Buffer.byteLength(internal.html),
   creatorHtmlBytes: Buffer.byteLength(creator.html),
+  dossierHtmlBytes: Buffer.byteLength(dossier.html),
   result: 'passed',
 }, null, 2));

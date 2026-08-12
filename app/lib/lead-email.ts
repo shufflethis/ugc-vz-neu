@@ -1,3 +1,14 @@
+import {
+  cleanText,
+  emailShell,
+  extractUrls,
+  getInitials,
+  htmlEscape,
+  htmlLines,
+  platformLabel,
+  socialPlatformNames,
+} from './email-shell';
+
 export type LeadKind = 'creator_match' | 'no_results' | 'general_contact';
 
 export type LeadClientInfo = {
@@ -14,6 +25,40 @@ export type LeadClientInfo = {
   website?: string;
 };
 
+export type InternalSocialAccount = {
+  platform: string;
+  handle: string;
+  url: string;
+  followers: number | null;
+  isPrimary: boolean;
+};
+
+export type InternalCreatorDetails = {
+  birthYear: number | null;
+  approxAge: number | null;
+  gender: string;
+  city: string;
+  countryCode: string;
+  heightCm: number | null;
+  phone: string;
+  contactText: string;
+  emailVerifiedAt: string | null;
+  notificationsPaused: boolean;
+  socialAccounts: InternalSocialAccount[];
+  portfolioLinks: string;
+  totalReach: number;
+  industries: string;
+  topics: string;
+  preferredContent: string;
+  equipment: string;
+  experienceSince: string;
+  specialTraits: string;
+  skinType: string;
+  petContext: string;
+  childrenContext: string;
+  profileQualityScore: number;
+};
+
 export type SelectedCreator = {
   id: string;
   name: string;
@@ -22,6 +67,10 @@ export type SelectedCreator = {
   priceRange: string;
   contactEmail?: string;
   socialLinks?: string;
+  // Nur bei internen Anfragen befuellt. Die bestehenden Render-Funktionen
+  // ignorieren das Feld, damit Privatdaten nicht versehentlich in Brand- oder
+  // Creator-Mails landen koennen.
+  internal?: InternalCreatorDetails;
 };
 
 export type DeliveryResult = {
@@ -36,72 +85,13 @@ export type RenderedEmail = {
   text: string;
 };
 
-export const htmlEscape = (value: unknown) =>
-  String(value ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
+// Interne Anfragen erkennen wir ausschliesslich an der Absenderdomain. Der
+// Schutz liegt nicht in dieser Pruefung, sondern darin, dass die angereicherte
+// Mail nur an genau diese Adresse zugestellt wird.
+const INTERNAL_EMAIL_PATTERN = /@famefact\.com$/i;
 
-const cleanText = (value: unknown, fallback = '') => {
-  const cleaned = String(value ?? '').replace(/\r\n/g, '\n').trim();
-  return cleaned || fallback;
-};
-
-const htmlLines = (value: unknown, fallback = 'Nicht angegeben') =>
-  htmlEscape(cleanText(value, fallback)).replace(/\n/g, '<br />');
-
-const socialPlatformNames = [
-  ['instagram', 'Instagram'],
-  ['tiktok', 'TikTok'],
-  ['youtube', 'YouTube'],
-  ['linkedin', 'LinkedIn'],
-  ['facebook', 'Facebook'],
-  ['pinterest', 'Pinterest'],
-  ['twitter', 'X'],
-] as const;
-
-const extractUrls = (value: unknown) => {
-  const matches = cleanText(value).match(/(?:https?:\/\/|www\.)[^\s<>"']+/gi) || [];
-  const urls = matches.flatMap((match) => {
-    const rawUrl = match.replace(/[),.;]+$/g, '');
-
-    try {
-      const parsed = new URL(/^www\./i.test(rawUrl) ? `https://${rawUrl}` : rawUrl);
-      if (!['http:', 'https:'].includes(parsed.protocol)) return [];
-
-      // Creator fields often contain share/tracking parameters. Profile links are
-      // clearer and more durable without them.
-      if (/instagram\.com$|tiktok\.com$|youtube\.com$|youtu\.be$|linkedin\.com$|facebook\.com$|pinterest\.|twitter\.com$|x\.com$/i.test(parsed.hostname)) {
-        parsed.search = '';
-        parsed.hash = '';
-      } else {
-        [...parsed.searchParams.keys()]
-          .filter((key) => key.toLowerCase().startsWith('utm_'))
-          .forEach((key) => parsed.searchParams.delete(key));
-      }
-
-      return [parsed.toString().replace(/\/$/, '')];
-    } catch {
-      return [];
-    }
-  });
-
-  return [...new Map(urls.map((url) => [url.toLowerCase(), url])).values()];
-};
-
-const platformLabel = (url: string) => {
-  const hostname = new URL(url).hostname.toLowerCase();
-  if (hostname.includes('instagram.')) return 'Instagram';
-  if (hostname.includes('tiktok.')) return 'TikTok';
-  if (hostname.includes('youtube.') || hostname === 'youtu.be') return 'YouTube';
-  if (hostname.includes('linkedin.')) return 'LinkedIn';
-  if (hostname.includes('facebook.')) return 'Facebook';
-  if (hostname.includes('pinterest.')) return 'Pinterest';
-  if (hostname.includes('twitter.') || hostname === 'x.com' || hostname.endsWith('.x.com')) return 'X';
-  return 'Website';
-};
+export const isInternalRequest = (email: string) =>
+  INTERNAL_EMAIL_PATTERN.test(String(email ?? '').trim().toLowerCase());
 
 const creatorUrls = (creator: SelectedCreator) =>
   extractUrls(`${creator.socialLinks || ''}\n${creator.networks || ''}`);
@@ -127,80 +117,6 @@ const reachSummary = (creator: SelectedCreator) => {
 const socialButtonsHtml = (creator: SelectedCreator) => creatorUrls(creator)
   .map((url) => `<a href="${htmlEscape(url)}" style="display:inline-block;margin:5px 6px 0 0;padding:7px 10px;border:1px solid #ddd2e5;border-radius:8px;background:#ffffff;color:#6f2fa9;font-size:12px;font-weight:800;text-decoration:none;">${htmlEscape(platformLabel(url))} öffnen</a>`)
   .join('');
-
-const getInitials = (name: string) => {
-  const initials = cleanText(name, 'UGC')
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part) => part.charAt(0).toUpperCase())
-    .join('');
-  return htmlEscape(initials || 'UGC');
-};
-
-const emailShell = ({
-  preheader,
-  eyebrow,
-  title,
-  children,
-  footerNote,
-}: {
-  preheader: string;
-  eyebrow: string;
-  title: string;
-  children: string;
-  footerNote?: string;
-}) => `<!doctype html>
-<html lang="de">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <meta name="x-apple-disable-message-reformatting" />
-    <title>${htmlEscape(title)}</title>
-    <style>
-      @media only screen and (max-width: 640px) {
-        .email-wrap { width: 100% !important; }
-        .email-pad { padding-left: 20px !important; padding-right: 20px !important; }
-        .stack-cell { display: block !important; width: 100% !important; padding-right: 0 !important; padding-bottom: 10px !important; }
-        .creator-avatar { width: 42px !important; height: 42px !important; line-height: 42px !important; }
-      }
-    </style>
-  </head>
-  <body style="margin:0;padding:0;background:#f5f3f9;color:#1d1725;font-family:Arial,Helvetica,sans-serif;">
-    <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">${htmlEscape(preheader)}</div>
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f5f3f9;">
-      <tr>
-        <td align="center" style="padding:28px 12px;">
-          <table role="presentation" width="640" cellpadding="0" cellspacing="0" class="email-wrap" style="width:640px;max-width:640px;background:#ffffff;border-radius:22px;overflow:hidden;box-shadow:0 12px 35px rgba(61,31,86,.10);">
-            <tr>
-              <td class="email-pad" style="padding:22px 42px;background:#17121f;border-bottom:4px solid #8b3fca;">
-                <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-                  <tr>
-                    <td style="font-size:21px;font-weight:800;color:#ffffff;letter-spacing:-.3px;">UGC<span style="color:#c8ff45;">VZ</span></td>
-                    <td align="right" style="font-size:12px;color:#d8cfe2;">Kostenlose Creator-Vermittlung</td>
-                  </tr>
-                </table>
-              </td>
-            </tr>
-            <tr>
-              <td class="email-pad" style="padding:38px 42px 14px;">
-                <div style="font-size:12px;line-height:18px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:#8b3fca;">${htmlEscape(eyebrow)}</div>
-                <h1 style="margin:9px 0 0;font-size:34px;line-height:41px;letter-spacing:-.8px;color:#17121f;">${htmlEscape(title)}</h1>
-              </td>
-            </tr>
-            ${children}
-            <tr>
-              <td class="email-pad" style="padding:25px 42px 34px;border-top:1px solid #eee9f2;color:#746b7c;font-size:12px;line-height:19px;">
-                ${htmlEscape(footerNote || 'Diese transaktionale E-Mail erhältst du, weil über UGC VZ eine Anfrage mit deiner Adresse gestellt wurde.')}<br />
-                UGC VZ ist ein Angebot der track by track GmbH / <a href="https://famefact.com/?utm_source=ugc-vz&amp;utm_medium=email" style="color:#6f2fa9;text-decoration:none;">famefact</a>, Schliemannstr. 23, 10437 Berlin.<br />
-                Fragen oder Missbrauch melden: <a href="mailto:hi@ugc-vz.de" style="color:#6f2fa9;">hi@ugc-vz.de</a>
-              </td>
-            </tr>
-          </table>
-        </td>
-      </tr>
-    </table>
-  </body>
-</html>`;
 
 const creatorCardHtml = (creator: SelectedCreator) => {
   const contactRows = [
@@ -259,6 +175,22 @@ const creatorText = (creator: SelectedCreator, index: number) => [
   `Netzwerke: ${networkSummary(creator)}`,
   `Reichweite: ${reachSummary(creator)}`,
   `E-Mail: ${creator.contactEmail || 'nicht hinterlegt'}`,
+  `Social: ${creatorUrls(creator).join(', ') || 'nicht hinterlegt'}`,
+].join('\n');
+
+// Wie im bereits gefixten Slack-Pfad: der interne Query-Pfad hebt das
+// Notification-Gate auf (contactEmail auch fuer pausierte Creator) und
+// kuerzt priceRange nicht auf 200, sondern auf 1500 Zeichen (siehe
+// INTERNAL_CREATOR_COLUMNS in submit-request/route.ts). Die interne
+// Statusmail an UGC_INTERNAL_EMAIL ist nicht das Dossier und darf diese
+// angereicherten Felder nicht ungefiltert uebernehmen. Geprueft wird nur,
+// ob creator.internal gesetzt ist – Felder daraus werden hier nie gerendert.
+const creatorTextInternal = (creator: SelectedCreator, index: number) => [
+  `${index + 1}. ${creator.name || 'UGC Creator'}`,
+  `Preis: ${(creator.internal ? cleanText(creator.priceRange).slice(0, 200) : creator.priceRange) || 'auf Anfrage'}`,
+  `Netzwerke: ${networkSummary(creator)}`,
+  `Reichweite: ${reachSummary(creator)}`,
+  `E-Mail: ${creator.internal ? 'Kontaktdaten im Dossier' : (creator.contactEmail || 'nicht hinterlegt')}`,
   `Social: ${creatorUrls(creator).join(', ') || 'nicht hinterlegt'}`,
 ].join('\n');
 
@@ -448,8 +380,17 @@ export function renderInternalLeadEmail({
         : 'Nicht angefordert';
   const statusColor = brandDelivery.status === 'queued' ? '#176b3a' : '#a12727';
   const query = clientInfo.searchQuery || clientInfo.noResultsQuery || clientInfo.subject || 'Nicht angegeben';
+  // Siehe creatorTextInternal: die interne Query liefert contactEmail auch
+  // fuer pausierte Creator und priceRange ungekuerzt. Diese Statusmail ist
+  // nicht das Dossier und darf beides nicht 1:1 uebernehmen.
   const creatorRows = selectedCreators.length
-    ? selectedCreators.map((creator) => `<li style="margin-bottom:12px;"><strong>${htmlEscape(creator.name)}</strong> · ${htmlEscape(creator.priceRange || 'Preis offen')}<br />${htmlEscape(networkSummary(creator))} · ${htmlEscape(reachSummary(creator))}<br />${creator.contactEmail ? htmlEscape(creator.contactEmail) : 'keine E-Mail'}${creatorUrls(creator).length ? `<br />${socialButtonsHtml(creator)}` : ''}</li>`).join('')
+    ? selectedCreators.map((creator) => {
+      const price = creator.internal ? cleanText(creator.priceRange).slice(0, 200) : creator.priceRange;
+      const contact = creator.internal
+        ? 'Kontaktdaten im Dossier'
+        : (creator.contactEmail ? htmlEscape(creator.contactEmail) : 'keine E-Mail');
+      return `<li style="margin-bottom:12px;"><strong>${htmlEscape(creator.name)}</strong> · ${htmlEscape(price || 'Preis offen')}<br />${htmlEscape(networkSummary(creator))} · ${htmlEscape(reachSummary(creator))}<br />${contact}${creatorUrls(creator).length ? `<br />${socialButtonsHtml(creator)}` : ''}</li>`;
+    }).join('')
     : '<li>Keine Creator ausgewählt.</li>';
 
   const children = `
@@ -478,7 +419,7 @@ Quelle: ${clientInfo.sourceUrl || 'Nicht angegeben'}
 Suche/Thema: ${query}
 Nachricht: ${clientInfo.message || 'Keine Nachricht'}
 
-${selectedCreators.map(creatorText).join('\n\n') || 'Keine Creator ausgewählt.'}`;
+${selectedCreators.map(creatorTextInternal).join('\n\n') || 'Keine Creator ausgewählt.'}`;
 
   return {
     subject: `[UGC VZ] ${kindLabel} ${leadId} · Brand-Mail ${statusLabel}`,
