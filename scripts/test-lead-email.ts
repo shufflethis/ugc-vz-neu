@@ -8,6 +8,7 @@ import {
   type LeadClientInfo,
   type SelectedCreator,
 } from '../app/lib/lead-email';
+import { renderInternalMatchEmail } from '../app/lib/internal-dossier-email';
 
 const clientInfo: LeadClientInfo = {
   name: 'Beispiel Brand',
@@ -88,6 +89,120 @@ assert.equal(isInternalRequest('famefact.com@gmail.com'), false);
 assert.equal(isInternalRequest('info@sub.famefact.com'), false);
 assert.equal(isInternalRequest(''), false);
 
+const internalCreators: SelectedCreator[] = [{
+  id: 'UGC-A1B2C3D4E5',
+  name: 'Anna Beispiel',
+  reach: 'TikTok: 42k, Instagram: 12k',
+  networks: 'TikTok, Instagram',
+  priceRange: '500–800 € pro Video, Nutzungsrechte 3 Monate inklusive',
+  contactEmail: 'anna@example.test',
+  socialLinks: 'https://instagram.com/anna',
+  internal: {
+    birthYear: 1998,
+    approxAge: 28,
+    gender: 'weiblich',
+    city: 'Berlin',
+    countryCode: 'DE',
+    heightCm: 172,
+    phone: '+49 170 1234567',
+    contactText: 'Am besten per WhatsApp erreichbar',
+    emailVerifiedAt: '2026-03-01T10:00:00.000Z',
+    notificationsPaused: false,
+    socialAccounts: [
+      { platform: 'tiktok', handle: '@annabeispiel', url: 'https://tiktok.com/@annabeispiel', followers: 42000, isPrimary: true },
+      { platform: 'instagram', handle: '@anna', url: 'https://instagram.com/anna', followers: 12000, isPrimary: false },
+    ],
+    portfolioLinks: 'https://example.test/portfolio',
+    totalReach: 54000,
+    industries: 'Beauty, Food',
+    topics: 'Skincare-Routinen',
+    preferredContent: 'Testimonials, Unboxing',
+    equipment: 'iPhone 15 Pro, Ringlicht',
+    experienceSince: '2021',
+    specialTraits: 'Zwillinge im Haushalt',
+    skinType: 'Mischhaut',
+    petContext: 'Hund',
+    childrenContext: 'Zwei Kinder',
+    profileQualityScore: 87,
+  },
+}, {
+  id: 'UGC-F6G7H8I9J0',
+  name: 'Pausierter Creator',
+  reach: '',
+  networks: 'TikTok',
+  priceRange: '',
+  contactEmail: 'pausiert@example.test',
+  socialLinks: '',
+  internal: {
+    birthYear: null,
+    approxAge: null,
+    gender: '',
+    city: '',
+    countryCode: 'DE',
+    heightCm: null,
+    phone: '',
+    contactText: '',
+    emailVerifiedAt: null,
+    notificationsPaused: true,
+    socialAccounts: [],
+    portfolioLinks: '',
+    totalReach: 0,
+    industries: '',
+    topics: '',
+    preferredContent: '',
+    equipment: '',
+    experienceSince: '',
+    specialTraits: '',
+    skinType: '',
+    petContext: '',
+    childrenContext: '',
+    profileQualityScore: 12,
+  },
+}];
+
+const dossier = renderInternalMatchEmail({
+  leadId: 'UGC-PREVIEW123',
+  clientInfo: { ...clientInfo, name: 'Team famefact', email: 'info@famefact.com' },
+  selectedCreators: internalCreators,
+  internalEmail: 'hi@ugc-vz.de',
+});
+
+// Entscheidungsdaten muessen sichtbar sein
+assert.match(dossier.subject, /\[INTERN\]/);
+assert.match(dossier.html, /\+49 170 1234567/);
+assert.match(dossier.html, /ca\. 28 Jahre/);
+assert.match(dossier.html, /42\.000/);
+assert.match(dossier.html, /Berlin/);
+assert.match(dossier.html, /Nutzungsrechte 3 Monate inklusive/);
+assert.match(dossier.html, /tel:\+491701234567/);
+assert.match(dossier.html, /Am besten per WhatsApp erreichbar/);
+assert.match(dossier.html, /Mischhaut/);
+assert.match(dossier.text, /\+49 170 1234567/);
+
+// Pausierte Creator: Kontakt sichtbar, aber deutlich markiert
+assert.match(dossier.html, /Benachrichtigungen pausiert/);
+assert.match(dossier.html, /pausiert@example\.test/);
+
+// Leere Felder werden ausgelassen statt als "Nicht angegeben" gerendert
+assert.doesNotMatch(dossier.html, /Hauttyp<\/td>\s*<td[^>]*><\/td>/);
+
+// Kein Marketing im internen Dossier
+assert.doesNotMatch(dossier.html, /geo-agentur/);
+assert.doesNotMatch(dossier.html, /Kampagnen-Support/);
+
+// Die externe Brand-Mail darf keine Privatdaten enthalten, auch nicht wenn
+// derselbe Creator-Datensatz mit befuelltem internal-Feld durchgereicht wird.
+const brandWithInternalData = renderBrandMatchEmail({
+  leadId: 'UGC-PREVIEW123',
+  clientInfo,
+  selectedCreators: internalCreators,
+  internalEmail: 'hi@ugc-vz.de',
+});
+assert.doesNotMatch(brandWithInternalData.html, /\+49 170 1234567/);
+assert.doesNotMatch(brandWithInternalData.html, /1998/);
+assert.doesNotMatch(brandWithInternalData.html, /Mischhaut/);
+assert.doesNotMatch(brandWithInternalData.text, /\+49 170 1234567/);
+
 writeFileSync('/tmp/ugc-creator-email-preview.html', creator.html, 'utf8');
 
 console.log(JSON.stringify({
@@ -96,5 +211,6 @@ console.log(JSON.stringify({
   brandTextBytes: Buffer.byteLength(brand.text),
   internalHtmlBytes: Buffer.byteLength(internal.html),
   creatorHtmlBytes: Buffer.byteLength(creator.html),
+  dossierHtmlBytes: Buffer.byteLength(dossier.html),
   result: 'passed',
 }, null, 2));
