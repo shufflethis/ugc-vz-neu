@@ -212,9 +212,12 @@ export function renderInternalMatchEmail({
   // aus der Nutzereingabe koennte darueber zusaetzliche Header injizieren
   // (z. B. "Bcc: ..."). Body und Text-Teil zeigen searchQuery unveraendert,
   // nur fuer den Betreff wird jede Whitespace-Folge zu einem Leerzeichen
-  // kollabiert. Die Kuerzung erfolgt nach Codepoints statt UTF-16-Einheiten,
+  // kollabiert. U+0085 (NEL) steht explizit dabei, weil \s es nicht erfasst:
+  // ob es als Header-Umbruch durchschlaegt, haengt sonst am Verhalten des
+  // Mail-Providers, und darauf soll sich diese Absicherung gerade nicht
+  // verlassen. Die Kuerzung erfolgt nach Codepoints statt UTF-16-Einheiten,
   // damit ein Emoji nicht mitten im Surrogatpaar zerschnitten wird.
-  const subjectQuery = [...searchQuery.replace(/\s+/g, ' ').trim()].slice(0, 60).join('');
+  const subjectQuery = [...searchQuery.replace(/[\s\u0085]+/g, ' ').trim()].slice(0, 60).join('');
 
   const children = `
     <tr>
