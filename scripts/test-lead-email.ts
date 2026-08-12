@@ -234,6 +234,12 @@ assert.match(dossier.html, /&lt;script&gt;/);
 assert.doesNotMatch(dossier.html, /<img src=x onerror=alert\(1\)>/);
 assert.match(dossier.html, /&lt;img src=x onerror=alert\(1\)&gt;/);
 
+// Nur http/https-URLs werden als klickbarer Link gerendert; ein
+// "javascript:"-Schema darf nie in einem href landen, der Account bleibt
+// aber sichtbar – nur ohne aktivierbaren Link.
+assert.doesNotMatch(dossier.html, /href="javascript:/);
+assert.match(dossier.html, /5\.000 Follower/);
+
 // Kein Marketing im internen Dossier
 assert.doesNotMatch(dossier.html, /geo-agentur/);
 assert.doesNotMatch(dossier.html, /Kampagnen-Support/);

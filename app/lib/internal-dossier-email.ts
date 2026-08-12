@@ -45,8 +45,26 @@ const sortedAccounts = (accounts: InternalSocialAccount[]) =>
 
 const telHref = (phone: string) => `tel:${phone.replace(/[^\d+]/g, '')}`;
 
+// Der Schreibpfad filtert URL-Schemata bereits; das hier ist die zweite
+// Verteidigungslinie im Renderer, damit z. B. ein "javascript:"-Schema nie
+// als klickbarer Link im Dossier landet.
+const isSafeUrl = (url: string) => {
+  try {
+    const parsed = new URL(url);
+    return ['http:', 'https:'].includes(parsed.protocol);
+  } catch {
+    return false;
+  }
+};
+
 const socialButtons = (accounts: InternalSocialAccount[]) => sortedAccounts(accounts)
-  .map((account) => `<a href="${htmlEscape(account.url)}" style="display:inline-block;margin:5px 6px 0 0;padding:8px 11px;border:1px solid #ddd2e5;border-radius:8px;background:#ffffff;color:#6f2fa9;font-size:12px;font-weight:800;text-decoration:none;">${htmlEscape(platformName(account.platform))}${account.handle ? ` ${htmlEscape(account.handle)}` : ''} · ${htmlEscape(followerLabel(account.followers))}</a>`)
+  .map((account) => {
+    const label = `${htmlEscape(platformName(account.platform))}${account.handle ? ` ${htmlEscape(account.handle)}` : ''} · ${htmlEscape(followerLabel(account.followers))}`;
+    const style = 'display:inline-block;margin:5px 6px 0 0;padding:8px 11px;border:1px solid #ddd2e5;border-radius:8px;background:#ffffff;color:#6f2fa9;font-size:12px;font-weight:800;text-decoration:none;';
+    return isSafeUrl(account.url)
+      ? `<a href="${htmlEscape(account.url)}" style="${style}">${label}</a>`
+      : `<span style="${style}">${label}</span>`;
+  })
   .join('');
 
 const dateLabel = (value: string | null) => {
