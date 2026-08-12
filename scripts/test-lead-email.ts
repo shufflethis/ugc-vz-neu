@@ -212,6 +212,7 @@ assert.match(dossier.html, /Nutzungsrechte 3 Monate inklusive/);
 assert.match(dossier.html, /tel:\+491701234567/);
 assert.match(dossier.html, /Am besten per WhatsApp erreichbar/);
 assert.match(dossier.html, /Mischhaut/);
+assert.match(dossier.html, /Zwillinge im Haushalt/);
 assert.match(dossier.text, /\+49 170 1234567/);
 
 // Pausierte Creator: Kontakt sichtbar, aber deutlich markiert
@@ -253,9 +254,30 @@ const brandWithInternalData = renderBrandMatchEmail({
   internalEmail: 'hi@ugc-vz.de',
 });
 assert.doesNotMatch(brandWithInternalData.html, /\+49 170 1234567/);
-assert.doesNotMatch(brandWithInternalData.html, /1998/);
+// birthYear wird von keinem Renderer je ausgegeben (nur approxAge) – eine
+// Pruefung auf "1998" kann also nie fehlschlagen. specialTraits dagegen wird
+// vom Dossier-Renderer tatsaechlich ausgegeben (siehe assert.match im
+// Dossier-Block oben), ist also die leakagefaehige Probe.
+assert.doesNotMatch(brandWithInternalData.html, /Zwillinge im Haushalt/);
 assert.doesNotMatch(brandWithInternalData.html, /Mischhaut/);
 assert.doesNotMatch(brandWithInternalData.text, /\+49 170 1234567/);
+
+// Die interne Statusmail (renderInternalLeadEmail) ist nicht das Dossier:
+// contactEmail und priceRange aus dem gelockerten internen Query-Pfad
+// duerfen nicht 1:1 durchschlagen, auch nicht fuer pausierte Creator.
+const internalStatusMail = renderInternalLeadEmail({
+  leadId: 'UGC-PREVIEW123',
+  kind: 'creator_match',
+  clientInfo: { ...clientInfo, name: 'Team famefact', email: 'info@famefact.com' },
+  selectedCreators: internalCreators,
+  brandDelivery: { status: 'queued', id: 'resend-preview' },
+});
+assert.doesNotMatch(internalStatusMail.html, /anna@example\.test/);
+assert.doesNotMatch(internalStatusMail.html, /pausiert@example\.test/);
+assert.doesNotMatch(internalStatusMail.text, /anna@example\.test/);
+assert.doesNotMatch(internalStatusMail.text, /pausiert@example\.test/);
+assert.equal((internalStatusMail.html.match(/Kontaktdaten im Dossier/g) || []).length, 3);
+assert.equal((internalStatusMail.text.match(/Kontaktdaten im Dossier/g) || []).length, 3);
 
 writeFileSync('/tmp/ugc-creator-email-preview.html', creator.html, 'utf8');
 

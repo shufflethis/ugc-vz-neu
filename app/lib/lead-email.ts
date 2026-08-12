@@ -178,6 +178,22 @@ const creatorText = (creator: SelectedCreator, index: number) => [
   `Social: ${creatorUrls(creator).join(', ') || 'nicht hinterlegt'}`,
 ].join('\n');
 
+// Wie im bereits gefixten Slack-Pfad: der interne Query-Pfad hebt das
+// Notification-Gate auf (contactEmail auch fuer pausierte Creator) und
+// kuerzt priceRange nicht auf 200, sondern auf 1500 Zeichen (siehe
+// INTERNAL_CREATOR_COLUMNS in submit-request/route.ts). Die interne
+// Statusmail an UGC_INTERNAL_EMAIL ist nicht das Dossier und darf diese
+// angereicherten Felder nicht ungefiltert uebernehmen. Geprueft wird nur,
+// ob creator.internal gesetzt ist – Felder daraus werden hier nie gerendert.
+const creatorTextInternal = (creator: SelectedCreator, index: number) => [
+  `${index + 1}. ${creator.name || 'UGC Creator'}`,
+  `Preis: ${(creator.internal ? cleanText(creator.priceRange).slice(0, 200) : creator.priceRange) || 'auf Anfrage'}`,
+  `Netzwerke: ${networkSummary(creator)}`,
+  `Reichweite: ${reachSummary(creator)}`,
+  `E-Mail: ${creator.internal ? 'Kontaktdaten im Dossier' : (creator.contactEmail || 'nicht hinterlegt')}`,
+  `Social: ${creatorUrls(creator).join(', ') || 'nicht hinterlegt'}`,
+].join('\n');
+
 export function renderBrandMatchEmail({
   leadId,
   clientInfo,
@@ -364,8 +380,17 @@ export function renderInternalLeadEmail({
         : 'Nicht angefordert';
   const statusColor = brandDelivery.status === 'queued' ? '#176b3a' : '#a12727';
   const query = clientInfo.searchQuery || clientInfo.noResultsQuery || clientInfo.subject || 'Nicht angegeben';
+  // Siehe creatorTextInternal: die interne Query liefert contactEmail auch
+  // fuer pausierte Creator und priceRange ungekuerzt. Diese Statusmail ist
+  // nicht das Dossier und darf beides nicht 1:1 uebernehmen.
   const creatorRows = selectedCreators.length
-    ? selectedCreators.map((creator) => `<li style="margin-bottom:12px;"><strong>${htmlEscape(creator.name)}</strong> · ${htmlEscape(creator.priceRange || 'Preis offen')}<br />${htmlEscape(networkSummary(creator))} · ${htmlEscape(reachSummary(creator))}<br />${creator.contactEmail ? htmlEscape(creator.contactEmail) : 'keine E-Mail'}${creatorUrls(creator).length ? `<br />${socialButtonsHtml(creator)}` : ''}</li>`).join('')
+    ? selectedCreators.map((creator) => {
+      const price = creator.internal ? cleanText(creator.priceRange).slice(0, 200) : creator.priceRange;
+      const contact = creator.internal
+        ? 'Kontaktdaten im Dossier'
+        : (creator.contactEmail ? htmlEscape(creator.contactEmail) : 'keine E-Mail');
+      return `<li style="margin-bottom:12px;"><strong>${htmlEscape(creator.name)}</strong> · ${htmlEscape(price || 'Preis offen')}<br />${htmlEscape(networkSummary(creator))} · ${htmlEscape(reachSummary(creator))}<br />${contact}${creatorUrls(creator).length ? `<br />${socialButtonsHtml(creator)}` : ''}</li>`;
+    }).join('')
     : '<li>Keine Creator ausgewählt.</li>';
 
   const children = `
@@ -394,7 +419,7 @@ Quelle: ${clientInfo.sourceUrl || 'Nicht angegeben'}
 Suche/Thema: ${query}
 Nachricht: ${clientInfo.message || 'Keine Nachricht'}
 
-${selectedCreators.map(creatorText).join('\n\n') || 'Keine Creator ausgewählt.'}`;
+${selectedCreators.map(creatorTextInternal).join('\n\n') || 'Keine Creator ausgewählt.'}`;
 
   return {
     subject: `[UGC VZ] ${kindLabel} ${leadId} · Brand-Mail ${statusLabel}`,

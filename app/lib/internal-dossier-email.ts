@@ -207,6 +207,15 @@ export function renderInternalMatchEmail({
   const count = selectedCreators.length;
   const searchQuery = cleanText(clientInfo.searchQuery, 'Keine Suchanfrage übermittelt');
 
+  // Der Betreff ist ein Mail-Header: cleanText normalisiert nur \r\n und
+  // trimmt aussen, kollabiert aber keine internen Zeilenumbrueche. Freitext
+  // aus der Nutzereingabe koennte darueber zusaetzliche Header injizieren
+  // (z. B. "Bcc: ..."). Body und Text-Teil zeigen searchQuery unveraendert,
+  // nur fuer den Betreff wird jede Whitespace-Folge zu einem Leerzeichen
+  // kollabiert. Die Kuerzung erfolgt nach Codepoints statt UTF-16-Einheiten,
+  // damit ein Emoji nicht mitten im Surrogatpaar zerschnitten wird.
+  const subjectQuery = [...searchQuery.replace(/\s+/g, ' ').trim()].slice(0, 60).join('');
+
   const children = `
     <tr>
       <td class="email-pad" style="padding:8px 42px 22px;">
@@ -237,7 +246,7 @@ Die Creator wurden zu dieser Anfrage nicht benachrichtigt.
 Rueckfragen: ${internalEmail}`;
 
   return {
-    subject: `[INTERN] ${count} Creator-Dossier${count === 1 ? '' : 's'} – ${searchQuery.slice(0, 60)}`,
+    subject: `[INTERN] ${count} Creator-Dossier${count === 1 ? '' : 's'} – ${subjectQuery}`,
     html: emailShell({
       preheader: `${count} vollständige Creator-Profile mit Direktkontakt`,
       eyebrow: 'Interne Recherche',

@@ -261,6 +261,16 @@ const INTERNAL_SOCIAL_JOIN = `
 const approximateAge = (birthYear: number | null) =>
   birthYear ? new Date().getFullYear() - birthYear : null;
 
+// new Date(...).toISOString() wirft einen RangeError bei einem invaliden
+// Datum. Der fliegt sonst bis in den catch der POST-Funktion und macht aus
+// einem Metadatum einen verlorenen Lead – widerspricht dem Prinzip, das
+// oben schon fuer is_internal durchgesetzt wird: der Lead ist das Wertvolle.
+const isoDateOrNull = (value: unknown): string | null => {
+  if (!value) return null;
+  const parsed = new Date(value as string);
+  return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString();
+};
+
 const mapSocialAccounts = (value: unknown): InternalSocialAccount[] => {
   const raw = typeof value === 'string' ? JSON.parse(value) : value;
   if (!Array.isArray(raw)) return [];
@@ -292,7 +302,7 @@ const mapInternalDetails = (row: any): InternalCreatorDetails => {
     heightCm: row.height_cm === null || row.height_cm === undefined ? null : Number(row.height_cm),
     phone: plainText(row.phone, 40),
     contactText: multilineText(row.contact_text, 400),
-    emailVerifiedAt: row.email_verified_at ? new Date(row.email_verified_at).toISOString() : null,
+    emailVerifiedAt: isoDateOrNull(row.email_verified_at),
     notificationsPaused: !row.notifications_enabled || Boolean(row.notification_paused_at),
     socialAccounts: mapSocialAccounts(row.social_accounts),
     portfolioLinks: multilineText(row.portfolio_links, 600),
@@ -416,6 +426,11 @@ async function persistLead({
         networks: creator.networks,
         priceRange: creator.priceRange,
         socialLinks: creator.socialLinks,
+        // Achtung: Das Notification-Gate ist im internen Pfad aufgehoben, also
+        // ist hasContactEmail bei internen Leads auch fuer pausierte Creator
+        // true. Aktuell folgenlos, weil shouldEmailCreators fuer interne
+        // Anfragen hart false ist – aber kein verlaessliches Signal fuer
+        // spaeteren Outreach, der auf diesem Feld aufbaut.
         hasContactEmail: Boolean(creator.contactEmail),
       },
       rank: index + 1,
