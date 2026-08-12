@@ -265,8 +265,8 @@ async function persistLead({
   const sql = getDatabase();
   const [lead] = await sql.query(`
       INSERT INTO brand_leads (
-        public_id, name, email, company, search_query, message, source_url, status, is_internal
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, 'submitted', $8)
+        public_id, name, email, company, search_query, message, source_url, status
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, 'submitted')
       ON CONFLICT (public_id) DO UPDATE SET
         name = EXCLUDED.name,
         email = EXCLUDED.email,
@@ -274,7 +274,6 @@ async function persistLead({
         search_query = EXCLUDED.search_query,
         message = EXCLUDED.message,
         source_url = EXCLUDED.source_url,
-        is_internal = EXCLUDED.is_internal,
         updated_at = now()
       RETURNING id
     `, [
@@ -285,8 +284,19 @@ async function persistLead({
       clientInfo.searchQuery || clientInfo.noResultsQuery || clientInfo.subject || kind,
       clientInfo.message || null,
       clientInfo.sourceUrl || null,
-      isInternal,
     ]);
+
+  // is_internal stammt aus Migration 004. Läuft ein Deploy der Migration voraus,
+  // degradiert das Feature hier zu einem fehlenden Marker statt zu einer
+  // fehlgeschlagenen Anfrage – der Lead selbst darf dadurch nie verloren gehen.
+  try {
+    await sql.query(
+      `UPDATE brand_leads SET is_internal = $2 WHERE id = $1`,
+      [lead.id, isInternal],
+    );
+  } catch (error) {
+    console.error(`Konnte is_internal für Lead ${lead.id} nicht setzen:`, error);
+  }
 
   if (selectedCreators.length) {
     const matches = selectedCreators.map((creator, index) => ({
