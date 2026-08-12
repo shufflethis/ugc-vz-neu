@@ -158,6 +158,41 @@ const internalCreators: SelectedCreator[] = [{
     childrenContext: '',
     profileQualityScore: 12,
   },
+}, {
+  id: 'UGC-K1L2M3N4O5',
+  name: 'Anna "<script>alert(1)</script>"',
+  reach: 'TikTok: 5k',
+  networks: 'TikTok',
+  priceRange: '200 €',
+  contactEmail: 'payload@example.test',
+  socialLinks: '',
+  internal: {
+    birthYear: 2000,
+    approxAge: 26,
+    gender: 'divers',
+    city: '<b>x',
+    countryCode: 'DE',
+    heightCm: 165,
+    phone: '+49 176 5559999',
+    contactText: '<img src=x onerror=alert(1)>',
+    emailVerifiedAt: null,
+    notificationsPaused: false,
+    socialAccounts: [
+      { platform: 'tiktok', handle: '<script>', url: 'javascript:alert(1)', followers: 5000, isPrimary: true },
+    ],
+    portfolioLinks: '',
+    totalReach: 5000,
+    industries: 'Test',
+    topics: 'Test',
+    preferredContent: 'Test',
+    equipment: 'Test',
+    experienceSince: '2022',
+    specialTraits: 'Test',
+    skinType: '',
+    petContext: '',
+    childrenContext: '',
+    profileQualityScore: 50,
+  },
 }];
 
 const dossier = renderInternalMatchEmail({
@@ -185,6 +220,19 @@ assert.match(dossier.html, /pausiert@example\.test/);
 
 // Leere Felder werden ausgelassen statt als "Nicht angegeben" gerendert
 assert.doesNotMatch(dossier.html, /Hauttyp<\/td>\s*<td[^>]*><\/td>/);
+assert.doesNotMatch(dossier.html, /Nicht angegeben/);
+// Hauttyp nur bei Creator 1 befuellt – Creator 2 und 3 lassen das Feld leer.
+assert.equal((dossier.html.match(/Hauttyp/g) || []).length, 1);
+
+// Escaping: Creator-kontrollierter Text darf nie roh ins HTML durchschlagen.
+assert.doesNotMatch(dossier.html, /<script>/);
+assert.match(dossier.html, /&lt;script&gt;/);
+// htmlEscape kodiert Tags, entfernt aber nicht die Zeichenkette "onerror=" –
+// eine rohe Substring-Suche waere hier ein Fehlalarm auf bereits inertem
+// Text. Deshalb kontextgenau pruefen: die Payload darf nie als lebendes
+// Markup auftauchen, wohl aber als kodierter Text.
+assert.doesNotMatch(dossier.html, /<img src=x onerror=alert\(1\)>/);
+assert.match(dossier.html, /&lt;img src=x onerror=alert\(1\)&gt;/);
 
 // Kein Marketing im internen Dossier
 assert.doesNotMatch(dossier.html, /geo-agentur/);
