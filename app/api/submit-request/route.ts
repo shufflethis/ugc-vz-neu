@@ -731,8 +731,19 @@ async function sendSlackNotification({
     : outreach.enabled
       ? `📨 Creator-Mails: ${outreach.queued} angenommen, ${outreach.failed} fehlgeschlagen, ${outreach.skippedNoEmail} ohne E-Mail, ${outreach.skippedDaily} heute bereits informiert${outreach.skippedLimit ? `, ${outreach.skippedLimit} wegen Versandlimit zurückgestellt` : ''}`
       : `⏸️ Creator-Mails deaktiviert · ${outreach.eligible} mit E-Mail versandfähig, ${outreach.skippedNoEmail} ohne hinterlegte E-Mail`;
+  // Die interne Query hebt das Notification-Gate auf und liefert ungekuerzte
+  // Preistexte (1500 statt 200 Zeichen). Die Slack-Zusammenfassung darf diese
+  // angereicherten Felder nicht ungefiltert uebernehmen, sonst landen Kontakt-
+  // adressen pausierter Creator und lange Preistexte in einem Kanal, der
+  // nicht das famefact-Postfach ist.
   const creatorSummary = selectedCreators.length
-    ? selectedCreators.map((creator) => `• *${slackEscape(creator.name)}* · ${slackEscape(creator.priceRange || 'Preis offen')}\n  ${slackEscape(creator.contactEmail || creator.socialLinks || 'kein direkter Kontakt')}`).join('\n')
+    ? selectedCreators.map((creator) => {
+      const price = isInternal ? plainText(creator.priceRange, 200) : creator.priceRange;
+      const contact = isInternal
+        ? 'Kontaktdaten im Dossier'
+        : (creator.contactEmail || creator.socialLinks || 'kein direkter Kontakt');
+      return `• *${slackEscape(creator.name)}* · ${slackEscape(price || 'Preis offen')}\n  ${slackEscape(contact)}`;
+    }).join('\n')
     : 'Keine Creator ausgewählt.';
   const query = clientInfo.searchQuery || clientInfo.noResultsQuery || clientInfo.subject || 'Nicht angegeben';
 
