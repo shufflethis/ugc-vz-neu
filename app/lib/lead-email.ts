@@ -25,6 +25,40 @@ export type LeadClientInfo = {
   website?: string;
 };
 
+export type InternalSocialAccount = {
+  platform: string;
+  handle: string;
+  url: string;
+  followers: number | null;
+  isPrimary: boolean;
+};
+
+export type InternalCreatorDetails = {
+  birthYear: number | null;
+  approxAge: number | null;
+  gender: string;
+  city: string;
+  countryCode: string;
+  heightCm: number | null;
+  phone: string;
+  contactText: string;
+  emailVerifiedAt: string | null;
+  notificationsPaused: boolean;
+  socialAccounts: InternalSocialAccount[];
+  portfolioLinks: string;
+  totalReach: number;
+  industries: string;
+  topics: string;
+  preferredContent: string;
+  equipment: string;
+  experienceSince: string;
+  specialTraits: string;
+  skinType: string;
+  petContext: string;
+  childrenContext: string;
+  profileQualityScore: number;
+};
+
 export type SelectedCreator = {
   id: string;
   name: string;
@@ -33,6 +67,10 @@ export type SelectedCreator = {
   priceRange: string;
   contactEmail?: string;
   socialLinks?: string;
+  // Nur bei internen Anfragen befuellt. Die bestehenden Render-Funktionen
+  // ignorieren das Feld, damit Privatdaten nicht versehentlich in Brand- oder
+  // Creator-Mails landen koennen.
+  internal?: InternalCreatorDetails;
 };
 
 export type DeliveryResult = {
@@ -46,6 +84,14 @@ export type RenderedEmail = {
   html: string;
   text: string;
 };
+
+// Interne Anfragen erkennen wir ausschliesslich an der Absenderdomain. Der
+// Schutz liegt nicht in dieser Pruefung, sondern darin, dass die angereicherte
+// Mail nur an genau diese Adresse zugestellt wird.
+const INTERNAL_EMAIL_PATTERN = /@famefact\.com$/i;
+
+export const isInternalRequest = (email: string) =>
+  INTERNAL_EMAIL_PATTERN.test(String(email ?? '').trim().toLowerCase());
 
 const creatorUrls = (creator: SelectedCreator) =>
   extractUrls(`${creator.socialLinks || ''}\n${creator.networks || ''}`);

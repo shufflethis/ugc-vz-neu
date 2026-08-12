@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { writeFileSync } from 'node:fs';
 import {
+  isInternalRequest,
   renderBrandMatchEmail,
   renderCreatorOutreachEmail,
   renderInternalLeadEmail,
@@ -75,6 +76,17 @@ assert.match(creator.html, /Profilangaben aktualisieren/);
 assert.match(creator.html, /keine Vermittlungsgebühr oder Provision/);
 assert.match(creator.html, /Benachrichtigungen pausieren/);
 assert.ok(Buffer.byteLength(brand.html) > 8_000);
+
+// Domainerkennung: das Ziel-Postfach ist die einzige Authentifizierung,
+// deshalb muss der Suffix-Anker exakt sitzen.
+assert.equal(isInternalRequest('info@famefact.com'), true);
+assert.equal(isInternalRequest('Name@FameFact.com'), true);
+assert.equal(isInternalRequest('  info@famefact.com  '), true);
+assert.equal(isInternalRequest('angreifer@famefact.com.evil.de'), false);
+assert.equal(isInternalRequest('x@notfamefact.com'), false);
+assert.equal(isInternalRequest('famefact.com@gmail.com'), false);
+assert.equal(isInternalRequest('info@sub.famefact.com'), false);
+assert.equal(isInternalRequest(''), false);
 
 writeFileSync('/tmp/ugc-creator-email-preview.html', creator.html, 'utf8');
 
