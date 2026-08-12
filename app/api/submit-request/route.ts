@@ -5,6 +5,8 @@ import { Resend } from 'resend';
 import { getDatabase, isDatabaseConfigured } from '@/app/lib/database';
 import {
   type DeliveryResult,
+  type InternalCreatorDetails,
+  type InternalSocialAccount,
   type LeadClientInfo,
   type LeadKind,
   type RenderedEmail,
@@ -196,7 +198,118 @@ function normalizeRequestBody(rawBody: unknown) {
   return { kind, clientInfo, creatorIds };
 }
 
-async function fetchSelectedCreators(creatorIds: string[]): Promise<SelectedCreator[]> {
+const PUBLIC_CREATOR_COLUMNS = `
+        v.public_id,
+        v.display_name,
+        v.reach_text,
+        v.rate_text,
+        v.social_links,
+        array_to_string(v.networks, ', ') AS network_names`;
+
+// Der interne Pfad hebt das Notification-Gate auf: Mitarbeiter sehen den
+// Kontakt auch bei pausierten Creatorn, bekommen den Zustand aber als Feld
+// mitgeliefert und in der Mail als Warnung angezeigt.
+const INTERNAL_CREATOR_COLUMNS = `${PUBLIC_CREATOR_COLUMNS},
+        v.birth_year,
+        v.gender,
+        v.city,
+        v.country_code,
+        v.height_cm,
+        v.special_traits,
+        v.experience_since,
+        v.industries,
+        v.topics,
+        v.skin_type,
+        v.pet_context,
+        v.children_context,
+        v.preferred_content,
+        v.equipment,
+        v.total_reach,
+        v.portfolio_links,
+        v.profile_quality_score,
+        c.email AS contact_email,
+        c.phone,
+        c.contact_text,
+        c.email_verified_at,
+        COALESCE(c.project_notifications_enabled, false) AS notifications_enabled,
+        c.notification_paused_at,
+        COALESCE(s.accounts, '[]'::json) AS social_accounts`;
+
+const PUBLIC_CONTACT_COLUMN = `,
+        CASE
+          WHEN c.project_notifications_enabled AND c.notification_paused_at IS NULL THEN c.email
+          ELSE NULL
+        END AS contact_email`;
+
+const INTERNAL_SOCIAL_JOIN = `
+      LEFT JOIN LATERAL (
+        SELECT json_agg(json_build_object(
+          'platform', a.platform,
+          'handle', a.handle,
+          'url', a.url,
+          'followers', a.followers,
+          'isPrimary', a.is_primary
+        ) ORDER BY a.is_primary DESC, a.followers DESC NULLS LAST) AS accounts
+        FROM creator_social_accounts a
+        WHERE a.creator_id = v.id
+      ) s ON true`;
+
+const approximateAge = (birthYear: number | null) =>
+  birthYear ? new Date().getFullYear() - birthYear : null;
+
+const mapSocialAccounts = (value: unknown): InternalSocialAccount[] => {
+  const raw = typeof value === 'string' ? JSON.parse(value) : value;
+  if (!Array.isArray(raw)) return [];
+
+  return raw
+    .filter((entry) => entry && typeof entry.url === 'string')
+    .map((entry) => ({
+      platform: plainText(entry.platform, 40) || 'other',
+      handle: plainText(entry.handle, 80),
+      url: plainText(entry.url, 300),
+      followers: Number.isFinite(Number(entry.followers)) && entry.followers !== null
+        ? Number(entry.followers)
+        : null,
+      isPrimary: Boolean(entry.isPrimary),
+    }));
+};
+
+const mapInternalDetails = (row: any): InternalCreatorDetails => {
+  const birthYear = row.birth_year === null || row.birth_year === undefined
+    ? null
+    : Number(row.birth_year);
+
+  return {
+    birthYear,
+    approxAge: approximateAge(birthYear),
+    gender: plainText(row.gender, 40),
+    city: plainText(row.city, 80),
+    countryCode: plainText(row.country_code, 2),
+    heightCm: row.height_cm === null || row.height_cm === undefined ? null : Number(row.height_cm),
+    phone: plainText(row.phone, 40),
+    contactText: multilineText(row.contact_text, 400),
+    emailVerifiedAt: row.email_verified_at ? new Date(row.email_verified_at).toISOString() : null,
+    notificationsPaused: !row.notifications_enabled || Boolean(row.notification_paused_at),
+    socialAccounts: mapSocialAccounts(row.social_accounts),
+    portfolioLinks: multilineText(row.portfolio_links, 600),
+    totalReach: Number(row.total_reach) || 0,
+    industries: multilineText(row.industries, 400),
+    topics: multilineText(row.topics, 400),
+    preferredContent: multilineText(row.preferred_content, 400),
+    equipment: multilineText(row.equipment, 400),
+    experienceSince: plainText(row.experience_since, 80),
+    specialTraits: multilineText(row.special_traits, 400),
+    skinType: plainText(row.skin_type, 80),
+    petContext: multilineText(row.pet_context, 200),
+    childrenContext: multilineText(row.children_context, 200),
+    profileQualityScore: Number(row.profile_quality_score) || 0,
+  };
+};
+
+async function fetchSelectedCreators(
+  creatorIds: string[],
+  { internal }: { internal: boolean },
+): Promise<SelectedCreator[]> {
   const neonIds = creatorIds.filter((id) => /^UGC-[A-F0-9]{10}$/.test(id));
   if (neonIds.length !== creatorIds.length) {
     throw new Error('Invalid creator ID format');
@@ -210,18 +323,9 @@ async function fetchSelectedCreators(creatorIds: string[]): Promise<SelectedCrea
     const placeholders = neonIds.map((_, index) => `$${index + 1}`).join(', ');
     const rows = await sql.query(`
       SELECT
-        v.public_id,
-        v.display_name,
-        v.reach_text,
-        v.rate_text,
-        v.social_links,
-        array_to_string(v.networks, ', ') AS network_names,
-        CASE
-          WHEN c.project_notifications_enabled AND c.notification_paused_at IS NULL THEN c.email
-          ELSE NULL
-        END AS contact_email
+        ${internal ? INTERNAL_CREATOR_COLUMNS : `${PUBLIC_CREATOR_COLUMNS}${PUBLIC_CONTACT_COLUMN}`}
       FROM creator_search_public v
-      LEFT JOIN creator_private_contacts c ON c.creator_id = v.id
+      LEFT JOIN creator_private_contacts c ON c.creator_id = v.id${internal ? INTERNAL_SOCIAL_JOIN : ''}
       WHERE v.public_id IN (${placeholders})
     `, neonIds);
 
@@ -229,11 +333,12 @@ async function fetchSelectedCreators(creatorIds: string[]): Promise<SelectedCrea
       creatorsById.set(String(row.public_id), {
         id: String(row.public_id),
         name: plainText(row.display_name, 100) || 'UGC Creator',
-        reach: multilineText(row.reach_text, 300),
+        reach: multilineText(row.reach_text, internal ? 1_500 : 300),
         networks: plainText(row.network_names, 300),
-        priceRange: multilineText(row.rate_text, 200),
+        priceRange: multilineText(row.rate_text, internal ? 1_500 : 200),
         contactEmail: emailRegex.test(String(row.contact_email || '')) ? String(row.contact_email).slice(0, 160) : '',
         socialLinks: multilineText(row.social_links, 500),
+        ...(internal ? { internal: mapInternalDetails(row) } : {}),
       });
     }
 
@@ -716,11 +821,10 @@ export async function POST(req: Request) {
     }
 
     const leadId = createLeadId(clientInfo.submissionId);
-    const selectedCreators = kind === 'creator_match'
-      ? await fetchSelectedCreators(creatorIds)
-      : [];
-
     const isInternal = isInternalRequest(clientInfo.email);
+    const selectedCreators = kind === 'creator_match'
+      ? await fetchSelectedCreators(creatorIds, { internal: isInternal })
+      : [];
 
     const databaseLeadId = await persistLead({
       leadId,
