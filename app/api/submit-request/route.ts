@@ -14,6 +14,7 @@ import {
   renderCreatorOutreachEmail,
   renderInternalLeadEmail,
   renderNoResultsEmail,
+  isInternalRequest,
 } from '@/app/lib/lead-email';
 
 export const maxDuration = 30;
@@ -251,19 +252,21 @@ async function persistLead({
   kind,
   clientInfo,
   selectedCreators,
+  isInternal,
 }: {
   leadId: string;
   kind: LeadKind;
   clientInfo: LeadClientInfo;
   selectedCreators: SelectedCreator[];
+  isInternal: boolean;
 }) {
   if (!isDatabaseConfigured()) throw new Error('Lead database is not configured');
 
   const sql = getDatabase();
   const [lead] = await sql.query(`
       INSERT INTO brand_leads (
-        public_id, name, email, company, search_query, message, source_url, status
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, 'submitted')
+        public_id, name, email, company, search_query, message, source_url, status, is_internal
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, 'submitted', $8)
       ON CONFLICT (public_id) DO UPDATE SET
         name = EXCLUDED.name,
         email = EXCLUDED.email,
@@ -271,6 +274,7 @@ async function persistLead({
         search_query = EXCLUDED.search_query,
         message = EXCLUDED.message,
         source_url = EXCLUDED.source_url,
+        is_internal = EXCLUDED.is_internal,
         updated_at = now()
       RETURNING id
     `, [
@@ -281,6 +285,7 @@ async function persistLead({
       clientInfo.searchQuery || clientInfo.noResultsQuery || clientInfo.subject || kind,
       clientInfo.message || null,
       clientInfo.sourceUrl || null,
+      isInternal,
     ]);
 
   if (selectedCreators.length) {
@@ -705,11 +710,14 @@ export async function POST(req: Request) {
       ? await fetchSelectedCreators(creatorIds)
       : [];
 
+    const isInternal = isInternalRequest(clientInfo.email);
+
     const databaseLeadId = await persistLead({
       leadId,
       kind,
       clientInfo,
       selectedCreators,
+      isInternal,
     });
 
     const delivery = await dispatchLeadEmails({
