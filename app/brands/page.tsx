@@ -92,11 +92,11 @@ export default function BrandsPage({ searchParams }: { searchParams?: { query?: 
   const videoSchema = {
     '@context': 'https://schema.org',
     '@type': 'VideoObject',
-    name: 'So findest du passende UGC Creator fuer deine Brand',
+    name: 'UGC Creator finden in UNTER 5 Minuten? So einfach & kostenlos ist UGC VZ!',
     description:
-      'Kurzes Erklaervideo: Wie Brands mit UGC VZ kostenlos passende UGC Creator in Deutschland finden - Suchanfrage beschreiben, Creator auswaehlen, Kontaktdaten erhalten.',
+      'Erklaervideo: Wie Brands mit UGC VZ kostenlos passende UGC Creator in Deutschland finden - Suchanfrage beschreiben, Creator auswaehlen, Kontaktdaten erhalten.',
     thumbnailUrl: `https://i.ytimg.com/vi/${YT_VIDEO_ID}/maxresdefault.jpg`,
-    uploadDate: '2025-01-15',
+    uploadDate: '2026-08-14T03:04:11+00:00',
     contentUrl: `https://www.youtube.com/watch?v=${YT_VIDEO_ID}`,
     embedUrl: `https://www.youtube-nocookie.com/embed/${YT_VIDEO_ID}`,
     publisher: {
@@ -148,7 +148,7 @@ export default function BrandsPage({ searchParams }: { searchParams?: { query?: 
         <section className="max-w-4xl mx-auto mb-16 px-4">
           <h2 className="text-3xl font-bold mb-4 text-center text-ink">
             So funktioniert die Creator-Suche{" "}
-            <span className="gradient-text">in 60 Sekunden</span>
+            <span className="gradient-text">in unter 5 Minuten</span>
           </h2>
           <p className="text-ink-soft text-center mb-6 max-w-2xl mx-auto">
             Kurzer Ueberblick, wie du aus einer Kampagnenbeschreibung konkrete Creator-Profile bekommst.
