@@ -17,7 +17,8 @@
     "db:audit": "node scripts/audit-neon.mjs",
     "content:audit": "node scripts/audit-content.mjs",
     "content:export-wordpress": "node scripts/export-wordpress-content.mjs",
-    "content:related": "node scripts/build-related-articles.mjs"
+    "content:related": "node scripts/build-related-articles.mjs",
+    "validate:competitors": "node --import tsx scripts/validate-competitors.ts"
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^6.7.2",
