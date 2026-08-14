@@ -10,8 +10,8 @@ export default function Footer() {
   return (
     <footer className="bg-void text-gray-300 py-16 border-t border-gray-800 mt-16 font-['Inter',sans-serif]">
       <div className="container mx-auto px-6 md:px-16 lg:px-24">
-        {/* Desktop: 4 columns, Tablet: 2 columns, Mobile: 1 column */}
-        <div className="footer-container grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 footer-grid-4 gap-8 lg:gap-12 mb-12">
+        {/* Desktop: 5 columns, Tablet: 2 columns, Mobile: 1 column */}
+        <div className="footer-container grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 footer-grid-5 gap-8 lg:gap-12 mb-12">
           {/* Column 1: Company Info/Logo */}
           <div>
             <div className="flex items-center mb-6">
@@ -42,6 +42,7 @@ export default function Footer() {
             <ul className="space-y-3">
               <li><Link href="/about" className="text-gray-400 hover:text-white transition-colors duration-200 text-sm">Über uns</Link></li>
               <li><Link href="/creator" className="text-gray-400 hover:text-white transition-colors duration-200 text-sm">Als Creator anmelden</Link></li>
+              <li><Link href="/brands" className="text-gray-400 hover:text-white transition-colors duration-200 text-sm">Für Brands</Link></li>
             </ul>
           </div>
 
@@ -70,6 +71,18 @@ export default function Footer() {
                 </button>
               </li>
               <li><Link href="/wissen" className="text-gray-400 hover:text-white transition-colors duration-200 text-sm">Wissen</Link></li>
+            </ul>
+          </div>
+
+          {/* Column 5: Vergleiche */}
+          <div>
+            <h3 className="text-lg font-semibold text-white mb-6">Vergleiche</h3>
+            <ul className="space-y-3">
+              <li><Link href="/vergleich" className="text-gray-400 hover:text-white transition-colors duration-200 text-sm">Alle Plattformen</Link></li>
+              <li><Link href="/vergleich/speekly-alternative" className="text-gray-400 hover:text-white transition-colors duration-200 text-sm">Speekly Alternative</Link></li>
+              <li><Link href="/vergleich/influee-alternative" className="text-gray-400 hover:text-white transition-colors duration-200 text-sm">Influee Alternative</Link></li>
+              <li><Link href="/vergleich/stylink-ugc-alternative" className="text-gray-400 hover:text-white transition-colors duration-200 text-sm">stylink UGC Alternative</Link></li>
+              <li><Link href="/vergleich/boksi-alternative" className="text-gray-400 hover:text-white transition-colors duration-200 text-sm">Boksi Alternative</Link></li>
             </ul>
           </div>
         </div>

@@ -24,6 +24,11 @@ const staticPages = [
   '/brands/ugc-agentur-hamburg',
   '/brands/ugc-agentur-muenchen',
   '/brands/ugc-vertrag-vorlage',
+  '/vergleich',
+  '/vergleich/speekly-alternative',
+  '/vergleich/influee-alternative',
+  '/vergleich/stylink-ugc-alternative',
+  '/vergleich/boksi-alternative',
 ];
 
 function xmlEscape(value: string) {

@@ -38,6 +38,7 @@ export async function GET() {
 - ${baseUrl}/brands: Creator suchen und Anfrage stellen
 - ${baseUrl}/creator: kostenloses Creator-Profil anlegen
 - ${baseUrl}/wissen: geprüfter Wissensbereich mit ${posts.length} veröffentlichten Artikeln
+- ${baseUrl}/vergleich: UGC-Plattformen im Vergleich, mit Quellen und Prüfdatum
 - ${baseUrl}/brands/ugc-vertrag-vorlage: Briefing- und Vertragsgrundlage
 - ${baseUrl}/about: Betreiber, Team und Hintergrund
 - ${baseUrl}/datenschutz: Datenschutzerklärung
