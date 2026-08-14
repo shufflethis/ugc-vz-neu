@@ -4,11 +4,11 @@ import { notFound } from 'next/navigation';
 import BreadcrumbSchema from '../../components/BreadcrumbSchema';
 import JsonLdScript from '../../wissen/[slug]/JsonLdScript';
 import ComparisonTable from '../../components/ComparisonTable';
-import { getCompetitor, getOwn, getPageCompetitors } from '../../lib/competitors';
+import MethodikNote from '../../components/MethodikNote';
+import { SUFFIX, VERIFIED_AT_LABEL, getCompetitor, getOwn, getPageCompetitors } from '../../lib/competitors';
+import { getPageCopy } from '../../lib/vergleich-copy';
 
 export const dynamicParams = false;
-
-const SUFFIX = '-alternative';
 
 function competitorFromParam(slug: string) {
   if (!slug.endsWith(SUFFIX)) return undefined;
@@ -25,7 +25,7 @@ export function generateMetadata({ params }: { params: { slug: string } }): Meta
   if (!c) return { title: 'Vergleich nicht gefunden', robots: { index: false, follow: false } };
   const url = `https://ugc-vz.de/vergleich/${params.slug}`;
   const title = `${c.name} Alternative: UGC Creator direkt finden`;
-  const description = `${c.name} im sachlichen Vergleich mit UGC VZ: Kosten, Provisionen, Creator-Pool und Direktkontakt. Alle Angaben mit Quelle, Stand 14.08.2026.`;
+  const description = `${c.name}: ${c.model}, Creator-Pool: ${c.creatorCount.value}. UGC VZ ist ein kostenloses Verzeichnis mit Direktkontakt statt Plattform-Abwicklung. Alle Angaben mit Quelle, Stand ${VERIFIED_AT_LABEL}.`;
   return {
     title,
     description,
@@ -39,6 +39,7 @@ export default function VergleichDetailPage({ params }: { params: { slug: string
   if (!c) notFound();
   const own = getOwn();
   const others = getPageCompetitors().filter((x) => x.slug !== c.slug);
+  const copy = getPageCopy(c, own);
 
   const breadcrumbs = [
     { name: 'Startseite', url: 'https://ugc-vz.de' },
@@ -64,12 +65,12 @@ export default function VergleichDetailPage({ params }: { params: { slug: string
       <main className="py-12 px-4 sm:px-8 md:px-16 lg:px-24">
         <section className="max-w-3xl mx-auto mb-12">
           <h1 className="text-4xl sm:text-5xl font-bold mb-6 text-ink">
-            {c.name} Alternative: <span className="gradient-text">Creator direkt finden</span>
+            {c.name} Alternative: <span className="gradient-text">UGC Creator direkt finden</span>
           </h1>
           <p className="text-lg text-ink-soft">
-            {c.name} ist ein {c.model.toLowerCase()}: Die Abwicklung läuft über die Plattform. UGC VZ ist ein kostenloses
-            Verzeichnis — du bekommst die Kontaktdaten der Creator und verhandelst direkt, ohne Plattformgebühr. Welche
-            Variante besser passt, hängt davon ab, wie viel Abwicklung du abgeben willst.
+            {c.name} ist ein {c.model}: Die Abwicklung läuft über die Plattform. UGC VZ ist ein kostenloses Verzeichnis —
+            du bekommst die Kontaktdaten der Creator und verhandelst direkt, ohne Plattformgebühr. Welche Variante besser
+            passt, hängt davon ab, wie viel Abwicklung du abgeben willst.
           </p>
         </section>
 
@@ -100,6 +101,64 @@ export default function VergleichDetailPage({ params }: { params: { slug: string
             Fairerweise: Der Creator-Pool von {c.name} ist deutlich größer als unser kuratiertes Verzeichnis, und wir
             übernehmen weder Verträge noch Zahlungsabwicklung. Wer das braucht, ist bei {c.name} besser aufgehoben.
           </p>
+        </section>
+
+        <section className="max-w-3xl mx-auto mb-16">
+          <h2 className="text-3xl font-bold mb-4 text-ink">Preisstruktur im Detail</h2>
+          <div className="space-y-4 text-ink-soft">
+            {copy.pricingDetail.map((p) => (
+              <p key={p}>{p}</p>
+            ))}
+          </div>
+          <p className="text-xs text-ink-soft/70 mt-4">
+            Quelle für die Preisangabe zu {c.name}:{' '}
+            <a
+              href={c.pricing.source}
+              target="_blank"
+              rel="noopener noreferrer nofollow"
+              className="underline hover:text-geo-violet"
+            >
+              {c.pricing.source}
+            </a>
+            , geprüft am {VERIFIED_AT_LABEL}.
+          </p>
+        </section>
+
+        <section className="max-w-3xl mx-auto mb-16">
+          <h2 className="text-3xl font-bold mb-4 text-ink">Direktkontakt oder Abwicklung über die Plattform</h2>
+          <div className="space-y-4 text-ink-soft">
+            {copy.handling.map((p) => (
+              <p key={p}>{p}</p>
+            ))}
+          </div>
+        </section>
+
+        <section className="max-w-3xl mx-auto mb-16">
+          <h2 className="text-3xl font-bold mb-4 text-ink">Was du vor der Buchung klären solltest</h2>
+          <p className="text-ink-soft mb-4">{copy.questionsIntro}</p>
+          <ul className="text-ink-soft space-y-2 list-disc list-inside">
+            {copy.questions.map((q) => (
+              <li key={q}>{q}</li>
+            ))}
+          </ul>
+        </section>
+
+        <section className="max-w-3xl mx-auto mb-16">
+          <h2 className="text-3xl font-bold mb-4 text-ink">Wofür UGC VZ nicht die richtige Wahl ist</h2>
+          <div className="space-y-4 text-ink-soft">
+            {copy.notFor.map((p) => (
+              <p key={p}>{p}</p>
+            ))}
+          </div>
+        </section>
+
+        <section className="max-w-3xl mx-auto mb-16">
+          <h2 className="text-3xl font-bold mb-4 text-ink">Fazit</h2>
+          <div className="space-y-4 text-ink-soft">
+            {copy.conclusion.map((p) => (
+              <p key={p}>{p}</p>
+            ))}
+          </div>
         </section>
 
         <section className="max-w-3xl mx-auto mb-16">
@@ -141,12 +200,7 @@ export default function VergleichDetailPage({ params }: { params: { slug: string
           </ul>
         </section>
 
-        <p className="max-w-3xl mx-auto mt-12 text-xs text-ink-soft/70">
-          Methodik: Alle Angaben stammen von den öffentlich zugänglichen Websites der Anbieter, zuletzt geprüft am
-          14.08.2026. Wo ein Anbieter keine Preise veröffentlicht, steht „nicht öffentlich" statt einer Schätzung. UGC VZ
-          ist unser eigenes Angebot — diese Seite ist damit kein neutraler Test, sondern ein Vergleich aus Anbietersicht
-          mit belegten Zahlen.
-        </p>
+        <MethodikNote className="max-w-3xl mx-auto mt-12" />
       </main>
     </div>
   );

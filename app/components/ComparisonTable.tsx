@@ -1,3 +1,4 @@
+import { formatVerifiedAt } from '../lib/competitors';
 import type { Competitor, CompetitorFact } from '../lib/competitors';
 
 const ROWS: { key: keyof Pick<Competitor, 'pricing' | 'creatorCount' | 'directContact' | 'commission' | 'markets'>; label: string }[] = [
@@ -8,15 +9,20 @@ const ROWS: { key: keyof Pick<Competitor, 'pricing' | 'creatorCount' | 'directCo
   { key: 'markets', label: 'Märkte' },
 ];
 
-function formatDate(iso: string) {
-  const [y, m, d] = iso.split('-');
-  return `${d}.${m}.${y}`;
-}
-
-function Cell({ fact }: { fact: CompetitorFact }) {
+function Cell({ fact, label, name }: { fact: CompetitorFact; label: string; name: string }) {
   return (
     <td className="align-top px-4 py-3 text-sm text-ink border-b border-hairline">
-      <span className={fact.isPublic ? '' : 'text-ink-soft italic'}>{fact.value}</span>
+      <span className={fact.isPublic ? '' : 'text-ink-soft italic'}>{fact.value}</span>{' '}
+      <a
+        href={fact.source}
+        target="_blank"
+        rel="noopener noreferrer nofollow"
+        title={`${fact.source} — geprüft am ${formatVerifiedAt(fact.verifiedAt)}`}
+        aria-label={`Quelle für ${label} bei ${name}, geprüft am ${formatVerifiedAt(fact.verifiedAt)}`}
+        className="align-super text-[10px] font-normal text-ink-soft/70 underline decoration-dotted hover:text-geo-violet"
+      >
+        Quelle
+      </a>
     </td>
   );
 }
@@ -53,7 +59,7 @@ export default function ComparisonTable({ rows, highlightSlug }: { rows: Competi
                   {row.label}
                 </th>
                 {rows.map((c) => (
-                  <Cell key={c.slug} fact={c[row.key]} />
+                  <Cell key={c.slug} fact={c[row.key]} label={row.label} name={c.name} />
                 ))}
               </tr>
             ))}
@@ -61,17 +67,9 @@ export default function ComparisonTable({ rows, highlightSlug }: { rows: Competi
         </table>
       </div>
       <p className="text-xs text-ink-soft/70 mt-3">
-        Stand: {formatDate(verifiedAt)}. Alle Angaben stammen von den Websites der Anbieter. „nicht öffentlich" heißt, dass der
-        Anbieter dazu keine Angabe veröffentlicht — wir schätzen keine Werte. Quellen:{' '}
-        {rows.map((c, i) => (
-          <span key={c.slug}>
-            {i > 0 && ', '}
-            <a href={c.url} target="_blank" rel="noopener noreferrer nofollow" className="underline hover:text-geo-violet">
-              {c.name}
-            </a>
-          </span>
-        ))}
-        .
+        Stand: {formatVerifiedAt(verifiedAt)}. Alle Angaben stammen von den Websites der Anbieter. Der Link „Quelle" hinter jedem
+        Wert führt auf die Anbieterseite, auf der dieser Wert steht; das Prüfdatum steht im Titel des Links. „nicht öffentlich"
+        heißt, dass der Anbieter dazu keine Angabe veröffentlicht — wir schätzen keine Werte.
       </p>
     </div>
   );

@@ -30,6 +30,17 @@ export interface Competitor {
 const V = '2026-08-14';
 const NOT_PUBLIC = 'nicht öffentlich';
 
+/** Slug-Suffix aller Detailseiten: /vergleich/{slug}{SUFFIX} */
+export const SUFFIX = '-alternative';
+
+export function formatVerifiedAt(iso: string): string {
+  const [y, m, d] = iso.split('-');
+  return `${d}.${m}.${y}`;
+}
+
+/** Prüfdatum als deutsches Datum. Einzige Quelle für „Stand:"-Angaben im Fließtext. */
+export const VERIFIED_AT_LABEL = formatVerifiedAt(V);
+
 export const competitors: Competitor[] = [
   {
     slug: 'ugc-vz',
@@ -58,7 +69,7 @@ export const competitors: Competitor[] = [
     model: 'Marktplatz mit Festpreisen',
     isOwn: false,
     hasOwnPage: true,
-    pricing: { value: '99 € / 119 € / 139 € pro Video (15/30/60 Sek.), zzgl. MwSt.; Rohmaterial ab 59 €', source: 'https://speekly.de/preise', verifiedAt: V, isPublic: true },
+    pricing: { value: '99 € / 119 € / 139 € pro Video (15/30/60 Sek.), zzgl. MwSt.; Rohmaterial-Paket ab 59 €', source: 'https://speekly.de/preise', verifiedAt: V, isPublic: true },
     creatorCount: { value: '10.000+', source: 'https://speekly.de', verifiedAt: V, isPublic: true },
     directContact: { value: 'Nein, Chat über die Plattform', source: 'https://speekly.de', verifiedAt: V, isPublic: true },
     commission: { value: 'im Videopreis enthalten', source: 'https://speekly.de/preise', verifiedAt: V, isPublic: true },
@@ -70,7 +81,7 @@ export const competitors: Competitor[] = [
     ],
     bestFor: 'Brands, die planbare Fixpreise pro Video wollen und die komplette Abwicklung abgeben möchten.',
     faqs: [
-      { question: 'Was kostet Speekly?', answer: 'Laut Preisseite von Speekly kosten fertig geschnittene UGC-Videos 99 € (15 Sekunden), 119 € (30 Sekunden) und 139 € (60 Sekunden), jeweils zzgl. MwSt. Ungeschnittenes Rohmaterial beginnt bei 59 €. Stand: 14.08.2026.' },
+      { question: 'Was kostet Speekly?', answer: `Laut Preisseite von Speekly kosten fertig geschnittene UGC-Videos 99 € (15 Sekunden), 119 € (30 Sekunden) und 139 € (60 Sekunden), jeweils zzgl. MwSt. Ein Paket mit ungeschnittenem Rohmaterial beginnt bei 59 €. Stand: ${VERIFIED_AT_LABEL}.` },
       { question: 'Gibt es eine kostenlose Alternative zu Speekly?', answer: 'UGC VZ ist ein kostenloses Creator-Verzeichnis. Du zahlst keine Plattformgebühr und verhandelst das Honorar direkt mit dem Creator. Dafür übernimmt UGC VZ auch keine Abwicklung, keine Verträge und keine Zahlungsabwicklung — das ist der Unterschied zum Marktplatzmodell von Speekly.' },
       { question: 'Kann ich Creator bei Speekly direkt kontaktieren?', answer: 'Die Kommunikation läuft über den Chat der Speekly-Plattform. Bei UGC VZ bekommst du die Kontaktdaten der Creator und schreibst direkt.' },
       { question: 'Worin unterscheiden sich Speekly und UGC VZ?', answer: 'Speekly ist ein Marktplatz: Du erstellst einen Auftrag, Creator bewerben sich, Speekly wickelt Vertrag und Zahlung ab und liefert ein fertiges Video zum Festpreis. UGC VZ ist ein Verzeichnis: Du suchst Creator, bekommst deren Kontaktdaten und regelst alles Weitere selbst.' },
@@ -95,7 +106,7 @@ export const competitors: Competitor[] = [
     ],
     bestFor: 'Brands mit hohem, kontinuierlichem Content-Volumen und internationalen Märkten, für die sich ein Monatsabo rechnet.',
     faqs: [
-      { question: 'Was kostet Influee wirklich?', answer: 'Die Startseite wirbt mit UGC-Videos „ab 76 €". Das ist der Creator-Anteil. Laut Preisseite kommt ein Pflicht-Abo von $229, $529 oder $999 pro Monat hinzu, dazu eine Marketplace-Fee von 10 % auf die Creator-Zahlungen. Die Creator-Honorare sind im Abo nicht enthalten. Stand: 14.08.2026.' },
+      { question: 'Was kostet Influee wirklich?', answer: `Die Startseite wirbt mit UGC-Videos „ab 76 €". Das ist der Creator-Anteil. Laut Preisseite kommt ein Pflicht-Abo von $229, $529 oder $999 pro Monat hinzu, dazu eine Marketplace-Fee von 10 % auf die Creator-Zahlungen. Die Creator-Honorare sind im Abo nicht enthalten. Stand: ${VERIFIED_AT_LABEL}.` },
       { question: 'Gibt es eine Influee-Alternative ohne Monatsabo?', answer: 'UGC VZ verlangt weder Abo noch Provision — es ist ein kostenloses Verzeichnis, über das du Creator direkt kontaktierst. Auch Speekly kommt ohne Abo aus und rechnet pro Video ab.' },
       { question: 'Wie viele deutsche Creator hat Influee?', answer: 'Influee gibt über 10.000 Creator in Deutschland an, bei 140.000+ weltweit. Das ist deutlich mehr als das kuratierte Verzeichnis von UGC VZ mit 470+ Creatorn im DACH-Raum.' },
       { question: 'Wann lohnt sich Influee gegenüber UGC VZ?', answer: 'Wenn du regelmäßig viel Content in mehreren Ländern produzierst und die Abwicklung samt Nutzungsrechten und Videoschnitt an eine Plattform abgeben willst. Bei einzelnen Kampagnen im DACH-Raum trägt das Monatsabo diese Kosten nicht.' },
@@ -120,7 +131,7 @@ export const competitors: Competitor[] = [
     ],
     bestFor: 'Brands im DACH-Raum, die eine vorgeschaltete Qualitätskontrolle und eine feste Lieferzeit wollen.',
     faqs: [
-      { question: 'Was kostet stylink UGC für Brands?', answer: 'stylink UGC veröffentlicht auf der eigenen Website keine Preise für Brands. Angegeben ist nur die Creator-Vergütung von „bis zu 200 € pro Video". In Vergleichsartikeln kursierende Zahlen lassen sich auf der Anbieterseite nicht belegen, deshalb führen wir hier keine. Stand: 14.08.2026.' },
+      { question: 'Was kostet stylink UGC für Brands?', answer: `stylink UGC veröffentlicht auf der eigenen Website keine Preise für Brands. Angegeben ist nur die Creator-Vergütung von „bis zu 200 € pro Video". In Vergleichsartikeln kursierende Zahlen lassen sich auf der Anbieterseite nicht belegen, deshalb führen wir hier keine. Stand: ${VERIFIED_AT_LABEL}.` },
       { question: 'Wie funktioniert stylink UGC?', answer: 'Brands erstellen einen Auftrag, Creator bewerben sich darauf, stylink führt einen Content-Check durch und die Brand zahlt nach Annahme des Videos.' },
       { question: 'Gibt es eine Alternative zu stylink UGC ohne Plattformgebühr?', answer: 'UGC VZ ist ein kostenloses Verzeichnis: Du findest Creator, bekommst deren Kontaktdaten und verhandelst direkt. Es gibt keine Plattformgebühr und keine Provision — dafür auch keinen Content-Check und keine Abwicklung durch uns.' },
     ],
@@ -144,7 +155,7 @@ export const competitors: Competitor[] = [
     ],
     bestFor: 'Größere Brands, die Influencer-Marketing und UGC gebündelt mit Reporting und persönlicher Betreuung einkaufen.',
     faqs: [
-      { question: 'Was kostet Boksi?', answer: 'Boksi veröffentlicht keine Preisliste. Die Website führt zu einer kostenlosen Demo, ein individuelles Angebot wird laut Anbieter innerhalb eines Werktags erstellt. Stand: 14.08.2026.' },
+      { question: 'Was kostet Boksi?', answer: `Boksi veröffentlicht keine Preisliste. Die Website führt zu einer kostenlosen Demo, ein individuelles Angebot wird laut Anbieter innerhalb eines Werktags erstellt. Stand: ${VERIFIED_AT_LABEL}.` },
       { question: 'Für wen eignet sich Boksi?', answer: 'Für Brands, die Kampagnen mit Reporting und Betreuung einkaufen wollen, statt einzelne Videos zu bestellen. Boksi nennt Branchen wie Food, Fashion, Beauty, Retail, Pet Care und Travel.' },
       { question: 'Gibt es eine Boksi-Alternative mit transparenten Kosten?', answer: 'UGC VZ ist kostenlos und verlangt keine Provision; du verhandelst das Honorar direkt mit dem Creator. Wer feste Videopreise sucht, findet sie bei Speekly öffentlich ausgewiesen.' },
     ],
@@ -179,7 +190,7 @@ export const competitors: Competitor[] = [
     pricing: { value: 'kein Abo, keine Servicegebühr; Zahlung pro Auftrag an den Creator', source: 'https://youdji.com/de', verifiedAt: V, isPublic: true },
     creatorCount: { value: '10.533', source: 'https://youdji.com/de', verifiedAt: V, isPublic: true },
     directContact: { value: 'Nein, Verträge und Zahlung laufen über die Plattform', source: 'https://youdji.com/de', verifiedAt: V, isPublic: true },
-    commission: { value: 'keine Servicegebühr angegeben', source: 'https://youdji.com/de', verifiedAt: V, isPublic: true },
+    commission: { value: 'keine Servicegebühr', source: 'https://youdji.com/de', verifiedAt: V, isPublic: true },
     markets: { value: '10 Länder, 43+ Sprachen', source: 'https://youdji.com/de', verifiedAt: V, isPublic: true },
     strengths: [
       'Kein Monatsabo und keine Servicegebühr für Marken',

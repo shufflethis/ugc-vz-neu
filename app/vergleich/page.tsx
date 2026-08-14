@@ -3,7 +3,8 @@ import Link from 'next/link';
 import BreadcrumbSchema from '../components/BreadcrumbSchema';
 import JsonLdScript from '../wissen/[slug]/JsonLdScript';
 import ComparisonTable from '../components/ComparisonTable';
-import { competitors } from '../lib/competitors';
+import MethodikNote from '../components/MethodikNote';
+import { SUFFIX, competitors } from '../lib/competitors';
 
 export const metadata: Metadata = {
   title: 'UGC-Plattformen im Vergleich 2026',
@@ -82,7 +83,7 @@ export default function VergleichPage() {
                     ))}
                   </ul>
                   {c.hasOwnPage && (
-                    <Link href={`/vergleich/${c.slug}-alternative`} className="text-sm underline hover:text-geo-violet">
+                    <Link href={`/vergleich/${c.slug}${SUFFIX}`} className="text-sm underline hover:text-geo-violet">
                       {c.name} und UGC VZ im Detail vergleichen
                     </Link>
                   )}
@@ -91,7 +92,7 @@ export default function VergleichPage() {
           </div>
         </section>
 
-        <section className="max-w-5xl mx-auto text-center">
+        <section className="max-w-5xl mx-auto text-center mb-16">
           <h2 className="text-3xl font-bold mb-4 text-ink">Creator direkt finden</h2>
           <p className="text-ink-soft mb-6">
             470+ kuratierte Creator im deutschsprachigen Raum, kostenlos, mit direkten Kontaktdaten.
@@ -103,6 +104,8 @@ export default function VergleichPage() {
             Zur Creator-Suche
           </Link>
         </section>
+
+        <MethodikNote className="max-w-5xl mx-auto" />
       </main>
     </div>
   );
