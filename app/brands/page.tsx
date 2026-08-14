@@ -4,6 +4,7 @@ import Link from 'next/link';
 import BreadcrumbSchema from '../components/BreadcrumbSchema';
 import JsonLdScript from '../wissen/[slug]/JsonLdScript';
 import SearchBox from '../components/SearchBox';
+import YouTubeEmbed from '../components/YouTubeEmbed';
 
 export const metadata: Metadata = {
   title: 'UGC Creator finden fuer Brands',
@@ -19,6 +20,12 @@ export const metadata: Metadata = {
     siteName: 'UGC VZ',
     locale: 'de_DE',
     type: 'website',
+    videos: [
+      {
+        url: 'https://www.youtube.com/watch?v=JLjfIUw3HwM',
+        type: 'text/html',
+      },
+    ],
   },
 };
 
@@ -81,11 +88,36 @@ export default function BrandsPage({ searchParams }: { searchParams?: { query?: 
     ],
   };
 
+  const YT_VIDEO_ID = 'JLjfIUw3HwM';
+  const videoSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'VideoObject',
+    name: 'So findest du passende UGC Creator fuer deine Brand',
+    description:
+      'Kurzes Erklaervideo: Wie Brands mit UGC VZ kostenlos passende UGC Creator in Deutschland finden - Suchanfrage beschreiben, Creator auswaehlen, Kontaktdaten erhalten.',
+    thumbnailUrl: `https://i.ytimg.com/vi/${YT_VIDEO_ID}/maxresdefault.jpg`,
+    uploadDate: '2025-01-15',
+    contentUrl: `https://www.youtube.com/watch?v=${YT_VIDEO_ID}`,
+    embedUrl: `https://www.youtube-nocookie.com/embed/${YT_VIDEO_ID}`,
+    publisher: {
+      '@type': 'Organization',
+      '@id': 'https://ugc-vz.de/#organization',
+      name: 'UGC VZ - track by track GmbH',
+      logo: {
+        '@type': 'ImageObject',
+        url: 'https://ugc-vz.de/ugc-vz-logo.webp',
+      },
+    },
+    inLanguage: 'de-DE',
+    isFamilyFriendly: true,
+  };
+
   return (
     <div className="min-h-screen bg-white text-ink">
       <BreadcrumbSchema items={breadcrumbs} />
       <JsonLdScript data={serviceSchema} />
       <JsonLdScript data={faqSchema} />
+      <JsonLdScript data={videoSchema} />
 
       <header className="py-6 px-4 sm:px-8 md:px-16 lg:px-24">
         <div className="container mx-auto flex justify-between items-center">
@@ -111,6 +143,32 @@ export default function BrandsPage({ searchParams }: { searchParams?: { query?: 
           <div className="max-w-2xl mx-auto">
             <SearchBox initialQuery={searchParams?.query || ''} />
           </div>
+        </section>
+
+        <section className="max-w-4xl mx-auto mb-16 px-4">
+          <h2 className="text-3xl font-bold mb-4 text-center text-ink">
+            So funktioniert die Creator-Suche{" "}
+            <span className="gradient-text">in 60 Sekunden</span>
+          </h2>
+          <p className="text-ink-soft text-center mb-6 max-w-2xl mx-auto">
+            Kurzer Ueberblick, wie du aus einer Kampagnenbeschreibung konkrete Creator-Profile bekommst.
+          </p>
+          <div className="relative w-full aspect-video rounded-2xl overflow-hidden shadow-2xl border border-hairline bg-slate-900">
+            {/* Click-to-load spart LCP und reduziert Drittland-Requests bis zur Interaktion */}
+            <YouTubeEmbed videoId={YT_VIDEO_ID} title="UGC VZ Creator-Suche Erklaervideo" />
+          </div>
+          <p className="text-xs text-ink-soft/70 mt-3 text-center">
+            Video wird ueber youtube-nocookie.com eingebettet. Mehr auf unserem{" "}
+            <a
+              href="https://www.youtube.com/@UGCVZ"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline hover:text-geo-violet"
+            >
+              YouTube-Kanal
+            </a>
+            .
+          </p>
         </section>
 
         <section className="max-w-6xl mx-auto grid md:grid-cols-3 gap-6 mb-16">

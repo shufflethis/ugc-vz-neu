@@ -37,7 +37,8 @@ export default function HomePageSchema() {
       "https://famefact.com",
       "https://www.linkedin.com/company/track-by-track-gmbh",
       "https://www.linkedin.com/in/tobias-famefact/",
-      "https://twitter.com/Ugc_Vz"
+      "https://twitter.com/Ugc_Vz",
+      "https://www.youtube.com/@UGCVZ"
     ],
     "taxID": "DE814954842",
     "duns": "34-024-8055",
