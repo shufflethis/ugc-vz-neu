@@ -779,6 +779,7 @@ git commit -m "feat: Alternative-zu-X Detailseiten mit FAQPage-Schema"
 - Modify: `src/components/FooterNew.tsx:14` (Grid-Klassen) und neue Spalte nach Zeile 74
 - Modify: `app/globals.css:105-113`
 - Modify: `app/sitemap.xml/route.ts:5-27`
+- Modify: `app/llms.txt/route.ts` (Abschnitt `## Hauptseiten`), ggf. `app/llm.txt/route.ts`
 
 **Interfaces:**
 - Consumes: nichts aus vorherigen Tasks (nur die Routen aus Task 3 und 4)
@@ -849,11 +850,26 @@ In `app/sitemap.xml/route.ts` das `staticPages`-Array um fünf Einträge ergänz
   '/vergleich/boksi-alternative',
 ```
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 5: Hub in `llms.txt` eintragen**
+
+`app/llms.txt/route.ts` pflegt eine statische Liste unter `## Hauptseiten`. Da die ganze Maßnahme GEO-motiviert ist, gehört der Hub dort hinein. Nach der `/wissen`-Zeile ergänzen:
+
+```ts
+- ${baseUrl}/vergleich: UGC-Plattformen im Vergleich, mit Quellen und Prüfdatum
+```
+
+Nur den Hub eintragen, nicht die vier Detailseiten — die Datei ist eine Übersicht, keine Sitemap.
+
+Run: `grep -n "Hauptseiten" -A 6 app/llms.txt/route.ts`
+Expected: die neue `/vergleich`-Zeile steht in der Liste.
+
+Prüfen, ob `app/llm.txt/route.ts` dieselbe Liste dupliziert: `grep -n "Hauptseiten" app/llm.txt/route.ts`. Falls ja, dort identisch ergänzen.
+
+- [ ] **Step 6: Commit**
 
 ```bash
-git add src/components/FooterNew.tsx app/globals.css app/sitemap.xml/route.ts
-git commit -m "feat: Vergleiche im Footer, Sitemap-Routen, fehlender /brands-Link"
+git add src/components/FooterNew.tsx app/globals.css app/sitemap.xml/route.ts app/llms.txt/route.ts app/llm.txt/route.ts
+git commit -m "feat: Vergleiche im Footer, Sitemap, llms.txt; fehlender /brands-Link"
 ```
 
 ---
@@ -925,3 +941,8 @@ Expected: FAQPage erkannt, keine Fehler. Kein `Product`- oder `AggregateRating`-
 
 - Search Console beobachten: Für welche `[Marke] Alternative`-Queries entstehen Impressions? Das liefert die Volumendaten, die vorab nicht verfügbar waren, und entscheidet, ob Refluenced und Youdji eigene Seiten bekommen.
 - Quartalsreview: `npm run validate:competitors` erzwingt Struktur, nicht Aktualität. Die `verifiedAt`-Daten stehen sichtbar auf der Seite — wenn sie älter als drei Monate sind, Preise neu prüfen.
+- IndexNow: Das Repo hat bereits IndexNow-Infrastruktur. Die fünf neuen URLs nach bestandener Task 6 einreichen — das speist Bing und damit Microsoft Copilot, was genau das GEO-Ziel dieser Maßnahme ist. Kein Code nötig, nur die Einreichung.
+
+## Bewusste Abweichung von der Spec
+
+Spec §5 listet „Preisstruktur im Detail" als eigenen Abschnitt. Im Plan ist sie in die Vergleichstabelle und die jeweils erste FAQ pro Seite gefaltet — dort steht sie mit Quelle und Stand-Datum. Ein dritter Ort für dieselben Zahlen wäre eine Dublette und ein Pflegerisiko.
