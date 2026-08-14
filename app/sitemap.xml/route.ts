@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server';
 import { getPageCount, getPublishedPosts } from '@/app/lib/content-repository';
+import { SUFFIX, getPageCompetitors } from '@/app/lib/competitors';
 
 const baseUrl = 'https://ugc-vz.de';
+// Detailseiten aus der Single Source of Truth ableiten, damit ein neues
+// hasOwnPage: true automatisch in der Sitemap landet.
+const vergleichPages = getPageCompetitors().map((c) => `/vergleich/${c.slug}${SUFFIX}`);
 const staticPages = [
   '',
   '/about',
@@ -24,6 +28,8 @@ const staticPages = [
   '/brands/ugc-agentur-hamburg',
   '/brands/ugc-agentur-muenchen',
   '/brands/ugc-vertrag-vorlage',
+  '/vergleich',
+  ...vergleichPages,
 ];
 
 function xmlEscape(value: string) {
