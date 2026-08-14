@@ -174,13 +174,6 @@ export default function SearchBox({ initialQuery = '' }: SearchBoxProps) {
   return (
     <div className={styles.searchContainer}>
       {/* Search input */}
-      <div className="mb-4 rounded-lg border border-hairline bg-surface px-4 py-3 text-left text-sm text-ink-soft">
-        <p>
-          Die KI hilft nur dabei, deine Suchanfrage zu verstehen und passende Creator-Vorschlaege zu sortieren.
-          Die finale Auswahl triffst du selbst. An OpenRouter wird nur deine Suchanfrage gesendet, keine komplette Creator-Datenbank.
-        </p>
-      </div>
-
       <div className={styles.searchInputContainer}>
         <textarea
           ref={searchInputRef}
@@ -206,21 +199,27 @@ export default function SearchBox({ initialQuery = '' }: SearchBoxProps) {
         <button
           onClick={handleStartSearch}
           disabled={isLoading}
-          aria-label="Search"
+          aria-label="Suche starten"
           className="search-button-gradient p-4 rounded-lg flex items-center justify-center focus:outline-none hover:opacity-90 transition-opacity"
           style={{
             minWidth: '60px',
             height: '60px'
           }}
         >
-          {isLoading ? '...' : <span className="material-icons text-white text-2xl">search</span>}
+          {isLoading ? (
+            <span className="text-white text-sm font-medium">...</span>
+          ) : (
+            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-4.35-4.35M17 10.5a6.5 6.5 0 11-13 0 6.5 6.5 0 0113 0z" />
+            </svg>
+          )}
         </button>
 
         <div className="relative group">
           <button
             onClick={toggleVoiceInput}
             disabled={isLoading || isIOSDeviceState || !browserSupportsSpeechRecognition}
-            aria-label="Toggle Voice Input"
+            aria-label={isListening ? 'Sprachaufnahme beenden' : 'Sprachsuche starten'}
             className={`p-4 rounded-lg flex items-center justify-center focus:outline-none transition-opacity ${
               isIOSDeviceState || !browserSupportsSpeechRecognition
                 ? 'bg-hairline cursor-not-allowed opacity-50'
@@ -232,9 +231,17 @@ export default function SearchBox({ initialQuery = '' }: SearchBoxProps) {
             }}
             title={isIOSDeviceState ? 'Spracherkennung ist auf iOS-Geräten nicht verfügbar' : !browserSupportsSpeechRecognition ? 'Spracherkennung wird von Ihrem Browser nicht unterstützt' : isListening ? 'Sprachaufnahme beenden' : 'Sprachsuche starten'}
           >
-            <span className="material-icons text-white text-2xl">
-              {isListening ? "mic" : "mic_off"}
-            </span>
+            {isListening ? (
+              <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 14a3 3 0 003-3V6a3 3 0 10-6 0v5a3 3 0 003 3z" />
+                <path d="M19 11a7 7 0 01-14 0H3a9 9 0 008 8.94V23h2v-3.06A9 9 0 0021 11h-2z" />
+              </svg>
+            ) : (
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                <line x1="4" y1="4" x2="20" y2="20" strokeLinecap="round" strokeWidth={2} />
+              </svg>
+            )}
           </button>
 
           {/* CRITICAL: Only show listening indicator if NOT on iOS */}
@@ -251,6 +258,16 @@ export default function SearchBox({ initialQuery = '' }: SearchBoxProps) {
           </span>
         </div>
       </div>
+
+      {/* Privacy / KI-Hinweis – dezent unter der Eingabe */}
+      <p className="mt-3 text-xs text-ink-soft/80 leading-relaxed flex items-start gap-2">
+        <svg className="w-3.5 h-3.5 mt-0.5 shrink-0 text-geo-violet" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+        </svg>
+        <span>
+          Die KI hilft nur, deine Suchanfrage zu verstehen und passende Creator zu sortieren. Die finale Auswahl triffst du selbst. An OpenRouter wird nur deine Suchanfrage gesendet, keine Creator-Datenbank.
+        </span>
+      </p>
 
       {/* We don't need to display the transcript separately anymore since it's shown in the chat bubble */}
 
