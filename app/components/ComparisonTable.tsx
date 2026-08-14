@@ -67,8 +67,8 @@ export default function ComparisonTable({ rows, highlightSlug }: { rows: Competi
         </table>
       </div>
       <p className="text-xs text-ink-soft/70 mt-3">
-        Stand: {formatVerifiedAt(verifiedAt)}. Alle Angaben stammen von den Websites der Anbieter. Der Link „Quelle" hinter jedem
-        Wert führt auf die Anbieterseite, auf der dieser Wert steht; das Prüfdatum steht im Titel des Links. „nicht öffentlich"
+        Stand: {formatVerifiedAt(verifiedAt)}. Alle Angaben stammen von den Websites der Anbieter. Der Link &bdquo;Quelle&quot; hinter jedem
+        Wert führt auf die Anbieterseite, auf der dieser Wert steht; das Prüfdatum steht im Titel des Links. &bdquo;nicht öffentlich&quot;
         heißt, dass der Anbieter dazu keine Angabe veröffentlicht — wir schätzen keine Werte.
       </p>
     </div>

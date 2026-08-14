@@ -57,7 +57,7 @@ export default function VergleichPage() {
           </p>
           <p className="text-sm text-ink-soft/80">
             Alle Zahlen stammen von den Websites der Anbieter, mit Quelle und Prüfdatum. Wo ein Anbieter keine Preise
-            veröffentlicht, steht „nicht öffentlich" — wir schätzen nichts.
+            veröffentlicht, steht &bdquo;nicht öffentlich&quot; — wir schätzen nichts.
           </p>
         </section>
 
