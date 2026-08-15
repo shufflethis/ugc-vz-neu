@@ -27,9 +27,6 @@ export function generateMetadata({ params }: { params: { slug: string } }): Meta
   if (!post) return { title: 'Artikel nicht gefunden', robots: { index: false, follow: false } };
   const author = getAuthor(post.authorId);
   const postUrl = `https://ugc-vz.de/wissen/${post.slug}`;
-  // Ein Artikel ueber Creator-Honorare braucht einen anderen Abschluss als einer
-  // ueber Kampagnen-Briefings. Bis hierher bekamen beide denselben.
-  const cta = getAudienceCta(getArticleAudience(post.slug));
   const image = absoluteContentUrl(post.featuredImage);
   return {
     title: post.title,
@@ -72,6 +69,9 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
   if (!post) notFound();
   const author = getAuthor(post.authorId);
   const postUrl = `https://ugc-vz.de/wissen/${post.slug}`;
+  // Ein Artikel ueber Creator-Honorare braucht einen anderen Abschluss als einer
+  // ueber Kampagnen-Briefings. Bis hierher bekamen beide denselben.
+  const cta = getAudienceCta(getArticleAudience(post.slug));
   const image = absoluteContentUrl(post.featuredImage);
   const readingTime = Math.max(1, Math.ceil(post.wordCount / 220));
   const articleSchema = {
