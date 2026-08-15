@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import ContactButton from '../../components/ContactButton';
 import ResponsiveCTAButton from '@/src/components/ResponsiveCTAButton';
+import { getArticleAudience, getAudienceCta } from '../../lib/article-audience';
 import LogoImage from '../../components/LogoImage';
 import JsonLdScript from './JsonLdScript';
 import BreadcrumbSchema from '../../components/BreadcrumbSchema';
@@ -26,6 +27,9 @@ export function generateMetadata({ params }: { params: { slug: string } }): Meta
   if (!post) return { title: 'Artikel nicht gefunden', robots: { index: false, follow: false } };
   const author = getAuthor(post.authorId);
   const postUrl = `https://ugc-vz.de/wissen/${post.slug}`;
+  // Ein Artikel ueber Creator-Honorare braucht einen anderen Abschluss als einer
+  // ueber Kampagnen-Briefings. Bis hierher bekamen beide denselben.
+  const cta = getAudienceCta(getArticleAudience(post.slug));
   const image = absoluteContentUrl(post.featuredImage);
   return {
     title: post.title,
@@ -123,7 +127,7 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
             <LogoImage width={32} height={32} className="mr-2" priority />
             <span className="text-xl font-bold gradient-text">UGC VZ</span>
           </Link>
-          <ResponsiveCTAButton />
+          <ResponsiveCTAButton href={cta.header.href} label={cta.header.label} />
         </div>
       </header>
 
@@ -181,9 +185,20 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
 
       <section className="px-4 sm:px-8 md:px-16 lg:px-24 py-16 grad-subtle">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl font-bold mb-6"><span className="gradient-text">Bereit für professionellen UGC?</span></h2>
-          <p className="text-xl text-ink-soft mb-8 max-w-2xl mx-auto">Finde passende Creator kostenlos oder lass dich bei Auswahl, Briefing und Kampagnenabwicklung unterstützen.</p>
-          <ContactButton>Kontakt aufnehmen</ContactButton>
+          <h2 className="text-3xl font-bold mb-6"><span className="gradient-text">{cta.footer.heading}</span></h2>
+          <p className="text-xl text-ink-soft mb-8 max-w-2xl mx-auto">{cta.footer.text}</p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <Link
+              href={cta.footer.primary.href}
+              className="bg-geo-violet hover:bg-geo-violet-soft text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+            >
+              {cta.footer.primary.label}
+            </Link>
+            <ContactButton>Kontakt aufnehmen</ContactButton>
+          </div>
+          {cta.footer.secondary && (
+            <p className="text-sm text-ink-soft/80 mt-6 max-w-2xl mx-auto">{cta.footer.secondary}</p>
+          )}
         </div>
       </section>
 

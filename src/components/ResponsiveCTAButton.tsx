@@ -6,11 +6,14 @@ import { trackUGCEvents } from '../../app/lib/analytics';
 interface ResponsiveCTAButtonProps {
   href?: string;
   className?: string;
+  /** Default bleibt der bisherige Text, damit die uebrigen Aufrufer unveraendert bleiben. */
+  label?: string;
 }
 
 export default function ResponsiveCTAButton({
   href = "/creator",
-  className = ""
+  className = "",
+  label = "Als Creator anmelden"
 }: ResponsiveCTAButtonProps) {
 
   const handleClick = () => {
@@ -31,7 +34,7 @@ export default function ResponsiveCTAButton({
         ${className}
       `}
     >
-      Als Creator anmelden
+      {label}
     </Link>
   );
 }
