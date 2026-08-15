@@ -103,6 +103,13 @@ export default function VergleichPage() {
           >
             Zur Creator-Suche
           </Link>
+          <p className="text-sm text-ink-soft/80 mt-6">
+            Wie das Verzeichnis-Modell funktioniert und wo seine Grenzen liegen, steht auf der Seite{' '}
+            <Link href="/brands/ugc-plattform-deutschland" className="underline hover:text-geo-violet">
+              UGC Plattform für Deutschland
+            </Link>
+            .
+          </p>
         </section>
 
         <MethodikNote className="max-w-5xl mx-auto" />
