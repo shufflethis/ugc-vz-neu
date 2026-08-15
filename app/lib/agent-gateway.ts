@@ -94,6 +94,7 @@ export async function searchCreators(params: SearchCreatorsParams, ctx: SearchCr
          p.public_id,
          p.city,
          p.topics,
+         p.total_reach,
          COALESCE(portfolio.cnt, 0) AS portfolio_count,
          COALESCE(social.cnt, 0) AS social_count
        FROM creator_profiles p
@@ -118,6 +119,10 @@ export async function searchCreators(params: SearchCreatorsParams, ctx: SearchCr
         });
         return {
           ...creator,
+          // /api/search entfernt totalReach aus finalCreators (siehe dortiges
+          // finalCreators-Mapping) -- die kanonische Zahl kommt deshalb aus
+          // creator_profiles statt aus der Such-API-Antwort.
+          totalReach: Number(row.total_reach) || 0,
           city: String(row.city || ''),
           __topics: String(row.topics || ''),
           humanVerification: { level: verification.level, name: verification.name },
