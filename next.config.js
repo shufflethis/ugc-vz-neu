@@ -167,6 +167,29 @@ const nextConfig = {
       { source: '/wissen/verzeichnis', destination: '/wissen', permanent: true },
       { source: '/wissen/workshops', destination: '/wissen', permanent: true },
       { source: '/wissen/ugc-vz.de', destination: '/wissen', permanent: true },
+
+      // Nach der WordPress-Migration (36a731e) auf 'gone' gesetzt, aber weiterhin
+      // von Google gerankt: 404 statt Signal-Konsolidierung. Ziele einzeln geprueft;
+      // Slugs ohne thematisch passendes Ziel bleiben bewusst 404 statt Soft-404 zu erzeugen.
+      { source: '/wissen/welche-brands-setzen-auf-ugc', destination: '/wissen/ugc-brands-strategien-fuer-authentisches-marketing', permanent: true },
+      { source: '/wissen/ugc-vertragsmuster-fuer-creator', destination: '/brands/ugc-vertrag-vorlage', permanent: true },
+      { source: '/wissen/was-muss-in-einem-ugc-vertrag-stehen', destination: '/wissen/ugc-vertrag-12-schutz-klauseln-fuer-brands-creator', permanent: true },
+      { source: '/wissen/welche-ugc-plattform-ist-die-beste-fuer-deutsche-unternehmen', destination: '/brands/ugc-plattform-deutschland', permanent: true },
+      { source: '/wissen/die-besten-nischen-fuer-ugc-content', destination: '/wissen/ugc-creator-deutschland-die-10-bestzahlenden-branchen', permanent: true },
+      { source: '/wissen/ugc-fuer-food-marken', destination: '/wissen/ugc-food-marketing-12-content-angles-mit-appetit-kaufdruck', permanent: true },
+      { source: '/wissen/lohnt-sich-ugc-creator-als-nebenverdienst', destination: '/wissen/ugc-verdienst-wie-viel-kann-man-wirklich-verdienen', permanent: true },
+      { source: '/wissen/ugc-creator-agency-model-agentur-fuer-ugc-gruenden', destination: '/wissen/ugc-creator-management-retainer-modelle-fuer-nachhaltigen-erfolg', permanent: true },
+      { source: '/wissen/ugc-fuer-b2b-marketing', destination: '/wissen/ugc-fuer-b2b-9-serioese-video-formate-ohne-lifestyle', permanent: true },
+      { source: '/wissen/ugc-creator-brand-collaborations-markenpartnerschaften-nutzen', destination: '/wissen/ugc-partner-strategische-kooperationen-fuer-authentisches-marketing', permanent: true },
+      { source: '/wissen/welche-ugc-agentur-in-berlin-passt-zu-meinem-unternehmen', destination: '/brands/ugc-agentur-berlin', permanent: true },
+      { source: '/wissen/ugc-fuer-lokale-unternehmen', destination: '/wissen/ugc-fuer-lokale-unternehmen-10-ideen-fuer-mehr-laufkundschaft', permanent: true },
+      { source: '/wissen/ugc-plattformen-im-vergleich', destination: '/vergleich', permanent: true },
+      { source: '/wissen/wie-starte-ich-als-ugc-creator-in-deutschland', destination: '/creator/ugc-creator-werden', permanent: true },
+      { source: '/wissen/wie-viel-kostet-es-mit-ugc-creators-zu-arbeiten', destination: '/brands/ugc-creator-preise', permanent: true },
+      { source: '/wissen/brauche-ich-eine-ugc-agentur-oder-kann-ich-direkt-creator-finden', destination: '/wissen/ugc-creator-finden-17-wege-ohne-agentur-fuer-erfolgreiches-marketing', permanent: true },
+      { source: '/wissen/b2b-ugc-geschaeftskunden-zum-content-erstellen-motivieren', destination: '/wissen/ugc-fuer-b2b-9-serioese-video-formate-ohne-lifestyle', permanent: true },
+      { source: '/wissen/was-ist-ein-ugc-creator', destination: '/wissen/ugc-was-ist-user-generated-content-strategie-guide-2026', permanent: true },
+      { source: '/wissen/ugc-kampagnen-von-der-idee-zur-umsetzung', destination: '/wissen/ugc-kampagne-launch-checkliste-in-10-punkten-von-idee-bis-umsetzung', permanent: true },
     ];
   },
 
