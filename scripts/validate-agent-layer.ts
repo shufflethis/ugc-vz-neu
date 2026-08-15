@@ -19,5 +19,12 @@ check(mapOutreachState({ createdAt: T0, brandEvents: ['email.queued', 'email.del
 check(mapOutreachState({ createdAt: T0, brandEvents: ['email.bounced'], now: new Date('2026-08-15T01:00:00Z') }) === 'failed', 'bounce: failed');
 check(mapOutreachState({ createdAt: T0, brandEvents: [], now: new Date('2026-08-17T01:00:00Z') }) === 'failed', '48h ohne Versand: failed');
 
+// Reale event_type-Werte aus app/api/submit-request/route.ts (Sendezeitpunkt,
+// unpraefigiert -- siehe DeliveryResult['status']), nicht nur die
+// email.*-Werte des Resend-Webhooks.
+check(mapOutreachState({ createdAt: T0, brandEvents: ['queued'], now: new Date('2026-08-15T01:00:00Z') }) === 'working', 'unpraefigiertes Sende-Event "queued" ohne Zustellung: working');
+check(mapOutreachState({ createdAt: T0, brandEvents: ['failed'], now: new Date('2026-08-15T01:00:00Z') }) === 'failed', 'unpraefigiertes Sende-Event "failed": failed');
+check(mapOutreachState({ createdAt: T0, brandEvents: ['not_configured'], now: new Date('2026-08-15T01:00:00Z') }) === 'failed', 'unpraefigiertes Sende-Event "not_configured": failed');
+
 if (errors.length) { errors.forEach((e) => console.error(' -', e)); process.exit(1); }
 console.log('OK: agent-layer Basisregeln');

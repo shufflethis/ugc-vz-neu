@@ -11,7 +11,17 @@ function gatewayError(code: string, message: string) {
 }
 
 // ---------- Lifecycle (pure, testbar) ----------
-const FAILURE_EVENTS = new Set(['email.bounced', 'email.failed', 'email.suppressed']);
+// Zwei Quellen fuer email_events.event_type bei audience='brand':
+// 1) Sendezeitpunkt (app/api/submit-request/route.ts persistInitialDelivery,
+//    DeliveryResult['status']): unpraefigiert -- 'queued' | 'failed' |
+//    'not_configured'. 'failed' und 'not_configured' sind beides
+//    Sende-Fehlschlaege ohne Aussicht auf einen spaeteren Webhook (bei
+//    'not_configured' wurde nie ein Versand versucht) und zaehlen deshalb als
+//    Failure. 'queued' ist kein Failure/Completed-Event und faellt bewusst
+//    durch auf den 'working'-Zweig unten.
+// 2) Resend-Webhook (app/api/webhooks/resend/route.ts persistEmailEvent):
+//    praefigiert mit 'email.'.
+const FAILURE_EVENTS = new Set(['failed', 'not_configured', 'email.bounced', 'email.failed', 'email.suppressed']);
 const COMPLETED_EVENTS = new Set(['email.delivered']);
 const STALE_MS = 48 * 60 * 60 * 1000;
 
@@ -89,6 +99,11 @@ export async function searchCreators(params: SearchCreatorsParams, ctx: SearchCr
   if (enriched.length) {
     const sql = getDatabase();
     const ids = enriched.map((c) => c.id);
+    // Dynamische Platzhalter statt ANY($1) -- gleiches Muster wie
+    // app/api/submit-request/route.ts:337 (fetchSelectedCreators), das
+    // einzige im Repo bereits gegen die echte Neon-Verbindung erprobte
+    // Mehrfach-ID-Query-Muster.
+    const placeholders = ids.map((_, index) => `$${index + 1}`).join(', ');
     const rows = await sql.query(
       `SELECT
          p.public_id,
@@ -104,8 +119,8 @@ export async function searchCreators(params: SearchCreatorsParams, ctx: SearchCr
        LEFT JOIN LATERAL (
          SELECT count(*)::int AS cnt FROM creator_social_accounts WHERE creator_id = p.id
        ) social ON true
-       WHERE p.public_id = ANY($1) AND p.status = 'active'`,
-      [ids],
+       WHERE p.public_id IN (${placeholders}) AND p.status = 'active'`,
+      ids,
     );
 
     const byId = new Map((rows as any[]).map((row) => [String(row.public_id), row]));
@@ -251,7 +266,8 @@ type RequestOutreachParams = {
 type RequestOutreachCtx = { origin: string; protocol: 'mcp' | 'a2a' };
 
 export async function requestOutreach(params: RequestOutreachParams, ctx: RequestOutreachCtx): Promise<{ requestId: string }> {
-  const creatorPublicIds = Array.isArray(params.creatorPublicIds) ? params.creatorPublicIds : [];
+  // Gleiche Deckelung wie app/a2a/route.ts:271 (submitCreatorRequest).
+  const creatorPublicIds = (Array.isArray(params.creatorPublicIds) ? params.creatorPublicIds : []).slice(0, 10);
   if (!creatorPublicIds.length || creatorPublicIds.some((id) => !CREATOR_PUBLIC_ID_RE.test(id))) {
     throw gatewayError('invalid_creator_public_ids', 'creatorPublicIds muss 1-10 gueltige UGC-IDs enthalten');
   }
@@ -265,16 +281,23 @@ export async function requestOutreach(params: RequestOutreachParams, ctx: Reques
     headers['x-api-key'] = process.env.SUBMIT_REQUEST_API_KEY;
   }
 
+  // Gleiche Feldlaengen wie app/a2a/route.ts:298-301 (submitCreatorRequest).
+  const brandName = String(params.brand.name || '').slice(0, 100);
+  const brandEmail = String(params.brand.email || '').slice(0, 120);
+  const defaultMessage = `${ctx.protocol.toUpperCase()} Agent Anfrage ueber UGC VZ`;
+  const brandMessageForApi = String(params.brand.message || defaultMessage).slice(0, 1000);
+  const brandSearchQuery = String(params.brand.searchQuery || '').slice(0, 500);
+
   const response = await fetch(`${ctx.origin}/api/submit-request`, {
     method: 'POST',
     headers,
     body: JSON.stringify({
       creatorIds: creatorPublicIds,
       clientInfo: {
-        name: params.brand.name,
-        email: params.brand.email,
-        message: params.brand.message || `${ctx.protocol.toUpperCase()} Agent Anfrage ueber UGC VZ`,
-        searchQuery: params.brand.searchQuery || '',
+        name: brandName,
+        email: brandEmail,
+        message: brandMessageForApi,
+        searchQuery: brandSearchQuery,
         sourcePath,
         sourceUrl: `${ctx.origin}${sourcePath}`,
       },
@@ -295,10 +318,10 @@ export async function requestOutreach(params: RequestOutreachParams, ctx: Reques
     requestId: leadId,
     protocol: ctx.protocol,
     creatorPublicIds: [...creatorPublicIds].sort(),
-    brandName: params.brand.name,
-    brandEmailHash: crypto.createHash('sha256').update(String(params.brand.email || '').toLowerCase()).digest('hex'),
-    message: params.brand.message || null,
-    searchQuery: params.brand.searchQuery || null,
+    brandName,
+    brandEmailHash: crypto.createHash('sha256').update(brandEmail.toLowerCase()).digest('hex'),
+    message: params.brand.message ? brandMessageForApi : null,
+    searchQuery: params.brand.searchQuery ? brandSearchQuery : null,
   };
   const payloadHash = canonicalHash(payload);
 
