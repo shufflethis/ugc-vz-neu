@@ -2,6 +2,19 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import {
+  Target,
+  Zap,
+  Wallet,
+  Rocket,
+  X,
+  Users,
+  Activity,
+  Sparkles,
+  XCircle,
+  CheckCircle2,
+  type LucideIcon,
+} from 'lucide-react';
 
 interface Section {
   id: string;
@@ -32,11 +45,11 @@ const sections: Section[] = [
   {
     id: 'why-works',
     title: 'Warum funktioniert das?',
-    content: 'Echte Datenbank, echte Results. 470+ echte UGC Creator, sortiert nach allem, was wichtig ist.'
+    content: 'Echte Datenbank, echte Ergebnisse. 470+ echte UGC Creator, sortiert nach allem, was wichtig ist.'
   },
   {
     id: 'for-brands',
-    title: 'Für Brands: Null Euro, maximale Results',
+    title: 'Für Brands: Null Euro, maximale Wirkung',
     content: 'Schluss mit Agentur-Gebühren. Andere verlangen 20-30% deines Kampagnen-Budgets. Wir? Null Euro.'
   },
   {
@@ -57,24 +70,24 @@ const sections: Section[] = [
   }
 ];
 
-const features = [
+const features: { icon: LucideIcon; title: string; description: string }[] = [
   {
-    icon: '🎯',
+    icon: Target,
     title: 'Präzise Matches',
     description: 'Creator, die zu deiner Brand passen'
   },
   {
-    icon: '⚡',
+    icon: Zap,
     title: 'In 5 Minuten',
     description: 'Schneller als jede Agentur'
   },
   {
-    icon: '💰',
+    icon: Wallet,
     title: 'Kostenlos',
     description: 'Keine versteckten Gebühren'
   },
   {
-    icon: '🚀',
+    icon: Rocket,
     title: 'Sofort starten',
     description: 'Heute suchen, morgen Content haben'
   }
@@ -145,19 +158,19 @@ export default function ContentCascade() {
                   <h4 className="text-2xl font-bold text-ink mb-4">Zeit ist Geld. Und du verschwendest beides.</h4>
                   <ul className="space-y-4 text-ink-soft">
                     <li className="flex items-start">
-                      <span className="text-red-400 mr-3 mt-1">✗</span>
+                      <X className="w-4 h-4 text-red-400 mr-3 mt-1 shrink-0" strokeWidth={2.5} aria-hidden="true" />
                       Stundenlang Profile durchklicken
                     </li>
                     <li className="flex items-start">
-                      <span className="text-red-400 mr-3 mt-1">✗</span>
+                      <X className="w-4 h-4 text-red-400 mr-3 mt-1 shrink-0" strokeWidth={2.5} aria-hidden="true" />
                       Fake-Follower aussortieren
                     </li>
                     <li className="flex items-start">
-                      <span className="text-red-400 mr-3 mt-1">✗</span>
+                      <X className="w-4 h-4 text-red-400 mr-3 mt-1 shrink-0" strokeWidth={2.5} aria-hidden="true" />
                       Creator anschreiben, die nie antworten
                     </li>
                     <li className="flex items-start">
-                      <span className="text-red-400 mr-3 mt-1">✗</span>
+                      <X className="w-4 h-4 text-red-400 mr-3 mt-1 shrink-0" strokeWidth={2.5} aria-hidden="true" />
                       Creator, die völlig falsch für deine Marke sind
                     </li>
                   </ul>
@@ -204,7 +217,7 @@ export default function ContentCascade() {
             {features.map((feature, index) => (
               <div key={index} className="group">
                 <div className="surface-card rounded-2xl p-8 hover:border-geo-violet/50 transition-all duration-300 hover:scale-105 hover:-translate-y-2 h-full">
-                  <div className="text-4xl mb-4">{feature.icon}</div>
+                  <feature.icon className="w-9 h-9 mb-4 text-geo-violet" strokeWidth={1.5} aria-hidden="true" />
                   <h4 className="text-xl font-bold text-ink mb-3">{feature.title}</h4>
                   <p className="text-ink-soft text-sm leading-relaxed">{feature.description}</p>
                 </div>
@@ -216,12 +229,12 @@ export default function ContentCascade() {
         {/* Categories Showcase */}
         <div className={`mb-24 transition-all duration-1000 delay-900 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
           <h3 className="text-4xl sm:text-5xl font-bold text-ink mb-12 text-center">
-            <span className="gradient-text">Echte Datenbank,</span> echte Results
+            <span className="gradient-text">Echte Datenbank,</span> echte Ergebnisse
           </h3>
 
           <div className="grid md:grid-cols-3 gap-8">
             <div className="surface-card rounded-2xl p-8">
-              <h4 className="text-2xl font-bold text-ink mb-6">🎯 Zielgruppe</h4>
+              <h4 className="text-2xl font-bold text-ink mb-6 flex items-center gap-3"><Users className="w-6 h-6 text-geo-violet shrink-0" strokeWidth={1.5} aria-hidden="true" />Zielgruppe</h4>
               <ul className="space-y-3 text-ink-soft">
                 <li>• Männer 18-25, 26-35, 36-50</li>
                 <li>• Frauen alle Altersgruppen</li>
@@ -230,7 +243,7 @@ export default function ContentCascade() {
             </div>
             
             <div className="surface-card rounded-2xl p-8">
-              <h4 className="text-2xl font-bold text-ink mb-6">🏃‍♂️ Lifestyle</h4>
+              <h4 className="text-2xl font-bold text-ink mb-6 flex items-center gap-3"><Activity className="w-6 h-6 text-geo-violet shrink-0" strokeWidth={1.5} aria-hidden="true" />Lifestyle</h4>
               <ul className="space-y-3 text-ink-soft">
                 <li>• Fitness-Freaks und Gym-Bros</li>
                 <li>• Wellness-Queens</li>
@@ -241,7 +254,7 @@ export default function ContentCascade() {
             </div>
             
             <div className="surface-card rounded-2xl p-8">
-              <h4 className="text-2xl font-bold text-ink mb-6">✨ Look & Style</h4>
+              <h4 className="text-2xl font-bold text-ink mb-6 flex items-center gap-3"><Sparkles className="w-6 h-6 text-geo-violet shrink-0" strokeWidth={1.5} aria-hidden="true" />Look &amp; Style</h4>
               <ul className="space-y-3 text-ink-soft">
                 <li>• Tätowiert oder clean</li>
                 <li>• Alternative oder mainstream</li>
@@ -267,7 +280,7 @@ export default function ContentCascade() {
 
             <div className="grid md:grid-cols-2 gap-12 mb-12">
               <div>
-                <h4 className="text-2xl font-bold text-geo-violet mb-6">❌ Influencer-Marketing 1.0</h4>
+                <h4 className="text-2xl font-bold text-geo-violet mb-6 flex items-center gap-3"><XCircle className="w-6 h-6 shrink-0" strokeWidth={1.5} aria-hidden="true" />Influencer-Marketing 1.0</h4>
                 <ul className="space-y-3 text-ink-soft text-left">
                   <li>• Mega-Influencer mit 0 Engagement</li>
                   <li>• Follower aus Bangladesch für deutsche Brands</li>
@@ -277,12 +290,12 @@ export default function ContentCascade() {
               </div>
 
               <div>
-                <h4 className="text-2xl font-bold text-green-deep mb-6">✅ UGC ist die Zukunft</h4>
+                <h4 className="text-2xl font-bold text-green-deep mb-6 flex items-center gap-3"><CheckCircle2 className="w-6 h-6 shrink-0" strokeWidth={1.5} aria-hidden="true" />UGC ist die Zukunft</h4>
                 <ul className="space-y-3 text-ink-soft text-left">
                   <li>• Authentisch statt gestellt</li>
                   <li>• Günstig statt teuer</li>
                   <li>• Zielgruppen-relevant statt Mainstream</li>
-                  <li>• Messbare Results statt Vanity-Metrics</li>
+                  <li>• Messbare Ergebnisse statt Vanity-Metrics</li>
                 </ul>
               </div>
             </div>

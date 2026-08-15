@@ -18,7 +18,7 @@ export default function UGCAgenturHamburgPage() {
           <p className="text-xl text-ink-soft max-w-3xl leading-relaxed mb-8">
             Wenn du UGC fuer Hamburg, Norddeutschland oder bundesweite Kampagnen suchst, kannst du zuerst passende Creator identifizieren und danach entscheiden, ob du Agentur-Support brauchst.
           </p>
-          <Link href="/brands?query=UGC%20Creator%20Hamburg" className="inline-flex bg-geo-violet hover:bg-geo-violet-soft text-white font-semibold py-3 px-6 rounded-lg">
+          <Link href="/brands#q=UGC+Creator+Hamburg" className="inline-flex bg-geo-violet hover:bg-geo-violet-soft text-white font-semibold py-3 px-6 rounded-lg">
             Creator fuer Hamburg suchen
           </Link>
         </section>

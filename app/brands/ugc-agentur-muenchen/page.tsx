@@ -18,7 +18,7 @@ export default function UGCAgenturMuenchenPage() {
           <p className="text-xl text-ink-soft max-w-3xl leading-relaxed mb-8">
             Fuer Muenchner Brands, DTC-Teams und Agenturen ist UGC VZ ein schneller Einstieg: Demand beschreiben, Creator-Vorschlaege ansehen und Kontaktinfos kostenlos anfragen.
           </p>
-          <Link href="/brands?query=UGC%20Creator%20Muenchen" className="inline-flex bg-geo-violet hover:bg-geo-violet-soft text-white font-semibold py-3 px-6 rounded-lg">
+          <Link href="/brands#q=UGC+Creator+Muenchen" className="inline-flex bg-geo-violet hover:bg-geo-violet-soft text-white font-semibold py-3 px-6 rounded-lg">
             Creator fuer Muenchen suchen
           </Link>
         </section>

@@ -62,6 +62,20 @@ export default function SearchBox({ initialQuery = '' }: SearchBoxProps) {
     toggleVoiceInput
   } = useVoiceRecognition(isIOSDeviceState, isMobileDeviceState, handleVoiceTranscript);
 
+  // Vorbefuellung ueber das Fragment (#q=...). Ein Fragment erzeugt fuer Crawler
+  // keine eigene URL, waehrend ein ?query=-Parameter eine Variante erzeugt, die
+  // auf /brands kanonisiert wird. Serverseitiges initialQuery hat Vorrang.
+  useEffect(() => {
+    if (initialQuery) return;
+    const hash = window.location.hash;
+    if (!hash.startsWith('#q=')) return;
+    try {
+      setSearchQuery(decodeURIComponent(hash.slice(3).replace(/\+/g, ' ')));
+    } catch {
+      // Ungueltige Prozent-Sequenz im Fragment: Vorbefuellung ueberspringen.
+    }
+  }, [initialQuery]);
+
   // Effect to adjust textarea height when content changes
   useEffect(() => {
     if (searchInputRef.current) {

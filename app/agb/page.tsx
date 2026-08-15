@@ -1,5 +1,7 @@
 'use client';
 
+import { Lightbulb, ClipboardList, Wallet, AlertTriangle } from 'lucide-react';
+
 import Image from 'next/image';
 import Link from 'next/link';
 import ResponsiveCTAButton from '@/src/components/ResponsiveCTAButton';
@@ -42,8 +44,8 @@ export default function AGBPage() {
 
           {/* Das Wichtigste in Kürze */}
           <div className="surface-card rounded-2xl p-6 md:p-8 mb-12">
-            <h2 className="text-2xl font-bold mb-4 flex items-center">
-              💡 Das Wichtigste in Kürze
+            <h2 className="text-2xl font-bold mb-4 flex items-center gap-3">
+              <Lightbulb className="w-6 h-6 shrink-0" strokeWidth={1.5} aria-hidden="true" />Das Wichtigste in Kürze
             </h2>
             <p className="text-ink-soft text-lg leading-relaxed">
               UGC-VZ ist und bleibt kostenlos! Wir sind eine reine Vermittlungsplattform, die Creator und Unternehmen zusammenbringt.
@@ -53,8 +55,8 @@ export default function AGBPage() {
 
           {/* Inhaltsverzeichnis */}
           <div className="surface-card rounded-2xl p-6 md:p-8 mb-12">
-            <h2 className="text-2xl font-bold mb-6 flex items-center text-ink">
-              📋 Inhaltsverzeichnis
+            <h2 className="text-2xl font-bold mb-6 flex items-center gap-3 text-ink">
+              <ClipboardList className="w-6 h-6 shrink-0" strokeWidth={1.5} aria-hidden="true" />Inhaltsverzeichnis
             </h2>
             <div className="grid md:grid-cols-2 gap-3">
               {[
@@ -123,8 +125,8 @@ export default function AGBPage() {
                 </div>
 
                 <div className="surface-card rounded-lg p-4">
-                  <h3 className="text-xl font-semibold mb-3 text-geo-violet flex items-center">
-                    💰 100% Kostenfrei
+                  <h3 className="text-xl font-semibold mb-3 text-geo-violet flex items-center gap-2">
+                    <Wallet className="w-5 h-5 shrink-0" strokeWidth={1.5} aria-hidden="true" />100% Kostenfrei
                   </h3>
                   <p className="text-ink-soft">
                     Die Nutzung von UGC-VZ ist für alle Parteien vollständig kostenfrei.
@@ -195,8 +197,8 @@ export default function AGBPage() {
                 </div>
 
                 <div className="bg-yellow-900/20 rounded-lg p-4 border border-yellow-500/30">
-                  <h3 className="text-xl font-semibold mb-3 text-yellow-400 flex items-center">
-                    ⚠️ Eigenverantwortung
+                  <h3 className="text-xl font-semibold mb-3 text-yellow-400 flex items-center gap-2">
+                    <AlertTriangle className="w-5 h-5 shrink-0" strokeWidth={1.5} aria-hidden="true" />Eigenverantwortung
                   </h3>
                   <p className="text-ink-soft">
                     Alle Nutzer handeln in eigener Verantwortung. Verträge, Preisverhandlungen und Zahlungen

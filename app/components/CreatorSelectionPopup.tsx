@@ -1,5 +1,7 @@
 'use client';
 
+import { PartyPopper } from 'lucide-react';
+
 import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { trackUGCEvents } from '../lib/analytics';
@@ -275,7 +277,7 @@ export default function CreatorSelectionPopup({
                   <div className="space-y-6">
                     <div className="text-center">
                       <h4 className="text-xl font-bold text-ink mb-2">
-                        Fast geschafft! 🎉
+                        Fast geschafft! <PartyPopper className="inline-block w-5 h-5 ml-1 align-[-3px]" strokeWidth={1.5} aria-hidden="true" />
                       </h4>
                       <p className="text-ink-soft text-sm">
                         Tragen Sie Ihre E-Mail ein. Die ausgewählten Kontakte und Preisangaben werden automatisch versendet.

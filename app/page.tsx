@@ -10,6 +10,31 @@ import TrustElements from './components/TrustElements';
 import ContentCascade from './components/ContentCascade';
 import HomePageSchema from './components/HomePageSchema';
 
+/**
+ * Check-Icon als Inline-SVG. Diese Seite ist eine Server Component;
+ * lucide-react nutzt forwardRef und laesst sich hier nicht einbinden.
+ * Pfad und Strichfuehrung entsprechen exakt lucide "check", damit die
+ * Optik zu den Icons in den Client-Komponenten passt.
+ */
+function CheckIcon({ className = '' }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2.5}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M20 6 9 17l-5-5" />
+    </svg>
+  );
+}
+
 export default function Home() {
   return (
     <div className="min-h-screen bg-white flex flex-col">
@@ -166,15 +191,15 @@ export default function Home() {
                 </p>
                 <ul className="text-ink-soft space-y-2">
                   <li className="flex items-start">
-                    <span className="text-green-deep mr-2">✓</span>
+                    <CheckIcon className="text-green-deep mr-2 mt-1 shrink-0" />
                     <span>Kostenlose Registrierung für Creator</span>
                   </li>
                   <li className="flex items-start">
-                    <span className="text-green-deep mr-2">✓</span>
+                    <CheckIcon className="text-green-deep mr-2 mt-1 shrink-0" />
                     <span>Direkte Bezahlung durch Unternehmen</span>
                   </li>
                   <li className="flex items-start">
-                    <span className="text-green-deep mr-2">✓</span>
+                    <CheckIcon className="text-green-deep mr-2 mt-1 shrink-0" />
                     <span>Flexible Projekte nach deinem Zeitplan</span>
                   </li>
                 </ul>
@@ -189,15 +214,15 @@ export default function Home() {
                 </p>
                 <ul className="text-ink-soft space-y-2">
                   <li className="flex items-start">
-                    <span className="text-green-deep mr-2">✓</span>
+                    <CheckIcon className="text-green-deep mr-2 mt-1 shrink-0" />
                     <span>Höhere Conversion durch Authentizität</span>
                   </li>
                   <li className="flex items-start">
-                    <span className="text-green-deep mr-2">✓</span>
+                    <CheckIcon className="text-green-deep mr-2 mt-1 shrink-0" />
                     <span>Kosteneffizient im Vergleich zu Influencern</span>
                   </li>
                   <li className="flex items-start">
-                    <span className="text-green-deep mr-2">✓</span>
+                    <CheckIcon className="text-green-deep mr-2 mt-1 shrink-0" />
                     <span>Direkter Kontakt ohne Agentur-Gebühren</span>
                   </li>
                 </ul>
