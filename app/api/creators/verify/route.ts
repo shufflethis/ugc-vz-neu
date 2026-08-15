@@ -2,6 +2,7 @@ import crypto from 'node:crypto';
 import { NextResponse } from 'next/server';
 import { Resend } from 'resend';
 import { getDatabase, isDatabaseConfigured } from '@/app/lib/database';
+import { buildCreatorWelcomeEmail } from '@/app/lib/creator-welcome-email';
 import {
   calculateReach,
   normalizeWebUrls,
@@ -209,6 +210,32 @@ export async function GET(request: Request) {
         ],
       }, { idempotencyKey: `ugc-vz/creator-verified/${submission.id}` });
       if (result.error) console.error('Internal creator registration email rejected', result.error.name);
+    }
+
+    // Willkommensmail an den Creator. Bewusst hier und nicht in der
+    // Double-Opt-In-Mail: die muss transaktional bleiben. Ein Fehlschlag darf
+    // die Verifizierung nicht kippen - das Profil ist zu diesem Zeitpunkt
+    // bereits aktiv.
+    if (process.env.RESEND_API_KEY) {
+      try {
+        const resend = new Resend(process.env.RESEND_API_KEY);
+        const welcome = buildCreatorWelcomeEmail({ name: displayName, publicId });
+        const welcomeResult = await resend.emails.send({
+          from: process.env.RESEND_FROM || 'UGC VZ <hi@ugc-vz.de>',
+          to: email,
+          subject: welcome.subject,
+          html: welcome.html,
+          text: welcome.text,
+          tags: [
+            { name: 'category', value: 'creator_welcome' },
+            { name: 'audience', value: 'creator' },
+            { name: 'creator_id', value: publicId },
+          ],
+        }, { idempotencyKey: `ugc-vz/creator-welcome/${submission.id}` });
+        if (welcomeResult.error) console.error('Creator welcome email rejected', welcomeResult.error.name);
+      } catch (welcomeError) {
+        console.error('Creator welcome email failed', welcomeError instanceof Error ? welcomeError.message : 'unknown error');
+      }
     }
 
     return redirectToCreator(request, 'verified');
