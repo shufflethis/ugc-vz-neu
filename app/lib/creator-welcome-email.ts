@@ -6,11 +6,12 @@
  * Bestaetigungsmail und damit angreifbar. Diese Mail geht erst nach der
  * Bestaetigung raus, wenn das Profil tatsaechlich aktiv ist.
  *
- * Inhaltlich der Schwerpunkt: Der Hinweis geht an *Marken*, nicht an andere
- * Creator. Ein Creator kennt vor allem andere Creator — das vertieft das
- * Verzeichnis, bringt aber keine Nachfrage. Marken, mit denen der Creator
- * ohnehin spricht, sind der direkte Weg dorthin, und es nuetzt ihm selbst,
- * weil diese Marke ihn dann buchen kann.
+ * Zwei Empfehlungswege, bewusst in dieser Reihenfolge. Zuerst andere Creator:
+ * "Hier ist es kostenlos" ist ein Satz, den man beilaeufig weitergibt, und der
+ * Creator-Pool ist die schwaechste Spalte im Anbietervergleich (470 gegenueber
+ * 10.000 bis 140.000). Danach Marken: hoehere Huerde, weil es ein beruflicher
+ * Akt ist, dafuer direkt auf der Nachfrageseite - und es nuetzt dem Creator
+ * selbst, weil die Marke ihn ueber das Verzeichnis buchen kann.
  *
  * Kein Aufruf zu Backlinks: incentivierte und massenhaft gleichfoermige Links
  * zaehlen bei Google zu den Link-Schemes, der Ertrag waere gering und das
@@ -30,6 +31,8 @@ const escapeHtml = (value: string) => value
  * Hauptseite und erzeugt kein Indexierungsproblem.
  */
 export const CREATOR_REFERRAL_URL = 'https://ugc-vz.de/brands?ref=creator-empfehlung';
+/** Weiterempfehlung an andere Creator - eigener ref-Wert, damit sich beide Wege getrennt messen lassen. */
+export const CREATOR_INVITE_URL = 'https://ugc-vz.de/creator?ref=creator-einladung';
 
 export const buildCreatorWelcomeEmail = ({
   name,
@@ -65,13 +68,14 @@ export const buildCreatorWelcomeEmail = ({
             </div>
 
             <div style="margin:26px 0 0;padding:20px 20px;border-radius:12px;background:#f4effa;border:1px solid #e0d2f2;">
-              <div style="font-size:17px;line-height:25px;font-weight:800;color:#21172a;">Kennst du eine Marke, die gerade Creator sucht?</div>
-              <p style="margin:10px 0 0;font-size:15px;line-height:24px;color:#5f5666;">Je mehr Marken das Verzeichnis nutzen, desto mehr Anfragen kommen bei allen Creatorn an — auch bei dir. Wenn du also gerade mit einer Marke im Gespräch bist oder eine kennst, die Content braucht: Schick ihr den Link. Die Suche ist für Marken kostenlos, und sie kann dich dort direkt finden.</p>
+              <div style="font-size:17px;line-height:25px;font-weight:800;color:#21172a;">Sag es weiter: Hier ist es kostenlos</div>
+              <p style="margin:10px 0 0;font-size:15px;line-height:24px;color:#5f5666;">Kennst du andere Creator, die noch nach Aufträgen suchen? Schick ihnen den Link. Anmeldung, Profil und Vermittlung kosten nichts, und es gibt keine Provision auf das Honorar. Je größer und vielfältiger das Verzeichnis wird, desto eher finden Marken hier, was sie suchen — und desto mehr Anfragen kommen bei allen an.</p>
               <table role="presentation" cellspacing="0" cellpadding="0" style="margin:18px 0 0;">
                 <tr><td style="border-radius:10px;background:#8b3fca;">
-                  <a href="${CREATOR_REFERRAL_URL}" style="display:inline-block;padding:13px 22px;color:#ffffff;text-decoration:none;font-size:15px;font-weight:800;">Link für Marken weitergeben</a>
+                  <a href="${CREATOR_INVITE_URL}" style="display:inline-block;padding:13px 22px;color:#ffffff;text-decoration:none;font-size:15px;font-weight:800;">Anderen Creatorn weiterleiten</a>
                 </td></tr>
               </table>
+              <p style="margin:16px 0 0;padding-top:14px;border-top:1px solid #e0d2f2;font-size:14px;line-height:22px;color:#5f5666;">Und falls du gerade mit einer Marke im Gespräch bist, die Content braucht: <a href="${CREATOR_REFERRAL_URL}" style="color:#8b3fca;font-weight:700;">Die Creator-Suche</a> ist für Marken ebenfalls kostenlos — und sie kann dich darüber direkt finden.</p>
             </div>
 
             <p style="margin:26px 0 0;font-size:14px;line-height:22px;color:#7a717f;">Du willst etwas an deinem Profil ändern oder es löschen lassen? Antworte einfach auf diese E-Mail.</p>
@@ -89,11 +93,14 @@ dein Profil ${publicId} ist bestätigt und aktiv. Ab jetzt kann es Marken vorges
 Wie es weitergeht:
 Marken beschreiben ihre Kampagne, wir schlagen passende Profile vor. Erst wenn eine Marke dich bewusst auswählt, geben wir deine Kontaktdaten weiter. In der öffentlichen Suche stehen sie nie. Für dich bleibt das kostenlos, und wir nehmen keine Provision auf dein Honorar.
 
-Kennst du eine Marke, die gerade Creator sucht?
-Je mehr Marken das Verzeichnis nutzen, desto mehr Anfragen kommen bei allen Creatorn an — auch bei dir. Wenn du gerade mit einer Marke im Gespräch bist oder eine kennst, die Content braucht, schick ihr diesen Link:
-${CREATOR_REFERRAL_URL}
+Sag es weiter: Hier ist es kostenlos
+Kennst du andere Creator, die noch nach Aufträgen suchen? Schick ihnen diesen Link:
+${CREATOR_INVITE_URL}
 
-Die Suche ist für Marken kostenlos, und sie kann dich dort direkt finden.
+Anmeldung, Profil und Vermittlung kosten nichts, und es gibt keine Provision auf das Honorar. Je größer und vielfältiger das Verzeichnis wird, desto eher finden Marken hier, was sie suchen - und desto mehr Anfragen kommen bei allen an.
+
+Und falls du gerade mit einer Marke im Gespräch bist, die Content braucht: Die Creator-Suche ist für Marken ebenfalls kostenlos, und sie kann dich darüber direkt finden:
+${CREATOR_REFERRAL_URL}
 
 Du willst etwas an deinem Profil ändern oder es löschen lassen? Antworte einfach auf diese E-Mail.
 
