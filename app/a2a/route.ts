@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { ugcVzAgentCard } from '@/app/lib/a2a-agent-card';
+import { getCreator, getOutreachStatus, requestOutreach } from '@/app/lib/agent-gateway';
 
 export const dynamic = 'force-dynamic';
 
@@ -280,45 +281,34 @@ async function submitCreatorRequest(request: Request, params: any, access: Agent
   }
 
   const origin = getOrigin(request);
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    Referer: `${origin}/brands?source=a2a`,
-  };
 
-  if (process.env.SUBMIT_REQUEST_API_KEY) {
-    headers['x-api-key'] = process.env.SUBMIT_REQUEST_API_KEY;
-  }
-
-  const response = await fetch(`${origin}/api/submit-request`, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({
-      creatorIds,
-      clientInfo: {
-        name: String(clientInfo.name).slice(0, 100),
-        email: String(clientInfo.email).slice(0, 120),
-        message: String(clientInfo.message || 'A2A Agent Anfrage ueber UGC VZ').slice(0, 1000),
-        searchQuery: String(clientInfo.searchQuery || params?.searchQuery || '').slice(0, 500),
-        sourcePath: '/a2a',
-        sourceUrl: `${origin}/a2a`,
+  // Additiv: der eigentliche Outreach-Aufruf laeuft jetzt durch das Gateway
+  // statt eines eigenen internen fetch auf /api/submit-request, damit
+  // agent_request_id/brief_hash/lead_agent_events auch fuer A2A geschrieben
+  // werden (siehe app/lib/agent-gateway.ts requestOutreach). Die Quota-/
+  // Auth-Pruefung oben (assertPaidAccess) bleibt unveraendert davor stehen.
+  const { requestId } = await requestOutreach(
+    {
+      creatorPublicIds: creatorIds,
+      brand: {
+        name: clientInfo.name,
+        email: clientInfo.email,
+        message: clientInfo.message,
+        searchQuery: clientInfo.searchQuery || params?.searchQuery,
       },
-    }),
-  });
-
-  const data = await response.json();
-  if (!response.ok || !data.success) {
-    throw new Error(data.error || data.message || 'Submit request failed');
-  }
+    },
+    { origin, protocol: 'a2a' },
+  );
 
   return {
     success: true,
+    taskId: requestId,
     billing: {
       tier: access.tier,
       note: 'Creator-Anfragen sind fuer bezahlte A2A Keys freigeschaltet. Suchlimits werden nur bei ugc.search_creators verbraucht.',
     },
     note:
-      'Brand-Anfrage erstellt. Die Brand bekommt die verfuegbaren Kontaktinfos per E-Mail. Creator werden nicht ungeprueft automatisiert angeschrieben.',
-    upstream: data,
+      'Brand-Anfrage erstellt. Die Brand bekommt die verfuegbaren Kontaktinfos per E-Mail. Creator werden nicht ungeprueft automatisiert angeschrieben. Status per tasks/get (taskId) abrufbar.',
   };
 }
 
@@ -359,11 +349,28 @@ export async function POST(request: Request) {
       const result = await submitCreatorRequest(request, body.params || {}, access);
       return jsonRpcResult(id, {
         task: {
-          id: `ugc-request-${Date.now()}`,
+          // Identisch mit result.taskId (= requestId aus dem Gateway), damit
+          // dieser Task ueber tasks/get nachschlagbar ist, statt einer
+          // unaufloesbaren Pseudo-ID.
+          id: result.taskId,
           status: { state: 'completed' },
           artifacts: [{ name: 'creator-request', mimeType: 'application/json', data: result }],
         },
       });
+    }
+
+    if (method === 'tasks/get' || method === 'ugc.get_outreach_status') {
+      const requestId = String(body.params?.taskId || body.params?.requestId || '');
+      const status = await getOutreachStatus(requestId);
+      return jsonRpcResult(id, {
+        id: status.requestId,
+        status: { state: status.state, timestamp: status.updatedAt },
+        kind: 'task',
+      });
+    }
+
+    if (method === 'ugc.get_creator' || method === 'creator_get') {
+      return jsonRpcResult(id, await getCreator(String(body.params?.publicId || body.params?.id || '')));
     }
 
     if (method === 'agent.card' || method === 'agent/getCard') {
@@ -371,7 +378,17 @@ export async function POST(request: Request) {
     }
 
     return jsonRpcError(id, -32601, 'Method not found', {
-      supportedMethods: ['ugc.search_creators', 'ugc.submit_creator_request', 'message/send', 'tasks/send', 'agent.card'],
+      supportedMethods: [
+        'ugc.search_creators',
+        'ugc.submit_creator_request',
+        'ugc.get_creator',
+        'ugc.get_outreach_status',
+        'creator_get',
+        'tasks/get',
+        'message/send',
+        'tasks/send',
+        'agent.card',
+      ],
     });
   } catch (error: any) {
     if (error.code === 'PAYMENT_REQUIRED') {
@@ -380,6 +397,20 @@ export async function POST(request: Request) {
 
     if (error.code === 'QUOTA_EXCEEDED') {
       return jsonRpcError(id, -32002, error.message, error.data, 429);
+    }
+
+    // Gateway-Fehler (app/lib/agent-gateway.ts gatewayError): not_found fuer
+    // unbekannte requestId/publicId, invalid_* fuer Formatfehler. -32001 ist
+    // hier zugleich A2A-Standardcode fuer TaskNotFoundError (HTTP 404) --
+    // kollidiert numerisch mit dem bestehenden PAYMENT_REQUIRED-Code oben,
+    // der aus einem hausgemachten Schema stammt und nicht angetastet wird
+    // (siehe Report, Concerns).
+    if (error.code === 'not_found') {
+      return jsonRpcError(id, -32001, error.message, undefined, 404);
+    }
+
+    if (error.code === 'invalid_public_id' || error.code === 'invalid_creator_public_ids') {
+      return jsonRpcError(id, -32602, error.message, undefined, 400);
     }
 
     return jsonRpcError(id, -32000, error.message || 'A2A request failed', undefined, 500);

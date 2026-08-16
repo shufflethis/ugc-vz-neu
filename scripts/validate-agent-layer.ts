@@ -1,6 +1,7 @@
 import { deriveVerificationLevel, VERIFICATION_LEVELS } from '../app/lib/agent-verification';
 import { mapOutreachState } from '../app/lib/agent-gateway';
 import { MCP_TOOLS } from '../app/lib/agent-tools';
+import { ugcVzAgentCard } from '../app/lib/a2a-agent-card';
 
 const errors: string[] = [];
 const check = (cond: boolean, msg: string) => { if (!cond) errors.push(msg); };
@@ -52,3 +53,26 @@ for (const tool of MCP_TOOLS) {
 
 if (registryErrors.length) { registryErrors.forEach((e) => console.error(' -', e)); process.exit(1); }
 console.log('OK: mcp tool registry');
+
+// ---------- A2A Agent Card (app/lib/a2a-agent-card.ts) ----------
+const cardErrors: string[] = [];
+const checkCard = (cond: boolean, msg: string) => { if (!cond) cardErrors.push(msg); };
+
+const EXPECTED_SKILL_IDS = ['creator_search', 'creator_get', 'outreach_request'];
+
+checkCard(ugcVzAgentCard.protocolVersion === '1.0', `protocolVersion muss '1.0' sein, ist ${JSON.stringify(ugcVzAgentCard.protocolVersion)}`);
+checkCard(
+  Array.isArray(ugcVzAgentCard.skills) && ugcVzAgentCard.skills.length === 3,
+  `skills muss genau 3 Eintraege haben, hat ${ugcVzAgentCard.skills?.length ?? 0}`,
+);
+checkCard(
+  JSON.stringify(ugcVzAgentCard.skills.map((s) => s.id)) === JSON.stringify(EXPECTED_SKILL_IDS),
+  `skills-IDs muessen exakt ${JSON.stringify(EXPECTED_SKILL_IDS)} sein, sind ${JSON.stringify(ugcVzAgentCard.skills.map((s) => s.id))}`,
+);
+checkCard(
+  ugcVzAgentCard.capabilities.stateTransitionHistory === false,
+  'capabilities.stateTransitionHistory muss false sein, bis lead_agent_events die Historie wirklich liefert',
+);
+
+if (cardErrors.length) { cardErrors.forEach((e) => console.error(' -', e)); process.exit(1); }
+console.log('OK: a2a agent card');
