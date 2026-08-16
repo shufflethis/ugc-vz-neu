@@ -1,5 +1,6 @@
 import { deriveVerificationLevel, VERIFICATION_LEVELS } from '../app/lib/agent-verification';
 import { mapOutreachState } from '../app/lib/agent-gateway';
+import { MCP_TOOLS } from '../app/lib/agent-tools';
 
 const errors: string[] = [];
 const check = (cond: boolean, msg: string) => { if (!cond) errors.push(msg); };
@@ -28,3 +29,26 @@ check(mapOutreachState({ createdAt: T0, brandEvents: ['not_configured'], now: ne
 
 if (errors.length) { errors.forEach((e) => console.error(' -', e)); process.exit(1); }
 console.log('OK: agent-layer Basisregeln');
+
+// ---------- MCP-Tool-Registry (app/lib/agent-tools.ts) ----------
+const registryErrors: string[] = [];
+const checkRegistry = (cond: boolean, msg: string) => { if (!cond) registryErrors.push(msg); };
+
+const EXPECTED_TOOL_NAMES = ['search_creators', 'get_creator', 'request_outreach', 'get_outreach_status', 'get_vocab'];
+
+checkRegistry(MCP_TOOLS.length === 5, `MCP_TOOLS muss genau 5 Tools enthalten, hat ${MCP_TOOLS.length}`);
+checkRegistry(
+  JSON.stringify(MCP_TOOLS.map((t) => t.name)) === JSON.stringify(EXPECTED_TOOL_NAMES),
+  `MCP_TOOLS-Namen muessen exakt ${JSON.stringify(EXPECTED_TOOL_NAMES)} sein, sind ${JSON.stringify(MCP_TOOLS.map((t) => t.name))}`,
+);
+for (const tool of MCP_TOOLS) {
+  checkRegistry(
+    typeof tool.description === 'string' && tool.description.length >= 200,
+    `Description von "${tool.name}" muss mindestens 200 Zeichen haben, hat ${tool.description?.length ?? 0}`,
+  );
+  checkRegistry(typeof tool.inputSchema === 'object' && tool.inputSchema !== null, `"${tool.name}" braucht ein inputSchema`);
+  checkRegistry(typeof tool.handler === 'function', `"${tool.name}" braucht einen Handler`);
+}
+
+if (registryErrors.length) { registryErrors.forEach((e) => console.error(' -', e)); process.exit(1); }
+console.log('OK: mcp tool registry');
