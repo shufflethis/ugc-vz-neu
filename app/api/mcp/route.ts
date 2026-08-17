@@ -14,7 +14,7 @@
 // -- diese API existiert in 2.1.1 nicht mehr. Siehe
 // .superpowers/sdd/2026-08-15-agent-layer/task-3-report.md fuer den vollen
 // Befund und die Controller-Entscheidung fuer 2.x.
-import { createMcpHandler, getPublicOrigin } from 'mcp-handler';
+import { createMcpHandler } from 'mcp-handler';
 import { MCP_TOOLS } from '@/app/lib/agent-tools';
 import { verifyWebBotAuth, checkRateLimit, peekRateLimit, getRateLimitKey } from '@/app/lib/web-bot-auth';
 
@@ -46,9 +46,20 @@ const handler = createMcpHandler(
         },
         async (args, ctx) => {
           const req = ctx.http?.req;
-          // getPublicOrigin (aus mcp-handler) statt eigener Header-Auswertung
-          // -- respektiert X-Forwarded-Host/-Proto hinter einem Proxy/Vercel.
-          const origin = req ? getPublicOrigin(req) : FALLBACK_ORIGIN;
+          // Blocker 2 (Fix-Wave-Review): NICHT mehr getPublicOrigin() aus
+          // mcp-handler -- die vertraut X-Forwarded-Host/-Proto, die ein
+          // Client beliebig setzen kann. Diese Origin bestimmt, wohin
+          // requestOutreach() (app/lib/agent-gateway.ts) den internen Fetch
+          // inkl. SUBMIT_REQUEST_API_KEY schickt -- ein manipulierter
+          // Forwarded-Host wuerde diesen Key an einen fremden Host senden.
+          // Gleiches Muster wie app/a2a/route.ts:184 (getOrigin): new
+          // URL(request.url).origin ist auf Vercel plattformgebunden (Next.js
+          // setzt die Request-URL selbst korrekt), nicht aus einem vom Client
+          // kontrollierbaren Header abgeleitet. AGENT_INTERNAL_ORIGIN als
+          // expliziter Override, falls eine Deployment-Umgebung das je
+          // braucht; FALLBACK_ORIGIN bleibt der letzte Ausweg fuer den
+          // (praktisch nie eintretenden) Fall ohne ctx.http.req.
+          const origin = process.env.AGENT_INTERNAL_ORIGIN || (req ? new URL(req.url).origin : FALLBACK_ORIGIN);
           const requestId = `mcp:${String(ctx.mcpReq.id)}`;
           return tool.handler(args, { origin, requestId });
         },

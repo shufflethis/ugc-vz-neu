@@ -63,7 +63,7 @@ const SEARCH_CREATORS_DESCRIPTION = [
 
 const searchCreatorsSchema = z.object({
   query: z.string().min(3).max(500),
-  maxResults: z.number().int().min(1).max(10).optional(),
+  max_results: z.number().int().min(1).max(10).optional(),
   city: z.string().max(80).optional(),
   topics: z.array(z.string().max(60)).max(10).optional(),
   human_verification_level_min: z.number().int().min(0).max(2).optional(),
@@ -144,7 +144,7 @@ export const MCP_TOOLS: McpToolDefinition[] = [
         const result = await searchCreators(
           {
             query: args.query,
-            maxResults: args.maxResults,
+            maxResults: args.max_results,
             city: args.city,
             topics: args.topics,
             humanVerificationLevelMin: args.human_verification_level_min,

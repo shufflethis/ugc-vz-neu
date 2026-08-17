@@ -194,7 +194,6 @@ export async function getCreator(publicId: string) {
        p.reach_text,
        p.total_reach,
        p.profile_image_url,
-       p.profile_quality_score,
        COALESCE(social.accounts, '[]'::json) AS socials,
        COALESCE(portfolio.items, '[]'::json) AS portfolio
      FROM creator_profiles p
@@ -250,10 +249,37 @@ export async function getCreator(publicId: string) {
     reach_text: row.reach_text,
     total_reach: row.total_reach,
     profile_image_url: row.profile_image_url,
-    profile_quality_score: row.profile_quality_score,
     socials,
     portfolio,
     humanVerification: { level: verification.level, name: verification.name },
+  };
+}
+
+// ---------- mapFlatOutreachParams ----------
+// Blocker 1b (Fix-Wave-Review): die A2A-Card wirbt fuer
+// /api/agent-schemas/request_outreach.json (MCP-foermig, flach):
+// {name, email, message?, search_query?, creator_public_ids}.
+// ugc.submit_creator_request akzeptierte bisher nur die verschachtelte Form
+// {creatorIds, clientInfo:{...}}. Reine Mapping-Funktion (kein I/O), damit
+// sie env-frei in scripts/validate-agent-layer.ts pruefbar ist. Greift nur,
+// wenn creator_public_ids vorhanden UND creatorIds abwesend ist -- die
+// bestehende verschachtelte Form gewinnt sonst unveraendert (kein
+// stillschweigendes Ueberschreiben, falls ein Aufrufer beide Formen mischt).
+export function mapFlatOutreachParams(
+  params: any,
+): { creatorIds: unknown; clientInfo: Record<string, unknown> } | null {
+  if (!params || typeof params !== 'object') return null;
+  if (params.creatorIds !== undefined) return null;
+  if (!Array.isArray(params.creator_public_ids)) return null;
+
+  return {
+    creatorIds: params.creator_public_ids,
+    clientInfo: {
+      name: params.name,
+      email: params.email,
+      message: params.message,
+      searchQuery: params.search_query,
+    },
   };
 }
 

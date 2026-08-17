@@ -1,6 +1,6 @@
 import { generateKeyPairSync, sign as cryptoSign } from 'node:crypto';
 import { deriveVerificationLevel, VERIFICATION_LEVELS } from '../app/lib/agent-verification';
-import { mapOutreachState } from '../app/lib/agent-gateway';
+import { mapOutreachState, mapFlatOutreachParams } from '../app/lib/agent-gateway';
 import { MCP_TOOLS, AGENT_SCHEMAS } from '../app/lib/agent-tools';
 import { ugcVzAgentCard } from '../app/lib/a2a-agent-card';
 import { verifyWebBotAuth, checkRateLimit, peekRateLimit, getRateLimitKey, __internals } from '../app/lib/web-bot-auth';
@@ -36,6 +36,54 @@ check(mapOutreachState({ createdAt: T0, brandEvents: ['not_configured'], now: ne
 
 if (errors.length) { errors.forEach((e) => console.error(' -', e)); process.exit(1); }
 console.log('OK: agent-layer Basisregeln');
+
+// ---------- mapFlatOutreachParams (Blocker 1b, Fix-Wave-Review) ----------
+// Reine Mapping-Funktion in app/lib/agent-gateway.ts: bildet die flache,
+// vom A2A-Card beworbene request_outreach.json-Form
+// {name, email, message?, search_query?, creator_public_ids} auf die intern
+// erwartete verschachtelte Form {creatorIds, clientInfo} ab -- nur, wenn
+// creator_public_ids vorhanden UND creatorIds abwesend ist.
+const flatErrors: string[] = [];
+const checkFlat = (cond: boolean, msg: string) => { if (!cond) flatErrors.push(msg); };
+
+const flatMapped = mapFlatOutreachParams({
+  name: 'Brand Name',
+  email: 'marketing@example.com',
+  message: 'Kampagnenbriefing',
+  search_query: 'Fitness Creator',
+  creator_public_ids: ['UGC-AB12CD34EF'],
+});
+checkFlat(flatMapped !== null, 'flache Form (creator_public_ids ohne creatorIds) muss gemappt werden');
+if (flatMapped) {
+  checkFlat(JSON.stringify(flatMapped.creatorIds) === JSON.stringify(['UGC-AB12CD34EF']), `creatorIds falsch gemappt: ${JSON.stringify(flatMapped.creatorIds)}`);
+  checkFlat(
+    JSON.stringify(flatMapped.clientInfo) === JSON.stringify({
+      name: 'Brand Name',
+      email: 'marketing@example.com',
+      message: 'Kampagnenbriefing',
+      searchQuery: 'Fitness Creator',
+    }),
+    `clientInfo falsch gemappt: ${JSON.stringify(flatMapped.clientInfo)}`,
+  );
+}
+
+checkFlat(
+  mapFlatOutreachParams({ creatorIds: ['UGC-AB12CD34EF'], clientInfo: { name: 'x', email: 'y@z.de' } }) === null,
+  'bestehende verschachtelte Form (creatorIds vorhanden) darf NICHT gemappt werden',
+);
+checkFlat(
+  mapFlatOutreachParams({
+    creatorIds: ['UGC-EXISTING'],
+    clientInfo: { name: 'x', email: 'y@z.de' },
+    creator_public_ids: ['UGC-SHOULD-BE-IGNORED'],
+  }) === null,
+  'bei gemischter Uebergabe (beide Formen) muss die verschachtelte Form gewinnen (kein Mapping)',
+);
+checkFlat(mapFlatOutreachParams({ name: 'x', email: 'y@z.de' }) === null, 'ohne creator_public_ids und ohne creatorIds darf nicht gemappt werden (kein Array)');
+checkFlat(mapFlatOutreachParams(null) === null, 'null-Params duerfen nicht gemappt werden');
+
+if (flatErrors.length) { flatErrors.forEach((e) => console.error(' -', e)); process.exit(1); }
+console.log('OK: mapFlatOutreachParams (Blocker 1b)');
 
 // ---------- MCP-Tool-Registry (app/lib/agent-tools.ts) ----------
 const registryErrors: string[] = [];

@@ -1,6 +1,12 @@
 import { NextResponse } from 'next/server';
 import { ugcVzAgentCard } from '@/app/lib/a2a-agent-card';
-import { getCreator, getOutreachStatus, requestOutreach } from '@/app/lib/agent-gateway';
+import {
+  getCreator,
+  getOutreachStatus,
+  requestOutreach,
+  mapFlatOutreachParams,
+  searchCreators as gatewaySearchCreators,
+} from '@/app/lib/agent-gateway';
 import { verifyWebBotAuth, checkRateLimit, peekRateLimit, getRateLimitKey } from '@/app/lib/web-bot-auth';
 
 export const dynamic = 'force-dynamic';
@@ -227,38 +233,51 @@ async function searchCreators(request: Request, params: any, access: AgentAccess
     throw new Error('Missing query. Provide params.query or a text message.');
   }
 
+  // ---- Quota/Auth-Block: unveraendert, exakt an derselben Stelle wie vorher
+  // (Blocker 1c, Fix-Wave-Review) -- muss vor jedem Delegations-Aufruf stehen
+  // bleiben, sonst wuerde eine Suche das Kontingent umgehen. ----
   const quota = consumeSearchQuota(access);
 
   const origin = getOrigin(request);
-  const response = await fetch(`${origin}/api/search`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Request-ID': `a2a-${Date.now()}`,
-    },
-    body: JSON.stringify({ query }),
-  });
 
-  const data = await response.json();
-  if (!response.ok || !data.success) {
-    throw new Error(data.message || data.error || 'Creator search failed');
-  }
+  // Blocker 1c (Fix-Wave-Review): die Card wirbt fuer
+  // /api/agent-schemas/search_creators.json (city/topics/
+  // human_verification_level_min) -- die Route ignorierte diese Filter bisher
+  // still. Jetzt Delegation an dieselbe Gateway-Funktion, die auch MCP nutzt
+  // (app/lib/agent-gateway.ts searchCreators), statt eines eigenen
+  // fetch+Mapping-Blocks direkt auf /api/search. clampResults() bleibt VOR
+  // der Uebergabe angewandt: das Gateway selbst clamped 1-24 (MCP-Bereich),
+  // A2A ist mit 1-10 bereits live -- ungeclamped durchreichen wuerde die
+  // Obergrenze einer bereits ausgelieferten API stillschweigend anheben.
+  // params.maxResults (bestehender A2A-Parametername) hat Vorrang;
+  // params.max_results als Fallback, weil beide A2A- und MCP-Skill in der
+  // Card auf dasselbe abgeleitete Schema verweisen und dieses seit Finding 6
+  // max_results heisst -- ein Aufrufer, der sich strikt an das beworbene
+  // Schema haelt, darf nicht ins Leere laufen.
+  const maxResults = clampResults(params?.maxResults ?? params?.max_results);
 
-  const maxResults = clampResults(params?.maxResults);
-  const creators = (data.creators || []).slice(0, maxResults).map((creator: any) => ({
-    id: creator.id,
-    name: creator.name,
-    reach: creator.reach,
-    totalReach: creator.totalReach,
-    networks: creator.networks || [],
-    priceRange: creator.priceRange || '',
-  }));
+  // Robustheit gegen Fehlformen von aussen (kein zod auf A2A-Seite): ein
+  // falsch typisiertes topics/city/human_verification_level_min darf nach
+  // bereits verbrauchtem Kontingent (quota oben) nicht zu einem harten
+  // 500 im Gateway fuehren (dort z. B. params.topics.some(...) ohne
+  // Array-Pruefung).
+  const topics = Array.isArray(params?.topics)
+    ? params.topics.filter((t: unknown) => typeof t === 'string')
+    : undefined;
+  const city = typeof params?.city === 'string' ? params.city : undefined;
+  const rawLevel = params?.human_verification_level_min;
+  const humanVerificationLevelMin = Number.isInteger(rawLevel) ? rawLevel : undefined;
+
+  const result = await gatewaySearchCreators(
+    { query, maxResults, city, topics, humanVerificationLevelMin },
+    { origin, requestId: `a2a-${Date.now()}` },
+  );
 
   return {
-    query,
-    totalCount: data.totalCount || creators.length,
-    returnedCount: creators.length,
-    creators,
+    query: result.query,
+    totalCount: result.totalCount,
+    returnedCount: result.returnedCount,
+    creators: result.creators,
     billing: quota,
     policy:
       'A2A ist ein bezahlter Agent-Zugang. Ergebnisse enthalten Creator-Vorschlaege ohne private Kontaktinfos. Kontaktinfos werden erst nach bewusster Anfrage an die angegebene Brand-E-Mail gesendet.',
@@ -270,8 +289,17 @@ async function searchCreators(request: Request, params: any, access: AgentAccess
 async function submitCreatorRequest(request: Request, params: any, access: AgentAccess) {
   assertPaidAccess(access);
 
-  const creatorIds = Array.isArray(params?.creatorIds) ? params.creatorIds.slice(0, 10) : [];
-  const clientInfo = params?.clientInfo || {};
+  // Blocker 1b (Fix-Wave-Review): faellt nur ein, wenn creator_public_ids
+  // vorhanden UND creatorIds abwesend ist (siehe mapFlatOutreachParams) --
+  // die bestehende verschachtelte Form bleibt unveraendert der Standardpfad
+  // und gewinnt, falls beide Formen gemischt uebergeben werden. Die
+  // Deckelung/Validierung unten (slice(0, 10), email/name-Pflicht) greift in
+  // jedem Fall unveraendert, unabhaengig davon, welche Form reinkam.
+  const flatMapped = mapFlatOutreachParams(params);
+  const effectiveParams = flatMapped ?? params;
+
+  const creatorIds = Array.isArray(effectiveParams?.creatorIds) ? effectiveParams.creatorIds.slice(0, 10) : [];
+  const clientInfo = effectiveParams?.clientInfo || {};
 
   if (!creatorIds.length) {
     throw new Error('Missing creatorIds. Select at least one creator from ugc.search_creators first.');
@@ -417,7 +445,14 @@ export async function POST(request: Request) {
     }
 
     if (method === 'ugc.get_creator' || method === 'creator_get') {
-      return jsonRpcResult(id, await getCreator(String(body.params?.publicId || body.params?.id || '')));
+      // Blocker 1a (Fix-Wave-Review): die Card wirbt fuer
+      // /api/agent-schemas/get_creator.json (MCP-foermig: creator_public_id),
+      // die Route akzeptierte das bisher nicht -- creator_public_id ist jetzt
+      // gleichrangig zu den bestehenden Aliasen, keiner der bestehenden faellt weg.
+      return jsonRpcResult(
+        id,
+        await getCreator(String(body.params?.creator_public_id || body.params?.publicId || body.params?.id || '')),
+      );
     }
 
     if (method === 'agent.card' || method === 'agent/getCard') {
