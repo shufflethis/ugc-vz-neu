@@ -79,6 +79,12 @@ curl -s -X POST https://ugc-vz.de/api/mcp \
   -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2026-07-28","capabilities":{},"clientInfo":{"name":"probe","version":"0"}}}'
 ```
 
+Von Hand gebaute JSON-RPC-Bodies wie oben bringen kein `_meta`-Envelope mit, das ein
+echter 2026-07-28-Client automatisch mitschickt – der Server verhandelt in diesem Fall auf
+seinen höchsten Legacy-Wert herunter, die Antwort zeigt daher `"protocolVersion":"2025-11-25"`
+statt `2026-07-28`. Das ist erwartetes Negotiation-Verhalten, kein Fehler; reale MCP-Clients
+bauen dieses Envelope selbst und sprechen 2026-07-28 nativ.
+
 Werkzeug-Aufruf per curl (`get_vocab` – kein Auth, keine Nebenwirkung, gut zum Testen):
 
 ```bash
