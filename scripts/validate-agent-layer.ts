@@ -161,18 +161,19 @@ checkManifest(
   `ucp.version muss exakt '2026-04-08' sein, ist ${JSON.stringify(ucpManifest.ucp.version)}`,
 );
 
-const capabilityDeclarations = Object.values(ucpManifest.ucp.capabilities).flat();
+const capabilities = ucpManifest.ucp.capabilities as Record<string, Array<{ schema: string }>>;
+const capabilityDeclarations = Object.values(capabilities).flat();
 checkManifest(
   capabilityDeclarations.length === 5,
   `ucp.capabilities muss genau 5 Capability-Deklarationen enthalten (ueber alle reverse-domain-Keys hinweg), hat ${capabilityDeclarations.length}`,
 );
 checkManifest(
-  Object.keys(ucpManifest.ucp.capabilities).length === 5,
-  `ucp.capabilities muss genau 5 reverse-domain-Keys haben (je Tool einer), hat ${Object.keys(ucpManifest.ucp.capabilities).length}`,
+  Object.keys(capabilities).length === 5,
+  `ucp.capabilities muss genau 5 reverse-domain-Keys haben (je Tool einer), hat ${Object.keys(capabilities).length}`,
 );
-for (const [key, declarations] of Object.entries(ucpManifest.ucp.capabilities)) {
+for (const [key, declarations] of Object.entries(capabilities)) {
   for (const decl of declarations) {
-    const schemaUrl = (decl as { schema: string }).schema;
+    const schemaUrl = decl.schema;
     const matchesKnownName = KNOWN_SCHEMA_NAMES.some((name) => schemaUrl.endsWith(`/${name}`));
     checkManifest(matchesKnownName, `Schema-URL von "${key}" endet nicht auf einen bekannten Tool-Namen: ${schemaUrl}`);
   }

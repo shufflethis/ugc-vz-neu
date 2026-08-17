@@ -10,6 +10,7 @@
     "test:lead-email": "node --import tsx scripts/test-lead-email.ts",
     "test:lead-flow": "node scripts/test-lead-flow.mjs",
     "test:creator-registration": "node --import tsx scripts/test-creator-registration.ts",
+    "test:creator-dashboard": "node --import tsx scripts/test-creator-dashboard.ts",
     "test:creator-export": "node --import tsx scripts/test-creator-export.ts",
     "test:private-creator-export": "node --import tsx scripts/test-private-creator-export.ts",
     "db:migrate": "node scripts/migrate-neon.mjs",
