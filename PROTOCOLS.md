@@ -212,6 +212,16 @@ Filter (ein Filter auf 2 liefert derzeit grundsätzlich keine Treffer); `get_cre
 ausschließlich `creator_public_id` entgegen und gibt die abgeleitete Stufe im Ergebnis
 zurück, ohne danach zu filtern. `get_vocab` gibt dieselbe Definition zurück.
 
+**`totalCount` von `search_creators` hat zwei Fälle**, abhängig davon, ob einer der Filter
+`city`/`topics`/`human_verification_level_min` aktiv ist: **ohne** aktiven Filter spiegelt
+`totalCount` die Gesamttrefferzahl aus dem Such-Backend (`/api/search`s eigenes
+`totalCount`-Feld); **mit** aktivem Filter zählt `totalCount` stattdessen nur Treffer
+innerhalb der bereits von `/api/search` zurückgelieferten (upstream gekappten)
+Kandidatenmenge, weil sich die Filter ausschließlich auf diese Menge anwenden lassen. Ein
+Vor-Kapp-Wert wäre in diesem zweiten Fall falsch. `search_creators`-Ergebnisobjekte (A2A wie
+MCP, seit der gemeinsamen Gateway-Delegation) tragen außerdem additiv `city` und
+`humanVerification` je Creator.
+
 ## 6. Rate-Limits und Web Bot Auth
 
 ### Web Bot Auth (Trust-Layer, `app/lib/web-bot-auth.ts`)

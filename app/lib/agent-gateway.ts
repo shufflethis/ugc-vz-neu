@@ -161,9 +161,23 @@ export async function searchCreators(params: SearchCreatorsParams, ctx: SearchCr
   const maxResults = Number.isFinite(rawMax) ? Math.min(Math.max(rawMax, 1), 24) : 6;
   const creators: PublicCreatorResult[] = filtered.slice(0, maxResults).map(({ __topics, ...rest }) => rest);
 
+  // Regressions-Fix (Re-Review nach Blocker 1c): totalCount hat zwei Faelle.
+  // Ohne aktive Post-Filter (city/topics/humanVerificationLevelMin) ist
+  // `filtered` nur um inaktive/status<>'active'-Profile bereinigt, aber
+  // `enriched`/`rawCreators` selbst kommt bereits GEKAPPT aus /api/search
+  // (dessen eigenes internes Limit) -- filtered.length waere dann ein
+  // Nachkapp-Wert, nicht die tatsaechliche Gesamttrefferzahl. Deshalb in
+  // diesem Fall data.totalCount von /api/search selbst uebernehmen (Fallback
+  // auf filtered.length, falls das Feld dort fehlen sollte). MIT aktivem
+  // Post-Filter ist ein Vor-Kapp-Wert dagegen falsch, weil sich der Filter
+  // nur auf die bereits gekappte Kandidatenmenge anwenden laesst -- dort
+  // bleibt filtered.length die einzig korrekte Zahl.
+  const hasActiveFilter = Boolean(params.city) || Boolean(params.topics && params.topics.length) || params.humanVerificationLevelMin !== undefined;
+  const totalCount = hasActiveFilter ? filtered.length : Number.isFinite(Number(data.totalCount)) ? Number(data.totalCount) : filtered.length;
+
   return {
     query: params.query,
-    totalCount: filtered.length,
+    totalCount,
     returnedCount: creators.length,
     creators,
   };
