@@ -27,6 +27,7 @@
     "@fortawesome/react-fontawesome": "^0.2.2",
     "@google/generative-ai": "^0.22.0",
     "@headlessui/react": "^1.7.17",
+    "@modelcontextprotocol/server": "^2.0.0",
     "@neondatabase/serverless": "^1.1.0",
     "@shadcn/ui": "^0.0.4",
     "@slack/webhook": "^7.0.4",
