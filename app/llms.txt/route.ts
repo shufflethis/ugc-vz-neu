@@ -39,11 +39,13 @@ export async function GET() {
 - ${baseUrl}/creator: kostenloses Creator-Profil anlegen
 - ${baseUrl}/wissen: geprüfter Wissensbereich mit ${posts.length} veröffentlichten Artikeln
 - ${baseUrl}/vergleich: UGC-Plattformen im Vergleich, mit Quellen und Prüfdatum
+- ${baseUrl}/api/mcp: MCP-Server für KI-Agenten (5 Tools: search_creators, get_creator, request_outreach, get_outreach_status, get_vocab)
 - ${baseUrl}/brands/ugc-vertrag-vorlage: Briefing- und Vertragsgrundlage
 - ${baseUrl}/about: Betreiber, Team und Hintergrund
 - ${baseUrl}/datenschutz: Datenschutzerklärung
 - ${baseUrl}/impressum: Anbieterkennzeichnung
-- ${baseUrl}/.well-known/agent-card.json: Agent Discovery
+- ${baseUrl}/.well-known/agent-card.json: Agent Discovery (A2A)
+- ${baseUrl}/.well-known/ucp: Universal-Commerce-Protocol-Manifest
 
 ## Wissensartikel
 
