@@ -207,9 +207,10 @@ Laufzeit aus vorhandenen Profildaten abgeleitet (`app/lib/agent-verification.ts`
 
 **Level 2 wird nicht vergeben.** Es gibt keine Migration, kein DB-Feld dafür – ändert sich
 die Datenlage eines Profils, ändert sich die abgeleitete Stufe automatisch beim nächsten
-Aufruf. `search_creators`/`get_creator` akzeptieren `human_verification_level_min` im
-Bereich 0–2, aber ein Filter auf 2 liefert derzeit grundsätzlich keine Treffer. `get_vocab`
-gibt dieselbe Definition zurück.
+Aufruf. Nur `search_creators` akzeptiert `human_verification_level_min` im Bereich 0–2 als
+Filter (ein Filter auf 2 liefert derzeit grundsätzlich keine Treffer); `get_creator` nimmt
+ausschließlich `creator_public_id` entgegen und gibt die abgeleitete Stufe im Ergebnis
+zurück, ohne danach zu filtern. `get_vocab` gibt dieselbe Definition zurück.
 
 ## 6. Rate-Limits und Web Bot Auth
 
@@ -250,8 +251,10 @@ und Cold-Start zurück. Fenster: 10 Minuten.
 
 Such-Operationen kosten 3 (MCP: `search_creators`; A2A: `ugc.search_creators` und dessen
 Aliase `message/send`/`tasks/send`), alle anderen Operationen kosten 1. Bei Überschreitung
-antwortet die Route mit HTTP `429` und einem JSON-RPC-förmigen Fehlerkörper (`code: -32029`)
-inkl. `Retry-After`.
+antwortet die Route mit HTTP `429` und einem JSON-RPC-förmigen Fehlerkörper
+(`code: -32029`), der die Wartezeit als `retryAfterSeconds` im `error.data`-Objekt trägt.
+Nur `/api/mcp` setzt zusätzlich einen echten `Retry-After`-HTTP-Header; `/a2a` liefert die
+Wartezeit ausschließlich im JSON-Body, ohne diesen Header.
 
 `/api/mcp` ist für alle Aufrufer frei zugänglich – hier bestimmt ausschließlich das
 Web-Bot-Auth-Verdikt das Rate-Limit-Tier. `/a2a` hat zusätzlich eine eigene, unabhängige

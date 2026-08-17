@@ -39,7 +39,7 @@ export async function GET() {
 - ${baseUrl}/creator: kostenloses Creator-Profil anlegen
 - ${baseUrl}/wissen: geprüfter Wissensbereich mit ${posts.length} veröffentlichten Artikeln
 - ${baseUrl}/vergleich: UGC-Plattformen im Vergleich, mit Quellen und Prüfdatum
-- ${baseUrl}/api/mcp: MCP-Server für KI-Agenten (5 Tools: search_creators, get_creator, request_outreach, get_outreach_status, get_vocab)
+- ${baseUrl}/api/mcp: MCP-Server für KI-Agenten (5 Tools: search_creators, get_creator, request_outreach, get_outreach_status, get_vocab); Protokoll-Details in der Datei PROTOCOLS.md im Quell-Repository
 - ${baseUrl}/brands/ugc-vertrag-vorlage: Briefing- und Vertragsgrundlage
 - ${baseUrl}/about: Betreiber, Team und Hintergrund
 - ${baseUrl}/datenschutz: Datenschutzerklärung
