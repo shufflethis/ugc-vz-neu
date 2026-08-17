@@ -496,6 +496,67 @@ const JWKS_POSITIVE_TTL_MS = 60 * 60 * 1000; // 1h
 const JWKS_NEGATIVE_TTL_MS = 10 * 60 * 1000; // 10min
 const JWKS_CACHE_MAX_ENTRIES = 2_000;
 
+// Fix-Runde (Finding B, SSRF/Fetch-Amplification): wohlbekannter Pfad aus dem
+// Draft (draft-meunier-webbotauth-httpsig-protocol, siehe Modul-Kopfkommentar
+// und Fix-Report Abschnitt "Finding A") fuer den Default-Discovery-Fall
+// "Signature-Agent nennt nur einen Origin, keinen eigenen JWKS-Pfad".
+const WELL_KNOWN_JWKS_PATH = '/.well-known/http-message-signatures-directory';
+
+// Fix-Runde: max. gleichzeitig ausstehende echte JWKS-Fetches (nicht: Cache-
+// Treffer, nicht: injizierte Test-Resolver). Verhindert, dass ein Angreifer
+// durch viele parallele Anfragen mit unterschiedlichen (oder identischen,
+// noch nicht gecachten) Signature-Agent-URLs beliebig viele gleichzeitige
+// ausgehende HTTPS-Verbindungen von diesem Server ausloest.
+const MAX_CONCURRENT_JWKS_FETCHES = 4;
+let inFlightJwksFetches = 0;
+
+/**
+ * Fix-Runde (Finding B): grobe, aber ausreichende Ablehnung von IP-Literalen
+ * (v4/v6) und "localhost" als Signature-Agent-Host, BEVOR ueberhaupt gefetcht
+ * wird -- verhindert das offensichtlichste SSRF-Muster (Client zeigt direkt
+ * auf 127.0.0.1/interne IP/Metadaten-Endpunkt per IP-Literal).
+ *
+ * Bewusst NICHT abgedeckt: DNS-Rebinding oder ein oeffentlicher Hostname, der
+ * auf eine interne/private IP aufloest (z. B. ein Angreifer-Domain mit A-
+ * Record 169.254.169.254). Das wuerde eine eigene DNS-Aufloesung +
+ * IP-Pinning vor dem eigentlichen fetch() erfordern (deutlich mehr
+ * Komplexitaet als in dieser Phase gerechtfertigt). Vertretbar, weil an
+ * dieser Stelle noch KEINE Zugriffs-/Autorisierungsentscheidung am Verdikt
+ * haengt (Spec §4.4: "differenzieren, nie blockieren") -- der schlimmste
+ * Fall ist ein Server-seitiger HTTPS-GET gegen eine vom Angreifer gewaehlte
+ * interne Adresse mit 3s-Timeout, dessen (nicht an den Client
+ * zurueckgegebene) Antwort hoechstens beeinflusst, ob spaeter 'verified'
+ * oder 'unsigned' geloggt wird. Dokumentiertes Restrisiko fuer eine
+ * zukuenftige Phase, in der Web-Bot-Auth echte Zugriffsentscheidungen trifft.
+ */
+function isForbiddenJwksHost(hostname: string): boolean {
+  // Trailing Dot entfernen (FQDN-Notation, "localhost." loest genau wie
+  // "localhost" auf Loopback auf; WHATWG URL() normalisiert IPv4-Literale
+  // bereits selbst auf Dotted-Quad, aber nicht den trailing dot bei
+  // Hostnamen) -- sonst wuerde "localhost." die localhost-Erkennung umgehen.
+  const lower = hostname.toLowerCase().replace(/\.$/, '');
+  if (lower === 'localhost') return true;
+  if (/^\d{1,3}(\.\d{1,3}){3}$/.test(lower)) return true; // IPv4-Literal
+  // URL()-Hostnamen von IPv6-Literalen sind bereits Klammer-frei (z. B.
+  // "::1"); echte DNS-Namen enthalten laut RFC 1123 keinen Doppelpunkt, ein
+  // Doppelpunkt reicht daher als zuverlaessiges IPv6-Signal.
+  if (lower.includes(':')) return true;
+  return false;
+}
+
+/**
+ * jwks_uri- vs. Directory-Discovery (Fix-Runde, Finding A): hat die
+ * Signature-Agent-URL einen "echten" Pfad, wird sie unveraendert als
+ * JWKS-Dokument-URL benutzt (jwks_uri-Stil). Ist der Pfad leer oder "/"
+ * (bare origin -- so sendet z. B. ChatGPT laut draft §5.2.1 recherchiertem
+ * Verhalten), wird stattdessen der wohlbekannte Pfad an diesem Origin
+ * gefetcht (Draft-Default fuer den Discovery-Typ "directory").
+ */
+function resolveJwksFetchUrl(agentUrl: string, parsed: URL): string {
+  const hasMeaningfulPath = parsed.pathname !== '' && parsed.pathname !== '/';
+  return hasMeaningfulPath ? agentUrl : `${parsed.origin}${WELL_KNOWN_JWKS_PATH}`;
+}
+
 interface JwksCacheEntry {
   expiresAt: number;
   data: JwksDocument | null;
@@ -514,10 +575,28 @@ function boundJwksCache(): void {
 
 async function fetchJwksDirect(url: string): Promise<JwksDocument | null> {
   if (!url.startsWith('https://')) return null; // nur https, siehe Briefing
+
+  // Fix-Runde (Finding B): Nebenlaeufigkeitsgrenze fuer echte ausgehende
+  // Fetches. Ueber der Grenze wird wie ein normaler Fetch-Fehler behandelt
+  // (-> negativer Cache, Verdikt degradiert zu unsigned) statt die Anfrage
+  // aufzustauen -- ein voruebergehender Ausreisser bei sehr hoher Last kostet
+  // im schlimmsten Fall bis zu 10 Minuten das hoehere Rate-Limit-Tier fuer
+  // einen echten Agenten, blockiert aber nie eine Route (Spec §4.4).
+  if (inFlightJwksFetches >= MAX_CONCURRENT_JWKS_FETCHES) return null;
+  inFlightJwksFetches += 1;
+
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), JWKS_FETCH_TIMEOUT_MS);
   try {
-    const response = await fetch(url, { signal: controller.signal, headers: { accept: 'application/json' } });
+    const response = await fetch(url, {
+      signal: controller.signal,
+      headers: { accept: 'application/json' },
+      // Fix-Runde (Finding B): keine Redirects folgen -- verhindert, dass
+      // eine zunaechst erlaubte https-URL serverseitig auf eine verbotene
+      // (IP-Literal/localhost/internes Ziel) umgeleitet wird und unsere
+      // Host-Pruefung (isForbiddenJwksHost) dadurch umgangen wird.
+      redirect: 'error',
+    });
     if (!response.ok) return null;
     const body = await response.json();
     if (!body || !Array.isArray(body.keys)) return null;
@@ -526,6 +605,7 @@ async function fetchJwksDirect(url: string): Promise<JwksDocument | null> {
     return null;
   } finally {
     clearTimeout(timeout);
+    inFlightJwksFetches -= 1;
   }
 }
 
@@ -594,6 +674,18 @@ export async function verifyWebBotAuth(request: Request, options: VerifyWebBotAu
     if (!agentUrl || !agentUrl.startsWith('https://')) {
       return { verdict: 'unsigned' };
     }
+    let agentUrlParsed: URL;
+    try {
+      agentUrlParsed = new URL(agentUrl);
+    } catch {
+      return { verdict: 'unsigned' };
+    }
+    // Fix-Runde (Finding B): IP-Literale/localhost als Signature-Agent-Host
+    // ablehnen, BEVOR irgendein Fetch ausgeloest wird -- siehe
+    // isForbiddenJwksHost fuer den genauen Umfang/die Grenzen.
+    if (isForbiddenJwksHost(agentUrlParsed.hostname)) {
+      return { verdict: 'unsigned', agent: agentUrl };
+    }
 
     const nowMs = options.now ?? Date.now();
     const evaluated = evaluateSignatureInputInternal(signatureInputHeader, nowMs);
@@ -619,7 +711,13 @@ export async function verifyWebBotAuth(request: Request, options: VerifyWebBotAu
       return { verdict: 'unsigned', agent: agentUrl };
     }
 
-    const jwks = await resolveJwks(agentUrl, options.jwksResolver, nowMs);
+    // Fix-Runde (Finding A): bare-origin Signature-Agent -> wohlbekannter
+    // Pfad; Signature-Agent mit eigenem Pfad -> direkter jwks_uri-Fetch.
+    // Der Cache wird unter der tatsaechlich gefetchten URL gefuehrt (nicht
+    // unter agentUrl), agentUrl bleibt unveraendert die Identitaet fuer
+    // Logging/Rate-Limit-Key (VerifyResult.agent).
+    const jwksFetchUrl = resolveJwksFetchUrl(agentUrl, agentUrlParsed);
+    const jwks = await resolveJwks(jwksFetchUrl, options.jwksResolver, nowMs);
     if (!jwks) return { verdict: 'unsigned', agent: agentUrl };
 
     const jwk = findJwkByKeyid(jwks, entry.keyid);
@@ -639,7 +737,20 @@ export async function verifyWebBotAuth(request: Request, options: VerifyWebBotAu
   }
 }
 
-/** Rate-Limit-Key: verifizierter Agent (JWKS-URL) sonst erste IP aus x-forwarded-for. */
+/**
+ * Rate-Limit-Key: verifizierter Agent (JWKS-URL) sonst erste IP aus
+ * x-forwarded-for.
+ *
+ * Der linkeste x-forwarded-for-Wert ist clientseitig frei waehlbar (jeder
+ * Client kann den Header selbst mitschicken; ohne einen vertrauenswuerdigen
+ * Reverse-Proxy, der den Header VOR dem Weiterreichen ueberschreibt statt nur
+ * anzuhaengen, ist das Feld nicht faelschungssicher). Das ist hier bewusst
+ * akzeptiert: der Key steuert ausschliesslich, in welchen Rate-Limit-Eimer
+ * eine Anfrage faellt -- er gewaehrt nie Zugriff und entscheidet nie ueber
+ * das Verdikt selbst. Schlimmstenfalls waehlt sich ein Angreifer einen
+ * eigenen Eimer (kein Vorteil) oder teilt sich einen Eimer mit einer echten
+ * IP (fuehrt hoechstens zu einem frueheren 429 fuer beide, keinem Bypass).
+ */
 export function getRateLimitKey(result: VerifyResult, request: Request): string {
   if (result.verdict === 'verified' && result.agent) return result.agent;
   const forwardedFor = request.headers.get('x-forwarded-for');
@@ -681,10 +792,24 @@ function boundRateLimitStore(): void {
   for (const [key] of entries.slice(0, removeCount)) rateLimitStore.delete(key);
 }
 
-export function checkRateLimit(
+/**
+ * Fix-Runde (Finding B, Fetch-Amplification): gemeinsame Implementierung fuer
+ * checkRateLimit (mutierend) und peekRateLimit (rein lesend). `mutate: false`
+ * simuliert exakt dieselbe Grenzwert-Pruefung, schreibt aber nichts in den
+ * Store -- damit lassen sich Anfragen VOR einer teuren/riskanten Operation
+ * (hier: der JWKS-Fetch in verifyWebBotAuth) ablehnen, ohne den eigentlichen
+ * Verbrauch schon zu verbuchen, bevor klar ist, gegen welchen Tier/Key final
+ * abgerechnet werden muss (siehe Zwei-Phasen-Gate in app/api/mcp/route.ts
+ * und app/a2a/route.ts: Phase A peekt gegen den IP-Key/unsigned-Tier, Phase C
+ * belastet erst nach dem Verdikt den tatsaechlich zutreffenden Key/Tier --
+ * "check-only dann einmal abrechnen", eine der zwei im Review vorgeschlagenen
+ * Optionen, siehe Fix-Report Abschnitt "Finding B").
+ */
+function evaluateRateLimitWindow(
   key: string,
   verdict: RateLimitVerdict,
-  cost = 1,
+  cost: number,
+  mutate: boolean,
 ): { allowed: boolean; retryAfterSeconds?: number } {
   const limit = RATE_LIMITS[verdict] ?? RATE_LIMITS.unsigned;
   const now = Date.now();
@@ -694,16 +819,42 @@ export function checkRateLimit(
   const entry: RateLimitWindow = windowFresh ? { windowStart: now, count: 0 } : existing;
 
   if (entry.count + cost > limit) {
-    rateLimitStore.set(key, entry);
-    boundRateLimitStore();
+    if (mutate) {
+      rateLimitStore.set(key, entry);
+      boundRateLimitStore();
+    }
     const retryAfterSeconds = Math.max(1, Math.ceil((entry.windowStart + RATE_LIMIT_WINDOW_MS - now) / 1000));
     return { allowed: false, retryAfterSeconds };
   }
 
-  entry.count += cost;
-  rateLimitStore.set(key, entry);
-  boundRateLimitStore();
+  if (mutate) {
+    entry.count += cost;
+    rateLimitStore.set(key, entry);
+    boundRateLimitStore();
+  }
   return { allowed: true };
+}
+
+export function checkRateLimit(
+  key: string,
+  verdict: RateLimitVerdict,
+  cost = 1,
+): { allowed: boolean; retryAfterSeconds?: number } {
+  return evaluateRateLimitWindow(key, verdict, cost, true);
+}
+
+/**
+ * Rein lesende Variante von checkRateLimit -- siehe Kommentar an
+ * evaluateRateLimitWindow. Verbraucht kein Kontingent, nur zum Vorab-Pruefen
+ * "wuerde diese Anfrage sowieso geblockt?", bevor eine potenziell teure
+ * Operation ausgeloest wird.
+ */
+export function peekRateLimit(
+  key: string,
+  verdict: RateLimitVerdict,
+  cost = 1,
+): { allowed: boolean; retryAfterSeconds?: number } {
+  return evaluateRateLimitWindow(key, verdict, cost, false);
 }
 
 // ============================================================================
@@ -718,6 +869,9 @@ export const __internals = {
   evaluateSignatureInput: evaluateSignatureInputInternal,
   buildSignatureBase,
   computeJwkThumbprint,
+  resolveJwksFetchUrl,
+  isForbiddenJwksHost,
+  WELL_KNOWN_JWKS_PATH,
   RATE_LIMIT_WINDOW_MS,
   RATE_LIMITS,
 };

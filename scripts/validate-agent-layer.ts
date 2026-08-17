@@ -3,7 +3,7 @@ import { deriveVerificationLevel, VERIFICATION_LEVELS } from '../app/lib/agent-v
 import { mapOutreachState } from '../app/lib/agent-gateway';
 import { MCP_TOOLS, AGENT_SCHEMAS } from '../app/lib/agent-tools';
 import { ugcVzAgentCard } from '../app/lib/a2a-agent-card';
-import { verifyWebBotAuth, checkRateLimit, getRateLimitKey, __internals } from '../app/lib/web-bot-auth';
+import { verifyWebBotAuth, checkRateLimit, peekRateLimit, getRateLimitKey, __internals } from '../app/lib/web-bot-auth';
 // `manifest` ist bewusst kein Export von route.ts (siehe Kommentar dort) --
 // wir rufen stattdessen GET() auf und lesen den echten Response-Body. Das
 // prueft zugleich Content-Type und dass die Route ueberhaupt laeuft.
@@ -292,8 +292,208 @@ checkWba(
   'getRateLimitKey muss bei unsigned die erste x-forwarded-for-IP als Key liefern',
 );
 
+// -- peekRateLimit darf NIE Verbrauch buchen (Grundlage des Zwei-Phasen-
+// Gates in app/api/mcp/route.ts und app/a2a/route.ts, Fix-Runde Finding B) --
+{
+  const key = 'validate:rate-limit:peek-no-mutate';
+  for (let i = 0; i < 50; i += 1) peekRateLimit(key, 'unsigned', 1); // 50x weit ueber dem Limit peeken
+  let blockedAt = -1;
+  for (let i = 1; i <= 35; i += 1) {
+    const result = checkRateLimit(key, 'unsigned', 1);
+    if (!result.allowed && blockedAt === -1) blockedAt = i;
+  }
+  checkWba(blockedAt === 31, `peekRateLimit darf keinen Verbrauch buchen -- nach 50 Peeks muss der 1. echte checkRateLimit-Lauf weiterhin exakt bei #31 blockieren, war #${blockedAt}`);
+}
+
+// -- Fix-Runde (Finding B): Zwei-Phasen-Gate-Ordnung. Simuliert exakt das
+// Muster aus app/api/mcp/route.ts und app/a2a/route.ts: Phase A peekt zuerst
+// gegen den IP-Key/unsigned-Tier; nur wenn sie erlaubt, wird
+// verifyWebBotAuth() (und damit ein moeglicher JWKS-Fetch) ueberhaupt
+// aufgerufen. Eine bereits ausgeschoepfte IP darf den injizierten Resolver
+// NIE erreichen. --
+{
+  const ipKey = 'validate:rate-limit:ordering-ip';
+  for (let i = 0; i < 30; i += 1) checkRateLimit(ipKey, 'unsigned', 1); // Bucket real ausschoepfen (wie Phase C es sonst irgendwann taete)
+
+  let resolverCalls = 0;
+  const countingResolver = async (_url: string) => {
+    resolverCalls += 1;
+    return null;
+  };
+  const signedRequest = new Request('https://ugc-vz.de/api/mcp', {
+    method: 'POST',
+    headers: {
+      host: 'ugc-vz.de',
+      'signature-agent': '"https://ordering-check.example.test/jwks"',
+      'signature-input': 'sig1=("@authority");created=1700000000;expires=1700003600;keyid="whatever";alg="ed25519";tag="web-bot-auth"',
+      signature: 'sig1=:AAAA:',
+    },
+  });
+
+  const preCheck = peekRateLimit(ipKey, 'unsigned', 1);
+  checkWba(preCheck.allowed === false, 'Phase A (peekRateLimit) muss die ausgeschoepfte IP als blockiert erkennen');
+  if (preCheck.allowed) {
+    await verifyWebBotAuth(signedRequest, { jwksResolver: countingResolver });
+  }
+  checkWba(resolverCalls === 0, `Bei blockierter Phase A darf verifyWebBotAuth (und damit der JWKS-Resolver) NIE aufgerufen werden, wurde ${resolverCalls}x aufgerufen`);
+}
+
+// -- Fix-Runde (Finding A): bare-origin Signature-Agent -> wohlbekannter
+// Pfad; Signature-Agent mit eigenem Pfad -> direkter jwks_uri-Fetch --
+checkWba(
+  __internals.resolveJwksFetchUrl('https://agent.example.test', new URL('https://agent.example.test')) ===
+    `https://agent.example.test${__internals.WELL_KNOWN_JWKS_PATH}`,
+  'resolveJwksFetchUrl muss bei bare origin (kein Pfad) den wohlbekannten Pfad anhaengen',
+);
+checkWba(
+  __internals.resolveJwksFetchUrl('https://agent.example.test/', new URL('https://agent.example.test/')) ===
+    `https://agent.example.test${__internals.WELL_KNOWN_JWKS_PATH}`,
+  'resolveJwksFetchUrl muss bei Pfad "/" den wohlbekannten Pfad anhaengen',
+);
+checkWba(
+  __internals.resolveJwksFetchUrl('https://agent.example.test/jwks.json', new URL('https://agent.example.test/jwks.json')) ===
+    'https://agent.example.test/jwks.json',
+  'resolveJwksFetchUrl muss bei eigenem Pfad die URL unveraendert als jwks_uri benutzen',
+);
+
+// End-to-End: stub-Resolver zeichnet auf, welche URL fuer eine bare-origin
+// Signature-Agent-Angabe tatsaechlich angefragt wird (wie es z. B. ChatGPT
+// laut Draft §5.2.1 sendet, siehe Fix-Report).
+{
+  const BARE_AGENT_URL = 'https://bare-origin-check.example.test';
+  let requestedUrl: string | null = null;
+  const capturingResolver = async (url: string) => {
+    requestedUrl = url;
+    return null;
+  };
+  const bareOriginRequest = new Request('https://ugc-vz.de/api/mcp', {
+    method: 'POST',
+    headers: {
+      host: 'ugc-vz.de',
+      'signature-agent': `"${BARE_AGENT_URL}"`,
+      'signature-input': 'sig1=("@authority");created=1700000000;expires=1700003600;keyid="whatever";alg="ed25519";tag="web-bot-auth"',
+      signature: 'sig1=:AAAA:',
+    },
+  });
+  await verifyWebBotAuth(bareOriginRequest, { jwksResolver: capturingResolver, now: 1700001000 * 1000 });
+  checkWba(
+    requestedUrl === `${BARE_AGENT_URL}${__internals.WELL_KNOWN_JWKS_PATH}`,
+    `Bare-Origin Signature-Agent muss den wohlbekannten Pfad fetchen, angefragt wurde ${requestedUrl}`,
+  );
+}
+
+// -- Fix-Runde (Finding B): IP-Literale/localhost als Signature-Agent-Host
+// werden VOR jedem Fetch abgelehnt --
+checkWba(__internals.isForbiddenJwksHost('127.0.0.1') === true, 'IPv4-Literal muss als verbotener JWKS-Host erkannt werden');
+checkWba(__internals.isForbiddenJwksHost('169.254.169.254') === true, 'IPv4-Literal (Metadaten-Range) muss als verbotener JWKS-Host erkannt werden');
+checkWba(__internals.isForbiddenJwksHost('localhost') === true, 'localhost muss als verbotener JWKS-Host erkannt werden');
+checkWba(__internals.isForbiddenJwksHost('LOCALHOST') === true, 'Gross-/Kleinschreibung darf localhost-Erkennung nicht umgehen');
+checkWba(__internals.isForbiddenJwksHost('localhost.') === true, 'trailing dot (FQDN-Notation) darf localhost-Erkennung nicht umgehen');
+checkWba(__internals.isForbiddenJwksHost('::1') === true, 'IPv6-Literal muss als verbotener JWKS-Host erkannt werden');
+checkWba(__internals.isForbiddenJwksHost('agent.example.test') === false, 'ein normaler Hostname darf nicht abgelehnt werden');
+
+{
+  let ipLiteralResolverCalls = 0;
+  const countingResolver2 = async () => {
+    ipLiteralResolverCalls += 1;
+    return null;
+  };
+  const ipLiteralRequest = new Request('https://ugc-vz.de/api/mcp', {
+    method: 'POST',
+    headers: {
+      host: 'ugc-vz.de',
+      'signature-agent': '"https://127.0.0.1/jwks"',
+      'signature-input': 'sig1=("@authority");created=1700000000;expires=1700003600;keyid="whatever";alg="ed25519";tag="web-bot-auth"',
+      signature: 'sig1=:AAAA:',
+    },
+  });
+  const ipLiteralResult = await verifyWebBotAuth(ipLiteralRequest, { jwksResolver: countingResolver2, now: 1700001000 * 1000 });
+  checkWba(ipLiteralResult.verdict === 'unsigned', `IP-Literal als Signature-Agent-Host muss unsigned ergeben, war ${ipLiteralResult.verdict}`);
+  checkWba(ipLiteralResolverCalls === 0, `IP-Literal als Signature-Agent-Host darf nie gefetcht werden, Resolver wurde ${ipLiteralResolverCalls}x aufgerufen`);
+}
+
+// -- Fix-Runde (Finding B): fetchJwksDirect() reicht redirect: 'error' an
+// fetch() durch -- geprueft ueber einen kurzzeitigen, sofort wieder
+// zurueckgesetzten globalThis.fetch-Stub (kein injizierbarer Punkt fuer
+// fetch-Optionen selbst vorhanden, und ein echter HTTPS-Redirect-Test
+// bräuchte echtes Netz/TLS -- siehe Fix-Report fuer die Begruendung dieser
+// gezielten Ausnahme von "lieber injizieren als globalThis mocken"). --
+{
+  const originalFetch = globalThis.fetch;
+  let capturedInit: RequestInit | undefined;
+  globalThis.fetch = (async (_input: unknown, init?: RequestInit) => {
+    capturedInit = init;
+    throw new Error('validate-agent-layer: fetch-Stub, kein echtes Netz');
+  }) as typeof fetch;
+
+  try {
+    const redirectCheckRequest = new Request('https://ugc-vz.de/api/mcp', {
+      method: 'POST',
+      headers: {
+        host: 'ugc-vz.de',
+        'signature-agent': '"https://redirect-check.example.test/jwks.json"',
+        'signature-input': 'sig1=("@authority");created=1700000000;expires=1700003600;keyid="whatever";alg="ed25519";tag="web-bot-auth"',
+        signature: 'sig1=:AAAA:',
+      },
+    });
+    await verifyWebBotAuth(redirectCheckRequest, { now: 1700001000 * 1000 });
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+
+  checkWba(capturedInit?.redirect === 'error', `fetchJwksDirect muss redirect: 'error' an fetch() uebergeben, war ${JSON.stringify(capturedInit?.redirect)}`);
+}
+
+// -- Fix-Runde (Finding B): Nebenlaeufigkeitsgrenze fuer echte JWKS-Fetches
+// (MAX_CONCURRENT_JWKS_FETCHES=4) -- ueber der Grenze wird gar nicht erst
+// gefetcht. Deterministisch pruefbar, weil der komplette Code-Pfad bis zum
+// eigentlichen fetch()-Aufruf synchron ist (keine awaits dazwischen): die
+// sechs verifyWebBotAuth()-Aufrufe unten erreichen daher, ohne dass wir
+// warten muessen, synchron ihren jeweiligen fetch()-Aufruf (oder den
+// vorzeitigen Abbruch wegen der Grenze), bevor wir die Fetch-Stubs
+// ueberhaupt freigeben. --
+{
+  const originalFetch = globalThis.fetch;
+  let inFlightStubs = 0;
+  let maxObservedConcurrency = 0;
+  let totalStubCalls = 0;
+  const releaseSignals: Array<() => void> = [];
+  globalThis.fetch = (async () => {
+    totalStubCalls += 1;
+    inFlightStubs += 1;
+    maxObservedConcurrency = Math.max(maxObservedConcurrency, inFlightStubs);
+    await new Promise<void>((resolve) => releaseSignals.push(resolve));
+    inFlightStubs -= 1;
+    throw new Error('validate-agent-layer: fetch-Stub, kein echtes Netz');
+  }) as typeof fetch;
+
+  try {
+    const makeConcurrencyRequest = (i: number) =>
+      new Request('https://ugc-vz.de/api/mcp', {
+        method: 'POST',
+        headers: {
+          host: 'ugc-vz.de',
+          'signature-agent': `"https://concurrency-check-${i}.example.test/jwks.json"`,
+          'signature-input': 'sig1=("@authority");created=1700000000;expires=1700003600;keyid="whatever";alg="ed25519";tag="web-bot-auth"',
+          signature: 'sig1=:AAAA:',
+        },
+      });
+
+    const pending = [0, 1, 2, 3, 4, 5].map((i) => verifyWebBotAuth(makeConcurrencyRequest(i), { now: 1700001000 * 1000 }));
+
+    checkWba(maxObservedConcurrency === 4, `Nebenlaeufige JWKS-Fetches duerfen die Grenze (4) nie ueberschreiten, beobachtet wurden ${maxObservedConcurrency}`);
+    checkWba(totalStubCalls === 4, `Nur 4 der 6 gleichzeitigen Anfragen duerfen ueberhaupt einen echten Fetch versuchen, tatsaechlich waren es ${totalStubCalls}`);
+
+    releaseSignals.forEach((release) => release());
+    const results = await Promise.all(pending);
+    checkWba(results.every((r) => r.verdict === 'unsigned'), 'alle 6 Anfragen muessen ohne erreichbares JWKS auf unsigned degradieren');
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+}
+
 if (wbaErrors.length) { wbaErrors.forEach((e) => console.error(' -', e)); process.exit(1); }
-console.log('OK: web-bot-auth Fixture-Tests (Parser, Signature-Base, Rate-Limit)');
+console.log('OK: web-bot-auth Fixture-Tests (Parser, Signature-Base, Rate-Limit, Fix-Runde: Ordering/Well-Known/Host-Filter/Redirect/Concurrency)');
 
 // ---------- Web Bot Auth: voller Round-Trip (echtes Ed25519-Keypaar) ----------
 // Erzeugt ein echtes Schluesselpaar, signiert einen synthetischen Request

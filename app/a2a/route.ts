@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { ugcVzAgentCard } from '@/app/lib/a2a-agent-card';
 import { getCreator, getOutreachStatus, requestOutreach } from '@/app/lib/agent-gateway';
-import { verifyWebBotAuth, checkRateLimit, getRateLimitKey } from '@/app/lib/web-bot-auth';
+import { verifyWebBotAuth, checkRateLimit, peekRateLimit, getRateLimitKey } from '@/app/lib/web-bot-auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -333,19 +333,42 @@ export async function POST(request: Request) {
   const id = body.id ?? null;
   const method = body.method || body.params?.skill || body.params?.skillId;
   const access = getAgentAccess(request);
+  const isSearchMethod = method === 'ugc.search_creators' || method === 'message/send' || method === 'tasks/send';
 
-  // Task 6 (Web Bot Auth, Spec §4.4): nur Verdikt-Logging + ein hoeheres
-  // Rate-Limit-Tier fuer die bestehende FREIE Nutzung (Methoden ohne eigene
-  // Bezahl-Quota, z. B. ugc.get_creator/tasks/get/agent.card). Die
-  // Bezahl-Quota-Logik unten (assertPaidAccess/consumeSearchQuota) bleibt
-  // dadurch exakt unveraendert -- bezahlte Keys haben bereits ihre eigene
-  // monatliche Quota und werden hier bewusst NICHT zusaetzlich gedrosselt.
+  // Task 6 (Web Bot Auth, Spec §4.4) + Fix-Runde (Sicherheitsreview,
+  // Finding B -- SSRF/Fetch-Amplification): verifyWebBotAuth() kann fuer
+  // signierte Anfragen einen ausgehenden JWKS-Fetch ausloesen (siehe
+  // app/lib/web-bot-auth.ts). Der Aufruf unten laeuft in dieser Route fuer
+  // JEDEN Request (auch mit gueltigem Bezahl-Key), weil das
+  // Verdikt-Logging alle Aufrufe abdecken soll -- deshalb peeken wir IMMER
+  // zuerst, rein lesend, IP-Key, unsigned-Tier ("check-only" statt
+  // "reserve+refund", siehe Fix-Report), UNABHAENGIG vom Auth-Status: eine
+  // bereits gesperrte IP wird abgelehnt, BEVOR verifyWebBotAuth (und damit
+  // ein moeglicher Fetch) ueberhaupt aufgerufen wird. Randfall: teilt sich
+  // ein bezahlter Key ausnahmsweise eine IP mit missbrauchter Guest-Nutzung,
+  // kann dieser Vor-Check theoretisch auch ihn treffen -- das ist bewusst in
+  // Kauf genommen (fuehrt hoechstens zu einem 429 mit Retry, nie zu einem
+  // Datenverlust), weil die SSRF-Absicherung sonst fuer bezahlte Keys
+  // luecken haette.
+  //
+  // Die tatsaechliche ABRECHNUNG (Phase C unten, mutierend, kann eine
+  // Anfrage final blockieren) bleibt weiterhin auf `!access.authenticated`
+  // beschraenkt: bezahlte Keys haben ihre eigene monatliche Quota
+  // (assertPaidAccess/consumeSearchQuota unten, exakt unveraendert) und
+  // werden hier bewusst NICHT zusaetzlich gedrosselt -- nur der
+  // SSRF-Vor-Check (peekRateLimit) gilt fuer alle, nicht das Rate-Limit
+  // selbst.
+  const ipKey = getRateLimitKey({ verdict: 'unsigned' }, request);
+  const preCheck = peekRateLimit(ipKey, 'unsigned', isSearchMethod ? 3 : 1);
+  if (!preCheck.allowed) {
+    return jsonRpcError(id, -32029, 'Rate limit exceeded', { verdict: 'unsigned', retryAfterSeconds: preCheck.retryAfterSeconds }, 429);
+  }
+
   const webBotAuth = await verifyWebBotAuth(request);
   console.log('[a2a:web-bot-auth]', { verdict: webBotAuth.verdict, agent: webBotAuth.agent });
 
   if (!access.authenticated) {
-    const isSearch = method === 'ugc.search_creators' || method === 'message/send' || method === 'tasks/send';
-    const rateLimit = checkRateLimit(getRateLimitKey(webBotAuth, request), webBotAuth.verdict, isSearch ? 3 : 1);
+    const rateLimit = checkRateLimit(getRateLimitKey(webBotAuth, request), webBotAuth.verdict, isSearchMethod ? 3 : 1);
     if (!rateLimit.allowed) {
       return jsonRpcError(
         id,

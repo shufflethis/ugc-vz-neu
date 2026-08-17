@@ -16,7 +16,7 @@
 // Befund und die Controller-Entscheidung fuer 2.x.
 import { createMcpHandler, getPublicOrigin } from 'mcp-handler';
 import { MCP_TOOLS } from '@/app/lib/agent-tools';
-import { verifyWebBotAuth, checkRateLimit, getRateLimitKey } from '@/app/lib/web-bot-auth';
+import { verifyWebBotAuth, checkRateLimit, peekRateLimit, getRateLimitKey } from '@/app/lib/web-bot-auth';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60;
@@ -82,6 +82,22 @@ const handler = createMcpHandler(
 // nur mit id: null, da wir den Body bewusst nicht zusaetzlich parsen wollen,
 // nur um eine id zu extrahieren, die der Client bei einem 429 ohnehin selbst
 // aus dem HTTP-Status ableiten kann.
+//
+// Fix-Runde (Sicherheitsreview nach Task 6, Finding B -- SSRF/Fetch-
+// Amplification): verifyWebBotAuth() kann fuer signierte Anfragen einen
+// ausgehenden JWKS-Fetch ausloesen (siehe app/lib/web-bot-auth.ts). Vorher
+// lief hier IMMER erst die Verifikation, DANACH das Rate-Limit -- eine
+// bereits gesperrte IP konnte also durch beliebig viele (oder wiederholte,
+// noch nicht negativ gecachte) Signature-Agent-URLs beliebig viele Fetches
+// ausloesen, ganz ohne je eine Antwort zu bekommen. Jetzt zweiphasig:
+// Phase A prueft NUR (peekRateLimit, keine Mutation) den IP-Key gegen das
+// unsigned-Tier -- blockiert, BEVOR verifyWebBotAuth ueberhaupt aufgerufen
+// wird, also bevor irgendein Fetch passieren kann. Phase B verifiziert erst
+// danach. Phase C belastet (checkRateLimit, mutierend) den nach dem Verdikt
+// tatsaechlich zutreffenden Key/Tier genau einmal -- ein verifizierter Agent
+// wird dadurch NICHT doppelt (einmal in Phase A als "unsigned", einmal in
+// Phase C als "verified") verbucht, weil Phase A nur peekt statt zu
+// verbrauchen ("check-only, dann einmal abrechnen", siehe Fix-Report).
 
 const SEARCH_TOOL_NAMES = new Set(['search_creators']);
 
@@ -103,31 +119,51 @@ async function costForRequest(request: Request): Promise<number> {
   return 1;
 }
 
-async function withWebBotAuthGate(request: Request): Promise<Response> {
-  const authResult = await verifyWebBotAuth(request);
-  const key = getRateLimitKey(authResult, request);
-  const cost = await costForRequest(request);
-  const rateLimit = checkRateLimit(key, authResult.verdict, cost);
-
-  if (!rateLimit.allowed) {
-    return new Response(
-      JSON.stringify({
-        jsonrpc: '2.0',
-        id: null,
-        error: {
-          code: -32029,
-          message: 'Rate limit exceeded',
-          data: { verdict: authResult.verdict, retryAfterSeconds: rateLimit.retryAfterSeconds },
-        },
-      }),
-      {
-        status: 429,
-        headers: {
-          'Content-Type': 'application/json',
-          'Retry-After': String(rateLimit.retryAfterSeconds ?? 60),
-        },
+function rateLimitResponse(verdict: string, retryAfterSeconds: number | undefined): Response {
+  return new Response(
+    JSON.stringify({
+      jsonrpc: '2.0',
+      id: null,
+      error: {
+        code: -32029,
+        message: 'Rate limit exceeded',
+        data: { verdict, retryAfterSeconds },
       },
-    );
+    }),
+    {
+      status: 429,
+      headers: {
+        'Content-Type': 'application/json',
+        'Retry-After': String(retryAfterSeconds ?? 60),
+      },
+    },
+  );
+}
+
+async function withWebBotAuthGate(request: Request): Promise<Response> {
+  const cost = await costForRequest(request);
+
+  // Phase A: nur peeken, NICHT verbrauchen -- IP-Key, immer 'unsigned'-Tier,
+  // weil wir das Verdikt an dieser Stelle noch nicht kennen (und es noch
+  // nicht ermitteln wollen, siehe Kopfkommentar oben).
+  const ipKey = getRateLimitKey({ verdict: 'unsigned' }, request);
+  const preCheck = peekRateLimit(ipKey, 'unsigned', cost);
+  if (!preCheck.allowed) {
+    return rateLimitResponse('unsigned', preCheck.retryAfterSeconds);
+  }
+
+  // Phase B: erst jetzt verifizieren (kann einen JWKS-Fetch ausloesen, aber
+  // nur fuer IPs, die Phase A passiert haben).
+  const authResult = await verifyWebBotAuth(request);
+  console.log('[mcp:web-bot-auth]', { verdict: authResult.verdict, agent: authResult.agent });
+
+  // Phase C: jetzt einmal wirklich abrechnen, gegen den nach dem Verdikt
+  // zutreffenden Key/Tier (verified -> Agent-URL/verified-Tier, sonst
+  // weiterhin IP-Key/unsigned-Tier -- invalid zaehlt wie unsigned).
+  const finalKey = getRateLimitKey(authResult, request);
+  const rateLimit = checkRateLimit(finalKey, authResult.verdict, cost);
+  if (!rateLimit.allowed) {
+    return rateLimitResponse(authResult.verdict, rateLimit.retryAfterSeconds);
   }
 
   return handler(request);
