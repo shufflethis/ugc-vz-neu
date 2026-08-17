@@ -1,7 +1,9 @@
+import { generateKeyPairSync, sign as cryptoSign } from 'node:crypto';
 import { deriveVerificationLevel, VERIFICATION_LEVELS } from '../app/lib/agent-verification';
 import { mapOutreachState } from '../app/lib/agent-gateway';
 import { MCP_TOOLS, AGENT_SCHEMAS } from '../app/lib/agent-tools';
 import { ugcVzAgentCard } from '../app/lib/a2a-agent-card';
+import { verifyWebBotAuth, checkRateLimit, getRateLimitKey, __internals } from '../app/lib/web-bot-auth';
 // `manifest` ist bewusst kein Export von route.ts (siehe Kommentar dort) --
 // wir rufen stattdessen GET() auf und lesen den echten Response-Body. Das
 // prueft zugleich Content-Type und dass die Route ueberhaupt laeuft.
@@ -171,6 +173,203 @@ for (const tool of MCP_TOOLS) {
 
 if (schemaFieldErrors.length) { schemaFieldErrors.forEach((e) => console.error(' -', e)); process.exit(1); }
 console.log('OK: agent-schemas <-> zod Feldgleichheit');
+
+// ---------- Web Bot Auth (app/lib/web-bot-auth.ts, Task 6) ----------
+// __internals ist bewusst kein Teil der oeffentlichen Modul-API (siehe
+// Kommentar dort) -- nur fuer diese Fixture-Tests exportiert.
+const wbaErrors: string[] = [];
+const checkWba = (cond: boolean, msg: string) => { if (!cond) wbaErrors.push(msg); };
+
+// -- Signature-Input-Parser: gueltige Zeile -> geparste Felder --
+const VALID_SIG_INPUT =
+  'sig1=("@authority" "content-type");created=1700000000;expires=1700003600;keyid="test-keyid";alg="ed25519";tag="web-bot-auth"';
+const NOW_WITHIN_WINDOW_MS = 1700001000 * 1000; // zwischen created und expires
+
+const parsedValid = __internals.evaluateSignatureInput(VALID_SIG_INPUT, NOW_WITHIN_WINDOW_MS);
+checkWba(parsedValid.ok === true, 'gueltige Signature-Input muss geparst werden (ok: true)');
+if (parsedValid.ok) {
+  checkWba(JSON.stringify(parsedValid.entry.components) === JSON.stringify(['@authority', 'content-type']), `Komponentenliste falsch geparst: ${JSON.stringify(parsedValid.entry.components)}`);
+  checkWba(parsedValid.entry.keyid === 'test-keyid', `keyid falsch geparst: ${parsedValid.entry.keyid}`);
+  checkWba(parsedValid.entry.alg === 'ed25519', `alg falsch geparst: ${parsedValid.entry.alg}`);
+  checkWba(parsedValid.entry.created === 1700000000, `created falsch geparst: ${parsedValid.entry.created}`);
+  checkWba(parsedValid.entry.expires === 1700003600, `expires falsch geparst: ${parsedValid.entry.expires}`);
+}
+
+// -- fehlendes tag -> unsigned --
+const MISSING_TAG_SIG_INPUT = 'sig1=("@authority");created=1700000000;expires=1700003600;keyid="test-keyid";alg="ed25519"';
+const parsedMissingTag = __internals.evaluateSignatureInput(MISSING_TAG_SIG_INPUT, NOW_WITHIN_WINDOW_MS);
+checkWba(
+  parsedMissingTag.ok === false && parsedMissingTag.verdict === 'unsigned',
+  `fehlendes tag muss unsigned ergeben, ergab ${JSON.stringify(parsedMissingTag)}`,
+);
+
+// -- abgelaufenes expires -> invalid --
+const EXPIRED_SIG_INPUT =
+  'sig1=("@authority");created=1700000000;expires=1700003600;keyid="test-keyid";alg="ed25519";tag="web-bot-auth"';
+const NOW_AFTER_EXPIRY_MS = 1700004000 * 1000; // nach expires=1700003600
+const parsedExpired = __internals.evaluateSignatureInput(EXPIRED_SIG_INPUT, NOW_AFTER_EXPIRY_MS);
+checkWba(
+  parsedExpired.ok === false && parsedExpired.verdict === 'invalid',
+  `abgelaufenes expires muss invalid ergeben, ergab ${JSON.stringify(parsedExpired)}`,
+);
+
+// -- created > 5 min in der Zukunft -> invalid --
+const FUTURE_CREATED_SIG_INPUT =
+  'sig1=("@authority");created=1700010000;expires=1700020000;keyid="test-keyid";alg="ed25519";tag="web-bot-auth"';
+const NOW_BEFORE_CREATED_MS = 1700000000 * 1000; // created liegt 10000s (>5min) in der Zukunft
+const parsedFutureCreated = __internals.evaluateSignatureInput(FUTURE_CREATED_SIG_INPUT, NOW_BEFORE_CREATED_MS);
+checkWba(
+  parsedFutureCreated.ok === false && parsedFutureCreated.verdict === 'invalid',
+  `created > 5min in der Zukunft muss invalid ergeben, ergab ${JSON.stringify(parsedFutureCreated)}`,
+);
+
+// -- Signature-Base-Konstruktion: von Hand berechneter Erwartungswert --
+// RFC 9421 §2.5: jede covered-component-Zeile "<name>": <wert>, LF-getrennt,
+// abschliessend die @signature-params-Zeile OHNE trailing LF. @authority
+// wird nach §2.2.3 lowercased mit entferntem Default-Port normalisiert.
+if (parsedValid.ok) {
+  const fixtureRequest = new Request('https://ugc-vz.de/api/mcp', {
+    method: 'POST',
+    headers: { host: 'UGC-VZ.de:443', 'content-type': 'application/json' },
+  });
+  const actualBase = __internals.buildSignatureBase(fixtureRequest, parsedValid.entry);
+  const expectedBase = [
+    '"@authority": ugc-vz.de',
+    '"content-type": application/json',
+    '"@signature-params": ("@authority" "content-type");created=1700000000;expires=1700003600;keyid="test-keyid";alg="ed25519";tag="web-bot-auth"',
+  ].join('\n');
+  checkWba(actualBase === expectedBase, `Signature-Base weicht ab.\n--- actual ---\n${actualBase}\n--- expected ---\n${expectedBase}`);
+}
+
+// -- checkRateLimit: unsigned blockiert beim 31. Request im Fenster --
+{
+  const key = 'validate:rate-limit:unsigned';
+  let blockedAt = -1;
+  for (let i = 1; i <= 35; i += 1) {
+    const result = checkRateLimit(key, 'unsigned');
+    if (!result.allowed && blockedAt === -1) blockedAt = i;
+  }
+  checkWba(blockedAt === 31, `31. unsigned-Request im Fenster muss blockiert werden, war es bei #${blockedAt}`);
+}
+
+// -- checkRateLimit: verified erst beim 121. Request blockiert --
+{
+  const key = 'validate:rate-limit:verified';
+  let blockedAt = -1;
+  for (let i = 1; i <= 125; i += 1) {
+    const result = checkRateLimit(key, 'verified');
+    if (!result.allowed && blockedAt === -1) blockedAt = i;
+  }
+  checkWba(blockedAt === 121, `121. verified-Request muss blockiert werden, war es bei #${blockedAt}`);
+}
+
+// -- checkRateLimit: cost=3 (search) zaehlt staerker als cost=1 (read) --
+{
+  const key = 'validate:rate-limit:cost3';
+  let blockedAt = -1;
+  let retryAfterSeenAtBlock: number | undefined;
+  for (let i = 1; i <= 12; i += 1) {
+    const result = checkRateLimit(key, 'unsigned', 3);
+    if (!result.allowed && blockedAt === -1) {
+      blockedAt = i;
+      retryAfterSeenAtBlock = result.retryAfterSeconds;
+    }
+  }
+  checkWba(blockedAt === 11, `11. Request mit cost=3 (33 > Limit 30) muss blockiert werden, war es bei #${blockedAt}`);
+  checkWba(typeof retryAfterSeenAtBlock === 'number' && retryAfterSeenAtBlock! > 0, 'retryAfterSeconds muss bei Blockierung gesetzt sein');
+}
+
+// -- getRateLimitKey: verified -> Agent-URL, sonst erste x-forwarded-for-IP --
+checkWba(
+  getRateLimitKey({ verdict: 'verified', agent: 'https://agent.example.test/jwks' }, new Request('https://ugc-vz.de/api/mcp')) === 'https://agent.example.test/jwks',
+  'getRateLimitKey muss bei verified die Agent-URL als Key liefern',
+);
+checkWba(
+  getRateLimitKey(
+    { verdict: 'unsigned' },
+    new Request('https://ugc-vz.de/api/mcp', { headers: { 'x-forwarded-for': '203.0.113.5, 10.0.0.1' } }),
+  ) === '203.0.113.5',
+  'getRateLimitKey muss bei unsigned die erste x-forwarded-for-IP als Key liefern',
+);
+
+if (wbaErrors.length) { wbaErrors.forEach((e) => console.error(' -', e)); process.exit(1); }
+console.log('OK: web-bot-auth Fixture-Tests (Parser, Signature-Base, Rate-Limit)');
+
+// ---------- Web Bot Auth: voller Round-Trip (echtes Ed25519-Keypaar) ----------
+// Erzeugt ein echtes Schluesselpaar, signiert einen synthetischen Request
+// exakt so, wie es ein Agent taete (Signature-Base ueber denselben
+// buildSignatureBase-Pfad, den auch der Verifier nutzt), und verifiziert
+// ihn ueber die volle verifyWebBotAuth()-Pipeline -- Header-Parsing,
+// JWKS-Keyid-Matching per Thumbprint (RFC 7638/8037), Cache, Ed25519-Crypto.
+// Der JWKS-Fetch wird ueber den injizierten jwksResolver gestubbt (kein
+// Netzzugriff, siehe Options-Parameter von verifyWebBotAuth).
+const wbaRoundtripErrors: string[] = [];
+const checkRoundtrip = (cond: boolean, msg: string) => { if (!cond) wbaRoundtripErrors.push(msg); };
+
+const { publicKey: rtPublicKey, privateKey: rtPrivateKey } = generateKeyPairSync('ed25519');
+const rtJwk = rtPublicKey.export({ format: 'jwk' }) as { kty: string; crv: string; x: string };
+const rtKeyid = __internals.computeJwkThumbprint(rtJwk);
+checkRoundtrip(typeof rtKeyid === 'string' && rtKeyid.length > 0, 'JWK-Thumbprint (keyid) muss berechenbar sein');
+
+const rtNowSec = Math.floor(Date.now() / 1000);
+const rtSigInput = `sig1=("@authority");created=${rtNowSec};expires=${rtNowSec + 300};keyid="${rtKeyid}";alg="ed25519";tag="web-bot-auth"`;
+const RT_AGENT_URL = 'https://agent.example.test/jwks';
+
+// Basis nur ueber Host-Header berechnen (die drei WBA-Header selbst sind
+// nicht Teil der signierten Komponenten -- components ist nur @authority).
+const rtBaseRequest = new Request('https://ugc-vz.de/api/mcp', { method: 'POST', headers: { host: 'ugc-vz.de' } });
+const rtEvaluated = __internals.evaluateSignatureInput(rtSigInput, Date.now());
+if (rtEvaluated.ok) {
+  const rtBase = __internals.buildSignatureBase(rtBaseRequest, rtEvaluated.entry);
+  const rtSignatureBytes = cryptoSign(null, Buffer.from(rtBase, 'utf8'), rtPrivateKey);
+  const rtSignatureHeader = `sig1=:${rtSignatureBytes.toString('base64')}:`;
+
+  let jwksFetchCount = 0;
+  const stubResolver = async (url: string) => {
+    jwksFetchCount += 1;
+    return url === RT_AGENT_URL ? { keys: [rtJwk] } : null;
+  };
+
+  const rtVerifyRequest = new Request('https://ugc-vz.de/api/mcp', {
+    method: 'POST',
+    headers: {
+      host: 'ugc-vz.de',
+      'signature-agent': `"${RT_AGENT_URL}"`,
+      'signature-input': rtSigInput,
+      signature: rtSignatureHeader,
+    },
+  });
+
+  const rtResult = await verifyWebBotAuth(rtVerifyRequest, { jwksResolver: stubResolver });
+  checkRoundtrip(rtResult.verdict === 'verified', `Runde-Trip-Signatur muss verified ergeben, war ${rtResult.verdict}`);
+  checkRoundtrip(rtResult.agent === RT_AGENT_URL, `agent im Ergebnis muss die Signature-Agent-URL sein, war ${rtResult.agent}`);
+
+  // Negativtest: letztes Byte der Signatur geflippt -> invalid (nicht
+  // verified, nicht unsigned -- die Signatur ist wohlgeformt, aber falsch).
+  const tamperedBytes = Buffer.from(rtSignatureBytes);
+  tamperedBytes[tamperedBytes.length - 1] ^= 0xff;
+  const rtTamperedRequest = new Request('https://ugc-vz.de/api/mcp', {
+    method: 'POST',
+    headers: {
+      host: 'ugc-vz.de',
+      'signature-agent': `"${RT_AGENT_URL}"`,
+      'signature-input': rtSigInput,
+      signature: `sig1=:${tamperedBytes.toString('base64')}:`,
+    },
+  });
+  const rtTamperedResult = await verifyWebBotAuth(rtTamperedRequest, { jwksResolver: stubResolver });
+  checkRoundtrip(rtTamperedResult.verdict === 'invalid', `Manipulierte Signatur muss invalid ergeben, war ${rtTamperedResult.verdict}`);
+
+  // JWKS-Cache: ueber beide Aufrufe hinweg (gleiche Signature-Agent-URL)
+  // darf der Resolver nur einmal aufgerufen worden sein.
+  checkRoundtrip(jwksFetchCount === 1, `JWKS-Resolver haette genau 1x aufgerufen werden muessen (Cache), war ${jwksFetchCount}x`);
+
+  if (wbaRoundtripErrors.length) { wbaRoundtripErrors.forEach((e) => console.error(' -', e)); process.exit(1); }
+  console.log('OK: web-bot-auth Round-Trip (echtes Ed25519-Keypaar, verified + invalid + JWKS-Cache)');
+} else {
+  console.error('Unerwarteter Fehler: Round-Trip-Signature-Input konnte nicht geparst werden', rtEvaluated);
+  process.exit(1);
+}
 
 })().catch((error) => {
   console.error('Unerwarteter Fehler in den UCP-/Schema-Checks:', error);

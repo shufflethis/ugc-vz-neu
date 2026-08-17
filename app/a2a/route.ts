@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { ugcVzAgentCard } from '@/app/lib/a2a-agent-card';
 import { getCreator, getOutreachStatus, requestOutreach } from '@/app/lib/agent-gateway';
+import { verifyWebBotAuth, checkRateLimit, getRateLimitKey } from '@/app/lib/web-bot-auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -332,6 +333,29 @@ export async function POST(request: Request) {
   const id = body.id ?? null;
   const method = body.method || body.params?.skill || body.params?.skillId;
   const access = getAgentAccess(request);
+
+  // Task 6 (Web Bot Auth, Spec §4.4): nur Verdikt-Logging + ein hoeheres
+  // Rate-Limit-Tier fuer die bestehende FREIE Nutzung (Methoden ohne eigene
+  // Bezahl-Quota, z. B. ugc.get_creator/tasks/get/agent.card). Die
+  // Bezahl-Quota-Logik unten (assertPaidAccess/consumeSearchQuota) bleibt
+  // dadurch exakt unveraendert -- bezahlte Keys haben bereits ihre eigene
+  // monatliche Quota und werden hier bewusst NICHT zusaetzlich gedrosselt.
+  const webBotAuth = await verifyWebBotAuth(request);
+  console.log('[a2a:web-bot-auth]', { verdict: webBotAuth.verdict, agent: webBotAuth.agent });
+
+  if (!access.authenticated) {
+    const isSearch = method === 'ugc.search_creators' || method === 'message/send' || method === 'tasks/send';
+    const rateLimit = checkRateLimit(getRateLimitKey(webBotAuth, request), webBotAuth.verdict, isSearch ? 3 : 1);
+    if (!rateLimit.allowed) {
+      return jsonRpcError(
+        id,
+        -32029,
+        'Rate limit exceeded',
+        { verdict: webBotAuth.verdict, retryAfterSeconds: rateLimit.retryAfterSeconds },
+        429,
+      );
+    }
+  }
 
   try {
     if (method === 'ugc.search_creators' || method === 'message/send' || method === 'tasks/send') {

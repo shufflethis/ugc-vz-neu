@@ -16,6 +16,7 @@
 // Befund und die Controller-Entscheidung fuer 2.x.
 import { createMcpHandler, getPublicOrigin } from 'mcp-handler';
 import { MCP_TOOLS } from '@/app/lib/agent-tools';
+import { verifyWebBotAuth, checkRateLimit, getRateLimitKey } from '@/app/lib/web-bot-auth';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60;
@@ -60,4 +61,76 @@ const handler = createMcpHandler(
   },
 );
 
-export { handler as GET, handler as POST, handler as DELETE };
+// ---------- Task 6: Web Bot Auth + Rate-Limit, VOR dem Handler ----------
+// Spec §4.4: "differenzieren, nie blockieren". Jede Anfrage bekommt ein
+// Verdikt (verified/invalid/unsigned aus app/lib/web-bot-auth.ts), das ihr
+// Rate-Limit-Tier bestimmt -- ein Mensch-aehnlicher, unsignierter Client
+// funktioniert unveraendert weiter, nur mit dem niedrigeren Tier.
+//
+// Bei Ueberschreitung antworten wir mit HTTP 429 VOR dem eigentlichen
+// mcp-handler-Aufruf, statt einen JSON-RPC-Fehler mit der passenden
+// Request-id ueber den Handler-Pfad zu schleusen: an dieser Stelle ist die
+// id nur durch Body-Parsing bekannt, und mcp-handler (server-seitig,
+// Streamable HTTP) erwartet den Original-Request-Stream unangetastet. Ein
+// HTTP-429-Pre-Handler-Response ist laut Briefing ausdruecklich zulaessig
+// ("wenn die Transport-Schicht das erlaubt") -- hier trifft das zu, weil
+// `handler` schlicht eine `(Request) => Promise<Response>`-Funktion ist
+// (siehe mcp-handler/dist/index.d.ts), also ohnehin an der Next.js-
+// Route-Handler-Grenze abgefangen werden kann, ohne den mcp-handler-internen
+// JSON-RPC-Envelope nachzubauen. Der Fehlerkoerper ist trotzdem JSON-RPC-
+// foermig (jsonrpc/id/error), damit MCP-Clients ihn als solchen erkennen,
+// nur mit id: null, da wir den Body bewusst nicht zusaetzlich parsen wollen,
+// nur um eine id zu extrahieren, die der Client bei einem 429 ohnehin selbst
+// aus dem HTTP-Status ableiten kann.
+
+const SEARCH_TOOL_NAMES = new Set(['search_creators']);
+
+// Ermittelt die Rate-Limit-Kosten (Suche zaehlt 3x, Lesen 1x), OHNE den
+// Original-Request-Body fuer den nachfolgenden Handler zu verbrauchen --
+// request.clone() dupliziert den Stream, das Original bleibt fuer
+// createMcpHandler() lesbar.
+async function costForRequest(request: Request): Promise<number> {
+  if (request.method !== 'POST') return 1;
+  try {
+    const body = await request.clone().json();
+    if (body?.method === 'tools/call' && SEARCH_TOOL_NAMES.has(body?.params?.name)) {
+      return 3;
+    }
+  } catch {
+    // Kaputtes/kein JSON -- der eigentliche Handler beantwortet das ohnehin
+    // als JSON-RPC-Parse-Fehler; hier zaehlen wir es als normale Kosten (1).
+  }
+  return 1;
+}
+
+async function withWebBotAuthGate(request: Request): Promise<Response> {
+  const authResult = await verifyWebBotAuth(request);
+  const key = getRateLimitKey(authResult, request);
+  const cost = await costForRequest(request);
+  const rateLimit = checkRateLimit(key, authResult.verdict, cost);
+
+  if (!rateLimit.allowed) {
+    return new Response(
+      JSON.stringify({
+        jsonrpc: '2.0',
+        id: null,
+        error: {
+          code: -32029,
+          message: 'Rate limit exceeded',
+          data: { verdict: authResult.verdict, retryAfterSeconds: rateLimit.retryAfterSeconds },
+        },
+      }),
+      {
+        status: 429,
+        headers: {
+          'Content-Type': 'application/json',
+          'Retry-After': String(rateLimit.retryAfterSeconds ?? 60),
+        },
+      },
+    );
+  }
+
+  return handler(request);
+}
+
+export { withWebBotAuthGate as GET, withWebBotAuthGate as POST, withWebBotAuthGate as DELETE };
