@@ -1,7 +1,11 @@
 import { deriveVerificationLevel, VERIFICATION_LEVELS } from '../app/lib/agent-verification';
 import { mapOutreachState } from '../app/lib/agent-gateway';
-import { MCP_TOOLS } from '../app/lib/agent-tools';
+import { MCP_TOOLS, AGENT_SCHEMAS } from '../app/lib/agent-tools';
 import { ugcVzAgentCard } from '../app/lib/a2a-agent-card';
+// `manifest` ist bewusst kein Export von route.ts (siehe Kommentar dort) --
+// wir rufen stattdessen GET() auf und lesen den echten Response-Body. Das
+// prueft zugleich Content-Type und dass die Route ueberhaupt laeuft.
+import { GET as getUcpManifest } from '../app/.well-known/ucp/route';
 
 const errors: string[] = [];
 const check = (cond: boolean, msg: string) => { if (!cond) errors.push(msg); };
@@ -76,3 +80,99 @@ checkCard(
 
 if (cardErrors.length) { cardErrors.forEach((e) => console.error(' -', e)); process.exit(1); }
 console.log('OK: a2a agent card');
+
+// Ab hier async: GET() der UCP-Route liefert eine Response, deren Body wir
+// per .json() lesen -- top-level await ist im hier verwendeten cjs-Transform
+// (tsx/esbuild ohne "type": "module") nicht erlaubt, deshalb eine
+// IIFE statt eines top-level await.
+void (async () => {
+
+// ---------- UCP-Manifest (app/.well-known/ucp/route.ts) ----------
+// Prueft die tatsaechliche, gegen die UCP-Spec (2026-04-08) verifizierte
+// Struktur -- siehe Kommentar in app/.well-known/ucp/route.ts fuer die
+// vollstaendige Abweichungsliste vom urspruenglichen Briefing-Entwurf
+// (kein ucp_version, kein primary_capability, ucp.services/capabilities
+// sind reverse-domain-keyed Maps statt Arrays mit name-Feld).
+const manifestErrors: string[] = [];
+const checkManifest = (cond: boolean, msg: string) => { if (!cond) manifestErrors.push(msg); };
+
+const KNOWN_SCHEMA_NAMES = EXPECTED_TOOL_NAMES.map((name) => `${name}.json`);
+
+const ucpManifestResponse = await getUcpManifest();
+checkManifest(ucpManifestResponse.status === 200, `GET /.well-known/ucp muss 200 liefern, war ${ucpManifestResponse.status}`);
+checkManifest(
+  (ucpManifestResponse.headers.get('content-type') ?? '').includes('application/json'),
+  `GET /.well-known/ucp muss application/json liefern, war ${ucpManifestResponse.headers.get('content-type')}`,
+);
+const ucpManifest = await ucpManifestResponse.json();
+
+checkManifest(
+  ucpManifest.ucp.version === '2026-04-08',
+  `ucp.version muss exakt '2026-04-08' sein, ist ${JSON.stringify(ucpManifest.ucp.version)}`,
+);
+
+const capabilityDeclarations = Object.values(ucpManifest.ucp.capabilities).flat();
+checkManifest(
+  capabilityDeclarations.length === 5,
+  `ucp.capabilities muss genau 5 Capability-Deklarationen enthalten (ueber alle reverse-domain-Keys hinweg), hat ${capabilityDeclarations.length}`,
+);
+checkManifest(
+  Object.keys(ucpManifest.ucp.capabilities).length === 5,
+  `ucp.capabilities muss genau 5 reverse-domain-Keys haben (je Tool einer), hat ${Object.keys(ucpManifest.ucp.capabilities).length}`,
+);
+for (const [key, declarations] of Object.entries(ucpManifest.ucp.capabilities)) {
+  for (const decl of declarations) {
+    const schemaUrl = (decl as { schema: string }).schema;
+    const matchesKnownName = KNOWN_SCHEMA_NAMES.some((name) => schemaUrl.endsWith(`/${name}`));
+    checkManifest(matchesKnownName, `Schema-URL von "${key}" endet nicht auf einen bekannten Tool-Namen: ${schemaUrl}`);
+  }
+}
+
+// dev.ucp.shopping.checkout bewusst NICHT in ucp.capabilities gelistet
+// (spec-konformes Signal fuer "nicht unterstuetzt": Abwesenheit statt eines
+// dedizierten Feldes) -- das Briefing wollte zusaetzlich einen expliziten,
+// von Menschen und Agenten lesbaren Hinweis samt Begruendung; der lebt in
+// der additiven commerce-Sektion, siehe Kommentar in route.ts.
+checkManifest(
+  !('dev.ucp.shopping.checkout' in ucpManifest.ucp.capabilities),
+  'dev.ucp.shopping.checkout darf nicht in ucp.capabilities gelistet sein (wir bieten keinen Checkout an)',
+);
+checkManifest(ucpManifest.commerce.checkout.supported === false, 'commerce.checkout.supported muss false sein');
+checkManifest(
+  typeof ucpManifest.commerce.checkout.reason === 'string' && ucpManifest.commerce.checkout.reason.length > 0,
+  'commerce.checkout.reason muss eine nicht-leere Begruendung sein',
+);
+
+if (manifestErrors.length) { manifestErrors.forEach((e) => console.error(' -', e)); process.exit(1); }
+console.log('OK: ucp manifest');
+
+// ---------- AGENT_SCHEMAS <-> zod-Feldgleichheit (app/lib/agent-tools.ts) ----------
+// AGENT_SCHEMAS wird aus MCP_TOOLS[*].inputSchema abgeleitet (siehe Kommentar
+// dort); dieser Check ist trotzdem kein Tautologie-Test, sondern eine
+// Regressionssicherung: er faellt, wenn sich zod- oder Standard-Schema-
+// Verhalten (z. B. .strict()/.passthrough(), umbenannte Felder) so aendert,
+// dass Feldnamen zwischen inputSchema.shape und dem abgeleiteten JSON-Schema
+// auseinanderlaufen -- exakt die Garantie, die Task 5 fordert.
+const schemaFieldErrors: string[] = [];
+const checkSchemaFields = (cond: boolean, msg: string) => { if (!cond) schemaFieldErrors.push(msg); };
+
+for (const tool of MCP_TOOLS) {
+  const zodFieldNames = Object.keys(tool.inputSchema.shape).sort();
+  const jsonSchema = AGENT_SCHEMAS[tool.name] as { properties?: Record<string, unknown> } | undefined;
+  checkSchemaFields(jsonSchema !== undefined, `AGENT_SCHEMAS["${tool.name}"] fehlt`);
+  // get_vocab hat ein leeres Objekt-Schema (z.object({})) -- properties kann
+  // dafuer fehlen oder {} sein, beides zaehlt als "keine Felder".
+  const jsonFieldNames = Object.keys(jsonSchema?.properties ?? {}).sort();
+  checkSchemaFields(
+    JSON.stringify(zodFieldNames) === JSON.stringify(jsonFieldNames),
+    `Feldnamen von "${tool.name}" weichen ab: zod ${JSON.stringify(zodFieldNames)} vs. JSON-Schema ${JSON.stringify(jsonFieldNames)}`,
+  );
+}
+
+if (schemaFieldErrors.length) { schemaFieldErrors.forEach((e) => console.error(' -', e)); process.exit(1); }
+console.log('OK: agent-schemas <-> zod Feldgleichheit');
+
+})().catch((error) => {
+  console.error('Unerwarteter Fehler in den UCP-/Schema-Checks:', error);
+  process.exit(1);
+});

@@ -221,3 +221,25 @@ export const MCP_TOOLS: McpToolDefinition[] = [
     },
   },
 ];
+
+// ---------- AGENT_SCHEMAS (Task 5: /api/agent-schemas/<name>.json) ----------
+// Nicht von Hand gepflegt, sondern aus MCP_TOOLS[*].inputSchema abgeleitet ueber
+// den Standard-Schema-JSON-Schema-Konverter, den zod@4.4.3 selbst implementiert
+// (zod/v4/classic/schemas.d.ts: "~standard": ZodStandardSchemaWithJSON<this>,
+// siehe node_modules/zod/v4/classic/schemas.js:56-63 fuer die Laufzeit-Zuweisung).
+// Das ist dieselbe Konvertierungsroutine, die @modelcontextprotocol/server beim
+// tools/list-Handshake aus app/api/mcp/route.ts zieht (Tool-Registrierung dort
+// reicht tool.inputSchema unveraendert an server.registerTool durch) -- MCP-
+// Inputs und UCP-/Skill-Schemas koennen dadurch nicht auseinanderlaufen, ganz
+// ohne zod-to-json-schema (bewusst nicht installiert, siehe Task-5-Briefing).
+// target 'draft-2020-12' pinnt das Ausgabeformat explizit (matcht den
+// $schema-Wert, den .input() sonst ohnehin waehlt) statt sich auf das
+// Default-Verhalten von .input({}) zu verlassen.
+// Rein, ohne I/O, zur Modul-Ladezeit einmalig berechnet -- unveraendert
+// importierbar durch app/api/agent-schemas/[name]/route.ts und
+// scripts/validate-agent-layer.ts.
+const JSON_SCHEMA_TARGET = { target: 'draft-2020-12' } as const;
+
+export const AGENT_SCHEMAS: Record<string, Record<string, unknown>> = Object.fromEntries(
+  MCP_TOOLS.map((tool) => [tool.name, tool.inputSchema['~standard'].jsonSchema.input(JSON_SCHEMA_TARGET)]),
+);
