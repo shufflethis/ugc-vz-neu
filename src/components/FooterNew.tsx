@@ -42,6 +42,7 @@ export default function Footer() {
             <ul className="space-y-3">
               <li><Link href="/about" className="text-gray-400 hover:text-white transition-colors duration-200 text-sm">Über uns</Link></li>
               <li><Link href="/creator" className="text-gray-400 hover:text-white transition-colors duration-200 text-sm">Als Creator anmelden</Link></li>
+              <li><Link href="/konto" className="text-gray-400 hover:text-white transition-colors duration-200 text-sm">Login für Creator</Link></li>
               <li><Link href="/brands" className="text-gray-400 hover:text-white transition-colors duration-200 text-sm">Für Brands</Link></li>
             </ul>
           </div>

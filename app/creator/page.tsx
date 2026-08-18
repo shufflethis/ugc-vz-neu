@@ -94,12 +94,20 @@ export default function CreatorPage({
           <p className="text-sm text-ink-soft max-w-2xl mx-auto leading-relaxed mb-8">
             Lege dein Profil direkt bei UGC VZ an. Öffentliche Profilangaben helfen Brands bei der Auswahl; deine E-Mail bleibt privat und wird nur für Bestätigung und konkrete Projektanfragen verwendet. Eine Löschung oder Korrektur ist jederzeit möglich.
           </p>
-          <Link
-            href={creatorFormUrl}
-            className="inline-flex bg-geo-violet hover:bg-geo-violet-soft text-white font-semibold py-4 px-8 rounded-lg transition-all"
-          >
-            Kostenloses Profil anlegen
-          </Link>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <Link
+              href={creatorFormUrl}
+              className="inline-flex bg-geo-violet hover:bg-geo-violet-soft text-white font-semibold py-4 px-8 rounded-lg transition-all"
+            >
+              Kostenloses Profil anlegen
+            </Link>
+            <Link
+              href="/konto"
+              className="inline-flex border border-geo-violet text-geo-violet hover:bg-geo-violet/5 font-semibold py-4 px-8 rounded-lg transition-all"
+            >
+              Mein Profil bearbeiten
+            </Link>
+          </div>
         </section>
 
         <CreatorRegistrationForm
