@@ -137,6 +137,7 @@ function EditView({ profile }: { profile: CreatorProfileView }) {
     birthYear: profile.birthYear ? String(profile.birthYear) : '',
     gender: profile.gender,
     city: profile.city,
+    profileImageUrl: profile.profileImageUrl || '',
     topics: profile.topics,
     preferredContent: profile.preferredContent,
     industries: profile.industries,
@@ -229,6 +230,23 @@ function EditView({ profile }: { profile: CreatorProfileView }) {
               <label><span className={labelClass}>Geburtsjahr</span><input type="number" min="1930" max={new Date().getFullYear() - 16} className={fieldClass} value={form.birthYear} onChange={(e) => update('birthYear', e.target.value)} inputMode="numeric" placeholder="z. B. 1995" /></label>
               <label><span className={labelClass}>Geschlecht</span><select className={fieldClass} value={form.gender} onChange={(e) => update('gender', e.target.value)}><option value="">Keine Angabe</option><option>Weiblich</option><option>Männlich</option><option>Divers</option><option>Selbstbeschreibung</option></select></label>
               <label className="sm:col-span-2"><span className={labelClass}>Stadt / Region</span><input className={fieldClass} value={form.city} onChange={(e) => update('city', e.target.value)} autoComplete="address-level2" maxLength={120} placeholder="z. B. Berlin oder Rhein-Main" /></label>
+              <div className="sm:col-span-2">
+                <span className={labelClass}>Profilbild</span>
+                <div className="flex items-start gap-4">
+                  <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border border-hairline bg-surface">
+                    {form.profileImageUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={form.profileImageUrl} alt="Profilbild-Vorschau" className="h-full w-full object-cover" />
+                    ) : (
+                      <span className="px-2 text-center text-xs text-ink-soft">Kein eigenes Bild</span>
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <input type="url" className={fieldClass} value={form.profileImageUrl} onChange={(e) => update('profileImageUrl', e.target.value)} maxLength={500} placeholder="https://… (optional)" />
+                    <span className="mt-2 block text-xs text-ink-soft">Optional: direkter Link zu deinem Profilbild. Lässt du das Feld leer, nutzen wir dein Social-Profilbild.</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -251,7 +269,7 @@ function EditView({ profile }: { profile: CreatorProfileView }) {
             <h2 className="text-xl font-bold mb-6">Links &amp; Freigabe</h2>
             <div className="space-y-5">
               <label><span className={labelClass}>Social-Links *</span><textarea className={`${fieldClass} min-h-32`} value={form.socialLinks} onChange={(e) => update('socialLinks', e.target.value)} placeholder={'https://instagram.com/deinprofil\nhttps://tiktok.com/@deinprofil'} required /><span className="mt-2 block text-xs text-ink-soft">Ein vollständiger Link pro Zeile, maximal 8.</span></label>
-              <label><span className={labelClass}>Portfolio und Arbeitsproben</span><textarea className={`${fieldClass} min-h-28`} value={form.portfolioLinks} onChange={(e) => update('portfolioLinks', e.target.value)} placeholder={'Canva-, Drive-, Website- oder Video-Link\nEin Link pro Zeile'} /><span className="mt-2 block text-xs text-ink-soft">Maximal 8 Links.</span></label>
+              <label><span className={labelClass}>Portfolio und Arbeitsproben</span><textarea className={`${fieldClass} min-h-28`} value={form.portfolioLinks} onChange={(e) => update('portfolioLinks', e.target.value)} placeholder={'Canva-, Drive-, Website- oder Video-Link\nEin Link pro Zeile'} /><span className="mt-2 block text-xs text-ink-soft">Maximal 15 Links.</span></label>
               <div className="rounded-2xl border border-hairline bg-surface p-4 text-sm leading-6 text-ink-soft">
                 <strong className="text-ink">Hinweis:</strong> UGC VZ hostet keine Dateien und nimmt aktuell nur Text- und Link-Daten an. Du kannst Videos also nicht hochladen — verlinke sie einfach (z. B. Google Drive, YouTube oder deine Website). Direkter Upload ist für die Zukunft denkbar, aktuell aber nicht möglich.
               </div>

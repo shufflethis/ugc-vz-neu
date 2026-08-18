@@ -30,6 +30,7 @@ const before: CreatorProfileView = {
   birthYear: 1995,
   gender: 'Weiblich',
   city: 'Berlin',
+  profileImageUrl: null,
   topics: 'Beauty, Food',
   preferredContent: 'Reels',
   industries: '',

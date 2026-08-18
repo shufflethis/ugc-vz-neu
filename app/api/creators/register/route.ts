@@ -5,6 +5,7 @@ import { getDatabase, isDatabaseConfigured } from '@/app/lib/database';
 import { buildCreatorVerificationEmail } from '@/app/lib/creator-registration-email';
 import {
   CREATOR_CONSENT_TEXT_VERSION,
+  normalizeImageUrl,
   normalizeWebUrls,
   type CreatorRegistrationPayload,
 } from '@/app/lib/creator-registration';
@@ -71,7 +72,7 @@ const normalizePayload = (body: Record<string, unknown>): CreatorRegistrationPay
     : null;
   const email = text(body.email, 254).toLowerCase();
   const socialLinks = normalizeWebUrls(body.socialLinks, 8);
-  const portfolioLinks = normalizeWebUrls(body.portfolioLinks, 8);
+  const portfolioLinks = normalizeWebUrls(body.portfolioLinks, 15);
   const name = text(body.name, 120);
   const topics = multiline(body.topics, 1_200);
   const preferredContent = multiline(body.preferredContent, 1_200);
@@ -95,6 +96,7 @@ const normalizePayload = (body: Record<string, unknown>): CreatorRegistrationPay
     birthYear,
     gender: text(body.gender, 80),
     city: text(body.city, 120),
+    profileImageUrl: normalizeImageUrl(body.profileImageUrl),
     topics,
     preferredContent,
     industries: multiline(body.industries, 1_200),

@@ -9,6 +9,7 @@ import {
 } from '@/app/lib/creator-profile';
 import {
   calculateReach,
+  normalizeImageUrl,
   normalizeWebUrls,
   socialHandle,
   socialPlatform,
@@ -91,7 +92,7 @@ export async function POST(request: NextRequest) {
   const preferredContent = multiline(body.preferredContent, 1_200);
   const rateText = multiline(body.rateText, 500);
   const socialLinks = normalizeWebUrls(body.socialLinks, 8);
-  const portfolioLinks = normalizeWebUrls(body.portfolioLinks, 8);
+  const portfolioLinks = normalizeWebUrls(body.portfolioLinks, 15);
 
   if (!name || !topics || !preferredContent || !rateText || socialLinks.length === 0) {
     return NextResponse.json({
@@ -108,6 +109,7 @@ export async function POST(request: NextRequest) {
     birthYear,
     gender: text(body.gender, 80),
     city: text(body.city, 120),
+    profileImageUrl: normalizeImageUrl(body.profileImageUrl),
     topics,
     preferredContent,
     industries: multiline(body.industries, 1_200),
@@ -160,6 +162,7 @@ export async function POST(request: NextRequest) {
         children_context = $16,
         pet_context = $17,
         profile_quality_score = $18,
+        profile_image_url = $19,
         updated_at = now()
       WHERE id = $1
     `,
@@ -169,6 +172,7 @@ export async function POST(request: NextRequest) {
         after.industries || null, rateText, after.reachText || null, totalReach,
         after.equipment || null, after.specialTraits || null,
         after.childrenContext || null, after.petContext || null, qualityScore,
+        after.profileImageUrl || null,
       ],
     );
 

@@ -5,6 +5,7 @@ export type CreatorRegistrationPayload = {
   birthYear: number | null;
   gender: string;
   city: string;
+  profileImageUrl: string | null;
   topics: string;
   preferredContent: string;
   industries: string;
@@ -23,6 +24,24 @@ export type CreatorRegistrationPayload = {
 };
 
 export const CREATOR_CONSENT_TEXT_VERSION = 'native-creator-v1-2026-07-16' as const;
+
+/**
+ * Normalisiert eine einzelne Bild-URL. Akzeptiert nur http(s), laesst Query-Parameter
+ * (Bildgroesse etc.) bewusst stehen und liefert null bei leerer/ungueltiger Eingabe.
+ */
+export const normalizeImageUrl = (value: unknown): string | null => {
+  let candidate = String(value || '').trim();
+  if (!candidate) return null;
+  if (/^www\./i.test(candidate)) candidate = `https://${candidate}`;
+  try {
+    const url = new URL(candidate);
+    if (!['http:', 'https:'].includes(url.protocol)) return null;
+    url.hash = '';
+    return url.toString();
+  } catch {
+    return null;
+  }
+};
 
 export const normalizeWebUrls = (value: unknown, max = 8): string[] => {
   const source = Array.isArray(value) ? value.join('\n') : String(value || '');

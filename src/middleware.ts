@@ -12,7 +12,7 @@ function applySecurityHeaders(response: NextResponse, request: NextRequest) {
     "default-src 'self'",
     `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === 'development' ? " 'unsafe-eval'" : ''} ${analyticsSource}`,
     "style-src 'self' 'unsafe-inline'",
-    "img-src 'self' data: blob: https://p16-sign-va.tiktokcdn.com https://p16-sign.tiktokcdn-us.com https://scontent.cdninstagram.com https://*.fbcdn.net https://yt3.ggpht.com https://yt3.googleusercontent.com https://www.gravatar.com https://i.ytimg.com",
+    "img-src 'self' data: blob: https: https://p16-sign-va.tiktokcdn.com https://p16-sign.tiktokcdn-us.com https://scontent.cdninstagram.com https://*.fbcdn.net https://yt3.ggpht.com https://yt3.googleusercontent.com https://www.gravatar.com https://i.ytimg.com",
     "font-src 'self'",
     `connect-src 'self' ${analyticsSource}`,
     "media-src 'self'",

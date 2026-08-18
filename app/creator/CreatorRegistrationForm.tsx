@@ -11,6 +11,7 @@ type CreatorFormState = {
   birthYear: string;
   gender: string;
   city: string;
+  profileImageUrl: string;
   topics: string;
   preferredContent: string;
   industries: string;
@@ -35,6 +36,7 @@ const initialState: CreatorFormState = {
   birthYear: '',
   gender: '',
   city: '',
+  profileImageUrl: '',
   topics: '',
   preferredContent: '',
   industries: '',
@@ -255,7 +257,8 @@ export default function CreatorRegistrationForm({
                 {step === 2 && (
                   <div className="space-y-5">
                     <label><span className={labelClass}>Social-Links *</span><textarea className={`${fieldClass} min-h-32`} value={form.socialLinks} onChange={(e) => update('socialLinks', e.target.value)} placeholder={'https://instagram.com/deinprofil\nhttps://tiktok.com/@deinprofil'} required /><span className="mt-2 block text-xs text-ink-soft">Ein vollständiger Link pro Zeile, maximal 8.</span></label>
-                    <label><span className={labelClass}>Portfolio und Arbeitsproben</span><textarea className={`${fieldClass} min-h-28`} value={form.portfolioLinks} onChange={(e) => update('portfolioLinks', e.target.value)} placeholder={'Canva-, Drive-, Website- oder Video-Link\nEin Link pro Zeile'} /><span className="mt-2 block text-xs text-ink-soft">Maximal 8 Links. Bitte nur Inhalte teilen, die Brands sehen dürfen.</span></label>
+                    <label><span className={labelClass}>Profilbild-URL</span><input type="url" className={fieldClass} value={form.profileImageUrl} onChange={(e) => update('profileImageUrl', e.target.value)} maxLength={500} placeholder="https://… (optional)" /><span className="mt-2 block text-xs text-ink-soft">Optional: direkter Link zu einem Bild. Lässt du das Feld leer, nutzen wir dein Social-Profilbild.</span></label>
+                    <label><span className={labelClass}>Portfolio und Arbeitsproben</span><textarea className={`${fieldClass} min-h-28`} value={form.portfolioLinks} onChange={(e) => update('portfolioLinks', e.target.value)} placeholder={'Canva-, Drive-, Website- oder Video-Link\nEin Link pro Zeile'} /><span className="mt-2 block text-xs text-ink-soft">Maximal 15 Links. Bitte nur Inhalte teilen, die Brands sehen dürfen.</span></label>
 
                     <div className="rounded-2xl border border-hairline bg-surface p-5 space-y-4">
                       <label className="flex cursor-pointer items-start gap-3"><input type="checkbox" className="mt-1 h-4 w-4 accent-geo-violet" checked={form.platformConsent} onChange={(e) => update('platformConsent', e.target.checked)} /><span className="text-sm leading-6 text-ink-soft"><strong className="text-ink">Pflicht:</strong> Ich stimme der Verarbeitung meiner Angaben zur Erstellung und Darstellung meines UGC-VZ-Profils gemäß der <Link href="/datenschutz" className="font-semibold text-geo-violet underline">Datenschutzerklärung</Link> zu. Öffentliche Profilangaben umfassen unter anderem Name/Künstlername, Region, Themen, Portfolio, Social-Links, Reichweite und Preisangaben.</span></label>

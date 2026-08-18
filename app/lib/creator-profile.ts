@@ -8,6 +8,7 @@ export type CreatorProfileView = {
   birthYear: number | null;
   gender: string;
   city: string;
+  profileImageUrl: string | null;
   topics: string;
   preferredContent: string;
   industries: string;
@@ -29,6 +30,7 @@ type ProfileRow = {
   birth_year: number | null;
   gender: string | null;
   city: string | null;
+  profile_image_url: string | null;
   topics: string | null;
   preferred_content: string | null;
   industries: string | null;
@@ -64,6 +66,7 @@ export const loadCreatorProfile = async (
       p.birth_year,
       p.gender,
       p.city,
+      p.profile_image_url,
       p.topics,
       p.preferred_content,
       p.industries,
@@ -106,6 +109,7 @@ export const loadCreatorProfile = async (
     birthYear: row.birth_year ?? null,
     gender: str(row.gender),
     city: str(row.city),
+    profileImageUrl: row.profile_image_url ?? null,
     topics: str(row.topics),
     preferredContent: str(row.preferred_content),
     industries: str(row.industries),
@@ -144,6 +148,7 @@ type ScalarField =
   | 'birthYear'
   | 'gender'
   | 'city'
+  | 'profileImageUrl'
   | 'topics'
   | 'preferredContent'
   | 'industries'
@@ -164,6 +169,7 @@ export const diffProfile = (
     ['birthYear', 'birth_year'],
     ['gender', 'gender'],
     ['city', 'city'],
+    ['profileImageUrl', 'profile_image_url'],
     ['topics', 'topics'],
     ['preferredContent', 'preferred_content'],
     ['industries', 'industries'],

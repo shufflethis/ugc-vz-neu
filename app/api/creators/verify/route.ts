@@ -77,7 +77,7 @@ export async function GET(request: Request) {
     const creatorId = existing?.creator_id || uuidFromEmail(email);
     const publicId = existing?.public_id || publicIdFromEmail(email);
     const socialLinks = normalizeWebUrls(payload.socialLinks, 8);
-    const portfolioLinks = normalizeWebUrls(payload.portfolioLinks, 8);
+    const portfolioLinks = normalizeWebUrls(payload.portfolioLinks, 15);
     const submittedAt = new Date().toISOString();
     const displayName = payload.stageName || payload.name;
     const qualityScore = Math.min(100,
@@ -94,10 +94,10 @@ export async function GET(request: Request) {
         id, public_id, status, display_name, legal_name, stage_name, birth_year,
         gender, city, topics, preferred_content, industries, rate_text, reach_text,
         total_reach, equipment, special_traits, children_context, pet_context,
-        profile_quality_score, source_priority, submitted_at
+        profile_quality_score, source_priority, submitted_at, profile_image_url
       ) VALUES (
         $1, $2, 'active', $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13,
-        $14, $15, $16, $17, $18, $19, 30, $20
+        $14, $15, $16, $17, $18, $19, 30, $20, $21
       )
       ON CONFLICT (id) DO UPDATE SET
         status = 'active',
@@ -120,6 +120,7 @@ export async function GET(request: Request) {
         profile_quality_score = EXCLUDED.profile_quality_score,
         source_priority = 30,
         submitted_at = EXCLUDED.submitted_at,
+        profile_image_url = EXCLUDED.profile_image_url,
         updated_at = now()
     `, [
       creatorId, publicId, displayName, payload.name, payload.stageName || null,
@@ -128,6 +129,7 @@ export async function GET(request: Request) {
       payload.reachText || null, calculateReach(payload.reachText || ''),
       payload.equipment || null, payload.specialTraits || null,
       payload.childrenContext || null, payload.petContext || null, qualityScore, submittedAt,
+      payload.profileImageUrl || null,
     ]);
 
     await sql.query(`
