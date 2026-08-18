@@ -42,12 +42,12 @@ export const buildCreatorVerificationEmail = ({
             </div>
             <p style="margin:22px 0 0;font-size:13px;line-height:20px;color:#7a717f;">Der Link ist 24 Stunden gültig. Falls du dich nicht angemeldet hast, kannst du diese E-Mail ignorieren.</p>
           </td></tr>
-          <tr><td style="padding:20px 30px;border-top:1px solid #ece8ee;font-size:12px;line-height:19px;color:#817887;">UGC VZ · ugc-vz.de · Kontakt: hi@ugc-vz.de</td></tr>
+          <tr><td style="padding:20px 30px;border-top:1px solid #ece8ee;font-size:12px;line-height:19px;color:#817887;">UGC VZ ist ein Service der track by track GmbH · Schliemannstr. 23, 10437 Berlin<br /><a href="https://ugc-vz.de/impressum" style="color:#6f2fa9;text-decoration:none;">Impressum</a> · <a href="https://ugc-vz.de/datenschutz" style="color:#6f2fa9;text-decoration:none;">Datenschutz</a> · Kontakt: <a href="mailto:hi@ugc-vz.de" style="color:#6f2fa9;text-decoration:none;">hi@ugc-vz.de</a></td></tr>
         </table>
       </td></tr>
     </table>
   </body>
 </html>`,
-    text: `Hallo ${firstName},\n\nbestätige deine E-Mail-Adresse, damit dein kostenloses UGC-VZ-Profil aktiviert werden kann:\n${verificationUrl}\n\nBrands können danach dein öffentliches Profil finden. Private Kontaktdaten verwenden wir nur für konkrete Anfragen. UGC VZ bleibt kostenlos und verlangt keine Provision.\n\nDer Link ist 24 Stunden gültig. Falls du dich nicht angemeldet hast, ignoriere diese E-Mail.\n\nUGC VZ`,
+    text: `Hallo ${firstName},\n\nbestätige deine E-Mail-Adresse, damit dein kostenloses UGC-VZ-Profil aktiviert werden kann:\n${verificationUrl}\n\nBrands können danach dein öffentliches Profil finden. Private Kontaktdaten verwenden wir nur für konkrete Anfragen. UGC VZ bleibt kostenlos und verlangt keine Provision.\n\nDer Link ist 24 Stunden gültig. Falls du dich nicht angemeldet hast, ignoriere diese E-Mail.\n\nUGC VZ ist ein Service der track by track GmbH · Schliemannstr. 23, 10437 Berlin\nImpressum: https://ugc-vz.de/impressum · Datenschutz: https://ugc-vz.de/datenschutz · Kontakt: hi@ugc-vz.de`,
   };
 };

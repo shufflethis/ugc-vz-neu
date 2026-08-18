@@ -80,12 +80,14 @@ export const emailShell = ({
   title,
   children,
   footerNote,
+  unsubscribeUrl,
 }: {
   preheader: string;
   eyebrow: string;
   title: string;
   children: string;
   footerNote?: string;
+  unsubscribeUrl?: string;
 }) => `<!doctype html>
 <html lang="de">
   <head>
@@ -127,9 +129,13 @@ export const emailShell = ({
             ${children}
             <tr>
               <td class="email-pad" style="padding:25px 42px 34px;border-top:1px solid #eee9f2;color:#746b7c;font-size:12px;line-height:19px;">
-                ${htmlEscape(footerNote || 'Diese transaktionale E-Mail erhältst du, weil über UGC VZ eine Anfrage mit deiner Adresse gestellt wurde.')}<br />
-                UGC VZ ist ein Angebot der track by track GmbH / <a href="https://famefact.com/?utm_source=ugc-vz&amp;utm_medium=email" style="color:#6f2fa9;text-decoration:none;">famefact</a>, Schliemannstr. 23, 10437 Berlin.<br />
-                Fragen oder Missbrauch melden: <a href="mailto:hi@ugc-vz.de" style="color:#6f2fa9;">hi@ugc-vz.de</a>
+                ${htmlEscape(footerNote || 'Diese transaktionale E-Mail erhältst du, weil über UGC VZ eine Anfrage mit deiner Adresse gestellt wurde.')}
+                <div style="margin-top:13px;">
+                  UGC VZ ist ein Service der <strong style="color:#5f5666;">track by track GmbH</strong> · Schliemannstr. 23, 10437 Berlin<br />
+                  <a href="https://ugc-vz.de/impressum" style="color:#6f2fa9;text-decoration:none;">Impressum</a>
+                  &nbsp;·&nbsp;<a href="https://ugc-vz.de/datenschutz" style="color:#6f2fa9;text-decoration:none;">Datenschutz</a>${unsubscribeUrl ? `&nbsp;·&nbsp;<a href="${htmlEscape(unsubscribeUrl)}" style="color:#6f2fa9;text-decoration:none;">Abmelden</a>` : ''}<br />
+                  Fragen oder Missbrauch melden: <a href="mailto:hi@ugc-vz.de" style="color:#6f2fa9;text-decoration:none;">hi@ugc-vz.de</a>
+                </div>
               </td>
             </tr>
           </table>

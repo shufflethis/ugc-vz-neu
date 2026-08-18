@@ -80,7 +80,7 @@ export const buildCreatorWelcomeEmail = ({
 
             <p style="margin:26px 0 0;font-size:14px;line-height:22px;color:#7a717f;">Du willst etwas an deinem Profil ändern oder es löschen lassen? Antworte einfach auf diese E-Mail.</p>
           </td></tr>
-          <tr><td style="padding:20px 30px;border-top:1px solid #ece8ee;font-size:12px;line-height:19px;color:#817887;">UGC VZ · ugc-vz.de · Kontakt: hi@ugc-vz.de</td></tr>
+          <tr><td style="padding:20px 30px;border-top:1px solid #ece8ee;font-size:12px;line-height:19px;color:#817887;">UGC VZ ist ein Service der track by track GmbH · Schliemannstr. 23, 10437 Berlin<br /><a href="https://ugc-vz.de/impressum" style="color:#6f2fa9;text-decoration:none;">Impressum</a> · <a href="https://ugc-vz.de/datenschutz" style="color:#6f2fa9;text-decoration:none;">Datenschutz</a> · Kontakt: <a href="mailto:hi@ugc-vz.de" style="color:#6f2fa9;text-decoration:none;">hi@ugc-vz.de</a></td></tr>
         </table>
       </td></tr>
     </table>
@@ -104,6 +104,7 @@ ${CREATOR_REFERRAL_URL}
 
 Du willst etwas an deinem Profil ändern oder es löschen lassen? Antworte einfach auf diese E-Mail.
 
-UGC VZ · ugc-vz.de`,
+UGC VZ ist ein Service der track by track GmbH · Schliemannstr. 23, 10437 Berlin
+Impressum: https://ugc-vz.de/impressum · Datenschutz: https://ugc-vz.de/datenschutz · Kontakt: hi@ugc-vz.de`,
   };
 };

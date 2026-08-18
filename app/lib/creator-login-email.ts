@@ -42,6 +42,6 @@ export const buildCreatorLoginEmail = ({ name, loginUrl }: { name: string; login
       children: body,
       footerNote: 'Diese E-Mail erhältst du, weil über deine Adresse ein Login für das UGC-VZ-Creator-Verzeichnis angefragt wurde.',
     }),
-    text: `Hallo ${firstName},\n\nhier ist dein persönlicher Anmeldelink zu deinem UGC-VZ-Profil:\n${loginUrl}\n\nMit einem Klick siehst du deine hinterlegten Angaben und kannst sie jederzeit ändern — zum Beispiel Portfolio-Links ergänzen oder Preise anpassen.\n\nDer Link ist ${CREATOR_LOGIN_TTL_MINUTES} Minuten gültig. Falls du dich nicht angemeldet hast, ignoriere diese E-Mail.\n\nSag es weiter: Anmeldung, Profil und Vermittlung bei UGC VZ sind für Creator kostenlos.\n\nUGC VZ · ugc-vz.de`,
+    text: `Hallo ${firstName},\n\nhier ist dein persönlicher Anmeldelink zu deinem UGC-VZ-Profil:\n${loginUrl}\n\nMit einem Klick siehst du deine hinterlegten Angaben und kannst sie jederzeit ändern — zum Beispiel Portfolio-Links ergänzen oder Preise anpassen.\n\nDer Link ist ${CREATOR_LOGIN_TTL_MINUTES} Minuten gültig. Falls du dich nicht angemeldet hast, ignoriere diese E-Mail.\n\nSag es weiter: Anmeldung, Profil und Vermittlung bei UGC VZ sind für Creator kostenlos.\n\nUGC VZ ist ein Service der track by track GmbH · Schliemannstr. 23, 10437 Berlin\nImpressum: https://ugc-vz.de/impressum · Datenschutz: https://ugc-vz.de/datenschutz · Kontakt: hi@ugc-vz.de`,
   };
 };
