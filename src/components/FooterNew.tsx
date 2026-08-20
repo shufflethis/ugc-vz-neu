@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import ContactPopup from '../../app/components/ContactPopup';
 import LogoImage from '../../app/components/LogoImage';
+import PreferredSourceBadge from '../../app/components/PreferredSourceBadge';
 
 export default function Footer() {
   const [isContactPopupOpen, setIsContactPopupOpen] = useState(false);
@@ -102,6 +103,7 @@ export default function Footer() {
             </a>
             . Alle Rechte vorbehalten.
           </p>
+          <PreferredSourceBadge variant="light" className="shrink-0" />
         </div>
       </div>
 

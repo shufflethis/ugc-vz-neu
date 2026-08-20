@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import ResponsiveCTAButton from '@/src/components/ResponsiveCTAButton';
 import LogoImage from '../components/LogoImage';
+import PreferredSourceBadge from '../components/PreferredSourceBadge';
 import BreadcrumbSchema from '../components/BreadcrumbSchema';
 import JsonLdScript from './[slug]/JsonLdScript';
 import ClientWissenContent from './ClientWissenContent';
@@ -64,6 +65,9 @@ export default function WissenListingPage({ page }: { page: number }) {
               Fundierte Guides für Creator, Brands und Marketing-Teams. Von Strategie und Preisen bis zu Briefing, Rechten und Kampagnenpraxis.
             </p>
             {page > 1 && <p className="mt-4 text-sm text-ink-soft">Seite {page} von {pageCount}</p>}
+            <div className="mt-8 flex justify-center">
+              <PreferredSourceBadge variant="dark" />
+            </div>
           </div>
 
           <ClientWissenContent posts={posts} />
