@@ -32,7 +32,7 @@ const args = Object.fromEntries(process.argv.slice(2).map((arg) => {
   const [key, value] = arg.replace(/^--/, '').split('=');
   return [key, value ?? true];
 }));
-const LIMIT = Number(args.limit) > 0 ? Number(args.limit) : 40;
+const LIMIT = Number(args.limit) > 0 ? Number(args.limit) : 25;
 const FORCE_PUBLIC_ID = typeof args['force-public-id'] === 'string' ? args['force-public-id'] : null;
 
 const BROWSER_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36';
@@ -83,12 +83,17 @@ const curlFetch = (url, extraHeaders = [], timeoutSeconds = 15) => {
   };
 };
 
+// Wird bei HTTP 429 gesetzt: dann bricht der Lauf ab, statt weiter gegen das
+// Rate-Limit zu rennen (das eskaliert sonst zum laengeren IP-Block).
+let rateLimited = false;
+
 const resolveAvatarSourceUrl = async ({ platform, handle }) => {
   if (platform === 'instagram') {
     const response = curlFetch(
       `https://www.instagram.com/api/v1/users/web_profile_info/?username=${encodeURIComponent(handle)}`,
       ['Accept: application/json', 'x-ig-app-id: 936619743392459'],
     );
+    if (response.status === 429) { rateLimited = true; return null; }
     if (response.status !== 200) return null;
     let data = null;
     try { data = JSON.parse(response.body.toString('utf8')); } catch { return null; }
@@ -96,6 +101,7 @@ const resolveAvatarSourceUrl = async ({ platform, handle }) => {
     return user?.profile_pic_url_hd || user?.profile_pic_url || null;
   }
   const response = curlFetch(`https://www.tiktok.com/@${encodeURIComponent(handle)}`, ['Accept: text/html']);
+  if (response.status === 429) { rateLimited = true; return null; }
   if (response.status !== 200) return null;
   const html = response.body.toString('utf8');
   const match = html.match(/<meta[^>]+property="og:image"[^>]+content="([^"]+)"/i)
@@ -145,12 +151,18 @@ let ok = 0;
 let failed = 0;
 
 for (const creator of candidates) {
+  if (rateLimited) {
+    console.log(`[${new Date().toISOString()}] Rate-Limit (429) erkannt - Lauf wird abgebrochen, Rest kommt beim naechsten Cron.`);
+    break;
+  }
+
   const handles = extractHandles(creator.social_links).slice(0, 3);
   let stored = false;
 
   for (const handle of handles) {
     try {
       const sourceUrl = await resolveAvatarSourceUrl(handle);
+      if (rateLimited) break;
       if (!sourceUrl) continue;
       const image = await downloadImage(sourceUrl);
       if (!image) continue;
@@ -176,6 +188,11 @@ for (const creator of candidates) {
     }
   }
 
+  if (!stored && rateLimited) {
+    // Rate-Limit ist nicht die Schuld des Creators: kein fail_count-Malus.
+    continue;
+  }
+
   if (!stored) {
     failed += 1;
     await sql.query(
@@ -190,8 +207,10 @@ for (const creator of candidates) {
     console.log(`  --  ${creator.public_id} ${creator.display_name}: kein Bild gefunden (${handles.length} Handles geprueft)`);
   }
 
-  // Hoeflich bleiben: Abstand zwischen Profilen, sonst riskieren wir IP-Blocks.
-  await sleep(2500 + Math.floor(Math.random() * 2000));
+  // Hoeflich bleiben: Instagram drosselt schon nach ~1 Dutzend schnellen
+  // Requests pro IP (empirisch beim Backfill). 8-14s Abstand haelt den
+  // Stundenlauf unter dem Radar; Vollabdeckung passiert ueber viele Laeufe.
+  await sleep(8000 + Math.floor(Math.random() * 6000));
 }
 
 console.log(`[${new Date().toISOString()}] Fertig: ${ok} gespeichert, ${failed} ohne Bild.`);
