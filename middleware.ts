@@ -69,10 +69,6 @@ export function middleware(request: NextRequest) {
   // Markdown-Content-Negotiation (acceptmarkdown.com): GET mit
   // "Accept: text/markdown" auf ausgehandelte Pfade wird auf die
   // Markdown-Variante unter /md/... rewritet (app/md/[[...path]]/route.ts).
-  // Die HTML-Variante dieser Pfade bekommt ihr "Vary: Accept" additiv ueber
-  // next.config.js headers() - hier NICHT setzen, sonst wuerde Nexts eigenes
-  // Vary (rsc, next-router-state-tree, ...) ueberschrieben und Client-Caches
-  // koennten falsche RSC-Payloads ausliefern.
   if (
     request.method === 'GET' &&
     !pathname.startsWith('/md') &&
@@ -80,10 +76,24 @@ export function middleware(request: NextRequest) {
     isMarkdownNegotiatedPath(pathname)
   ) {
     const target = new URL(`/md${pathname === '/' ? '' : pathname.replace(/\/+$/, '')}`, request.url);
-    return applySecurityHeaders(NextResponse.rewrite(target), request);
+    return NextResponse.rewrite(target);
   }
 
-  return applySecurityHeaders(NextResponse.next(), request);
+  // HTML-Variante der ausgehandelten Pfade: Vary muss Accept enthalten, sonst
+  // koennen CDNs die Markdown- und die HTML-Antwort im selben Cache-Slot
+  // mischen. Nexts eigene Vary-Werte (RSC, ...) explizit mitfuehren statt sie
+  // zu ueberschreiben - Client-Caches unterscheiden sonst RSC-Payloads nicht
+  // mehr von HTML.
+  if (request.method === 'GET' && isMarkdownNegotiatedPath(pathname)) {
+    const response = NextResponse.next();
+    response.headers.set('Vary', 'RSC, Next-Router-State-Tree, Next-Router-Prefetch, Accept');
+    return response;
+  }
+
+  // Security-Header kommen zentral aus next.config.js headers() - hier nicht
+  // erneut setzen, sonst antwortet die Seite mit zwei CSP-Headern (Browser
+  // erzwingen dann die Schnittmenge).
+  return NextResponse.next();
 }
 
 // Pfade mit Markdown-Variante; muss zur STATIC_PAGES-Liste in

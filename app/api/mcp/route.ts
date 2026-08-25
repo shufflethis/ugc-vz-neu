@@ -156,10 +156,10 @@ function rateLimitResponse(verdict: string, retryAfterSeconds: number | undefine
 // SDK ein 406 ("kein MCP-Server hier"). Der Shim ergaenzt fehlende Accept-
 // Werte, bevor der SDK-Handler prueft; spec-konforme Clients bleiben unberuehrt.
 async function withCompatibleAccept(request: Request): Promise<Request> {
-  const accept = request.headers.get('accept') || '';
-  const hasJson = /application\/json|\*\/\*/i.test(accept);
-  const hasSse = /text\/event-stream|\*\/\*/i.test(accept);
-  if (hasJson && hasSse) return request;
+  // Exakt der SDK-Check (server/dist: handlePostRequest): verlangt BEIDE
+  // Literale im Accept-Header - "*/*" (curl-Default!) genuegt dem SDK nicht.
+  const accept = (request.headers.get('accept') || '').toLowerCase();
+  if (accept.includes('application/json') && accept.includes('text/event-stream')) return request;
   const headers = new Headers(request.headers);
   headers.set('accept', 'application/json, text/event-stream');
   // Body puffern statt Stream durchreichen: new Request(request, init) verlangt
