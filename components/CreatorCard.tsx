@@ -85,6 +85,11 @@ export default function CreatorCard({ creator, isSelected, onSelect, className }
             fill
             className="object-cover"
             sizes="96px"
+            // Remote-URLs (eigene Bildlinks der Creator) laufen am Optimizer
+            // vorbei: ohne remotePatterns-Allowlist waere sonst jeder Host ein
+            // offener Proxy. Lokale Pfade (/api/avatar/..., Placeholder) nutzen
+            // den Optimizer normal.
+            unoptimized={/^https?:\/\//i.test(creator.image || '')}
             onError={(e) => {
               const target = e.target as HTMLImageElement;
               // Ensure correct gender-specific placeholder on error

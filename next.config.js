@@ -31,18 +31,11 @@ const nextConfig = {
 
   trailingSlash: false,
 
-  images: {
-    // Creator koennen eigene Bild-URLs von beliebigen Hosts hinterlegen
-    // (profile_image_url); das Wildcard-Pattern laesst sie durch den
-    // next/image-Optimizer. Automatische Avatare kommen von der eigenen
-    // Domain (/api/avatar/...) und brauchen kein remotePattern.
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: '**',
-      },
-    ],
-  },
+  // Kein remotePatterns-Eintrag: ein Wildcard-Pattern wuerde den
+  // next/image-Optimizer zum offenen Bild-Proxy machen (SSRF-/Abuse-Flaeche).
+  // Remote-Bilder (von Creatorn hinterlegte Bild-URLs) rendert CreatorCard
+  // deshalb mit unoptimized direkt im Browser; automatische Avatare kommen
+  // von der eigenen Domain (/api/avatar/...) und brauchen den Optimizer nicht.
 
   // Redirects für alte/nicht existierende URLs (SEO fix für Seobility 404s)
   async redirects() {
