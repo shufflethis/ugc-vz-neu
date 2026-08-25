@@ -229,6 +229,29 @@ const nextConfig = {
         ],
       },
       {
+        // Markdown-Content-Negotiation (acceptmarkdown.com): die HTML-Variante
+        // der ausgehandelten Pfade braucht "Vary: Accept", damit CDNs die
+        // HTML- und die Markdown-Antwort (src/middleware.ts -> /md/...) nicht
+        // im selben Cache-Slot mischen. Additiv als eigener Header - Nexts
+        // eigenes Vary (rsc, ...) bleibt unberuehrt, beide werden per
+        // HTTP-Semantik kombiniert. Pfadliste muss zu
+        // isMarkdownNegotiatedPath() in src/middleware.ts passen.
+        source: '/(developers|brands|creator|vergleich|about|contact|privacy|wissen)',
+        headers: [{ key: 'Vary', value: 'Accept' }],
+      },
+      {
+        source: '/',
+        headers: [{ key: 'Vary', value: 'Accept' }],
+      },
+      {
+        source: '/wissen/:slug',
+        headers: [{ key: 'Vary', value: 'Accept' }],
+      },
+      {
+        source: '/md/:path*',
+        headers: [{ key: 'Vary', value: 'Accept' }],
+      },
+      {
         // Statische Assets (_next/static/*)
         source: '/_next/static/:path*',
         headers: [

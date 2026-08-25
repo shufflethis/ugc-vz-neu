@@ -151,6 +151,25 @@ function rateLimitResponse(verdict: string, retryAfterSeconds: number | undefine
   );
 }
 
+// Streamable-HTTP verlangt "Accept: application/json, text/event-stream" --
+// naive Clients und Discovery-Scanner schicken das oft nicht und bekaemen vom
+// SDK ein 406 ("kein MCP-Server hier"). Der Shim ergaenzt fehlende Accept-
+// Werte, bevor der SDK-Handler prueft; spec-konforme Clients bleiben unberuehrt.
+async function withCompatibleAccept(request: Request): Promise<Request> {
+  const accept = request.headers.get('accept') || '';
+  const hasJson = /application\/json|\*\/\*/i.test(accept);
+  const hasSse = /text\/event-stream|\*\/\*/i.test(accept);
+  if (hasJson && hasSse) return request;
+  const headers = new Headers(request.headers);
+  headers.set('accept', 'application/json, text/event-stream');
+  // Body puffern statt Stream durchreichen: new Request(request, init) verlangt
+  // in undici sonst die duplex-Option und ist versionsabhaengig fragil.
+  const body = request.method === 'GET' || request.method === 'HEAD'
+    ? undefined
+    : await request.arrayBuffer();
+  return new Request(request.url, { method: request.method, headers, body });
+}
+
 async function withWebBotAuthGate(request: Request): Promise<Response> {
   const cost = await costForRequest(request);
 
@@ -177,7 +196,7 @@ async function withWebBotAuthGate(request: Request): Promise<Response> {
     return rateLimitResponse(authResult.verdict, rateLimit.retryAfterSeconds);
   }
 
-  return handler(request);
+  return handler(await withCompatibleAccept(request));
 }
 
 export { withWebBotAuthGate as GET, withWebBotAuthGate as POST, withWebBotAuthGate as DELETE };

@@ -64,6 +64,8 @@ export default function Footer() {
             <h3 className="text-lg font-semibold text-white mb-6">Support & Kontakt</h3>
             <ul className="space-y-3">
               <li><Link href="/faq" className="text-gray-400 hover:text-white transition-colors duration-200 text-sm">FAQ</Link></li>
+              <li><Link href="/contact" className="text-gray-400 hover:text-white transition-colors duration-200 text-sm">Kontaktseite</Link></li>
+              <li><Link href="/developers" className="text-gray-400 hover:text-white transition-colors duration-200 text-sm">API &amp; KI-Agenten</Link></li>
               <li>
                 <button
                   onClick={() => setIsContactPopupOpen(true)}

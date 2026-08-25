@@ -44,7 +44,7 @@ export const ugcVzAgentCard = {
     url: baseUrl,
   },
   version: '1.0.0',
-  documentationUrl: `${baseUrl}/llms.txt`,
+  documentationUrl: `${baseUrl}/developers`,
   iconUrl: `${baseUrl}/ugc-vz-logo.webp`,
   pricing: {
     currency: 'EUR',

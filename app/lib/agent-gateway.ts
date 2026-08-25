@@ -303,7 +303,7 @@ type RequestOutreachParams = {
   brand: { name: string; email: string; message?: string; searchQuery?: string };
 };
 
-type RequestOutreachCtx = { origin: string; protocol: 'mcp' | 'a2a' };
+type RequestOutreachCtx = { origin: string; protocol: 'mcp' | 'a2a' | 'rest' };
 
 export async function requestOutreach(params: RequestOutreachParams, ctx: RequestOutreachCtx): Promise<{ requestId: string }> {
   // Gleiche Deckelung wie app/a2a/route.ts:271 (submitCreatorRequest).
@@ -312,7 +312,7 @@ export async function requestOutreach(params: RequestOutreachParams, ctx: Reques
     throw gatewayError('invalid_creator_public_ids', 'creatorPublicIds muss 1-10 gueltige UGC-IDs enthalten');
   }
 
-  const sourcePath = ctx.protocol === 'mcp' ? '/api/mcp' : '/a2a';
+  const sourcePath = ctx.protocol === 'mcp' ? '/api/mcp' : ctx.protocol === 'rest' ? '/api/v1' : '/a2a';
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     Referer: `${ctx.origin}/brands?source=${ctx.protocol}`,

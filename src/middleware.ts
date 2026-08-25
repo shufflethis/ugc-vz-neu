@@ -65,7 +65,33 @@ export function middleware(request: NextRequest) {
 
   const wissenMatch = pathname.match(/^\/wissen\/([^/]+)\/?$/);
   if (wissenMatch && goneSlugs.has(wissenMatch[1])) return gone(request);
+
+  // Markdown-Content-Negotiation (acceptmarkdown.com): GET mit
+  // "Accept: text/markdown" auf ausgehandelte Pfade wird auf die
+  // Markdown-Variante unter /md/... rewritet (app/md/[[...path]]/route.ts).
+  // Die HTML-Variante dieser Pfade bekommt ihr "Vary: Accept" additiv ueber
+  // next.config.js headers() - hier NICHT setzen, sonst wuerde Nexts eigenes
+  // Vary (rsc, next-router-state-tree, ...) ueberschrieben und Client-Caches
+  // koennten falsche RSC-Payloads ausliefern.
+  if (
+    request.method === 'GET' &&
+    !pathname.startsWith('/md') &&
+    (request.headers.get('accept') || '').toLowerCase().includes('text/markdown') &&
+    isMarkdownNegotiatedPath(pathname)
+  ) {
+    const target = new URL(`/md${pathname === '/' ? '' : pathname.replace(/\/+$/, '')}`, request.url);
+    return applySecurityHeaders(NextResponse.rewrite(target), request);
+  }
+
   return applySecurityHeaders(NextResponse.next(), request);
+}
+
+// Pfade mit Markdown-Variante; muss zur STATIC_PAGES-Liste in
+// app/md/[[...path]]/route.ts passen (plus /wissen und /wissen/<slug>).
+function isMarkdownNegotiatedPath(pathname: string): boolean {
+  const normalized = pathname.replace(/\/+$/, '') || '/';
+  if (['/', '/developers', '/brands', '/creator', '/vergleich', '/about', '/contact', '/privacy', '/wissen'].includes(normalized)) return true;
+  return /^\/wissen\/[^/]+$/.test(normalized);
 }
 
 export const config = {

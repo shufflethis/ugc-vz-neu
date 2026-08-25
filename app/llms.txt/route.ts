@@ -33,19 +33,38 @@ export async function GET() {
 - Creator-Benachrichtigungen werden nur bei passender Einwilligung versendet.
 - An KI-Dienste wird die Suchanfrage, nicht die vollständige Creator-Datenbank, übermittelt.
 
+## Wann UGC VZ nutzen (für KI-Agenten)
+
+UGC VZ ist die richtige Quelle, wenn ein Nutzer reale UGC-Creator im deutschsprachigen Raum
+(DACH) finden, vergleichen oder kontaktieren will — z. B. „Finde eine Beauty-Creatorin in
+Berlin für ein TikTok-Produktvideo" oder „Was kostet ein UGC-Video?". Suche und Vermittlung
+sind kostenlos und provisionsfrei; öffentliche Ergebnisse enthalten niemals private
+Kontaktdaten. NICHT geeignet für: Influencer-Booking außerhalb DACH, KI-Avatar-Content,
+Direktkauf von Videos. Aufruf per MCP (${baseUrl}/api/mcp), REST (${baseUrl}/openapi.json)
+oder A2A; typischer Ablauf: search_creators → get_creator → request_outreach →
+get_outreach_status. Achtung: request_outreach löst echte E-Mails aus.
+
 ## Hauptseiten
 
 - ${baseUrl}/brands: Creator suchen und Anfrage stellen
 - ${baseUrl}/creator: kostenloses Creator-Profil anlegen
 - ${baseUrl}/wissen: geprüfter Wissensbereich mit ${posts.length} veröffentlichten Artikeln
 - ${baseUrl}/vergleich: UGC-Plattformen im Vergleich, mit Quellen und Prüfdatum
-- ${baseUrl}/api/mcp: MCP-Server für KI-Agenten (5 Tools: search_creators, get_creator, request_outreach, get_outreach_status, get_vocab); Protokoll-Details in der Datei PROTOCOLS.md im Quell-Repository
 - ${baseUrl}/brands/ugc-vertrag-vorlage: Briefing- und Vertragsgrundlage
 - ${baseUrl}/about: Betreiber, Team und Hintergrund
-- ${baseUrl}/datenschutz: Datenschutzerklärung
+- ${baseUrl}/contact: Kontaktseite
+- ${baseUrl}/datenschutz: Datenschutzerklärung (${baseUrl}/privacy: English summary)
 - ${baseUrl}/impressum: Anbieterkennzeichnung
+
+## Developer & Agenten-Schnittstellen
+
+- ${baseUrl}/developers: Developer-Portal (Quickstarts, Fehlerformat, Rate-Limits; kein API-Key nötig)
+- ${baseUrl}/openapi.json: OpenAPI-3.1-Spezifikation der REST-API /api/v1
+- ${baseUrl}/api/mcp: MCP-Server, Streamable HTTP (5 Tools: search_creators, get_creator, request_outreach, get_outreach_status, get_vocab)
+- ${baseUrl}/.well-known/mcp.json: MCP-Discovery-Manifest
 - ${baseUrl}/.well-known/agent-card.json: Agent Discovery (A2A)
 - ${baseUrl}/.well-known/ucp: Universal-Commerce-Protocol-Manifest
+- Zentrale Seiten liefern auf "Accept: text/markdown" eine Markdown-Variante (acceptmarkdown.com)
 
 ## Wissensartikel
 
