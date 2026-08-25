@@ -26,7 +26,7 @@ export const useCountdown = () => {
         "Analysiere Suchanfrage...",
         "Extrahiere Schlüsselwörter: TikTok, Instagram, Reichweite...",
         "Verbinde mit Creator-Datenbank...",
-        "Durchsuche 370+ echte Creator-Profile...",
+        "Durchsuche 400+ echte Creator-Profile...",
         "Filtere nach Plattform und Zielgruppe...",
         "Prüfe Verfügbarkeit und Preisrahmen...",
         "Bewerte Content-Qualität und Engagement...",

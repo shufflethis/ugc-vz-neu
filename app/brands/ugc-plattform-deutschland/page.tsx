@@ -9,7 +9,7 @@ export const metadata: Metadata = pageMetadata({
   path: '/brands/ugc-plattform-deutschland',
   title: 'UGC Plattform Deutschland',
   description:
-    'UGC VZ ist eine kostenlose UGC Plattform für Deutschland: 470+ Creator durchsuchen, passende Profile auswählen und direkt Kontakt aufnehmen — ohne Agenturgebühr und ohne Abo.',
+    'UGC VZ ist eine kostenlose UGC Plattform für Deutschland: 400+ Creator durchsuchen, passende Profile auswählen und direkt Kontakt aufnehmen — ohne Agenturgebühr und ohne Abo.',
 });
 
 const faqs = [
@@ -75,7 +75,7 @@ export default function UGCPlattformDeutschlandPage() {
               einen ersten Absatz, der ohne den Rest der Seite verstaendlich ist. */}
           <p className="text-xl text-ink-soft max-w-3xl mb-6 leading-relaxed">
             UGC VZ ist eine <strong className="text-ink">kostenlose UGC Plattform für den deutschsprachigen Raum</strong>.
-            470+ kuratierte Creator, keine Plattformgebühr, keine Provision auf das Honorar — und statt eines
+            400+ kuratierte Creator, keine Plattformgebühr, keine Provision auf das Honorar — und statt eines
             Nachrichten-Postfachs bekommst du die direkten Kontaktdaten der Creator, die du ausgewählt hast. Diese Seite
             erklärt, wie das Modell funktioniert, wo seine Grenzen liegen und wann eine klassische Buchungsplattform die
             bessere Wahl ist.
@@ -286,7 +286,7 @@ export default function UGCPlattformDeutschlandPage() {
                 erst nach einer bewussten Anfrage und nie ungefragt aus der öffentlichen Suche.
               </li>
               <li>
-                470+ kuratierte Creator im deutschsprachigen Raum — deutlich weniger als internationale Marktplätze,
+                400+ kuratierte Creator im deutschsprachigen Raum — deutlich weniger als internationale Marktplätze,
                 dafür auf den DACH-Markt zugeschnitten.
               </li>
               <li>

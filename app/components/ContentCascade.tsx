@@ -45,7 +45,7 @@ const sections: Section[] = [
   {
     id: 'why-works',
     title: 'Warum funktioniert das?',
-    content: 'Echte Datenbank, echte Ergebnisse. 470+ echte UGC Creator, sortiert nach allem, was wichtig ist.'
+    content: 'Echte Datenbank, echte Ergebnisse. 400+ echte UGC Creator, sortiert nach allem, was wichtig ist.'
   },
   {
     id: 'for-brands',
@@ -94,7 +94,7 @@ const features: { icon: LucideIcon; title: string; description: string }[] = [
 ];
 
 const stats = [
-  { number: '470+', label: 'echte UGC Creator' },
+  { number: '400+', label: 'echte UGC Creator' },
   { number: '< 5 Min', label: 'Durchschnittliche Matchzeit' },
   { number: '0€', label: 'Kosten für Brands' },
   { number: '95%', label: 'Erfolgreiche Matches' }
