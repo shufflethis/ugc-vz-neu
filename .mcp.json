@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "ugc-vz": {
+      "type": "http",
+      "url": "https://ugc-vz.de/api/mcp"
+    }
+  }
+}
