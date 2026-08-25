@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
-import { getProfileImage } from '@/utils/profileImage';
 import { getDatabase, isDatabaseConfigured } from '@/app/lib/database';
+import { isUsableCustomImageUrl } from '@/app/lib/social-avatar';
 
 // Define a proper type for processed creators
 type ProcessedCreator = {
@@ -262,7 +262,8 @@ const fetchNeonCreatorRecords = async (): Promise<CreatorRecord[]> => {
     SELECT
       public_id, display_name, birth_year, gender, city, special_traits,
       industries, topics, preferred_content, equipment, rate_text, reach_text,
-      total_reach, profile_image_url, social_links, portfolio_links, networks
+      total_reach, profile_image_url, social_links, portfolio_links, networks,
+      has_social_avatar
     FROM creator_search_public
     ORDER BY profile_quality_score DESC, total_reach DESC, display_name ASC
     LIMIT 1000
@@ -284,6 +285,7 @@ const fetchNeonCreatorRecords = async (): Promise<CreatorRecord[]> => {
       'Portfolio': String(row.portfolio_links || ''),
       'Ausrüstung': String(row.equipment || ''),
       'cached_image_url': String(row.profile_image_url || ''),
+      'has_social_avatar': Boolean(row.has_social_avatar),
     },
   }));
 };
@@ -678,18 +680,28 @@ export async function POST(req: Request) {
           const reachText = profile.reachText;
           const totalReach = profile.totalReach;
 
+          // Bild-Prioritaet:
+          // 1. vom Creator gesetzter direkter Bildlink (keine Social-Seiten-URLs,
+          //    keine ablaufenden CDN-Links aus dem Airtable-Altbestand)
+          // 2. automatisch geholtes Social-Profilbild (/api/avatar/..., eigene Domain)
+          // 3. lokal vorgerendertes Legacy-Bild
+          // 4. Placeholder nach Geschlecht
           const cachedImageUrl = profile.imageUrl;
+          const hasSocialAvatar = Boolean(fields['has_social_avatar']);
           let finalImage: string;
           let hasCustomImage: boolean;
 
           if (
-            cachedImageUrl &&
-            cachedImageUrl.trim() !== '' &&
+            isUsableCustomImageUrl(cachedImageUrl) &&
             !BLOCKED_CREATOR_IMAGE_RECORD_IDS.has(record.id)
           ) {
             finalImage = cachedImageUrl;
             hasCustomImage = true;
-            console.log(`[${requestId}] Using cached image for ${fullName}: ${finalImage}`);
+            console.log(`[${requestId}] Using custom image for ${fullName}: ${finalImage}`);
+          } else if (hasSocialAvatar) {
+            finalImage = `/api/avatar/${record.id}`;
+            hasCustomImage = true;
+            console.log(`[${requestId}] Using social avatar for ${fullName}: ${finalImage}`);
           } else {
             const localCreatorImage = getLocalCreatorImage(record.id);
             if (localCreatorImage) {
@@ -704,7 +716,7 @@ export async function POST(req: Request) {
                 finalImage = '/placeholder.jpg';
               }
               hasCustomImage = false;
-              console.log(`[${requestId}] No cached/local image for ${fullName}, using placeholder: ${finalImage}`);
+              console.log(`[${requestId}] No custom/social image for ${fullName}, using placeholder: ${finalImage}`);
             }
           }
           // Debug logging for gender and image assignment

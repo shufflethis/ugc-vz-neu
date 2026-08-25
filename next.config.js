@@ -4,7 +4,10 @@ const contentSecurityPolicy = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline'${isDevelopment ? " 'unsafe-eval'" : ''} https://analytics.polymarkt.de`,
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https://p16-sign-va.tiktokcdn.com https://p16-sign.tiktokcdn-us.com https://scontent.cdninstagram.com https://*.fbcdn.net https://yt3.ggpht.com https://yt3.googleusercontent.com https://www.gravatar.com https://i.ytimg.com",
+  // https: ist noetig, damit von Creatorn selbst eingetragene Bild-URLs
+  // (beliebige Hosts) laden. Die Middleware-CSP hatte das bereits; live gewinnt
+  // aber diese Header-Definition, darum muss es auch hier stehen.
+  "img-src 'self' data: blob: https:",
   "font-src 'self'",
   "connect-src 'self' https://analytics.polymarkt.de",
   "media-src 'self'",
@@ -29,43 +32,14 @@ const nextConfig = {
   trailingSlash: false,
 
   images: {
+    // Creator koennen eigene Bild-URLs von beliebigen Hosts hinterlegen
+    // (profile_image_url); das Wildcard-Pattern laesst sie durch den
+    // next/image-Optimizer. Automatische Avatare kommen von der eigenen
+    // Domain (/api/avatar/...) und brauchen kein remotePattern.
     remotePatterns: [
-      // TikTok Profile Images
       {
         protocol: 'https',
-        hostname: 'p16-sign-va.tiktokcdn.com',
-      },
-      {
-        protocol: 'https',
-        hostname: 'p16-sign.tiktokcdn-us.com',
-      },
-      // Instagram Profile Images
-      {
-        protocol: 'https',
-        hostname: 'scontent.cdninstagram.com',
-      },
-      {
-        protocol: 'https',
-        hostname: 'instagram.*.fbcdn.net',
-      },
-      // YouTube Profile Images
-      {
-        protocol: 'https',
-        hostname: 'yt3.ggpht.com',
-      },
-      {
-        protocol: 'https',
-        hostname: 'yt3.googleusercontent.com',
-      },
-      // Placeholder Images
-      {
-        protocol: 'https',
-        hostname: 'via.placeholder.com',
-      },
-      // Gravatar (falls verwendet)
-      {
-        protocol: 'https',
-        hostname: 'www.gravatar.com',
+        hostname: '**',
       },
     ],
   },

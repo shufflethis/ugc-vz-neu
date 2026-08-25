@@ -14,6 +14,7 @@ import {
   socialHandle,
   socialPlatform,
 } from '@/app/lib/creator-registration';
+import { tryUpdateSocialAvatar } from '@/app/lib/social-avatar';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -212,6 +213,13 @@ export async function POST(request: NextRequest) {
 
     const edits = diffProfile(before, { ...after, publicId: before.publicId, email: before.email });
     await recordProfileEdits(sql, creatorId, edits);
+
+    // Best-Effort: Social-Profilbild sofort holen (Instagram blockt Vercel-IPs
+    // haeufig - dann uebernimmt der VPS-Cron). Darf das Speichern nie verzoegern
+    // oder kippen, deshalb hartes 3s-Limit und ohne Fehlerpropagation.
+    if (!after.profileImageUrl && socialLinks.length > 0) {
+      await tryUpdateSocialAvatar(sql, creatorId, socialLinks, 3000);
+    }
 
     return NextResponse.json({ success: true, message: 'Dein Profil wurde gespeichert.' });
   } catch (error) {

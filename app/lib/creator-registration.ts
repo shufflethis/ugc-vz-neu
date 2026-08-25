@@ -1,3 +1,5 @@
+import { isSocialPageUrl, rewriteToDirectImageUrl } from './social-avatar';
+
 export type CreatorRegistrationPayload = {
   name: string;
   stageName: string;
@@ -28,14 +30,20 @@ export const CREATOR_CONSENT_TEXT_VERSION = 'native-creator-v1-2026-07-16' as co
 /**
  * Normalisiert eine einzelne Bild-URL. Akzeptiert nur http(s), laesst Query-Parameter
  * (Bildgroesse etc.) bewusst stehen und liefert null bei leerer/ungueltiger Eingabe.
+ *
+ * Links auf Social-Media-SEITEN (instagram.com/..., tiktok.com/...) werden
+ * verworfen: das sind HTML-Seiten, keine Bilder. null heisst hier "kein eigenes
+ * Bild" - dann greift die automatische Uebernahme des Social-Profilbilds
+ * (app/lib/social-avatar.ts).
  */
 export const normalizeImageUrl = (value: unknown): string | null => {
   let candidate = String(value || '').trim();
   if (!candidate) return null;
   if (/^www\./i.test(candidate)) candidate = `https://${candidate}`;
   try {
-    const url = new URL(candidate);
+    const url = new URL(rewriteToDirectImageUrl(candidate));
     if (!['http:', 'https:'].includes(url.protocol)) return null;
+    if (isSocialPageUrl(url.toString())) return null;
     url.hash = '';
     return url.toString();
   } catch {

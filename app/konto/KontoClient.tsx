@@ -154,6 +154,15 @@ function EditView({ profile }: { profile: CreatorProfileView }) {
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState('');
   const [saved, setSaved] = useState(false);
+  const [previewFailed, setPreviewFailed] = useState(false);
+
+  // Social-SEITEN-Links (Profil/Post) sind keine Bilddateien - der Server
+  // verwirft sie (normalizeImageUrl), die Vorschau zeigt darum direkt den
+  // automatischen Avatar und einen Hinweis statt eines kaputten Bildes.
+  const imageUrlIsSocialPage = /(^|\.|\/\/)(instagram\.com|tiktok\.com|facebook\.com|youtube\.com|x\.com|twitter\.com)\//i.test(form.profileImageUrl.trim());
+  const previewImageSrc = form.profileImageUrl.trim() && !imageUrlIsSocialPage
+    ? form.profileImageUrl.trim()
+    : `/api/avatar/${profile.publicId}`;
 
   const update = (key: keyof typeof form, value: string | boolean) => {
     setForm((current) => ({ ...current, [key]: value }));
@@ -234,16 +243,29 @@ function EditView({ profile }: { profile: CreatorProfileView }) {
                 <span className={labelClass}>Profilbild</span>
                 <div className="flex items-start gap-4">
                   <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border border-hairline bg-surface">
-                    {form.profileImageUrl ? (
+                    {previewImageSrc && !previewFailed ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={form.profileImageUrl} alt="Profilbild-Vorschau" className="h-full w-full object-cover" />
+                      <img
+                        src={previewImageSrc}
+                        alt="Profilbild-Vorschau"
+                        className="h-full w-full object-cover"
+                        onError={() => setPreviewFailed(true)}
+                      />
                     ) : (
-                      <span className="px-2 text-center text-xs text-ink-soft">Kein eigenes Bild</span>
+                      <span className="px-2 text-center text-xs text-ink-soft">Kommt automatisch</span>
                     )}
                   </div>
                   <div className="flex-1">
-                    <input type="url" className={fieldClass} value={form.profileImageUrl} onChange={(e) => update('profileImageUrl', e.target.value)} maxLength={500} placeholder="https://… (optional)" />
-                    <span className="mt-2 block text-xs text-ink-soft">Optional: direkter Link zu deinem Profilbild. Lässt du das Feld leer, nutzen wir dein Social-Profilbild.</span>
+                    <input type="url" className={fieldClass} value={form.profileImageUrl} onChange={(e) => { update('profileImageUrl', e.target.value); setPreviewFailed(false); }} maxLength={500} placeholder="https://… (optional)" />
+                    {imageUrlIsSocialPage ? (
+                      <span className="mt-2 block rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-900">
+                        Das ist ein Link zu deinem Social-Profil, kein Bildlink. Du musst hier nichts eintragen: Lass das Feld einfach leer — wir übernehmen dein Instagram-/TikTok-Profilbild automatisch aus deinen Social-Links.
+                      </span>
+                    ) : (
+                      <span className="mt-2 block text-xs leading-5 text-ink-soft">
+                        Du musst hier nichts eintragen: Wir übernehmen dein Instagram-/TikTok-Profilbild automatisch aus deinen Social-Links (nach dem Speichern in der Regel innerhalb einer Stunde sichtbar). Nur ausfüllen, wenn du ein anderes Bild möchtest — dann bitte einen direkten Link zu einer Bilddatei (endet z. B. auf .jpg oder .png).
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>

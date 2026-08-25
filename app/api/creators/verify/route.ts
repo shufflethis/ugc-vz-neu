@@ -5,11 +5,13 @@ import { getDatabase, isDatabaseConfigured } from '@/app/lib/database';
 import { buildCreatorWelcomeEmail } from '@/app/lib/creator-welcome-email';
 import {
   calculateReach,
+  normalizeImageUrl,
   normalizeWebUrls,
   socialHandle,
   socialPlatform,
   type CreatorRegistrationPayload,
 } from '@/app/lib/creator-registration';
+import { tryUpdateSocialAvatar } from '@/app/lib/social-avatar';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -76,6 +78,9 @@ export async function GET(request: Request) {
 
     const creatorId = existing?.creator_id || uuidFromEmail(email);
     const publicId = existing?.public_id || publicIdFromEmail(email);
+    // Alte, noch unbestaetigte Submissions koennen Social-Seiten-URLs als
+    // "Bildlink" enthalten - hier nochmal normalisieren, nicht nur beim Absenden.
+    const profileImageUrl = normalizeImageUrl(payload.profileImageUrl);
     const socialLinks = normalizeWebUrls(payload.socialLinks, 8);
     const portfolioLinks = normalizeWebUrls(payload.portfolioLinks, 15);
     const submittedAt = new Date().toISOString();
@@ -129,7 +134,7 @@ export async function GET(request: Request) {
       payload.reachText || null, calculateReach(payload.reachText || ''),
       payload.equipment || null, payload.specialTraits || null,
       payload.childrenContext || null, payload.petContext || null, qualityScore, submittedAt,
-      payload.profileImageUrl || null,
+      profileImageUrl,
     ]);
 
     await sql.query(`
@@ -191,6 +196,12 @@ export async function GET(request: Request) {
       SET verified_at = now()
       WHERE id = $1 AND verified_at IS NULL
     `, [submission.id]);
+
+    // Best-Effort: Social-Profilbild direkt holen. Schlaegt von Vercel-IPs oft
+    // fehl (Instagram-Block) - dann holt es der VPS-Cron zeitnah nach.
+    if (!profileImageUrl && socialLinks.length > 0) {
+      await tryUpdateSocialAvatar(sql, creatorId, socialLinks, 3000);
+    }
 
     if (process.env.RESEND_API_KEY && process.env.UGC_INTERNAL_EMAIL) {
       const resend = new Resend(process.env.RESEND_API_KEY);
