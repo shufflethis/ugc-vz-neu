@@ -83,8 +83,10 @@ const curlFetch = (url, extraHeaders = [], timeoutSeconds = 15) => {
   };
 };
 
-// Wird bei HTTP 429 gesetzt: dann bricht der Lauf ab, statt weiter gegen das
-// Rate-Limit zu rennen (das eskaliert sonst zum laengeren IP-Block).
+// Wird bei Rate-Limit-/Block-Signalen (429, 401, 403) gesetzt: dann bricht der
+// Lauf ab, statt weiter gegen den Block zu rennen (das eskaliert sonst zum
+// laengeren IP-Block). Nur 404/"user not found" ist ein echter Fehlversuch des
+// jeweiligen Handles.
 let rateLimited = false;
 
 const resolveAvatarSourceUrl = async ({ platform, handle }) => {
@@ -93,7 +95,7 @@ const resolveAvatarSourceUrl = async ({ platform, handle }) => {
       `https://www.instagram.com/api/v1/users/web_profile_info/?username=${encodeURIComponent(handle)}`,
       ['Accept: application/json', 'x-ig-app-id: 936619743392459'],
     );
-    if (response.status === 429) { rateLimited = true; return null; }
+    if ([429, 401, 403].includes(response.status)) { rateLimited = true; return null; }
     if (response.status !== 200) return null;
     let data = null;
     try { data = JSON.parse(response.body.toString('utf8')); } catch { return null; }
@@ -101,7 +103,7 @@ const resolveAvatarSourceUrl = async ({ platform, handle }) => {
     return user?.profile_pic_url_hd || user?.profile_pic_url || null;
   }
   const response = curlFetch(`https://www.tiktok.com/@${encodeURIComponent(handle)}`, ['Accept: text/html']);
-  if (response.status === 429) { rateLimited = true; return null; }
+  if ([429, 401, 403].includes(response.status)) { rateLimited = true; return null; }
   if (response.status !== 200) return null;
   const html = response.body.toString('utf8');
   const match = html.match(/<meta[^>]+property="og:image"[^>]+content="([^"]+)"/i)
