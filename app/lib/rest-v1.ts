@@ -26,18 +26,36 @@ export const toolSchema = (name: string) => {
   return tool.inputSchema;
 };
 
-/** IP-basiertes Rate-Limit (unsigned-Tier, wie /api/mcp fuer anonyme Clients). */
-export const restRateLimit = (request: NextRequest, cost: number): Response | null => {
+/**
+ * IP-basiertes Rate-Limit (unsigned-Tier, wie /api/mcp fuer anonyme Clients).
+ * Liefert entweder die 429-Antwort ODER die RateLimit-Header (IETF-Draft +
+ * X-RateLimit-Aliase), die die Route an ihre Erfolgsantwort haengt.
+ */
+export const restRateLimit = (
+  request: NextRequest,
+  cost: number,
+): { limited: Response | null; headers: Record<string, string> } => {
   const key = getRateLimitKey({ verdict: 'unsigned' }, request);
   const verdictCheck = checkRateLimit(key, 'unsigned', cost);
-  if (verdictCheck.allowed) return null;
-  return problemResponse({
+  const headers: Record<string, string> = {
+    'RateLimit-Limit': String(verdictCheck.limit),
+    'RateLimit-Remaining': String(verdictCheck.remaining),
+    'RateLimit-Policy': `${verdictCheck.limit};w=600`,
+    'X-RateLimit-Limit': String(verdictCheck.limit),
+    'X-RateLimit-Remaining': String(verdictCheck.remaining),
+  };
+  if (verdictCheck.allowed) return { limited: null, headers };
+
+  const limited = problemResponse({
     status: 429,
     title: 'Rate limit exceeded',
     detail: `Zu viele Anfragen. Bitte in ${verdictCheck.retryAfterSeconds ?? 60} Sekunden erneut versuchen.`,
     code: 'rate_limited',
     resolution: 'Web-Bot-Auth-signierte Agenten erhalten ein hoeheres Limit, siehe https://ugc-vz.de/developers.',
   });
+  limited.headers.set('Retry-After', String(verdictCheck.retryAfterSeconds ?? 60));
+  for (const [headerName, value] of Object.entries(headers)) limited.headers.set(headerName, value);
+  return { limited, headers };
 };
 
 export const zodProblem = (error: z.ZodError) =>

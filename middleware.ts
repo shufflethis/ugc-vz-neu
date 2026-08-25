@@ -66,14 +66,18 @@ export function middleware(request: NextRequest) {
   const wissenMatch = pathname.match(/^\/wissen\/([^/]+)\/?$/);
   if (wissenMatch && goneSlugs.has(wissenMatch[1])) return gone(request);
 
-  // Markdown-Content-Negotiation (acceptmarkdown.com): GET mit
-  // "Accept: text/markdown" auf ausgehandelte Pfade wird auf die
-  // Markdown-Variante unter /md/... rewritet (app/md/[[...path]]/route.ts).
+  // Markdown-Content-Negotiation (acceptmarkdown.com): GET mit explizitem
+  // "Accept: text/markdown" wird auf die Markdown-Variante unter /md/...
+  // rewritet (app/md/[[...path]]/route.ts). Unbekannte Pfade beantwortet die
+  // md-Route dort mit einem kurzen Markdown-404 samt Recovery-Links - exakt
+  // das Verhalten, das is-agentic.com selbst als Referenz implementiert.
+  // Browser senden nie text/markdown; APIs/Protokoll-Endpunkte sind explizit
+  // ausgenommen.
   if (
     request.method === 'GET' &&
-    !pathname.startsWith('/md') &&
     (request.headers.get('accept') || '').toLowerCase().includes('text/markdown') &&
-    isMarkdownNegotiatedPath(pathname)
+    !/^\/(md($|\/)|api\/|a2a($|\/)|\.well-known\/|_next\/|konto($|\/))/.test(pathname) &&
+    !/\.[a-z0-9]{2,5}$/i.test(pathname)
   ) {
     const target = new URL(`/md${pathname === '/' ? '' : pathname.replace(/\/+$/, '')}`, request.url);
     return NextResponse.rewrite(target);

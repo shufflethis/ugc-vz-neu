@@ -12,7 +12,7 @@ export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
 
 export async function POST(request: NextRequest) {
-  const limited = restRateLimit(request, 3);
+  const { limited, headers: rateHeaders } = restRateLimit(request, 3);
   if (limited) return limited;
 
   let body: unknown;
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
       },
       { origin: requestOrigin(request), protocol: 'rest' },
     );
-    return NextResponse.json({ request_id: result.requestId, status_url: `/api/v1/outreach/${result.requestId}` }, { status: 202 });
+    return NextResponse.json({ request_id: result.requestId, status_url: `/api/v1/outreach/${result.requestId}` }, { status: 202, headers: rateHeaders });
   } catch (error) {
     const code = (error as { code?: string })?.code;
     if (code) return badRequest(error instanceof Error ? error.message : 'Ungueltige Anfrage.', code);

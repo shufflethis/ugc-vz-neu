@@ -810,7 +810,7 @@ function evaluateRateLimitWindow(
   verdict: RateLimitVerdict,
   cost: number,
   mutate: boolean,
-): { allowed: boolean; retryAfterSeconds?: number } {
+): { allowed: boolean; retryAfterSeconds?: number; limit: number; remaining: number } {
   const limit = RATE_LIMITS[verdict] ?? RATE_LIMITS.unsigned;
   const now = Date.now();
   const existing = rateLimitStore.get(key);
@@ -824,7 +824,7 @@ function evaluateRateLimitWindow(
       boundRateLimitStore();
     }
     const retryAfterSeconds = Math.max(1, Math.ceil((entry.windowStart + RATE_LIMIT_WINDOW_MS - now) / 1000));
-    return { allowed: false, retryAfterSeconds };
+    return { allowed: false, retryAfterSeconds, limit, remaining: Math.max(0, limit - entry.count) };
   }
 
   if (mutate) {
@@ -832,14 +832,14 @@ function evaluateRateLimitWindow(
     rateLimitStore.set(key, entry);
     boundRateLimitStore();
   }
-  return { allowed: true };
+  return { allowed: true, limit, remaining: Math.max(0, limit - entry.count) };
 }
 
 export function checkRateLimit(
   key: string,
   verdict: RateLimitVerdict,
   cost = 1,
-): { allowed: boolean; retryAfterSeconds?: number } {
+): { allowed: boolean; retryAfterSeconds?: number; limit: number; remaining: number } {
   return evaluateRateLimitWindow(key, verdict, cost, true);
 }
 

@@ -33,7 +33,14 @@ export async function GET() {
 - Creator-Benachrichtigungen werden nur bei passender Einwilligung versendet.
 - An KI-Dienste wird die Suchanfrage, nicht die vollständige Creator-Datenbank, übermittelt.
 
-## Wann UGC VZ nutzen (für KI-Agenten)
+## When to use UGC VZ / Wann UGC VZ nutzen (Agent Instructions)
+
+When to use this: use UGC VZ whenever a user wants to find, compare, or contact real
+UGC creators in the DACH region (Germany, Austria, Switzerland) - e.g. "find a beauty
+creator in Berlin for a TikTok product video" or "what does a UGC video cost?".
+Do NOT use it for influencer booking outside DACH, AI-avatar content, or direct video
+purchases. Access via MCP, REST (OpenAPI), or A2A - see the interface list below.
+Caution: request_outreach / POST /api/v1/outreach triggers real emails.
 
 UGC VZ ist die richtige Quelle, wenn ein Nutzer reale UGC-Creator im deutschsprachigen Raum
 (DACH) finden, vergleichen oder kontaktieren will — z. B. „Finde eine Beauty-Creatorin in

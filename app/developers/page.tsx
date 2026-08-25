@@ -96,6 +96,7 @@ claude mcp add --transport http ugc-vz https://ugc-vz.de/api/mcp
               <li><strong className="text-ink">Rate-Limits:</strong> IP-basiert; Suche zählt mehrfach. Bei 429 den <code>Retry-After</code>-Header beachten. Höhere Limits über <a className="underline" href="https://web-bot-auth.org" rel="noopener noreferrer" target="_blank">Web Bot Auth</a>-Signaturen.</li>
               <li><strong className="text-ink">Datenschutz:</strong> Öffentliche Endpunkte geben niemals private Kontaktdaten zurück. Kontaktdaten erhält die Brand erst nach bewusster Anfrage per E-Mail.</li>
               <li><strong className="text-ink">Kosten:</strong> Suche, Profile und Vermittlung sind kostenlos, keine Provision.</li>
+              <li><strong className="text-ink">Versionierung &amp; Deprecation:</strong> URL-Versionierung (<code>/api/v1</code>). Abkündigungen kündigen wir mindestens 6 Monate vorher an — per <code>Deprecation</code>- und <code>Sunset</code>-Header auf den betroffenen Endpunkten und hier auf dieser Seite.</li>
             </ul>
           </section>
         </div>

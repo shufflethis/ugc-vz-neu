@@ -10,7 +10,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest, { params }: { params: { publicId: string } }) {
-  const limited = restRateLimit(request, 1);
+  const { limited, headers: rateHeaders } = restRateLimit(request, 1);
   if (limited) return limited;
 
   const publicId = String(params.publicId || '');
@@ -20,7 +20,7 @@ export async function GET(request: NextRequest, { params }: { params: { publicId
 
   try {
     const result = await getCreator(publicId);
-    return NextResponse.json(result);
+    return NextResponse.json(result, { headers: rateHeaders });
   } catch (error) {
     const code = (error as { code?: string })?.code;
     if (code === 'not_found') {

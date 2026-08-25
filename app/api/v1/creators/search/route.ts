@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
 
 export async function POST(request: NextRequest) {
-  const limited = restRateLimit(request, 3);
+  const { limited, headers: rateHeaders } = restRateLimit(request, 3);
   if (limited) return limited;
 
   let body: unknown;
@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
       },
       { origin: requestOrigin(request), requestId: `rest_${Date.now().toString(36)}` },
     );
-    return NextResponse.json(result);
+    return NextResponse.json(result, { headers: rateHeaders });
   } catch (error) {
     console.error('REST v1 search failed', error instanceof Error ? error.message : 'unknown');
     return serverError('Die Creator-Suche ist voruebergehend nicht verfuegbar.', 'search_unavailable');

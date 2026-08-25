@@ -10,13 +10,13 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
-  const limited = restRateLimit(request, 1);
+  const { limited, headers: rateHeaders } = restRateLimit(request, 1);
   if (limited) return limited;
 
   try {
     const result = await getVocab();
     return NextResponse.json(result, {
-      headers: { 'Cache-Control': 'public, max-age=0, s-maxage=3600, stale-while-revalidate=86400' },
+      headers: { ...rateHeaders, 'Cache-Control': 'public, max-age=0, s-maxage=3600, stale-while-revalidate=86400' },
     });
   } catch (error) {
     console.error('REST v1 vocab failed', error instanceof Error ? error.message : 'unknown');

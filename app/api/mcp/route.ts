@@ -196,7 +196,35 @@ async function withWebBotAuthGate(request: Request): Promise<Response> {
     return rateLimitResponse(authResult.verdict, rateLimit.retryAfterSeconds);
   }
 
-  return handler(await withCompatibleAccept(request));
+  const originalAccept = (request.headers.get('accept') || '').toLowerCase();
+  const response = await handler(await withCompatibleAccept(request));
+
+  // Clients, die nur application/json akzeptieren (typisch: einfache
+  // JSON-RPC-Prober), koennen die SSE-Antwort des SDK nicht parsen. Fuer sie
+  // wird die gepufferte SSE-Antwort in die letzte JSON-RPC-Message
+  // zurueckuebersetzt. Spec-konforme Streamable-HTTP-Clients (Accept enthaelt
+  // text/event-stream) bekommen weiterhin unveraendert SSE.
+  const wantsSse = originalAccept.includes('text/event-stream') || originalAccept.includes('*/*');
+  const isSse = (response.headers.get('content-type') || '').includes('text/event-stream');
+  if (!wantsSse && isSse && response.status === 200) {
+    // Body ist nach text() verbraucht - deshalb wird IMMER eine neue Antwort
+    // gebaut (JSON der letzten Message oder notfalls der Rohtext).
+    const text = await response.text();
+    const dataLines = text
+      .split('\n')
+      .filter((line) => line.startsWith('data:'))
+      .map((line) => line.slice(5).trim())
+      .filter(Boolean);
+    const last = dataLines[dataLines.length - 1];
+    return new Response(last || text, {
+      status: 200,
+      headers: {
+        'Content-Type': last ? 'application/json' : response.headers.get('content-type') || 'text/plain',
+        'Cache-Control': 'no-store',
+      },
+    });
+  }
+  return response;
 }
 
 export { withWebBotAuthGate as GET, withWebBotAuthGate as POST, withWebBotAuthGate as DELETE };
