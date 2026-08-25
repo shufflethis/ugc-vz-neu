@@ -73,6 +73,14 @@ claude mcp add --transport http ugc-vz https://ugc-vz.de/api/mcp
               <code>get_outreach_status</code>, <code>get_vocab</code>. Suchergebnisse enthalten niemals
               private Kontaktdaten.
             </p>
+            <p className="mt-3 text-sm leading-6 text-ink-soft">
+              Gelistet im{' '}
+              <a className="font-semibold text-geo-violet underline" href="https://registry.modelcontextprotocol.io/v0/servers?search=ugc-vz" rel="noopener noreferrer" target="_blank">offiziellen MCP-Registry</a>{' '}
+              (<code>de.ugc-vz/creator-search</code>) und auf{' '}
+              <a className="font-semibold text-geo-violet underline" href="https://glama.ai/mcp/connectors/de.ugc-vz/creator-search" rel="noopener noreferrer" target="_blank">Glama</a>.
+              Quellcode-Doku &amp; npm-Bridge:{' '}
+              <a className="font-semibold text-geo-violet underline" href="https://github.com/ugcvz/ugc-vz-mcp" rel="noopener noreferrer" target="_blank">github.com/ugcvz/ugc-vz-mcp</a>.
+            </p>
           </section>
 
           <section className={card} id="a2a">

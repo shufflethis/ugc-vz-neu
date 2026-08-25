@@ -69,6 +69,7 @@ get_outreach_status. Achtung: request_outreach löst echte E-Mails aus.
 - ${baseUrl}/openapi.json: OpenAPI-3.1-Spezifikation der REST-API /api/v1
 - ${baseUrl}/api/mcp: MCP-Server, Streamable HTTP (5 Tools: search_creators, get_creator, request_outreach, get_outreach_status, get_vocab)
 - ${baseUrl}/.well-known/mcp.json: MCP-Discovery-Manifest
+- https://github.com/ugcvz/ugc-vz-mcp: MCP-Repo (Doku, server.json, npm-Bridge); Registry-Name de.ugc-vz/creator-search
 - ${baseUrl}/.well-known/agent-card.json: Agent Discovery (A2A)
 - ${baseUrl}/.well-known/ucp: Universal-Commerce-Protocol-Manifest
 - Zentrale Seiten liefern auf "Accept: text/markdown" eine Markdown-Variante (acceptmarkdown.com)
