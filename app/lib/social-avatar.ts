@@ -178,21 +178,14 @@ export const upsertSocialAvatar = async (
   );
 };
 
-const recordAttemptFailure = async (sql: SqlClient, creatorId: string): Promise<void> => {
-  await sql.query(
-    `INSERT INTO creator_social_avatars (creator_id, last_attempt_at, fail_count, updated_at)
-     VALUES ($1, now(), 1, now())
-     ON CONFLICT (creator_id) DO UPDATE SET
-       last_attempt_at = now(),
-       fail_count = creator_social_avatars.fail_count + 1,
-       updated_at = now()`,
-    [creatorId],
-  );
-};
-
 /**
  * Best-Effort: Profilbild sofort holen und speichern. Wirft nie - Vercel-IPs
  * werden von Instagram haeufig geblockt, dann uebernimmt der VPS-Cron.
+ *
+ * WICHTIG: Ein Fehlschlag hier wird bewusst NICHT in fail_count/last_attempt_at
+ * protokolliert. Diese Probe scheitert von Vercel aus quasi immer (IP-Block +
+ * HTTP/1.1-429) - wuerde sie zaehlen, schoebe der Backoff im Cron-Kandidaten-
+ * Query jeden frisch registrierten Creator um Stunden nach hinten.
  */
 export const tryUpdateSocialAvatar = async (
   sql: SqlClient,
@@ -212,7 +205,6 @@ export const tryUpdateSocialAvatar = async (
       await upsertSocialAvatar(sql, creatorId, { ...image, platform: handle.platform, handle: handle.handle });
       return true;
     }
-    await recordAttemptFailure(sql, creatorId);
   } catch {
     // Best-Effort: Fehler hier duerfen Registrierung/Speichern nie kippen.
   }
