@@ -44,3 +44,6 @@ TRASH/
 TRASH-FILES.md
 /tmp/ugc-*
 .env*.local
+
+# Aussortierte Dateien (siehe TRASH-FILES.md)
+TRASH/

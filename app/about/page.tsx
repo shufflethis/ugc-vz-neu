@@ -42,17 +42,10 @@ const team = [
   { slug: 'tobias', name: 'Tobias', role: 'Gründer & CEO', bio: 'Treibt die Vision von UGC-VZ voran: ein Verzeichnis, das Marken und authentische Creator ohne Umwege zusammenbringt.' },
   { slug: 'gorden', name: 'Gorden', role: 'Co-Founder', bio: 'Verantwortet Partnerschaften und sorgt dafür, dass UGC-VZ für Creator wie für Brands kostenlos bleibt.' },
   { slug: 'robert', name: 'Robert', role: 'Lead Creator Relations', bio: 'Betreut die Creator-Community und hilft Talenten, mit dem richtigen Profil entdeckt zu werden.' },
-  { slug: 'sascha', name: 'Sascha', role: 'Senior UGC-Strategie', bio: 'Entwickelt Content-Strategien, die aus Produkten Geschichten machen, denen Menschen wirklich vertrauen.' },
   { slug: 'marcel', name: 'Marcel', role: 'Head of Performance & UGC-Ads', bio: 'Weiß, welcher Creator-Content auf Paid Social tatsächlich konvertiert – und welcher nur schön aussieht.' },
-  { slug: 'annie', name: 'Annie', role: 'Head of Content', bio: 'Sorgt dafür, dass jedes Format authentisch bleibt – vom Unboxing bis zum ehrlichen Testimonial.' },
-  { slug: 'sophie', name: 'Sophie', role: 'Creator Relations Managerin', bio: 'Erste Ansprechpartnerin für Creator und begleitet sie vom Profil bis zum ersten Brand-Match.' },
-  { slug: 'jane', name: 'Jane', role: 'Senior Creative Direction', bio: 'Gibt UGC-Kampagnen visuellen Feinschliff, ohne die ungeschliffene Echtheit zu verlieren.' },
   { slug: 'patrick', name: 'Patrick', role: 'Senior Campaign Manager', bio: 'Bringt Brands und Creator in Projekten zusammen und hält Kampagnen zuverlässig on track.' },
-  { slug: 'lea', name: 'Lea', role: 'Community & Creator Support', bio: 'Hält die Creator-Community lebendig und beantwortet alle Fragen rund ums Profil.' },
   { slug: 'jan', name: 'Jan', role: 'Head of Tech & Plattform', bio: 'Hält das Verzeichnis schnell, stabil und für beide Seiten einfach bedienbar.' },
   { slug: 'thomas', name: 'Thomas', role: 'Head of Sound', bio: 'Kümmert sich darum, dass UGC-Videos auch akustisch im Kopf hängen bleiben.' },
-  { slug: 'ansgar', name: 'Ansgar', role: 'Fotografie & Video', bio: 'Setzt Creator und Produkte ins richtige Licht – natürlich, nie gestellt.' },
-  { slug: 'ella', name: 'Ella', role: 'Feel-Good-Managerin', bio: 'Bürohund mit Dauer-Wuff für gute Laune zwischen den Drehs.' },
 ];
 
 export default function AboutPage() {
