@@ -462,6 +462,7 @@ export async function POST(req: Request) {
     // totalCount nur ueber Funktionslogs rekonstruieren.
     let droppedLowScore = 0;
     let droppedError = 0;
+    const droppedSamples: Array<{ id: string; score: number; gender: string }> = [];
 
     console.log(`[${requestId}] Processing ${searchRecords.length} creators with deterministic scoring in batches of ${BATCH_SIZE}`);
 
@@ -675,6 +676,9 @@ export async function POST(req: Request) {
           // If score is very low, this creator doesn't match the requirements
           if (score < 5) {
             droppedLowScore += 1;
+            if (droppedSamples.length < 5) {
+              droppedSamples.push({ id: record.id, score, gender: profile.gender });
+            }
             console.log(`[${requestId}] Skipping ${fullName} - score too low (${score})`);
             return null;
           }
@@ -821,6 +825,7 @@ export async function POST(req: Request) {
         droppedLowScore,
         droppedError,
         droppedGenderFilter: validCreators.length - genderFilteredCreators.length,
+        droppedSamples,
       },
       query: query,
       reasoning: reasoning,
