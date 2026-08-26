@@ -76,6 +76,35 @@ export default function Footer() {
               </li>
               <li><Link href="/wissen" className="text-gray-400 hover:text-white transition-colors duration-200 text-sm">Wissen</Link></li>
             </ul>
+
+            {/* Vertrauenssignale: offener Quellcode des MCP-Servers und der
+                eigene Kanal - beides pruefbar, deshalb hier statt im Fliesstext. */}
+            <div className="mt-6 flex items-center gap-4">
+              <a
+                href="https://github.com/ugcvz/ugc-vz-mcp"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="UGC VZ MCP-Server auf GitHub"
+                title="MCP-Server auf GitHub"
+                className="text-gray-400 hover:text-white transition-colors duration-200"
+              >
+                <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2.2c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1.1-.7.1-.7.1-.7 1.2.1 1.9 1.2 1.9 1.2 1.1 1.9 2.8 1.3 3.5 1 .1-.8.4-1.3.8-1.6-2.7-.3-5.5-1.3-5.5-5.9 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 4.7 18.3 5 18.3 5c.6 1.7.2 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .3Z" />
+                </svg>
+              </a>
+              <a
+                href="https://www.youtube.com/@ugcvz"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="UGC VZ auf YouTube"
+                title="UGC VZ auf YouTube"
+                className="text-gray-400 hover:text-white transition-colors duration-200"
+              >
+                <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1c.5-1.9.5-5.8.5-5.8s0-3.9-.5-5.8ZM9.6 15.6V8.4l6.2 3.6-6.2 3.6Z" />
+                </svg>
+              </a>
+            </div>
           </div>
 
           {/* Column 5: Vergleiche */}
