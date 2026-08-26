@@ -95,7 +95,7 @@ export default function VergleichPage() {
         <section className="max-w-5xl mx-auto text-center mb-16">
           <h2 className="text-3xl font-bold mb-4 text-ink">Creator direkt finden</h2>
           <p className="text-ink-soft mb-6">
-            400+ kuratierte Creator im deutschsprachigen Raum, kostenlos, mit direkten Kontaktdaten.
+            470+ kuratierte Creator im deutschsprachigen Raum, kostenlos, mit direkten Kontaktdaten.
           </p>
           <Link
             href="/brands"

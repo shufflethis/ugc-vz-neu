@@ -8,7 +8,7 @@
  *
  * Zwei Empfehlungswege, bewusst in dieser Reihenfolge. Zuerst andere Creator:
  * "Hier ist es kostenlos" ist ein Satz, den man beilaeufig weitergibt, und der
- * Creator-Pool ist die schwaechste Spalte im Anbietervergleich (400 gegenueber
+ * Creator-Pool ist die schwaechste Spalte im Anbietervergleich (470 gegenueber
  * 10.000 bis 140.000). Danach Marken: hoehere Huerde, weil es ein beruflicher
  * Akt ist, dafuer direkt auf der Nachfrageseite - und es nuetzt dem Creator
  * selbst, weil die Marke ihn ueber das Verzeichnis buchen kann.
