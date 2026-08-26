@@ -5,6 +5,7 @@ import BreadcrumbSchema from '../components/BreadcrumbSchema';
 import JsonLdScript from '../wissen/[slug]/JsonLdScript';
 import SearchBox from '../components/SearchBox';
 import YouTubeEmbed from '../components/YouTubeEmbed';
+import { CREATOR_COUNT_LABEL } from '../lib/creator-count';
 
 export const metadata: Metadata = {
   title: 'UGC Creator finden fuer Brands',
@@ -174,7 +175,7 @@ export default function BrandsPage({ searchParams }: { searchParams?: { query?: 
         <section className="max-w-6xl mx-auto grid md:grid-cols-3 gap-6 mb-16">
           {[
             ['Keine Agenturpflicht', 'Du kannst UGC VZ kostenlos nutzen und Creator direkt anfragen. Agentur-Support ist optional, nicht Voraussetzung.'],
-            ['470+ echte Creator', 'Die Datenbank besteht aus echten UGC Creatorn, nicht aus synthetischen Platzhalterprofilen.'],
+            [`${CREATOR_COUNT_LABEL} echte Creator`, 'Die Datenbank besteht aus echten UGC Creatorn, nicht aus synthetischen Platzhalterprofilen.'],
             ['Besser als kalte DMs', 'Statt endlos Instagram-Profile zu pruefen, startest du mit einer klaren Kampagnenbeschreibung.'],
             ['Fuer echte Kampagnen', 'Geeignet fuer Produktvideos, Testimonials, Social Ads, Launches, E-Commerce und lokale Brand-Aktivierungen.'],
           ].map(([title, copy]) => (

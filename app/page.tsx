@@ -9,6 +9,7 @@ import LogoImage from './components/LogoImage';
 import TrustElements from './components/TrustElements';
 import ContentCascade from './components/ContentCascade';
 import HomePageSchema from './components/HomePageSchema';
+import { CREATOR_COUNT_LABEL } from './lib/creator-count';
 
 /**
  * Check-Icon als Inline-SVG. Diese Seite ist eine Server Component;
@@ -100,7 +101,7 @@ export default function Home() {
             </h1>
             
             <p className="text-lg sm:text-xl md:text-2xl text-gray-200 max-w-3xl mb-12 leading-relaxed">
-              Die kostenlose Plattform für User Generated Content in Deutschland. Brands beschreiben ihre Kampagne und finden passende Creator aus 470+ echten Profilen.
+              Die kostenlose Plattform für User Generated Content in Deutschland. Brands beschreiben ihre Kampagne und finden passende Creator aus {CREATOR_COUNT_LABEL} echten Profilen.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 mb-8 w-full sm:w-auto">

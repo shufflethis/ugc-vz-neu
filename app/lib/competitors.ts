@@ -1,3 +1,5 @@
+import { CREATOR_COUNT_LABEL } from './creator-count';
+
 export interface CompetitorFact {
   value: string;
   source: string;
@@ -30,6 +32,7 @@ export interface Competitor {
 const V = '2026-08-14';
 // Eigener Creator-Count: gegen die Live-Suche (/api/v1/creators/search) nachgezaehlt.
 const V_OWN = '2026-08-26';
+
 const NOT_PUBLIC = 'nicht öffentlich';
 
 /** Slug-Suffix aller Detailseiten: /vergleich/{slug}{SUFFIX} */
@@ -52,14 +55,14 @@ export const competitors: Competitor[] = [
     isOwn: true,
     hasOwnPage: false,
     pricing: { value: 'kostenlos', source: 'https://ugc-vz.de/brands', verifiedAt: V, isPublic: true },
-    creatorCount: { value: '470+ (DACH, kuratiert)', source: 'https://ugc-vz.de/brands', verifiedAt: V_OWN, isPublic: true },
+    creatorCount: { value: `${CREATOR_COUNT_LABEL} (DACH, kuratiert)`, source: 'https://ugc-vz.de/brands', verifiedAt: V_OWN, isPublic: true },
     directContact: { value: 'Ja, Kontaktdaten der Creator', source: 'https://ugc-vz.de/brands', verifiedAt: V, isPublic: true },
     commission: { value: 'keine', source: 'https://ugc-vz.de/brands', verifiedAt: V, isPublic: true },
     markets: { value: 'DACH', source: 'https://ugc-vz.de/brands', verifiedAt: V, isPublic: true },
     strengths: [
       'Kostenlos, keine Plattform- oder Vermittlungsgebühr',
       'Direkte Kontaktdaten der Creator statt Kommunikation über eine Plattform',
-      '470+ kuratierte Creator im deutschsprachigen Raum',
+      `${CREATOR_COUNT_LABEL} kuratierte Creator im deutschsprachigen Raum`,
     ],
     bestFor: 'Brands, die Creator direkt ansprechen, selbst verhandeln und ohne Zwischenstelle zusammenarbeiten wollen.',
     faqs: [],
@@ -110,7 +113,7 @@ export const competitors: Competitor[] = [
     faqs: [
       { question: 'Was kostet Influee wirklich?', answer: `Die Startseite wirbt mit UGC-Videos „ab 76 €". Das ist der Creator-Anteil. Laut Preisseite kommt ein Pflicht-Abo von $229, $529 oder $999 pro Monat hinzu, dazu eine Marketplace-Fee von 10 % auf die Creator-Zahlungen. Die Creator-Honorare sind im Abo nicht enthalten. Stand: ${VERIFIED_AT_LABEL}.` },
       { question: 'Gibt es eine Influee-Alternative ohne Monatsabo?', answer: 'UGC VZ verlangt weder Abo noch Provision — es ist ein kostenloses Verzeichnis, über das du Creator direkt kontaktierst. Auch Speekly kommt ohne Abo aus und rechnet pro Video ab.' },
-      { question: 'Wie viele deutsche Creator hat Influee?', answer: 'Influee gibt über 10.000 Creator in Deutschland an, bei 140.000+ weltweit. Das ist deutlich mehr als das kuratierte Verzeichnis von UGC VZ mit 470+ Creatorn im DACH-Raum.' },
+      { question: 'Wie viele deutsche Creator hat Influee?', answer: `Influee gibt über 10.000 Creator in Deutschland an, bei 140.000+ weltweit. Das ist deutlich mehr als das kuratierte Verzeichnis von UGC VZ mit ${CREATOR_COUNT_LABEL} Creatorn im DACH-Raum.` },
       { question: 'Wann lohnt sich Influee gegenüber UGC VZ?', answer: 'Wenn du regelmäßig viel Content in mehreren Ländern produzierst und die Abwicklung samt Nutzungsrechten und Videoschnitt an eine Plattform abgeben willst. Bei einzelnen Kampagnen im DACH-Raum trägt das Monatsabo diese Kosten nicht.' },
     ],
   },

@@ -8,6 +8,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import NoResults from '../../components/NoResults';
 import CreatorSelectionPopup from './CreatorSelectionPopup';
 import { trackUGCEvents } from '../lib/analytics';
+import { CREATOR_COUNT_LABEL } from '../lib/creator-count';
 import {
   faInstagram,
   faTiktok,
@@ -297,7 +298,7 @@ export default function SearchBox({ initialQuery = '' }: SearchBoxProps) {
           <div className="flex items-center justify-center gap-3">
             <div className="w-5 h-5 border-2 border-geo-violet border-t-transparent rounded-full animate-spin" />
             <p className="text-sm sm:text-base text-ink-soft">
-              Suche in <span className="text-geo-violet font-semibold">470+ echten Creator-Profilen</span> nach passenden Treffern.
+              Suche in <span className="text-geo-violet font-semibold">{CREATOR_COUNT_LABEL} echten Creator-Profilen</span> nach passenden Treffern.
             </p>
           </div>
         </div>

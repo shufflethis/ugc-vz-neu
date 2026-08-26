@@ -5,6 +5,7 @@ import JsonLdScript from '../wissen/[slug]/JsonLdScript';
 import ComparisonTable from '../components/ComparisonTable';
 import MethodikNote from '../components/MethodikNote';
 import { SUFFIX, competitors } from '../lib/competitors';
+import { CREATOR_COUNT_LABEL } from '../lib/creator-count';
 
 export const metadata: Metadata = {
   title: 'UGC-Plattformen im Vergleich 2026',
@@ -95,7 +96,7 @@ export default function VergleichPage() {
         <section className="max-w-5xl mx-auto text-center mb-16">
           <h2 className="text-3xl font-bold mb-4 text-ink">Creator direkt finden</h2>
           <p className="text-ink-soft mb-6">
-            470+ kuratierte Creator im deutschsprachigen Raum, kostenlos, mit direkten Kontaktdaten.
+            {CREATOR_COUNT_LABEL} kuratierte Creator im deutschsprachigen Raum, kostenlos, mit direkten Kontaktdaten.
           </p>
           <Link
             href="/brands"

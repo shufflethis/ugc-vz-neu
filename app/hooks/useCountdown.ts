@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { CREATOR_COUNT_LABEL } from '../lib/creator-count';
 
 export const useCountdown = () => {
   const [countdownActive, setCountdownActive] = useState(false);
@@ -26,7 +27,7 @@ export const useCountdown = () => {
         "Analysiere Suchanfrage...",
         "Extrahiere Schlüsselwörter: TikTok, Instagram, Reichweite...",
         "Verbinde mit Creator-Datenbank...",
-        "Durchsuche 470+ echte Creator-Profile...",
+        `Durchsuche ${CREATOR_COUNT_LABEL} echte Creator-Profile...`,
         "Filtere nach Plattform und Zielgruppe...",
         "Prüfe Verfügbarkeit und Preisrahmen...",
         "Bewerte Content-Qualität und Engagement...",
