@@ -462,7 +462,6 @@ export async function POST(req: Request) {
     // totalCount nur ueber Funktionslogs rekonstruieren.
     let droppedLowScore = 0;
     let droppedError = 0;
-    const droppedSamples: Array<{ id: string; score: number; gender: string }> = [];
 
     console.log(`[${requestId}] Processing ${searchRecords.length} creators with deterministic scoring in batches of ${BATCH_SIZE}`);
 
@@ -573,8 +572,12 @@ export async function POST(req: Request) {
         // For maximum only, closer to max is better
         score += 50 * (1 - Math.min(totalReach / analysis.maxFollowers, 1));
       } else {
-        // No follower constraints, higher reach is slightly better
-        score += Math.min(Math.log10(totalReach) * 5, 30);
+        // No follower constraints, higher reach is slightly better.
+        // Reichweite 0 heisst hier "keine auslesbare Angabe", nicht "irrelevant":
+        // Math.log10(0) ist -Infinity und hat den Gesamtscore vernichtet, wodurch
+        // jedes Profil ohne Reichweitenangabe an der Schwelle score < 5 aus der
+        // Suche fiel (92 von 495 aktiven Profilen).
+        score += totalReach > 0 ? Math.min(Math.log10(totalReach) * 5, 30) : 0;
       }
 
       // 4. Topic/niche match (check in bio or other fields)
@@ -676,9 +679,6 @@ export async function POST(req: Request) {
           // If score is very low, this creator doesn't match the requirements
           if (score < 5) {
             droppedLowScore += 1;
-            if (droppedSamples.length < 5) {
-              droppedSamples.push({ id: record.id, score, gender: profile.gender || '' });
-            }
             console.log(`[${requestId}] Skipping ${fullName} - score too low (${score})`);
             return null;
           }
@@ -825,7 +825,6 @@ export async function POST(req: Request) {
         droppedLowScore,
         droppedError,
         droppedGenderFilter: validCreators.length - genderFilteredCreators.length,
-        droppedSamples,
       },
       query: query,
       reasoning: reasoning,
