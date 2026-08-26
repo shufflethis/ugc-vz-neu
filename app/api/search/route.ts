@@ -677,7 +677,7 @@ export async function POST(req: Request) {
           if (score < 5) {
             droppedLowScore += 1;
             if (droppedSamples.length < 5) {
-              droppedSamples.push({ id: record.id, score, gender: profile.gender });
+              droppedSamples.push({ id: record.id, score, gender: profile.gender || '' });
             }
             console.log(`[${requestId}] Skipping ${fullName} - score too low (${score})`);
             return null;
