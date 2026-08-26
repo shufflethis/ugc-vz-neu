@@ -104,6 +104,18 @@ export default function Footer() {
                   <path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1c.5-1.9.5-5.8.5-5.8s0-3.9-.5-5.8ZM9.6 15.6V8.4l6.2 3.6-6.2 3.6Z" />
                 </svg>
               </a>
+              <a
+                href="https://x.com/UGC_VZ"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="UGC VZ auf X"
+                title="UGC VZ auf X"
+                className="text-gray-400 hover:text-white transition-colors duration-200"
+              >
+                <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M18.9 2H22l-7.6 8.7L23.3 22h-7l-5.5-7.2L4.5 22H1.4l8.1-9.3L1 2h7.2l5 6.6L18.9 2Zm-1.2 18h1.7L7.4 3.9H5.6L17.7 20Z" />
+                </svg>
+              </a>
             </div>
           </div>
 
