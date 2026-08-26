@@ -4,6 +4,7 @@
 // MCP_TOOLS abgeleitet - kann nicht vom Server abweichen.
 import { NextResponse } from 'next/server';
 import { MCP_TOOLS } from '@/app/lib/agent-tools';
+import { AGENT_LAYER_VERSION } from '@/app/lib/agent-version';
 
 export const dynamic = 'force-static';
 
@@ -16,7 +17,7 @@ const manifest = {
     'Kostenloses Verzeichnis realer UGC-Creator (DACH) mit Portfolio- und Social-Nachweisen.',
     'Suche, Profilabruf und Kontaktanfragen fuer Brands - ohne API-Key, ohne Provision.',
   ].join(' '),
-  version: '1.0.0',
+  version: AGENT_LAYER_VERSION,
   endpoint: `${BASE}/api/mcp`,
   transport: 'streamable-http',
   protocolVersion: '2026-07-28',

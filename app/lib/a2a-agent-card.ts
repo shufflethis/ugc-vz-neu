@@ -1,3 +1,5 @@
+import { AGENT_LAYER_VERSION } from '@/app/lib/agent-version';
+
 const baseUrl = 'https://ugc-vz.de';
 
 // A2A v1.0 (April 2026, Linux Foundation). Normativ ist ausschliesslich
@@ -43,7 +45,7 @@ export const ugcVzAgentCard = {
     organization: 'track by track GmbH / famefact',
     url: baseUrl,
   },
-  version: '1.0.0',
+  version: AGENT_LAYER_VERSION,
   documentationUrl: `${baseUrl}/developers`,
   iconUrl: `${baseUrl}/ugc-vz-logo.webp`,
   pricing: {

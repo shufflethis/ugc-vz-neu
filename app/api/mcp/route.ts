@@ -17,6 +17,7 @@
 import { createMcpHandler } from 'mcp-handler';
 import { MCP_TOOLS } from '@/app/lib/agent-tools';
 import { verifyWebBotAuth, checkRateLimit, peekRateLimit, getRateLimitKey } from '@/app/lib/web-bot-auth';
+import { AGENT_LAYER_VERSION } from '@/app/lib/agent-version';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60;
@@ -69,7 +70,7 @@ const handler = createMcpHandler(
     }
   },
   {
-    serverInfo: { name: 'ugc-vz', version: '1.0.0' },
+    serverInfo: { name: 'ugc-vz', version: AGENT_LAYER_VERSION },
     instructions: SERVER_INSTRUCTIONS,
   },
 );
