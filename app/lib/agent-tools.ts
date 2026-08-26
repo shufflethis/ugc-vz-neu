@@ -95,6 +95,9 @@ const REQUEST_OUTREACH_DESCRIPTION = [
   'keine Creator-Details und keine privaten Kontaktdaten zurueck, sondern nur die request_id.',
   'message und search_query sind optionale Freitextfelder mit Kontext fuer UGC VZ. Typischer',
   'Ablauf: search_creators -> get_creator -> request_outreach -> get_outreach_status.',
+  'Nur fuer ernsthafte, eigene Anfragen aufrufen: der Aufruf loest einen echten E-Mail-Versand aus,',
+  'name und email muessen der anfragenden Brand tatsaechlich gehoeren. Keine Massenanfragen, keine',
+  'Testaufrufe. Es gelten die Nutzungsbedingungen unter https://ugc-vz.de/agb (Ziffer 10).',
 ].join(' ');
 
 const requestOutreachSchema = z.object({

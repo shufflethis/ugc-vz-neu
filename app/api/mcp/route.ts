@@ -32,6 +32,8 @@ const SERVER_INSTRUCTIONS = [
   'und erhalten Kontaktdaten per E-Mail; UGC VZ nimmt keine Provision.',
   'Typischer Ablauf: search_creators -> get_creator -> request_outreach -> get_outreach_status.',
   'get_vocab liefert Themen, Staedte und die Definition der human_verification-Stufen.',
+  'Nutzungsbedingungen: https://ugc-vz.de/agb (Ziffer 10 regelt den maschinellen Zugriff).',
+  'Verantwortlich fuer Aufrufe ist, wer den Agenten betreibt.',
 ].join(' ');
 
 const handler = createMcpHandler(

@@ -27,6 +27,11 @@ const manifest = {
     schema: `${BASE}/api/agent-schemas/${tool.name}.json`,
   })),
   documentation: `${BASE}/developers`,
+  // Ohne API-Key und ohne Registrierung greift "Zustimmung durch Nutzung" nur,
+  // wenn die Bedingungen ueberhaupt auffindbar sind -- deshalb hier und in
+  // SERVER_INSTRUCTIONS, nicht nur auf der Website. Feldname wie in
+  // app/openapi.json/route.ts (OpenAPI info.termsOfService).
+  termsOfService: `${BASE}/agb`,
   openapi: `${BASE}/openapi.json`,
   related: {
     a2a: `${BASE}/.well-known/agent-card.json`,

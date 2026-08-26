@@ -69,6 +69,7 @@ export default function AGBPage() {
                 "Urheberrechte",
                 "Änderungen & Kündigung",
                 "Technische Verfügbarkeit",
+                "Maschinelle Nutzung",
                 "Schlussbestimmungen"
               ].map((item, index) => (
                 <div key={index} className="flex items-center text-ink-soft">
@@ -92,6 +93,8 @@ export default function AGBPage() {
                   <p className="text-ink-soft">
                     Diese Allgemeinen Geschäftsbedingungen gelten für die Nutzung der Plattform UGC-VZ,
                     die von der track by track GmbH / famefact (&bdquo;Betreiber&ldquo;) betrieben wird.
+                    Sie gelten für die Nutzung über die Website ebenso wie für den maschinellen Zugriff
+                    über die bereitgestellten Schnittstellen (siehe Ziffer 10).
                   </p>
                 </div>
 
@@ -103,6 +106,8 @@ export default function AGBPage() {
                     <li><strong>Unternehmen:</strong> Firmen, die nach UGC Creators suchen</li>
                     <li><strong>Nutzer:</strong> Alle Personen, die die Plattform verwenden (Creator und Unternehmen)</li>
                     <li><strong>Vermittlung:</strong> Die Bereitstellung von Kontaktmöglichkeiten zwischen Creatorn und Unternehmen</li>
+                    <li><strong>Schnittstelle:</strong> Maschinenlesbare Zugänge zum Verzeichnis, insbesondere der MCP-Server, die REST-API und die Agent-Discovery-Dokumente</li>
+                    <li><strong>Agent:</strong> Software, die eine Schnittstelle selbsttätig aufruft, etwa ein KI-Assistent im Auftrag eines Unternehmens</li>
                   </ul>
                 </div>
               </div>
@@ -341,25 +346,90 @@ export default function AGBPage() {
 
             {/* Section 10 */}
             <section className="surface-card rounded-2xl p-6 md:p-8">
-              <h2 className="text-2xl font-bold mb-6 text-ink">10. SCHLUSSBESTIMMUNGEN</h2>
+              <h2 className="text-2xl font-bold mb-6 text-ink">10. MASCHINELLE NUTZUNG (API, MCP UND KI-AGENTEN)</h2>
 
               <div className="space-y-6">
                 <div>
-                  <h3 className="text-xl font-semibold mb-3 text-geo-violet">10.1 Anwendbares Recht</h3>
+                  <h3 className="text-xl font-semibold mb-3 text-geo-violet">10.1 Geltung ohne Registrierung</h3>
+                  <p className="text-ink-soft">
+                    Die Schnittstellen sind bewusst ohne API-Schlüssel und ohne Registrierung nutzbar. Wer sie
+                    abruft, erkennt diese AGB in der zum Zeitpunkt des Abrufs unter ugc-vz.de/agb veröffentlichten
+                    Fassung an. Eine gesonderte Mitteilung von Änderungen nach Ziffer 8.1 ist bei
+                    registrierungsfreiem Zugriff technisch nicht möglich; maßgeblich ist deshalb allein die dort
+                    veröffentlichte Fassung. Verantwortlich für einen Abruf ist stets die natürliche oder
+                    juristische Person, die den Agenten oder die Anwendung betreibt &ndash; nicht das eingesetzte
+                    Sprachmodell.
+                  </p>
+                </div>
+
+                <div className="bg-yellow-900/20 rounded-lg p-4 border border-yellow-500/30">
+                  <h3 className="text-xl font-semibold mb-3 text-yellow-400 flex items-center gap-2">
+                    <AlertTriangle className="w-5 h-5 shrink-0" strokeWidth={1.5} aria-hidden="true" />10.2 Kontaktanfragen über die Schnittstelle
+                  </h3>
+                  <p className="text-ink-soft">
+                    Eine Kontaktanfrage über die Schnittstelle (&bdquo;request_outreach&ldquo;) löst einen echten
+                    E-Mail-Versand aus und ist kein Testendpunkt. Sie ist ausschließlich für ernsthafte, eigene
+                    Anfragen zulässig. Name und E-Mail-Adresse müssen zutreffen und dem anfragenden Unternehmen
+                    gehören. Untersagt sind automatisierte Massenanfragen, Anfragen ohne konkretes Projekt sowie
+                    Testaufrufe gegen den Produktivbetrieb. Wer einen Agenten betreibt, haftet für die von diesem
+                    ausgelösten Anfragen wie für eigene.
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="text-xl font-semibold mb-3 text-geo-violet">10.3 Zweckbindung der übermittelten Kontaktdaten</h3>
+                  <p className="text-ink-soft">
+                    Kontaktdaten, die nach einer Anfrage übermittelt werden, dürfen ausschließlich für genau diese
+                    Anfrage verwendet werden. Untersagt sind insbesondere die Aufnahme in Newsletter- oder
+                    Werbeverteiler, der Aufbau eigener Creator-Datenbanken, die Weitergabe an Dritte sowie jede
+                    Verwendung als Trainingsdaten.
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="text-xl font-semibold mb-3 text-geo-violet">10.4 Schutz des Verzeichnisses</h3>
+                  <p className="text-ink-soft">
+                    Das Verzeichnis ist als Datenbank nach §§ 87a ff. UrhG geschützt. Die systematische
+                    Vervielfältigung oder Weiterverwendung wesentlicher Teile &ndash; auch durch wiederholte Abrufe
+                    für sich genommen unwesentlicher Teile &ndash; ist untersagt, ebenso der Aufbau eines
+                    konkurrierenden Verzeichnisses aus diesen Daten. Der quelloffene Client-Code steht unter
+                    MIT-Lizenz; die Verzeichnisdaten selbst sind davon ausdrücklich nicht erfasst.
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="text-xl font-semibold mb-3 text-geo-violet">10.5 Verfügbarkeit, Begrenzung und Sperrung</h3>
+                  <p className="text-ink-soft">
+                    Für die Schnittstellen gilt Ziffer 9 entsprechend. Ein Anspruch auf Bestand, Umfang oder
+                    unveränderte Form einzelner Endpunkte besteht nicht; sie können jederzeit geändert oder
+                    eingestellt werden. Der Betreiber darf Abrufe zur Sicherung des Betriebs begrenzen und einzelne
+                    Clients bei Verstößen gegen diese Ziffer 10 ohne Vorankündigung sperren.
+                  </p>
+                </div>
+              </div>
+            </section>
+
+            {/* Section 11 */}
+            <section className="surface-card rounded-2xl p-6 md:p-8">
+              <h2 className="text-2xl font-bold mb-6 text-ink">11. SCHLUSSBESTIMMUNGEN</h2>
+
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-xl font-semibold mb-3 text-geo-violet">11.1 Anwendbares Recht</h3>
                   <p className="text-ink-soft">
                     Es gilt das Recht der Bundesrepublik Deutschland.
                   </p>
                 </div>
 
                 <div>
-                  <h3 className="text-xl font-semibold mb-3 text-geo-violet">10.2 Gerichtsstand</h3>
+                  <h3 className="text-xl font-semibold mb-3 text-geo-violet">11.2 Gerichtsstand</h3>
                   <p className="text-ink-soft">
                     Gerichtsstand ist Berlin.
                   </p>
                 </div>
 
                 <div>
-                  <h3 className="text-xl font-semibold mb-3 text-geo-violet">10.3 Salvatorische Klausel</h3>
+                  <h3 className="text-xl font-semibold mb-3 text-geo-violet">11.3 Salvatorische Klausel</h3>
                   <p className="text-ink-soft">
                     Sollten einzelne Bestimmungen unwirksam sein, bleiben die übrigen Bestimmungen davon unberührt.
                   </p>
