@@ -457,6 +457,12 @@ export async function POST(req: Request) {
     const BATCH_SIZE = Math.max(10, Math.min(50, Math.ceil(searchRecords.length / 4)));
     const results = [];
 
+    // Diagnose: wieviele aktive Profile faellt die Pipeline unterwegs weg? Ohne
+    // diese Zaehler laesst sich eine Differenz zwischen DB-Bestand und
+    // totalCount nur ueber Funktionslogs rekonstruieren.
+    let droppedLowScore = 0;
+    let droppedError = 0;
+
     console.log(`[${requestId}] Processing ${searchRecords.length} creators with deterministic scoring in batches of ${BATCH_SIZE}`);
 
     // Create a scoring function based on the query analysis
@@ -668,6 +674,7 @@ export async function POST(req: Request) {
 
           // If score is very low, this creator doesn't match the requirements
           if (score < 5) {
+            droppedLowScore += 1;
             console.log(`[${requestId}] Skipping ${fullName} - score too low (${score})`);
             return null;
           }
@@ -735,7 +742,8 @@ export async function POST(req: Request) {
             score: score // Add AI score for sorting
           };
         } catch (error) {
-          console.error(`[${requestId}] Error processing creator:`, error);
+          droppedError += 1;
+          console.error(`[${requestId}] Error processing creator ${record.id}:`, error);
           return null;
         }
       }));
@@ -805,6 +813,15 @@ export async function POST(req: Request) {
       success: true,
       creators: finalCreators,
       totalCount: genderFilteredCreators.length,
+      // Herkunft der Zahl offenlegen: poolSize ist der aktive Bestand aus
+      // creator_search_public, der Rest zeigt, wo Profile verloren gehen.
+      pool: {
+        size: searchRecords.length,
+        scored: validCreators.length,
+        droppedLowScore,
+        droppedError,
+        droppedGenderFilter: validCreators.length - genderFilteredCreators.length,
+      },
       query: query,
       reasoning: reasoning,
       analysis: {
