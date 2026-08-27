@@ -3,6 +3,7 @@ import { deriveVerificationLevel, VERIFICATION_LEVELS } from '../app/lib/agent-v
 import { mapOutreachState, mapFlatOutreachParams } from '../app/lib/agent-gateway';
 import { MCP_TOOLS, AGENT_SCHEMAS } from '../app/lib/agent-tools';
 import { ugcVzAgentCard } from '../app/lib/a2a-agent-card';
+import { WEBMCP_REGISTRY_TOOLS } from '../app/components/WebMcpAgentLayer';
 import { verifyWebBotAuth, checkRateLimit, peekRateLimit, getRateLimitKey, __internals } from '../app/lib/web-bot-auth';
 // `manifest` ist bewusst kein Export von route.ts (siehe Kommentar dort) --
 // wir rufen stattdessen GET() auf und lesen den echten Response-Body. Das
@@ -107,6 +108,31 @@ for (const tool of MCP_TOOLS) {
 
 if (registryErrors.length) { registryErrors.forEach((e) => console.error(' -', e)); process.exit(1); }
 console.log('OK: mcp tool registry');
+
+// ---------- WebMCP-Layer (app/components/WebMcpAgentLayer.tsx) ----------
+// Die Browser-Tools sind eine Teilmenge der Registry -- ohne request_outreach:
+// im Browser sendet der Mensch die Kontaktanfrage selbst (Human-in-the-loop).
+const webmcpErrors: string[] = [];
+const checkWebmcp = (cond: boolean, msg: string) => { if (!cond) webmcpErrors.push(msg); };
+
+const registryNames = new Set(MCP_TOOLS.map((t) => t.name));
+for (const name of WEBMCP_REGISTRY_TOOLS) {
+  checkWebmcp(registryNames.has(name), `WebMCP-Tool "${name}" existiert nicht in MCP_TOOLS`);
+  const schema = AGENT_SCHEMAS[name];
+  checkWebmcp(schema !== undefined, `AGENT_SCHEMAS["${name}"] fehlt fuer den WebMCP-Layer`);
+  try {
+    JSON.stringify(schema);
+  } catch {
+    webmcpErrors.push(`AGENT_SCHEMAS["${name}"] ist nicht JSON-serialisierbar (Server->Client-Props)`);
+  }
+}
+checkWebmcp(
+  !WEBMCP_REGISTRY_TOOLS.includes('request_outreach'),
+  'request_outreach darf im WebMCP-Layer NIE registriert werden (Human-in-the-loop: der Mensch sendet im Formular)',
+);
+
+if (webmcpErrors.length) { webmcpErrors.forEach((e) => console.error(' -', e)); process.exit(1); }
+console.log('OK: webmcp layer (Registry-Teilmenge, ohne request_outreach)');
 
 // ---------- A2A Agent Card (app/lib/a2a-agent-card.ts) ----------
 const cardErrors: string[] = [];

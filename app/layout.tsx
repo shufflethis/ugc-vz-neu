@@ -3,6 +3,7 @@ import { GeistSans } from 'geist/font/sans'
 import { GeistMono } from 'geist/font/mono'
 import "./globals.css";
 import Footer from "@/src/components/FooterNew";
+import WebMcpAgentLayer from "./components/WebMcpAgentLayer";
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -94,6 +95,8 @@ export default function RootLayout({
         <main className="flex-grow">{children}</main>
         <Footer />
         <ToastContainer position="top-center" autoClose={3000} hideProgressBar={false} />
+        {/* WebMCP: Agent-Tools via navigator.modelContext (rendert nichts) */}
+        <WebMcpAgentLayer />
       </body>
     </html>
   )

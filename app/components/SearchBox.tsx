@@ -23,6 +23,9 @@ import { useDeviceDetection } from '../hooks/useDeviceDetection';
 import { useSearch } from '../hooks/useSearch';
 import { useVoiceRecognition } from '../hooks/useVoiceRecognition';
 
+// WebMCP-Anbindung: Events, ueber die der Agent-Layer diese UI steuert
+import { AGENT_UI_EVENTS } from './WebMcpProvider';
+
 interface SearchBoxProps {
   initialQuery?: string;
 }
@@ -62,6 +65,77 @@ export default function SearchBox({ initialQuery = '' }: SearchBoxProps) {
     browserSupportsSpeechRecognition,
     toggleVoiceInput
   } = useVoiceRecognition(isIOSDeviceState, isMobileDeviceState, handleVoiceTranscript);
+
+  // --- WebMCP-Agent-Anbindung (app/components/WebMcpProvider.tsx) ---
+  // requestId der laufenden Agent-Suche; null = keine Agent-Suche offen.
+  const agentSearchRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    window.__ugcvzAgentUiReady = true;
+
+    const onAgentSearch = (event: Event) => {
+      const { query, requestId } = (event as CustomEvent).detail || {};
+      if (typeof query !== 'string' || !query.trim()) return;
+      agentSearchRef.current = typeof requestId === 'string' ? requestId : null;
+      setSearchQuery(query);
+      performSearch(query.trim());
+    };
+
+    const onAgentSelect = (event: Event) => {
+      const { creator_ids, requestId } = (event as CustomEvent).detail || {};
+      const ids: string[] = Array.isArray(creator_ids) ? creator_ids.map(String) : [];
+      const known = new Set(creators.map((c) => c.id));
+      const selected: string[] = [];
+      const notFound: string[] = [];
+      for (const id of ids) {
+        if (!known.has(id)) {
+          notFound.push(id);
+          continue;
+        }
+        // Idempotent auswaehlen: bereits markierte Creator nicht wieder abwaehlen.
+        if (!selectedCreators.includes(id)) toggleCreatorSelection(id);
+        selected.push(id);
+      }
+      window.dispatchEvent(
+        new CustomEvent(AGENT_UI_EVENTS.selectResult, {
+          detail: { requestId, selected, not_found: notFound },
+        }),
+      );
+    };
+
+    window.addEventListener(AGENT_UI_EVENTS.search, onAgentSearch);
+    window.addEventListener(AGENT_UI_EVENTS.select, onAgentSelect);
+    return () => {
+      delete window.__ugcvzAgentUiReady;
+      window.removeEventListener(AGENT_UI_EVENTS.search, onAgentSearch);
+      window.removeEventListener(AGENT_UI_EVENTS.select, onAgentSelect);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [creators, selectedCreators]);
+
+  // Ergebnis einer Agent-Suche zurueckmelden, sobald die Suche fertig ist.
+  useEffect(() => {
+    const requestId = agentSearchRef.current;
+    if (!requestId || isLoading) return;
+    if (creators.length === 0 && !showNoResults) return;
+    agentSearchRef.current = null;
+    window.dispatchEvent(
+      new CustomEvent(AGENT_UI_EVENTS.searchResult, {
+        detail: {
+          requestId,
+          no_results: showNoResults,
+          reasoning: reasoning || undefined,
+          creators: creators.map(({ id, name, reach, priceRange, networks }) => ({
+            id,
+            name,
+            reach,
+            price_range: priceRange,
+            networks,
+          })),
+        },
+      }),
+    );
+  }, [creators, showNoResults, isLoading, reasoning]);
 
   // Vorbefuellung ueber das Fragment (#q=...). Ein Fragment erzeugt fuer Crawler
   // keine eigene URL, waehrend ein ?query=-Parameter eine Variante erzeugt, die
@@ -177,6 +251,13 @@ export default function SearchBox({ initialQuery = '' }: SearchBoxProps) {
           trackUGCEvents.creatorContact(creatorId, platform);
         }
       });
+
+      // WebMCP: leadId der abgeschickten Anfrage fuer get_last_outreach melden
+      if (data.leadId) {
+        window.dispatchEvent(
+          new CustomEvent(AGENT_UI_EVENTS.outreachSubmitted, { detail: { leadId: String(data.leadId) } }),
+        );
+      }
 
       // Reset nur die Auswahl nach erfolgreichem Senden
       clearSelection();
