@@ -1,0 +1,140 @@
+{
+  "$schema": "https://developers.openai.com/apps-sdk/schemas/chatgpt-app-submission.v1.json",
+  "schema_version": 1,
+  "app_info": {
+    "display_name": "UGC VZ",
+    "subtitle": "Find real UGC creators (DACH)",
+    "description": "UGC VZ is a free directory of real, verified UGC creators in the German-speaking region (Germany, Austria, Switzerland) with portfolio and social-media proof - no AI-avatar content. Brands search the directory by free-text query, city, topics, or verification level, inspect individual creator profiles, and deliberately request contact. UGC VZ then delivers the creators' contact details to the brand by e-mail; the directory takes no commission. Typical workflow: search creators, review a profile, trigger an outreach request, and poll its delivery status. Creator search and profile data never expose private contact details inside ChatGPT.",
+    "category": "BUSINESS"
+  },
+  "tools": {
+    "search_creators": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Only queries the UGC VZ creator database and returns matching public profiles without creating or updating any records.",
+        "open_world_justification": "Reads from UGC VZ's own private database and does not write to public internet state or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform any irreversible action."
+      }
+    },
+    "get_creator": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Only retrieves the public profile of a single creator by ID and never modifies data or exposes private contact details.",
+        "open_world_justification": "Reads from UGC VZ's own private database and does not write to public internet state or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform any irreversible action."
+      }
+    },
+    "request_outreach": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": true,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Creates a new outreach request in UGC VZ's system and triggers a real e-mail delivering creator contact details to the requesting brand.",
+        "open_world_justification": "Triggers real e-mail delivery outside the closed system, addressed to the brand e-mail supplied by the caller.",
+        "destructive_justification": "Only adds a new outreach request and sends a notification; it does not delete, overwrite, or revoke anything."
+      }
+    },
+    "get_outreach_status": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Only reads the lifecycle status (submitted, working, completed, failed) of an existing outreach request without changing it.",
+        "open_world_justification": "Reads request state from UGC VZ's own private database and does not touch external systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform any irreversible action."
+      }
+    },
+    "get_vocab": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Only returns aggregated vocabulary (topics, industries, cities, verification-level definitions) derived from active profiles.",
+        "open_world_justification": "Reads aggregated data from UGC VZ's own private database and does not touch external systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform any irreversible action."
+      }
+    }
+  },
+  "test_cases": [
+    {
+      "description": "Free-text creator search for a campaign brief.",
+      "user_prompt": "Find me UGC creators in Berlin who could shoot a TikTok product video for a fitness brand.",
+      "file_attachment_urls": null,
+      "tools_triggered": "search_creators",
+      "expected_output": "Returns a list of matching public creator profiles (name, city, topics, verification level) without any private contact details.",
+      "expected_output_url": null
+    },
+    {
+      "description": "Inspect a single creator from a previous search result.",
+      "user_prompt": "Show me more details about the second creator from that search.",
+      "file_attachment_urls": null,
+      "tools_triggered": "get_creator",
+      "expected_output": "Returns the full public profile (topics, industries, equipment, portfolio links, social accounts, fee and reach text) for the given creator_public_id, still without private contact data.",
+      "expected_output_url": null
+    },
+    {
+      "description": "Deliberate brand outreach after reviewing profiles.",
+      "user_prompt": "Please request contact details for these two creators. My name is Jane Doe and my company e-mail is jane@brand.example.",
+      "file_attachment_urls": null,
+      "tools_triggered": "request_outreach",
+      "expected_output": "Creates an outreach request and returns a request_id; the model explains that UGC VZ will deliver the creators' contact details to the given brand e-mail.",
+      "expected_output_url": null
+    },
+    {
+      "description": "Poll the delivery status of an outreach request.",
+      "user_prompt": "Has my creator contact request gone through yet?",
+      "file_attachment_urls": null,
+      "tools_triggered": "get_outreach_status",
+      "expected_output": "Returns the current lifecycle status (submitted, working, completed, or failed) with timestamps for the stored request_id.",
+      "expected_output_url": null
+    },
+    {
+      "description": "Discover valid filter values before a first search.",
+      "user_prompt": "What topics and cities can I filter UGC VZ creators by, and what do the verification levels mean?",
+      "file_attachment_urls": null,
+      "tools_triggered": "get_vocab",
+      "expected_output": "Returns the current vocabulary of topics, industries, and cities plus the definition of the human_verification levels and a pricing note.",
+      "expected_output_url": null
+    }
+  ],
+  "negative_test_cases": [
+    {
+      "description": "Do not trigger for general influencer-marketing advice.",
+      "user_prompt": "What's a good briefing template for working with influencers?",
+      "file_attachment_urls": null,
+      "tools_triggered": null,
+      "expected_output": "The app should not be invoked; this is general marketing advice with no creator search or outreach intent.",
+      "expected_output_url": null
+    },
+    {
+      "description": "Do not trigger for creator searches outside the DACH region.",
+      "user_prompt": "Find me UGC creators in Los Angeles for an English-language campaign.",
+      "file_attachment_urls": null,
+      "tools_triggered": null,
+      "expected_output": "The app should not be invoked or should clarify that UGC VZ only lists creators in the German-speaking region (DACH).",
+      "expected_output_url": null
+    },
+    {
+      "description": "Do not send outreach without an explicit, serious brand request.",
+      "user_prompt": "Just test the contact request feature with some fake data.",
+      "file_attachment_urls": null,
+      "tools_triggered": null,
+      "expected_output": "request_outreach must not be called; the terms of use forbid test calls and bulk requests, and name/e-mail must belong to the real requesting brand.",
+      "expected_output_url": null
+    }
+  ]
+}

@@ -41,11 +41,28 @@ function toolError(toolName: string, error: unknown): ToolResult {
   };
 }
 
+// MCP-Tool-Annotationen (Spec: ToolAnnotations). ChatGPT-Apps-Submissions
+// verlangen alle drei Hints explizit pro Tool -- fehlende/null-Werte sind
+// dort Blocker, Protokoll-Defaults reichen nicht.
+export type McpToolAnnotations = {
+  readOnlyHint: boolean;
+  openWorldHint: boolean;
+  destructiveHint: boolean;
+};
+
 export type McpToolDefinition = {
   name: string;
   description: string;
   inputSchema: z.ZodObject<z.ZodRawShape>;
+  annotations: McpToolAnnotations;
   handler: (args: any, ctx: ToolRequestCtx) => Promise<ToolResult>;
+};
+
+// Reine Lesetools: holen Daten, veraendern nichts, kein externer Effekt.
+const READ_ONLY_ANNOTATIONS: McpToolAnnotations = {
+  readOnlyHint: true,
+  openWorldHint: false,
+  destructiveHint: false,
 };
 
 // ---------- search_creators ----------
@@ -177,6 +194,7 @@ export const MCP_TOOLS: McpToolDefinition[] = [
     name: 'search_creators',
     description: SEARCH_CREATORS_DESCRIPTION,
     inputSchema: searchCreatorsSchema,
+    annotations: READ_ONLY_ANNOTATIONS,
     handler: async (args, ctx) => {
       try {
         const result = await searchCreators(
@@ -199,6 +217,7 @@ export const MCP_TOOLS: McpToolDefinition[] = [
     name: 'get_creator',
     description: GET_CREATOR_DESCRIPTION,
     inputSchema: getCreatorSchema,
+    annotations: READ_ONLY_ANNOTATIONS,
     handler: async (args) => {
       try {
         const result = await getCreator(args.creator_public_id);
@@ -212,6 +231,9 @@ export const MCP_TOOLS: McpToolDefinition[] = [
     name: 'request_outreach',
     description: REQUEST_OUTREACH_DESCRIPTION,
     inputSchema: requestOutreachSchema,
+    // Loest echten E-Mail-Versand aus (openWorld), legt aber nur additiv eine
+    // Anfrage an -- loescht/ueberschreibt nichts (nicht destructive).
+    annotations: { readOnlyHint: false, openWorldHint: true, destructiveHint: false },
     handler: async (args, ctx) => {
       try {
         const result = await requestOutreach(
@@ -236,6 +258,7 @@ export const MCP_TOOLS: McpToolDefinition[] = [
     name: 'get_outreach_status',
     description: GET_OUTREACH_STATUS_DESCRIPTION,
     inputSchema: getOutreachStatusSchema,
+    annotations: READ_ONLY_ANNOTATIONS,
     handler: async (args) => {
       try {
         const result = await getOutreachStatus(args.request_id);
@@ -249,6 +272,7 @@ export const MCP_TOOLS: McpToolDefinition[] = [
     name: 'get_vocab',
     description: GET_VOCAB_DESCRIPTION,
     inputSchema: getVocabSchema,
+    annotations: READ_ONLY_ANNOTATIONS,
     handler: async () => {
       try {
         const result = await getVocab();

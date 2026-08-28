@@ -46,6 +46,7 @@ const handler = createMcpHandler(
           title: tool.name,
           description: tool.description,
           inputSchema: tool.inputSchema,
+          annotations: tool.annotations,
         },
         async (args, ctx) => {
           const req = ctx.http?.req;
