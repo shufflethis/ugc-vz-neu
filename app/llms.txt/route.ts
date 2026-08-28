@@ -68,7 +68,7 @@ get_outreach_status. Achtung: request_outreach löst echte E-Mails aus.
 - ${baseUrl}/developers: Developer-Portal (Quickstarts, Fehlerformat, Rate-Limits; kein API-Key nötig)
 - ${baseUrl}/openapi.json: OpenAPI-3.1-Spezifikation der REST-API /api/v1
 - ${baseUrl}/api/mcp: MCP-Server, Streamable HTTP (5 Tools: search_creators, get_creator, request_outreach, get_outreach_status, get_vocab)
-- WebMCP: Die Startseite registriert im Browser Tools via navigator.modelContext (search_creators, get_creator, get_vocab, get_outreach_status, select_creators, get_last_outreach) - sichtbar nur in WebMCP-faehigen Browsern (ChatGPT-Browser, Chrome mit Flag), nicht im HTML. request_outreach gibt es dort bewusst nicht: die Kontaktanfrage sendet der Mensch selbst im Formular.
+- WebMCP: Die Startseite registriert im Browser Tools via modelContext (document.modelContext bei ChatGPT Site tools, navigator.modelContext im Chromium-Prototyp) (search_creators, get_creator, get_vocab, get_outreach_status, select_creators, get_last_outreach) - sichtbar nur in WebMCP-faehigen Browsern (ChatGPT-Browser, Chrome mit Flag), nicht im HTML. request_outreach gibt es dort bewusst nicht: die Kontaktanfrage sendet der Mensch selbst im Formular.
 - ${baseUrl}/.well-known/mcp.json: MCP-Discovery-Manifest
 - https://github.com/ugcvz/ugc-vz-mcp: MCP-Repo (Doku, server.json, npm-Bridge); Registry-Name de.ugc-vz/creator-search
 - https://www.npmjs.com/package/ugc-vz-mcp: npm-Bridge fuer stdio-only-Clients (npx -y ugc-vz-mcp)

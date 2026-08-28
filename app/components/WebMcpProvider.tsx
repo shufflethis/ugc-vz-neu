@@ -1,8 +1,9 @@
 'use client';
 
 // WebMCP-Layer: registriert die Agent-Tools im Browser ueber
-// navigator.modelContext.registerTool() (W3C-Proposal; ChatGPT-Browser und
-// Chrome mit Flag). Feature-Detection -- in normalen Browsern ist die
+// modelContext.registerTool()/provideContext() (W3C-Proposal). ChatGPT Site
+// tools stellt die API auf document.modelContext bereit, der Chromium-Prototyp
+// auf navigator.modelContext -- beide werden unterstuetzt. Feature-Detection -- in normalen Browsern ist die
 // Komponente ein No-op und rendert nichts.
 //
 // Human-in-the-loop bewusst: request_outreach wird hier NICHT registriert.
@@ -106,6 +107,7 @@ type WebMcpToolDefinition = {
   name: string;
   description: string;
   inputSchema: Record<string, unknown>;
+  annotations?: { readOnlyHint: boolean };
   execute: (args: Record<string, unknown>) => Promise<ToolResult>;
 };
 
@@ -121,11 +123,14 @@ function buildToolDefinitions(tools: WebMcpToolMeta[]): WebMcpToolDefinition[] {
     description: string,
     inputSchema: Record<string, unknown>,
     execute: (args: Record<string, unknown>) => Promise<ToolResult>,
+    readOnly = false,
   ) => {
     definitions.push({
       name,
       description,
       inputSchema,
+      // Hinweis fuer den Safety-Review des Agent-Browsers (z. B. ChatGPT Site tools).
+      ...(readOnly ? { annotations: { readOnlyHint: true } } : {}),
       async execute(args: Record<string, unknown>) {
         try {
           return await execute(args ?? {});
@@ -169,15 +174,17 @@ function buildToolDefinitions(tools: WebMcpToolMeta[]): WebMcpToolDefinition[] {
     const getCreator = registryTool('get_creator');
     register(getCreator.name, getCreator.description, getCreator.inputSchema, (args) =>
       viaApi(`/api/v1/creators/${encodeURIComponent(String(args.creator_public_id))}`),
+      true,
     );
 
     const outreachStatus = registryTool('get_outreach_status');
     register(outreachStatus.name, outreachStatus.description, outreachStatus.inputSchema, (args) =>
       viaApi(`/api/v1/outreach/${encodeURIComponent(String(args.request_id))}`),
+      true,
     );
 
     const vocab = registryTool('get_vocab');
-    register(vocab.name, vocab.description, vocab.inputSchema, () => viaApi('/api/v1/vocab'));
+    register(vocab.name, vocab.description, vocab.inputSchema, () => viaApi('/api/v1/vocab'), true);
 
     register(
       'select_creators',
@@ -216,7 +223,7 @@ function buildToolDefinitions(tools: WebMcpToolMeta[]): WebMcpToolDefinition[] {
       }
       const status = await viaApi(`/api/v1/outreach/${encodeURIComponent(lastOutreachId)}`);
       return textResult({ request_id: lastOutreachId, status: status.content[0]?.text });
-    });
+    }, true);
 
   return definitions;
 }
@@ -232,7 +239,11 @@ export default function WebMcpProvider({ tools }: { tools: WebMcpToolMeta[] }) {
     // (inkrementell, Chromium-Prototyp) und provideContext (deklarativ).
     const tryRegister = (): boolean => {
       if (registered) return true;
-      const modelContext = (navigator as { modelContext?: ModelContext }).modelContext;
+      // ChatGPT (Site tools) stellt die API auf document bereit, der
+      // Chromium-Prototyp auf navigator -- beide pruefen.
+      const modelContext =
+        (navigator as { modelContext?: ModelContext }).modelContext ??
+        (document as { modelContext?: ModelContext }).modelContext;
       if (!modelContext) return false;
       const definitions = buildToolDefinitions(tools);
       if (typeof modelContext.registerTool === 'function') {
