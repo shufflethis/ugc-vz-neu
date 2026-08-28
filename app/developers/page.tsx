@@ -109,7 +109,7 @@ claude mcp add --transport http ugc-vz https://ugc-vz.de/api/mcp
             <p className="text-sm leading-6 text-ink-soft">
               Ausprobieren: <a className="font-semibold text-geo-violet underline" href="https://ugc-vz.de">ugc-vz.de</a>{' '}
               im Browser der ChatGPT-Desktop-App öffnen oder in Chrome 149+ mit{' '}
-              <code>chrome://flags/#enable-webmcp-testing</code> — die Adressleiste zeigt „Site tools" an.
+              <code>chrome://flags/#enable-webmcp-testing</code> — die Adressleiste zeigt „Site tools&ldquo; an.
               Namen, Beschreibungen und Schemas stammen aus derselben Registry wie MCP-Server, REST-API und A2A.
             </p>
           </section>
