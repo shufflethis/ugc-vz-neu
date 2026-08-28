@@ -102,47 +102,44 @@ const GET_LAST_OUTREACH_DESCRIPTION = [
   'Mensch die Anfrage gesendet hat. Gibt keine Kontaktdaten zurueck.',
 ].join(' ');
 
-export default function WebMcpProvider({ tools }: { tools: WebMcpToolMeta[] }) {
-  useEffect(() => {
-    const modelContext = (navigator as { modelContext?: { registerTool?: unknown } }).modelContext as
-      | { registerTool: (tool: object) => void }
-      | undefined;
-    if (registered || typeof modelContext?.registerTool !== 'function') return;
-    registered = true;
+type WebMcpToolDefinition = {
+  name: string;
+  description: string;
+  inputSchema: Record<string, unknown>;
+  execute: (args: Record<string, unknown>) => Promise<ToolResult>;
+};
 
-    window.addEventListener(AGENT_UI_EVENTS.outreachSubmitted, ((event: Event) => {
-      const leadId = (event as CustomEvent).detail?.leadId;
-      if (typeof leadId === 'string' && leadId) lastOutreachId = leadId;
-    }) as EventListener);
+type ModelContext = {
+  registerTool?: (tool: WebMcpToolDefinition) => void;
+  provideContext?: (context: { tools: WebMcpToolDefinition[] }) => void;
+};
 
-    const register = (
-      name: string,
-      description: string,
-      inputSchema: Record<string, unknown>,
-      execute: (args: Record<string, unknown>) => Promise<ToolResult>,
-    ) => {
-      try {
-        modelContext.registerTool({
-          name,
-          description,
-          inputSchema,
-          async execute(args: Record<string, unknown>) {
-            try {
-              return await execute(args ?? {});
-            } catch (error) {
-              return textResult(
-                `Fehler bei ${name}: ${error instanceof Error ? error.message : String(error)}`,
-                true,
-              );
-            }
-          },
-        });
-      } catch (error) {
-        console.error(`[webmcp] registerTool ${name} fehlgeschlagen`, error);
-      }
-    };
+function buildToolDefinitions(tools: WebMcpToolMeta[]): WebMcpToolDefinition[] {
+  const definitions: WebMcpToolDefinition[] = [];
+  const register = (
+    name: string,
+    description: string,
+    inputSchema: Record<string, unknown>,
+    execute: (args: Record<string, unknown>) => Promise<ToolResult>,
+  ) => {
+    definitions.push({
+      name,
+      description,
+      inputSchema,
+      async execute(args: Record<string, unknown>) {
+        try {
+          return await execute(args ?? {});
+        } catch (error) {
+          return textResult(
+            `Fehler bei ${name}: ${error instanceof Error ? error.message : String(error)}`,
+            true,
+          );
+        }
+      },
+    });
+  };
 
-    const meta = Object.fromEntries(tools.map((tool) => [tool.name, tool]));
+  const meta = Object.fromEntries(tools.map((tool) => [tool.name, tool]));
     const registryTool = (name: string) => {
       const tool = meta[name];
       if (!tool) throw new Error(`WebMCP: Tool-Metadaten fuer ${name} fehlen`);
@@ -220,6 +217,59 @@ export default function WebMcpProvider({ tools }: { tools: WebMcpToolMeta[] }) {
       const status = await viaApi(`/api/v1/outreach/${encodeURIComponent(lastOutreachId)}`);
       return textResult({ request_id: lastOutreachId, status: status.content[0]?.text });
     });
+
+  return definitions;
+}
+
+export default function WebMcpProvider({ tools }: { tools: WebMcpToolMeta[] }) {
+  useEffect(() => {
+    window.addEventListener(AGENT_UI_EVENTS.outreachSubmitted, ((event: Event) => {
+      const leadId = (event as CustomEvent).detail?.leadId;
+      if (typeof leadId === 'string' && leadId) lastOutreachId = leadId;
+    }) as EventListener);
+
+    // Beide API-Formen des W3C-Proposals unterstuetzen: registerTool
+    // (inkrementell, Chromium-Prototyp) und provideContext (deklarativ).
+    const tryRegister = (): boolean => {
+      if (registered) return true;
+      const modelContext = (navigator as { modelContext?: ModelContext }).modelContext;
+      if (!modelContext) return false;
+      const definitions = buildToolDefinitions(tools);
+      if (typeof modelContext.registerTool === 'function') {
+        registered = true;
+        for (const definition of definitions) {
+          try {
+            modelContext.registerTool(definition);
+          } catch (error) {
+            console.error(`[webmcp] registerTool ${definition.name} fehlgeschlagen`, error);
+          }
+        }
+        return true;
+      }
+      if (typeof modelContext.provideContext === 'function') {
+        registered = true;
+        try {
+          modelContext.provideContext({ tools: definitions });
+        } catch (error) {
+          console.error('[webmcp] provideContext fehlgeschlagen', error);
+        }
+        return true;
+      }
+      return false;
+    };
+
+    if (tryRegister()) return;
+
+    // Manche Agent-Browser injizieren navigator.modelContext erst NACH dem
+    // Seiten-Load -- bis zu 30s nachfassen, dann aufgeben (normaler Browser).
+    const interval = setInterval(() => {
+      if (tryRegister()) clearInterval(interval);
+    }, 500);
+    const giveUp = setTimeout(() => clearInterval(interval), 30_000);
+    return () => {
+      clearInterval(interval);
+      clearTimeout(giveUp);
+    };
   }, [tools]);
 
   return null;
