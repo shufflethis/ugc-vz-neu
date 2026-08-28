@@ -90,6 +90,12 @@ function askUi(
 }
 
 const SELECT_CREATORS_DESCRIPTION = [
+  'Marks creators from the last visible search_creators result directly in the page UI and opens',
+  'the contact request form pre-filled with that selection. Only available on the homepage with',
+  'the search visible; call search_creators first. The human sends the contact request themselves',
+  'in the form (name and e-mail belong to the requesting brand) - there is deliberately no',
+  'request_outreach tool in the browser. After the human submits, get_last_outreach returns the',
+  'request_id. [DE]',
   'Markiert Creator aus dem letzten sichtbaren search_creators-Ergebnis direkt in der Seiten-UI',
   'und oeffnet das Anfrage-Formular mit dieser Vorauswahl. Nur auf der Startseite mit sichtbarer',
   'Suche verfuegbar; zuerst search_creators aufrufen. Die Kontaktanfrage selbst sendet der Mensch',
@@ -98,6 +104,9 @@ const SELECT_CREATORS_DESCRIPTION = [
 ].join(' ');
 
 const GET_LAST_OUTREACH_DESCRIPTION = [
+  'Returns request_id and current status of the contact request the human most recently submitted',
+  'via the form in this browser session. Call after select_creators once the human has sent the',
+  'request. Returns no contact details. [DE]',
   'Liefert request_id und aktuellen Status der Kontaktanfrage, die der Mensch zuletzt in dieser',
   'Browser-Sitzung ueber das Formular abgeschickt hat. Nach select_creators aufrufen, sobald der',
   'Mensch die Anfrage gesendet hat. Gibt keine Kontaktdaten zurueck.',

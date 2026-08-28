@@ -52,6 +52,13 @@ export type McpToolDefinition = {
 // Beschreibung wortgleich aus dem Task-3-Briefing uebernommen (der Text IST
 // der Prompt fuer das aufrufende Sprachmodell).
 const SEARCH_CREATORS_DESCRIPTION = [
+  'Searches the UGC-VZ directory of real, verified UGC creators in the German-speaking region',
+  '(DACH). query is free text and the main path (e.g. "fitness creator 30+ for a TikTok product',
+  'video"); a language model structures the request server-side. Optional: city (substring),',
+  'topics (at least one match), human_verification_level_min (0 = self_reported,',
+  '1 = self_reported_with_portfolio; levels are derived from profile data, see get_vocab).',
+  'Results NEVER contain private contact details. Use get_creator for details on a match;',
+  'request_outreach for a contact request. [DE]',
   'Durchsucht das UGC-VZ-Verzeichnis realer UGC-Creator im deutschsprachigen Raum.',
   'query ist Freitext und der Hauptpfad (z. B. "Fitness-Creatorin ab 30 fuer TikTok-Produktvideo");',
   'ein Sprachmodell strukturiert die Anfrage serverseitig. Optional: city (Substring),',
@@ -71,6 +78,12 @@ const searchCreatorsSchema = z.object({
 
 // ---------- get_creator ----------
 const GET_CREATOR_DESCRIPTION = [
+  'Returns the public profile of a single UGC creator for a creator_public_id from a previous',
+  'search_creators result: name, city, topics, industries, preferred content, equipment,',
+  'experience since, fee and reach text, portfolio links, social accounts and the',
+  'human_verification level. NEVER returns private contact details such as e-mail or real name -',
+  'the brand receives those from UGC VZ by e-mail only after request_outreach. Use before',
+  'request_outreach to inspect a match more closely. [DE]',
   'Liefert das oeffentliche Profil eines einzelnen UGC-Creators zu einer creator_public_id aus',
   'einem vorherigen search_creators-Ergebnis: Name, Stadt, Themen, Branchen, bevorzugter Content,',
   'Ausruestung, Erfahrung seit, Honorar- und Reichweitentext, Portfolio-Links, Social-Accounts',
@@ -88,6 +101,16 @@ const getCreatorSchema = z.object({
 // "Pflicht:"-Satz + "Gibt request_id..."-Satz), eingebettet in eine volle
 // Beschreibung im selben Register wie die anderen vier Tools.
 const REQUEST_OUTREACH_DESCRIPTION = [
+  'Triggers a deliberate brand request. UGC VZ then forwards the contact details of the selected',
+  'creators to the brand by e-mail. Required: name, email, creator_public_ids from a previous',
+  'search. Returns request_id for get_outreach_status. Creators must have been found via',
+  'search_creators or get_creator before this call; request_outreach itself returns no creator',
+  'details and no private contact data, only the request_id. message and search_query are',
+  'optional free-text context for UGC VZ. Typical flow: search_creators -> get_creator ->',
+  'request_outreach -> get_outreach_status. Call only for serious, genuine requests: the call',
+  'triggers a real e-mail, and name and email must actually belong to the requesting brand.',
+  'No bulk requests, no test calls. The terms of use at https://ugc-vz.de/agb (section 10)',
+  'apply. [DE]',
   'Loest eine bewusste Brand-Anfrage aus. UGC VZ gibt daraufhin die Kontaktdaten der ausgewaehlten',
   'Creator per E-Mail an die Brand weiter. Pflicht: name, email, creator_public_ids aus vorheriger',
   'Suche. Gibt request_id fuer get_outreach_status zurueck. Vor diesem Aufruf muessen die Creator',
@@ -113,6 +136,12 @@ const requestOutreachSchema = z.object({
 
 // ---------- get_outreach_status ----------
 const GET_OUTREACH_STATUS_DESCRIPTION = [
+  'Returns the current status of a contact request previously triggered with request_outreach,',
+  'by request_id: submitted (received, not yet processed), working (e-mail delivery in',
+  'progress), completed (contact details delivered by e-mail) or failed (delivery failed or',
+  '48 hours without delivery). NEVER returns private contact details itself, only the lifecycle',
+  'status with timestamps. Call repeatedly after request_outreach until the status is completed',
+  'or failed. [DE]',
   'Liefert den aktuellen Status einer zuvor mit request_outreach ausgeloesten Kontaktanfrage anhand',
   'der request_id: submitted (eingegangen, noch nicht bearbeitet), working (E-Mail-Versand laeuft),',
   'completed (Kontaktdaten wurden per E-Mail zugestellt) oder failed (Versand fehlgeschlagen oder',
@@ -127,6 +156,12 @@ const getOutreachStatusSchema = z.object({
 
 // ---------- get_vocab ----------
 const GET_VOCAB_DESCRIPTION = [
+  'Returns the currently valid vocabulary for search_creators: most common topics, industries',
+  'and cities from active creator profiles, the definition of the human_verification levels',
+  '(0 = self_reported, 1 = self_reported_with_portfolio, 2 = reserved, currently not assigned)',
+  'and a note on pricing. Contains no creator or contact data. Call before a first',
+  'search_creators request or when unsure about valid filter values (city, topics,',
+  'human_verification_level_min). [DE]',
   'Liefert das aktuell gueltige Vokabular fuer search_creators: haeufigste Themen (topics),',
   'Branchen und Staedte aus aktiven Creator-Profilen sowie die Definition der',
   'human_verification-Stufen (0 = self_reported, 1 = self_reported_with_portfolio, 2 = reserviert,',
