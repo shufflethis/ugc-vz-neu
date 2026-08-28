@@ -77,6 +77,17 @@ export default function Footer() {
               <li><Link href="/wissen" className="text-gray-400 hover:text-white transition-colors duration-200 text-sm">Wissen</Link></li>
             </ul>
 
+            {/* WebMCP-Badge: die Seite registriert Site-Tools im Browser
+                (document.modelContext) - Details auf /developers#webmcp. */}
+            <Link
+              href="/developers#webmcp"
+              className="mt-6 inline-flex items-center gap-2 rounded-full border border-gray-700 px-3 py-1.5 text-xs text-gray-400 hover:text-white hover:border-gray-500 transition-colors duration-200"
+              title="Diese Seite registriert 6 Site-Tools für KI-Agenten"
+            >
+              <span aria-hidden="true">⚡</span>
+              WebMCP ready — 6 Site-Tools
+            </Link>
+
             {/* Vertrauenssignale: offener Quellcode des MCP-Servers und der
                 eigene Kanal - beides pruefbar, deshalb hier statt im Fliesstext. */}
             <div className="mt-6 flex items-center gap-4">

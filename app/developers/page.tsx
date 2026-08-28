@@ -90,6 +90,30 @@ claude mcp add --transport http ugc-vz https://ugc-vz.de/api/mcp
             </p>
           </section>
 
+          <section className={card} id="webmcp">
+            <h2 className={h2}>WebMCP — Site-Tools direkt im Browser</h2>
+            <p className="leading-7 text-ink-soft mb-4">
+              Die Website selbst registriert 6 Tools über <code>document.modelContext</code>{' '}
+              (ChatGPT Site-Tools) bzw. <code>navigator.modelContext</code> (W3C-Proposal,
+              Chromium-Prototyp): <code>search_creators</code>, <code>get_creator</code>,{' '}
+              <code>select_creators</code>, <code>get_last_outreach</code>,{' '}
+              <code>get_outreach_status</code>, <code>get_vocab</code>. Der Agent sucht und
+              markiert Treffer direkt in der Seiten-UI — Mensch und Agent sehen denselben Bildschirm.
+            </p>
+            <p className="leading-7 text-ink-soft mb-4">
+              <strong className="text-ink">Human-in-the-loop by design:</strong> ein{' '}
+              <code>request_outreach</code>-Tool gibt es im Browser bewusst nicht. Die Kontaktanfrage
+              (echter E-Mail-Versand) sendet immer der Mensch selbst über das Formular; danach liefert{' '}
+              <code>get_last_outreach</code> die <code>request_id</code> zum Status-Tracking an den Agenten zurück.
+            </p>
+            <p className="text-sm leading-6 text-ink-soft">
+              Ausprobieren: <a className="font-semibold text-geo-violet underline" href="https://ugc-vz.de">ugc-vz.de</a>{' '}
+              im Browser der ChatGPT-Desktop-App öffnen oder in Chrome 149+ mit{' '}
+              <code>chrome://flags/#enable-webmcp-testing</code> — die Adressleiste zeigt „Site tools" an.
+              Namen, Beschreibungen und Schemas stammen aus derselben Registry wie MCP-Server, REST-API und A2A.
+            </p>
+          </section>
+
           <section className={card} id="a2a">
             <h2 className={h2}>A2A &amp; weitere Discovery-Endpunkte</h2>
             <ul className="space-y-2 leading-7 text-ink-soft">
