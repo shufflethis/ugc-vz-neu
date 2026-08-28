@@ -40,8 +40,21 @@ export async function GET(request: Request) {
     if (submission.used_at) return redirectToKonto(request, 'invalid');
     if (new Date(submission.expires_at).getTime() < Date.now()) return redirectToKonto(request, 'invalid');
 
+    // Ein geklickter Anmeldelink beweist, dass die Adresse dem Creator gehoert --
+    // damit ist die E-Mail verifiziert, auch wenn das Profil aus dem Sheet-Import
+    // stammt und nie ein Double-Opt-in durchlaufen hat. coalesce haelt einen
+    // bereits vorhandenen Zeitstempel fest, das CTE macht beides atomar.
     await sql.query(
-      `UPDATE creator_verification_tokens SET used_at = now() WHERE id = $1 AND used_at IS NULL`,
+      `WITH consumed AS (
+         UPDATE creator_verification_tokens
+         SET used_at = now()
+         WHERE id = $1 AND used_at IS NULL
+         RETURNING creator_id
+       )
+       UPDATE creator_private_contacts c
+       SET email_verified_at = coalesce(c.email_verified_at, now()), updated_at = now()
+       FROM consumed
+       WHERE c.creator_id = consumed.creator_id`,
       [submission.id],
     );
 

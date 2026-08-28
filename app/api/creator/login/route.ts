@@ -71,15 +71,18 @@ export async function POST(request: NextRequest) {
     FROM creator_private_contacts c
     JOIN creator_profiles p ON p.id = c.creator_id
     WHERE lower(c.email) = lower($1)
-      AND c.email_verified_at IS NOT NULL
       AND p.status = 'active'
     LIMIT 1
   `,
     [email],
   ) as unknown as Array<{ id: string; display_name: string }>;
 
-  // Kein verifiziertes Profil -> keine Mail, aber trotzdem generische Antwort.
+  // Kein aktives Profil -> keine Mail, aber trotzdem generische Antwort.
+  // Der Log-Eintrag verraet dem Client nichts, macht aber genau diesen Fall
+  // nachvollziehbar: ohne ihn ist "Mail nie gesendet" im Support nicht von
+  // "Mail nicht angekommen" zu unterscheiden.
   if (!creator) {
+    console.warn('Creator login requested for unknown or inactive profile:', email);
     return NextResponse.json({ success: true, message: GENERIC_MESSAGE });
   }
 
