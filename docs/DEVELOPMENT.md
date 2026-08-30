@@ -13,6 +13,9 @@ npm run dev
 
 Für reine Content- und UI-Arbeit genügt eine `.env.local` auf Basis von
 `.env.example`. Creator-Suche, Registrierung und Exporte benötigen `DATABASE_URL`.
+Die WebMCP-Schicht selbst braucht keine Credentials — die Tools registrieren
+sich bei jedem Seitenaufruf. Agent-Layer validieren (inkl. WebMCP-Teilmenge):
+`npm run validate:agent-layer`.
 
 ## Wichtige Befehle
 
@@ -33,6 +36,9 @@ Backends normalerweise nicht erneut ausgeführt.
 ## Architektur
 
 - `app/`: Next.js App Router, statische Seiten und Server-Routen
+- `app/lib/agent-tools.ts`: **eine** Werkzeug-Registry für MCP, WebMCP, REST und A2A
+- `app/api/mcp`: MCP-Server (Streamable HTTP, stateless, Web Bot Auth + Rate-Limits)
+- `app/components/WebMcpProvider.tsx`: WebMCP-Site-Tools (`document.modelContext`)
 - `content/wissen/`: versionierte Artikelquellen und Content-Manifeste
 - `public/wp-content/uploads/`: lokal archivierte Medien mit stabilen Altpfaden
 - `app/lib/content-repository.ts`: einzige Lesegrenze für Wissensinhalte
@@ -41,7 +47,8 @@ Backends normalerweise nicht erneut ausgeführt.
 - `app/api/creators/*`: Registrierung, Verifikation und geschützte Sheet-Exporte
 - `middleware.ts`: 410 für entfernte Thin-Content-URLs und Alt-Host-Routing
 
-Details stehen in [docs/content-architecture.md](content-architecture.md),
+Details stehen in [PROTOCOLS.md](../PROTOCOLS.md),
+[docs/content-architecture.md](content-architecture.md),
 [docs/brand-lead-automation.md](brand-lead-automation.md) und
 [docs/creator-database-migration.md](creator-database-migration.md).
 
@@ -49,7 +56,8 @@ Details stehen in [docs/content-architecture.md](content-architecture.md),
 
 Jeder Push und Pull Request auf `main` läuft durch
 [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) (`tsc --noEmit`).
-Das ersetzt den lokalen Typecheck, der auf dem VPS nicht zuverlässig läuft.
+Das ersetzt den lokalen Typecheck, der auf dem VPS nicht zuverlässig läuft
+(earlyoom beendet `tsc` und `next build`).
 
 ## Deployment
 

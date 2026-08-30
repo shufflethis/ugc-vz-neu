@@ -5,6 +5,7 @@
 [![WebMCP](https://img.shields.io/badge/WebMCP-6_site_tools-ff6d00)](https://ugc-vz.de/developers#webmcp)
 [![npm](https://img.shields.io/badge/npm-ugc--vz--mcp-cb3837)](https://www.npmjs.com/package/ugc-vz-mcp)
 [![Status](https://img.shields.io/badge/Status-Live-brightgreen)](#status)
+[![CI](https://github.com/shufflethis/ugc-vz-neu/actions/workflows/ci.yml/badge.svg)](https://github.com/shufflethis/ugc-vz-neu/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 **[UGC VZ](https://ugc-vz.de)** is a free directory of **real, verified UGC
@@ -207,61 +208,12 @@ Typischer Ablauf: `search_creators` → `get_creator` → `request_outreach` →
 aus — keine Testaufrufe; es gelten die [AGB (Ziffer 10)](https://ugc-vz.de/agb).
 Alle Details im [Developer-Portal](https://ugc-vz.de/developers).
 
-## Lokal starten
+## Entwicklung
 
-```bash
-npm ci
-npx vercel env pull .env.local --environment=development
-npm run dev
-```
-
-Für reine Content- und UI-Arbeit genügt eine `.env.local` auf Basis von
-`.env.example`. Creator-Suche, Registrierung und Exporte benötigen `DATABASE_URL`.
-Die WebMCP-Schicht selbst braucht keine Credentials — die Tools registrieren
-sich bei jedem Seitenaufruf. Agent-Layer validieren (inkl. WebMCP-Teilmenge):
-`npm run validate:agent-layer`.
-
-## Wichtige Befehle
-
-```bash
-npx tsc --noEmit
-npm run build
-npm run test:lead-email
-npm run test:creator-registration
-npm run test:creator-export
-npm run test:private-creator-export
-npm run db:audit
-```
-
-`content:export-wordpress` ist nur ein reproduzierbarer Migrationsnachweis. Der
-Exporter ist kein Produktions-Sync und wird nach der Abschaltung des alten
-Backends normalerweise nicht erneut ausgeführt.
-
-## Architektur
-
-- `app/`: Next.js App Router, statische Seiten und Server-Routen
-- `app/lib/agent-tools.ts`: **eine** Werkzeug-Registry für MCP, WebMCP, REST und A2A
-- `app/api/mcp`: MCP-Server (Streamable HTTP, stateless, Web Bot Auth + Rate-Limits)
-- `app/components/WebMcpProvider.tsx`: WebMCP-Site-Tools (`document.modelContext`)
-- `content/wissen/`: versionierte Artikelquellen und Content-Manifeste
-- `public/wp-content/uploads/`: lokal archivierte Medien mit stabilen Altpfaden
-- `app/lib/content-repository.ts`: einzige Lesegrenze für Wissensinhalte
-- `app/api/search`: Creator-Suche ausschließlich aus Neon
-- `app/api/submit-request`: persistenter Lead, Resend-Versand und Slack-Status
-- `app/api/creators/*`: Registrierung, Verifikation und geschützte Sheet-Exporte
-- `middleware.ts`: 410 für entfernte Thin-Content-URLs und Alt-Host-Routing
-
-Details stehen in [PROTOCOLS.md](PROTOCOLS.md),
-[docs/content-architecture.md](docs/content-architecture.md),
-[docs/brand-lead-automation.md](docs/brand-lead-automation.md) und
-[docs/creator-database-migration.md](docs/creator-database-migration.md).
-
-## Deployment
-
-Das Repository ist mit dem Vercel-Projekt `trackys-projects-6c71603f/ugc-vz`
-verknüpft. Änderungen zuerst als Preview prüfen und danach mit `vercel --prod`
-veröffentlichen. Secrets bleiben ausschließlich in Vercel und in der
-gitignorierten `.env.local`.
+Setup, Befehle, Architektur und Deployment stehen in
+[docs/DEVELOPMENT.md](docs/DEVELOPMENT.md). Sicherheitslücken bitte gemäß
+[SECURITY.md](SECURITY.md) an **hi@ugc-vz.de** melden — nicht über
+öffentliche Issues.
 
 ---
 
