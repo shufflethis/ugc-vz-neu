@@ -29,6 +29,8 @@ export const AGENT_UI_EVENTS = {
   searchResult: 'ugcvz:agent-search-result',
   select: 'ugcvz:agent-select',
   selectResult: 'ugcvz:agent-select-result',
+  getSelection: 'ugcvz:agent-get-selection',
+  getSelectionResult: 'ugcvz:agent-get-selection-result',
   outreachSubmitted: 'ugcvz:outreach-submitted',
 } as const;
 
@@ -119,6 +121,21 @@ const GET_LAST_OUTREACH_DESCRIPTION = [
   'Liefert request_id und aktuellen Status der Kontaktanfrage, die der Mensch zuletzt in dieser',
   'Browser-Sitzung ueber das Formular abgeschickt hat. Nach select_creators aufrufen, sobald der',
   'Mensch die Anfrage gesendet hat. Gibt keine Kontaktdaten zurueck.',
+].join(' ');
+
+const GET_HUMAN_SELECTION_DESCRIPTION = [
+  'Returns the creators the human has marked by clicking result cards on the page in this browser',
+  'session, with the card data visible to them (id, name, reach, price range, networks). This is',
+  'the human -> agent channel of the shared screen: call it when the human says things like',
+  '"compare the ones I picked", "find one more like these" or "which ones did I mark?". Requires',
+  'the homepage with a visible search_creators result. Read-only; does not change the selection.',
+  'Use select_creators to add creators to the same selection. [DE]',
+  'Liefert die Creator, die der Mensch in dieser Browser-Sitzung per Klick auf Ergebnis-Cards',
+  'markiert hat, mit den fuer ihn sichtbaren Card-Daten (id, name, reach, price_range, networks).',
+  'Das ist der Rueckkanal Mensch -> Agent des gemeinsamen Bildschirms: aufrufen, wenn der Mensch',
+  'sagt "vergleich die, die ich markiert habe", "such mir noch einen wie diese" oder "welche habe',
+  'ich markiert?". Nur auf der Startseite mit sichtbarem search_creators-Ergebnis. Nur lesend;',
+  'aendert die Auswahl nicht. select_creators ergaenzt dieselbe Auswahl.',
 ].join(' ');
 
 type WebMcpToolDefinition = {
@@ -229,7 +246,7 @@ function buildToolDefinitions(tools: WebMcpToolMeta[]): WebMcpToolDefinition[] {
         }
         const result = await askUi(AGENT_UI_EVENTS.select, AGENT_UI_EVENTS.selectResult, { creator_ids: args.creator_ids }, 5_000);
         return textResult({
-          hinweis: 'Das Anfrage-Formular ist geoeffnet. Der Mensch prueft die Auswahl und sendet selbst ab. Danach get_last_outreach aufrufen.',
+          hinweis: 'Das Anfrage-Formular ist geoeffnet. Die Auswahl ist additiv zu dem, was der Mensch selbst markiert hat (all_selected). Der Mensch prueft und sendet selbst ab. Danach get_last_outreach aufrufen.',
           ...result,
         });
       },
@@ -242,6 +259,31 @@ function buildToolDefinitions(tools: WebMcpToolMeta[]): WebMcpToolDefinition[] {
       const status = await viaApi(`/api/v1/outreach/${encodeURIComponent(lastOutreachId)}`);
       return textResult({ request_id: lastOutreachId, status: status.content[0]?.text });
     }, true);
+
+    register(
+      'get_human_selection',
+      GET_HUMAN_SELECTION_DESCRIPTION,
+      { type: 'object', properties: {} },
+      async () => {
+        if (!window.__ugcvzAgentUiReady) {
+          return textResult(
+            'get_human_selection ist nur auf der Startseite mit sichtbarer Suche verfuegbar. Zuerst dorthin navigieren und search_creators aufrufen.',
+            true,
+          );
+        }
+        const result = await askUi(AGENT_UI_EVENTS.getSelection, AGENT_UI_EVENTS.getSelectionResult, {}, 5_000);
+        const selected = Array.isArray(result.selected) ? result.selected : [];
+        return textResult({
+          source: 'ui',
+          hinweis:
+            selected.length === 0
+              ? 'Der Mensch hat auf der Seite noch nichts markiert. Er kann Ergebnis-Cards anklicken; select_creators markiert alternativ per ID.'
+              : 'Vom Menschen auf der Seite markiert. select_creators ergaenzt diese Auswahl, ohne sie zu ersetzen.',
+          ...result,
+        });
+      },
+      true,
+    );
 
   return definitions;
 }

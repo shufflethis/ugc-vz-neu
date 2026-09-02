@@ -81,6 +81,15 @@ export default function SearchBox({ initialQuery = '' }: SearchBoxProps) {
       performSearch(query.trim());
     };
 
+    // Card-Daten, die der Mensch auf der Seite sieht -- gleiche Felder wie im
+    // searchResult-Event, damit der Agent beide Ergebnisse gleich lesen kann.
+    const toCard = (id: string) => {
+      const c = creators.find((creator) => creator.id === id);
+      return c
+        ? { id: c.id, name: c.name, reach: c.reach, price_range: c.priceRange, networks: c.networks }
+        : { id };
+    };
+
     const onAgentSelect = (event: Event) => {
       const { creator_ids, requestId } = (event as CustomEvent).detail || {};
       const ids: string[] = Array.isArray(creator_ids) ? creator_ids.map(String) : [];
@@ -96,19 +105,37 @@ export default function SearchBox({ initialQuery = '' }: SearchBoxProps) {
         if (!selectedCreators.includes(id)) toggleCreatorSelection(id);
         selected.push(id);
       }
+      // Gesamtauswahl nach dem Merge: was der Mensch markiert hatte plus die neuen.
+      const allSelected = Array.from(new Set([...selectedCreators, ...selected]));
       window.dispatchEvent(
         new CustomEvent(AGENT_UI_EVENTS.selectResult, {
-          detail: { requestId, selected, not_found: notFound },
+          detail: { requestId, selected, not_found: notFound, all_selected: allSelected },
+        }),
+      );
+    };
+
+    // Rueckkanal Mensch -> Agent: welche Cards hat der Mensch angeklickt?
+    const onAgentGetSelection = (event: Event) => {
+      const { requestId } = (event as CustomEvent).detail || {};
+      window.dispatchEvent(
+        new CustomEvent(AGENT_UI_EVENTS.getSelectionResult, {
+          detail: {
+            requestId,
+            selected: selectedCreators.map(toCard),
+            visible_total: creators.length,
+          },
         }),
       );
     };
 
     window.addEventListener(AGENT_UI_EVENTS.search, onAgentSearch);
     window.addEventListener(AGENT_UI_EVENTS.select, onAgentSelect);
+    window.addEventListener(AGENT_UI_EVENTS.getSelection, onAgentGetSelection);
     return () => {
       delete window.__ugcvzAgentUiReady;
       window.removeEventListener(AGENT_UI_EVENTS.search, onAgentSearch);
       window.removeEventListener(AGENT_UI_EVENTS.select, onAgentSelect);
+      window.removeEventListener(AGENT_UI_EVENTS.getSelection, onAgentGetSelection);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [creators, selectedCreators]);
