@@ -97,7 +97,7 @@ schemas at `/api/agent-schemas/<tool>.json`.
 
 ## WebMCP — site tools in the browser
 
-The homepage registers **6 tools** via `modelContext` (both
+The homepage registers **7 tools** via `modelContext` (both
 `document.modelContext` — used by ChatGPT site tools — and
 `navigator.modelContext` — used by the Chromium prototype — are supported,
 via `registerTool` or `provideContext`, including APIs injected after page
@@ -111,6 +111,7 @@ load):
 | `get_vocab` | Topics, cities, price bands, human-verification levels (read-only). |
 | `get_outreach_status` | Status of a contact request by ID (read-only). |
 | `get_last_outreach` | Returns the request ID of the contact request **the human** last submitted in this browser session (read-only). |
+| `get_human_selection` | Returns the creators **the human** has marked by clicking result cards on the page, with the card data they see (read-only). The human → agent channel of the shared screen: "compare the ones I picked", "find one more like these". |
 
 **Human-in-the-loop by design:** there is deliberately **no**
 `request_outreach` tool in the browser. The agent searches and shortlists;
@@ -118,6 +119,10 @@ the final send — which triggers a real e-mail to real creators — stays a
 human click in the form. After the human submits, `get_last_outreach` hands
 the request ID back to the agent so it can track status. Read-only tools
 carry `annotations.readOnlyHint` for the browser's safety review.
+The shared screen works in both directions: `search_creators` and
+`select_creators` let the agent act on the page, `get_human_selection` lets
+the agent read what the human clicked, so "find one more like the two I
+marked" needs no IDs typed by anyone.
 
 Tool names, descriptions and JSON schemas come from the same single source
 (`app/lib/agent-tools.ts`) that already powers the site's MCP server
@@ -131,7 +136,7 @@ registered in the browser.
 1. Open **https://ugc-vz.de** in the ChatGPT desktop app's built-in browser
    (use GPT-5.6 Sol or Terra; site tools are disabled on Luna), or in Chrome
    149+ with `chrome://flags/#enable-webmcp-testing` enabled.
-2. Check the **Site tools** entry in the address bar — 6 tools should be
+2. Check the **Site tools** entry in the address bar — 7 tools should be
    listed.
 3. Ask the agent e.g. *"Find me three beauty creators for TikTok product
    videos"* — the result cards appear on the page while the agent gets the
@@ -148,8 +153,8 @@ Demo video: **[youtu.be/EtSpIT2LQn0](https://youtu.be/EtSpIT2LQn0)**
 UGC VZ existed before the submission period. Everything WebMCP was built
 during the submission period — timestamped commit history:
 
-- `15f4414` (2026-08-27) — WebMCP layer: 6 tools, UI-driven search/select,
-  human-in-the-loop design (`app/components/WebMcpProvider.tsx`,
+- `15f4414` (2026-08-27) — WebMCP layer: initial tool set, UI-driven
+  search/select, human-in-the-loop design (`app/components/WebMcpProvider.tsx`,
   `app/components/WebMcpAgentLayer.tsx`, event wiring in
   `app/components/SearchBox.tsx`, validation in
   `scripts/validate-agent-layer.ts`)

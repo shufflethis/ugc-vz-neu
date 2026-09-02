@@ -93,12 +93,14 @@ claude mcp add --transport http ugc-vz https://ugc-vz.de/api/mcp
           <section className={card} id="webmcp">
             <h2 className={h2}>WebMCP — Site-Tools direkt im Browser</h2>
             <p className="leading-7 text-ink-soft mb-4">
-              Die Website selbst registriert 6 Tools über <code>document.modelContext</code>{' '}
+              Die Website selbst registriert 7 Tools über <code>document.modelContext</code>{' '}
               (ChatGPT Site-Tools) bzw. <code>navigator.modelContext</code> (W3C-Proposal,
               Chromium-Prototyp): <code>search_creators</code>, <code>get_creator</code>,{' '}
-              <code>select_creators</code>, <code>get_last_outreach</code>,{' '}
+              <code>select_creators</code>, <code>get_last_outreach</code>, <code>get_human_selection</code>,{' '}
               <code>get_outreach_status</code>, <code>get_vocab</code>. Der Agent sucht und
-              markiert Treffer direkt in der Seiten-UI — Mensch und Agent sehen denselben Bildschirm.
+              markiert Treffer direkt in der Seiten-UI, und er liest, welche Cards der Mensch
+              selbst angeklickt hat — Mensch und Agent arbeiten auf demselben Bildschirm in
+              beide Richtungen.
             </p>
             <p className="leading-7 text-ink-soft mb-4">
               <strong className="text-ink">Human-in-the-loop by design:</strong> ein{' '}
