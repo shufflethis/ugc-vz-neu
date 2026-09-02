@@ -32,6 +32,15 @@ export const AGENT_UI_EVENTS = {
   outreachSubmitted: 'ugcvz:outreach-submitted',
 } as const;
 
+// Tools, die es NUR im Browser gibt (nicht in app/lib/agent-tools.ts):
+// sie steuern die Seiten-UI oder lesen Browser-Session-State. Wird von
+// scripts/validate-agent-layer.ts gegen die Registry geprueft.
+export const WEBMCP_BROWSER_ONLY_TOOLS = ['select_creators', 'get_last_outreach', 'get_human_selection'] as const;
+
+// Gesamtzahl der im Browser registrierten Tools (Registry-Teilmenge aus
+// WebMcpAgentLayer + Browser-only). Doku und Devpost-Text zitieren diese Zahl.
+export const WEBMCP_TOOL_COUNT = 7;
+
 declare global {
   interface Window {
     // Gesetzt von SearchBox.tsx solange die Such-UI gemountet ist.

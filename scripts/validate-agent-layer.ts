@@ -4,6 +4,7 @@ import { mapOutreachState, mapFlatOutreachParams } from '../app/lib/agent-gatewa
 import { MCP_TOOLS, AGENT_SCHEMAS } from '../app/lib/agent-tools';
 import { ugcVzAgentCard } from '../app/lib/a2a-agent-card';
 import { WEBMCP_REGISTRY_TOOLS } from '../app/components/WebMcpAgentLayer';
+import { WEBMCP_BROWSER_ONLY_TOOLS, WEBMCP_TOOL_COUNT } from '../app/components/WebMcpProvider';
 import { verifyWebBotAuth, checkRateLimit, peekRateLimit, getRateLimitKey, __internals } from '../app/lib/web-bot-auth';
 // `manifest` ist bewusst kein Export von route.ts (siehe Kommentar dort) --
 // wir rufen stattdessen GET() auf und lesen den echten Response-Body. Das
@@ -131,8 +132,26 @@ checkWebmcp(
   'request_outreach darf im WebMCP-Layer NIE registriert werden (Human-in-the-loop: der Mensch sendet im Formular)',
 );
 
+// Browser-only-Tools: existieren NICHT in der Registry (steuern die Seiten-UI
+// oder lesen Browser-Session-State) und duerfen sich nicht mit ihr ueberlappen.
+for (const name of WEBMCP_BROWSER_ONLY_TOOLS) {
+  checkWebmcp(!registryNames.has(name), `Browser-only-Tool "${name}" kollidiert mit einem Registry-Tool`);
+}
+checkWebmcp(
+  !(WEBMCP_BROWSER_ONLY_TOOLS as readonly string[]).includes('request_outreach'),
+  'request_outreach darf auch nicht als Browser-only-Tool registriert werden',
+);
+checkWebmcp(
+  (WEBMCP_BROWSER_ONLY_TOOLS as readonly string[]).includes('get_human_selection'),
+  'get_human_selection fehlt in WEBMCP_BROWSER_ONLY_TOOLS (Mensch -> Agent Rueckkanal)',
+);
+checkWebmcp(
+  WEBMCP_REGISTRY_TOOLS.length + WEBMCP_BROWSER_ONLY_TOOLS.length === WEBMCP_TOOL_COUNT,
+  `WEBMCP_TOOL_COUNT (${WEBMCP_TOOL_COUNT}) != Registry-Teilmenge (${WEBMCP_REGISTRY_TOOLS.length}) + Browser-only (${WEBMCP_BROWSER_ONLY_TOOLS.length})`,
+);
+
 if (webmcpErrors.length) { webmcpErrors.forEach((e) => console.error(' -', e)); process.exit(1); }
-console.log('OK: webmcp layer (Registry-Teilmenge, ohne request_outreach)');
+console.log(`OK: webmcp layer (${WEBMCP_TOOL_COUNT} Tools: Registry-Teilmenge + Browser-only, ohne request_outreach)`);
 
 // ---------- A2A Agent Card (app/lib/a2a-agent-card.ts) ----------
 const cardErrors: string[] = [];
