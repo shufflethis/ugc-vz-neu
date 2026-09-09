@@ -878,10 +878,12 @@ interface QueryAnalysis {
 }
 
 // OpenRouter-based AI query analysis
+// Bewusst nur kleine, guenstige Modelle: die Query-Analyse ist ein kurzer
+// JSON-Extraktionsjob. Obergrenze ist DeepSeek V4 Flash (0731 = gepinnte
+// Version, ohne Suffix = Alias als Fallback).
 const OPENROUTER_ANALYSIS_MODELS = [
+  'deepseek/deepseek-v4-flash-0731',
   'deepseek/deepseek-v4-flash',
-  'tencent/hy3-preview',
-  'minimax/minimax-m2.7',
 ];
 
 async function analyzeQueryWithOpenRouter(query: string, requestId: string): Promise<QueryAnalysis> {
@@ -937,8 +939,16 @@ Regeln:
           }
         ],
         temperature: 0.3, // Lower temperature for more consistent structured output
-        max_tokens: 300
-      })
+        max_tokens: 300,
+        // DeepSeek V4 Flash ist ein Reasoning-Modell: ohne diese Option
+        // verbraucht es die 300 Tokens fuers Denken und liefert content: null
+        // (gemessen: 10 s + leere Antwort vs. 2,4 s mit fertigem JSON).
+        reasoning: { enabled: false },
+      }),
+      // Harte Obergrenze, damit ein haengender Upstream nicht die ganze
+      // Function (60 s, auch ueber /api/mcp) auffrisst -- der Regex-Fallback
+      // uebernimmt dann.
+      signal: AbortSignal.timeout(12_000),
     });
 
     if (!response.ok) {
@@ -954,6 +964,10 @@ Regeln:
     }
 
     const content = data.choices[0].message.content;
+    if (typeof content !== 'string' || !content.trim()) {
+      console.error(`[${requestId}] OpenRouter returned empty content (finish_reason=${data.choices[0].finish_reason}, reasoning_tokens=${data.usage?.completion_tokens_details?.reasoning_tokens ?? '?'})`);
+      throw new Error('OpenRouter returned empty content');
+    }
     console.log(`[${requestId}] OpenRouter raw response:`, content);
 
     // Parse JSON from response

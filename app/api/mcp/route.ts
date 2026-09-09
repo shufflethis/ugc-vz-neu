@@ -124,6 +124,9 @@ async function costForRequest(request: Request): Promise<number> {
   if (request.method !== 'POST') return 1;
   try {
     const body = await request.clone().json();
+    // Methode + Tool loggen: Vercel-Timeouts (60 s) auf dieser Route waren
+    // sonst nicht zuordenbar -- der Body ist im Runtime-Log nicht sichtbar.
+    console.log('[mcp:request]', { method: body?.method, tool: body?.params?.name, id: body?.id });
     if (body?.method === 'tools/call' && SEARCH_TOOL_NAMES.has(body?.params?.name)) {
       return 3;
     }

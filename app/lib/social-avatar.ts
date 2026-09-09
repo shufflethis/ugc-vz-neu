@@ -6,7 +6,10 @@
 //
 // Instagram blockt Vercel-Rechenzentrums-IPs meist: die Fetches hier sind
 // Best-Effort beim Speichern; die verlaessliche Quelle ist der VPS-Cron
-// (scripts/fetch-social-avatars.mjs), der dieselbe Tabelle befuellt.
+// (scripts/fetch-social-avatars.mjs), der dieselbe Tabelle befuellt. Der
+// Cron hat zusaetzlich einen Instagram-Fallback ueber die Geonode Scraper
+// API (kostet Tokens, 3-20 s pro Aufruf) -- bewusst NICHT hier gespiegelt,
+// damit das Speichern im Konto nicht darauf wartet.
 
 type SqlClient = { query: (query: string, params?: unknown[]) => Promise<any[]> };
 

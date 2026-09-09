@@ -92,7 +92,69 @@ const curlFetch = (url, extraHeaders = [], timeoutSeconds = 15) => {
 const blockedPlatforms = new Map(); // platform -> HTTP-Status
 const BLOCK_STATUSES = new Set([429, 401, 403]);
 const ALL_PLATFORMS = ['instagram', 'tiktok'];
-const allPlatformsBlocked = () => ALL_PLATFORMS.every((platform) => blockedPlatforms.has(platform));
+
+// Instagram-Fallback ueber die Geonode Scraper API (Proxy-Netz, DE-Exit):
+// die VPS-IP bekommt von der Instagram-Profil-API nur noch 401/429, ueber
+// Geonode kommt die Profilseite mit og:image zurueck. Kostet Tokens pro
+// Aufruf -- deshalb nur fuer Instagram, nur wenn der direkte Weg gesperrt
+// ist, und pro Creator genau ein Mal (kein Refresh; Creator aendern ihr Bild
+// selbst im Konto). Key: GEONODE_SCRAPER_API_KEY in .env.local.
+const GEONODE_KEY = process.env.GEONODE_SCRAPER_API_KEY || '';
+let geonodeDisabled = !GEONODE_KEY;
+if (geonodeDisabled) console.log(`[${new Date().toISOString()}] Kein GEONODE_SCRAPER_API_KEY - Instagram nur direkt.`);
+
+const platformUsable = (platform) => !blockedPlatforms.has(platform)
+  || (platform === 'instagram' && !geonodeDisabled);
+const allPlatformsBlocked = () => ALL_PLATFORMS.every((platform) => !platformUsable(platform));
+
+// og:image ist 100x100; dieselbe Datei liegt im Seiten-JSON auch als 150x150
+// (signierte CDN-URL -- Groesse im Query-String laesst sich nicht umschreiben,
+// das gibt 403). Gespiegelt in app/lib/social-avatar.ts.
+const extractInstagramAvatarUrl = (html) => {
+  const og = html.match(/<meta[^>]+property="og:image"[^>]+content="([^"]+)"/i)
+    || html.match(/<meta[^>]+content="([^"]+)"[^>]+property="og:image"/i);
+  if (!og) return null;
+  const small = og[1].replace(/&amp;/g, '&');
+  const file = small.match(/\/([^/?]+\.(?:jpe?g|png|webp))\?/i)?.[1];
+  if (file) {
+    const escaped = file.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const larger = html.match(new RegExp(`https:(?:\\\\/|/){2}[^"'\\s<>]*?${escaped}\\?stp=dst-jpg_s150x150[^"'\\s<>]*`));
+    if (larger) return larger[0].replace(/\\u0026/g, '&').replace(/\\\//g, '/').replace(/&amp;/g, '&');
+  }
+  return small;
+};
+
+const fetchInstagramViaGeonode = async (handle) => {
+  if (geonodeDisabled) return null;
+  let response;
+  try {
+    response = await fetch('https://scraper.geonode.io/v1/extract', {
+      method: 'POST',
+      headers: { 'X-Api-Key': GEONODE_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        url: `https://www.instagram.com/${encodeURIComponent(handle)}/`,
+        formats: ['html'],
+        processing_mode: 'sync',
+        country_code: 'de',
+      }),
+      signal: AbortSignal.timeout(60_000),
+    });
+  } catch (error) {
+    console.log(`  ERR geonode ${handle}: ${error instanceof Error ? error.message : error}`);
+    return null;
+  }
+  if ([401, 402, 403, 429].includes(response.status)) {
+    // Key ungueltig, Guthaben leer oder Rate-Limit: fuer diesen Lauf aus.
+    geonodeDisabled = true;
+    console.log(`[${new Date().toISOString()}] geonode: HTTP ${response.status} - Instagram-Fallback fuer diesen Lauf deaktiviert.`);
+    return null;
+  }
+  // 422 = Seite nicht verarbeitbar (z.B. Profil geloescht): echter Fehlversuch.
+  if (!response.ok) return null;
+  const json = await response.json().catch(() => null);
+  const html = json?.data?.html;
+  return typeof html === 'string' ? extractInstagramAvatarUrl(html) : null;
+};
 
 // TikTok liefert das Profilbild nicht mehr als og:image, sondern nur noch als
 // JSON im HTML ("avatarLarger", JSON-escaped mit /). og:image bleibt als
@@ -112,7 +174,9 @@ const extractTikTokAvatarUrl = (html) => {
 };
 
 const resolveAvatarSourceUrl = async ({ platform, handle }) => {
-  if (blockedPlatforms.has(platform)) return null;
+  if (blockedPlatforms.has(platform)) {
+    return platform === 'instagram' ? fetchInstagramViaGeonode(handle) : null;
+  }
   const response = platform === 'instagram'
     ? curlFetch(
       `https://www.instagram.com/api/v1/users/web_profile_info/?username=${encodeURIComponent(handle)}`,
@@ -121,8 +185,8 @@ const resolveAvatarSourceUrl = async ({ platform, handle }) => {
     : curlFetch(`https://www.tiktok.com/@${encodeURIComponent(handle)}`, ['Accept: text/html']);
   if (BLOCK_STATUSES.has(response.status)) {
     blockedPlatforms.set(platform, response.status);
-    console.log(`[${new Date().toISOString()}] ${platform}: HTTP ${response.status} (Rate-Limit/Block) - Plattform fuer diesen Lauf gesperrt.`);
-    return null;
+    console.log(`[${new Date().toISOString()}] ${platform}: HTTP ${response.status} (Rate-Limit/Block) - direkter Weg fuer diesen Lauf gesperrt.`);
+    return platform === 'instagram' ? fetchInstagramViaGeonode(handle) : null;
   }
   if (response.status !== 200) return null;
   if (platform === 'instagram') {
@@ -168,7 +232,6 @@ const candidates = await sql.query(
        AND (
          a.creator_id IS NULL
          OR (a.image IS NULL AND (a.last_attempt_at IS NULL OR a.last_attempt_at < now() - (least(a.fail_count, 10) + 1) * interval '6 hours'))
-         OR (a.image IS NOT NULL AND a.fetched_at < now() - interval '14 days')
        )
      ))
    ORDER BY a.fetched_at ASC NULLS FIRST
@@ -191,7 +254,7 @@ for (const creator of candidates) {
   }
 
   const handles = extractHandles(creator.social_links)
-    .filter((handle) => !blockedPlatforms.has(handle.platform))
+    .filter((handle) => platformUsable(handle.platform))
     .slice(0, 3);
   if (handles.length === 0) {
     skipped += 1;
@@ -203,10 +266,10 @@ for (const creator of candidates) {
   let blockedDuringAttempt = false;
 
   for (const handle of handles) {
-    if (blockedPlatforms.has(handle.platform)) { blockedDuringAttempt = true; continue; }
+    if (!platformUsable(handle.platform)) { blockedDuringAttempt = true; continue; }
     try {
       const sourceUrl = await resolveAvatarSourceUrl(handle);
-      if (blockedPlatforms.has(handle.platform)) { blockedDuringAttempt = true; continue; }
+      if (!sourceUrl && !platformUsable(handle.platform)) { blockedDuringAttempt = true; continue; }
       if (!sourceUrl) continue;
       const image = await downloadImage(sourceUrl);
       if (!image) continue;
