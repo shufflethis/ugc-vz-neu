@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { toast } from 'react-toastify';
+import { MAX_CREATORS_PER_REQUEST } from '@/app/lib/lead-limits';
 
 interface Creator {
   id: string;
@@ -78,11 +79,16 @@ export const useSearch = () => {
   };
 
   const toggleCreatorSelection = (creatorId: string) => {
-    setSelectedCreators(prev => 
-      prev.includes(creatorId) 
-        ? prev.filter(id => id !== creatorId)
-        : [...prev, creatorId]
-    );
+    setSelectedCreators(prev => {
+      if (prev.includes(creatorId)) return prev.filter(id => id !== creatorId);
+      // Server nimmt max. MAX_CREATORS_PER_REQUEST an -- hier schon stoppen,
+      // statt beim Absenden mit 400 zu scheitern.
+      if (prev.length >= MAX_CREATORS_PER_REQUEST) {
+        toast.info(`Maximal ${MAX_CREATORS_PER_REQUEST} Creator pro Anfrage. Bitte erst abschicken, dann weitere auswählen.`, { toastId: 'max-creators' });
+        return prev;
+      }
+      return [...prev, creatorId];
+    });
   };
 
   const resetSearch = () => {

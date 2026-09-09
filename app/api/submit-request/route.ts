@@ -19,12 +19,12 @@ import {
   isInternalRequest,
 } from '@/app/lib/lead-email';
 import { renderInternalMatchEmail } from '@/app/lib/internal-dossier-email';
+import { MAX_CREATORS_PER_REQUEST } from '@/app/lib/lead-limits';
 
 export const maxDuration = 30;
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-const MAX_CREATORS_PER_REQUEST = 10;
 const MAX_BODY_BYTES = 30_000;
 const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
 
@@ -836,20 +836,31 @@ export async function POST(req: Request) {
 
     const { kind, clientInfo, creatorIds } = normalizeRequestBody(rawBody);
 
+    // 400er landen sonst nur als Statuscode im Vercel-Log -- der Grund muss
+    // nachvollziehbar bleiben. `message` ist die deutsche Meldung fuer das UI,
+    // `error` bleibt der stabile englische Code fuer Agenten/A2A.
+    const reject = (error: string, message: string) => {
+      console.warn(`[submit-request] 400 ${error} (kind=${kind}, creators=${creatorIds.length}, hasName=${Boolean(clientInfo.name)}, hasWebsite=${Boolean(clientInfo.website)})`);
+      return NextResponse.json({ success: false, error, message }, { status: 400 });
+    };
+
     if (clientInfo.website) {
-      return NextResponse.json({ success: false, error: 'Invalid request' }, { status: 400 });
+      return reject('Invalid request', 'Die Anfrage konnte nicht verarbeitet werden. Bitte laden Sie die Seite neu und versuchen Sie es erneut.');
     }
 
     if (!clientInfo.name) {
-      return NextResponse.json({ success: false, error: 'Name is required' }, { status: 400 });
+      return reject('Name is required', 'Bitte geben Sie Ihren Namen ein.');
     }
 
     if (!emailRegex.test(clientInfo.email)) {
-      return NextResponse.json({ success: false, error: 'Invalid email format' }, { status: 400 });
+      return reject('Invalid email format', 'Bitte geben Sie eine gültige E-Mail-Adresse ein.');
     }
 
     if (kind === 'creator_match' && (creatorIds.length === 0 || creatorIds.length > MAX_CREATORS_PER_REQUEST)) {
-      return NextResponse.json({ success: false, error: 'Select between 1 and 10 creators' }, { status: 400 });
+      return reject(
+        `Select between 1 and ${MAX_CREATORS_PER_REQUEST} creators`,
+        `Bitte wählen Sie zwischen 1 und ${MAX_CREATORS_PER_REQUEST} Creator pro Anfrage aus (aktuell: ${creatorIds.length}).`,
+      );
     }
 
     const ipKey = `ip:${hashRateLimitValue(getClientIp(req))}`;

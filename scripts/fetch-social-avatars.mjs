@@ -83,32 +83,55 @@ const curlFetch = (url, extraHeaders = [], timeoutSeconds = 15) => {
   };
 };
 
-// Wird bei Rate-Limit-/Block-Signalen (429, 401, 403) gesetzt: dann bricht der
-// Lauf ab, statt weiter gegen den Block zu rennen (das eskaliert sonst zum
-// laengeren IP-Block). Nur 404/"user not found" ist ein echter Fehlversuch des
-// jeweiligen Handles.
-let rateLimited = false;
+// Pro Plattform: bei Rate-Limit-/Block-Signalen (429, 401, 403) wird die
+// Plattform fuer diesen Lauf gesperrt, statt weiter gegen den Block zu rennen
+// (das eskaliert sonst zum laengeren IP-Block). Die andere Plattform laeuft
+// weiter -- Instagram blockt die VPS-IP z.B. seit Ende August 2026 komplett
+// (401/429 auf die Profil-API), TikTok antwortet normal. Nur 404/"user not
+// found" ist ein echter Fehlversuch des jeweiligen Handles.
+const blockedPlatforms = new Map(); // platform -> HTTP-Status
+const BLOCK_STATUSES = new Set([429, 401, 403]);
+const ALL_PLATFORMS = ['instagram', 'tiktok'];
+const allPlatformsBlocked = () => ALL_PLATFORMS.every((platform) => blockedPlatforms.has(platform));
+
+// TikTok liefert das Profilbild nicht mehr als og:image, sondern nur noch als
+// JSON im HTML ("avatarLarger", JSON-escaped mit /). og:image bleibt als
+// erster Versuch drin, falls es zurueckkommt. Gespiegelt in app/lib/social-avatar.ts.
+const extractTikTokAvatarUrl = (html) => {
+  const og = html.match(/<meta[^>]+property="og:image"[^>]+content="([^"]+)"/i)
+    || html.match(/<meta[^>]+content="([^"]+)"[^>]+property="og:image"/i);
+  if (og) return og[1].replace(/&amp;/g, '&');
+  const json = html.match(/"avatar(?:Larger|Medium)":"((?:[^"\\]|\\.)*)"/);
+  if (!json) return null;
+  try {
+    const url = JSON.parse(`"${json[1]}"`);
+    return /^https:\/\//i.test(url) ? url : null;
+  } catch {
+    return null;
+  }
+};
 
 const resolveAvatarSourceUrl = async ({ platform, handle }) => {
-  if (platform === 'instagram') {
-    const response = curlFetch(
+  if (blockedPlatforms.has(platform)) return null;
+  const response = platform === 'instagram'
+    ? curlFetch(
       `https://www.instagram.com/api/v1/users/web_profile_info/?username=${encodeURIComponent(handle)}`,
       ['Accept: application/json', 'x-ig-app-id: 936619743392459'],
-    );
-    if ([429, 401, 403].includes(response.status)) { rateLimited = true; return null; }
-    if (response.status !== 200) return null;
+    )
+    : curlFetch(`https://www.tiktok.com/@${encodeURIComponent(handle)}`, ['Accept: text/html']);
+  if (BLOCK_STATUSES.has(response.status)) {
+    blockedPlatforms.set(platform, response.status);
+    console.log(`[${new Date().toISOString()}] ${platform}: HTTP ${response.status} (Rate-Limit/Block) - Plattform fuer diesen Lauf gesperrt.`);
+    return null;
+  }
+  if (response.status !== 200) return null;
+  if (platform === 'instagram') {
     let data = null;
     try { data = JSON.parse(response.body.toString('utf8')); } catch { return null; }
     const user = data?.data?.user;
     return user?.profile_pic_url_hd || user?.profile_pic_url || null;
   }
-  const response = curlFetch(`https://www.tiktok.com/@${encodeURIComponent(handle)}`, ['Accept: text/html']);
-  if ([429, 401, 403].includes(response.status)) { rateLimited = true; return null; }
-  if (response.status !== 200) return null;
-  const html = response.body.toString('utf8');
-  const match = html.match(/<meta[^>]+property="og:image"[^>]+content="([^"]+)"/i)
-    || html.match(/<meta[^>]+content="([^"]+)"[^>]+property="og:image"/i);
-  return match ? match[1].replace(/&amp;/g, '&') : null;
+  return extractTikTokAvatarUrl(response.body.toString('utf8'));
 };
 
 const downloadImage = async (url) => {
@@ -123,6 +146,12 @@ const downloadImage = async (url) => {
 // aelter als 14 Tage ist. Fehlversuche werden mit wachsendem Abstand wiederholt
 // (fail_count-Backoff), damit geloeschte/private Accounts nicht dauerhaft
 // jede Stunde angefragt werden.
+//
+// Der Pool ist groesser als LIMIT: Creator, deren Plattformen in diesem Lauf
+// gesperrt sind, werden ohne Malus uebersprungen und zaehlen nicht als
+// Versuch. Sonst staenden bei Instagram-Block die IG-only-Profile dauerhaft
+// vorne in der Warteschlange und TikTok-Profile kaemen nie an die Reihe.
+const POOL_SIZE = FORCE_PUBLIC_ID ? 1 : LIMIT * 8;
 const candidates = await sql.query(
   `SELECT p.id, p.public_id, p.display_name,
           COALESCE(s.social_links, '') AS social_links,
@@ -144,27 +173,40 @@ const candidates = await sql.query(
      ))
    ORDER BY a.fetched_at ASC NULLS FIRST
    LIMIT $1`,
-  [LIMIT, FORCE_PUBLIC_ID],
+  [POOL_SIZE, FORCE_PUBLIC_ID],
 );
 
-console.log(`[${new Date().toISOString()}] ${candidates.length} Avatar-Kandidaten (Limit ${LIMIT})`);
+console.log(`[${new Date().toISOString()}] ${candidates.length} Avatar-Kandidaten im Pool (max. ${LIMIT} Versuche)`);
 
 let ok = 0;
 let failed = 0;
+let skipped = 0;
+let attempts = 0;
 
 for (const creator of candidates) {
-  if (rateLimited) {
-    console.log(`[${new Date().toISOString()}] Rate-Limit (429) erkannt - Lauf wird abgebrochen, Rest kommt beim naechsten Cron.`);
+  if (attempts >= LIMIT) break;
+  if (allPlatformsBlocked()) {
+    console.log(`[${new Date().toISOString()}] Alle Plattformen gesperrt - Lauf wird abgebrochen, Rest kommt beim naechsten Cron.`);
     break;
   }
 
-  const handles = extractHandles(creator.social_links).slice(0, 3);
+  const handles = extractHandles(creator.social_links)
+    .filter((handle) => !blockedPlatforms.has(handle.platform))
+    .slice(0, 3);
+  if (handles.length === 0) {
+    skipped += 1;
+    continue;
+  }
+
+  attempts += 1;
   let stored = false;
+  let blockedDuringAttempt = false;
 
   for (const handle of handles) {
+    if (blockedPlatforms.has(handle.platform)) { blockedDuringAttempt = true; continue; }
     try {
       const sourceUrl = await resolveAvatarSourceUrl(handle);
-      if (rateLimited) break;
+      if (blockedPlatforms.has(handle.platform)) { blockedDuringAttempt = true; continue; }
       if (!sourceUrl) continue;
       const image = await downloadImage(sourceUrl);
       if (!image) continue;
@@ -190,7 +232,7 @@ for (const creator of candidates) {
     }
   }
 
-  if (!stored && rateLimited) {
+  if (!stored && blockedDuringAttempt) {
     // Rate-Limit ist nicht die Schuld des Creators: kein fail_count-Malus.
     continue;
   }
@@ -215,4 +257,7 @@ for (const creator of candidates) {
   await sleep(8000 + Math.floor(Math.random() * 6000));
 }
 
-console.log(`[${new Date().toISOString()}] Fertig: ${ok} gespeichert, ${failed} ohne Bild.`);
+const blockedInfo = blockedPlatforms.size
+  ? ` Gesperrt: ${[...blockedPlatforms].map(([platform, status]) => `${platform}=${status}`).join(', ')}.`
+  : '';
+console.log(`[${new Date().toISOString()}] Fertig: ${ok} gespeichert, ${failed} ohne Bild, ${skipped} uebersprungen (Plattform gesperrt).${blockedInfo}`);

@@ -110,7 +110,9 @@ export default function CreatorSelectionPopup({
       onClose();
     } catch (error) {
       trackUGCEvents.leadFormError('creator_selection', 'submit_failed');
-      toast.error('Fehler beim Senden der Anfrage. Bitte versuchen Sie es erneut.');
+      // Deutsche Server-Meldung anzeigen (z.B. Creator-Limit), sonst generisch.
+      const userMessage = (error as { userMessage?: string } | null)?.userMessage;
+      toast.error(userMessage || 'Fehler beim Senden der Anfrage. Bitte versuchen Sie es erneut.');
     } finally {
       setIsSubmitting(false);
     }

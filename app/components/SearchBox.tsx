@@ -9,6 +9,7 @@ import NoResults from '../../components/NoResults';
 import CreatorSelectionPopup from './CreatorSelectionPopup';
 import { trackUGCEvents } from '../lib/analytics';
 import { CREATOR_COUNT_LABEL } from '../lib/creator-count';
+import { MAX_CREATORS_PER_REQUEST } from '../lib/lead-limits';
 import {
   faInstagram,
   faTiktok,
@@ -96,14 +97,22 @@ export default function SearchBox({ initialQuery = '' }: SearchBoxProps) {
       const known = new Set(creators.map((c) => c.id));
       const selected: string[] = [];
       const notFound: string[] = [];
+      // Gleiche Obergrenze wie beim Klick: mehr nimmt der Server nicht an.
+      let remaining = Math.max(0, MAX_CREATORS_PER_REQUEST - selectedCreators.length);
       for (const id of ids) {
         if (!known.has(id)) {
           notFound.push(id);
           continue;
         }
         // Idempotent auswaehlen: bereits markierte Creator nicht wieder abwaehlen.
-        if (!selectedCreators.includes(id)) toggleCreatorSelection(id);
+        if (selectedCreators.includes(id)) {
+          selected.push(id);
+          continue;
+        }
+        if (remaining <= 0) continue;
+        toggleCreatorSelection(id);
         selected.push(id);
+        remaining -= 1;
       }
       // Gesamtauswahl nach dem Merge: was der Mensch markiert hatte plus die neuen.
       const allSelected = Array.from(new Set([...selectedCreators, ...selected]));
@@ -259,7 +268,11 @@ export default function SearchBox({ initialQuery = '' }: SearchBoxProps) {
 
       const data = await res.json();
       if (!data.success) {
-        throw new Error(data.error || 'Failed to submit');
+        // `message` ist die deutsche Meldung vom Server (z.B. zu viele
+        // Creator), `error` der englische Code -- das Popup zeigt userMessage.
+        const submitError = new Error(data.error || 'Failed to submit') as Error & { userMessage?: string };
+        if (typeof data.message === 'string' && data.message) submitError.userMessage = data.message;
+        throw submitError;
       }
 
       // Track successful contact form submission

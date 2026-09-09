@@ -135,10 +135,24 @@ export const resolveAvatarSourceUrl = async (
     timeoutMs,
   );
   if (!response.ok) return null;
-  const html = await response.text();
-  const match = html.match(/<meta[^>]+property="og:image"[^>]+content="([^"]+)"/i)
+  return extractTikTokAvatarUrl(await response.text());
+};
+
+// TikTok liefert das Profilbild nicht mehr als og:image, sondern nur noch als
+// JSON im HTML ("avatarLarger", JSON-escaped mit /). og:image bleibt als
+// erster Versuch drin. Gespiegelt in scripts/fetch-social-avatars.mjs.
+export const extractTikTokAvatarUrl = (html: string): string | null => {
+  const og = html.match(/<meta[^>]+property="og:image"[^>]+content="([^"]+)"/i)
     || html.match(/<meta[^>]+content="([^"]+)"[^>]+property="og:image"/i);
-  return match ? match[1].replace(/&amp;/g, '&') : null;
+  if (og) return og[1].replace(/&amp;/g, '&');
+  const json = html.match(/"avatar(?:Larger|Medium)":"((?:[^"\\]|\\.)*)"/);
+  if (!json) return null;
+  try {
+    const url = JSON.parse(`"${json[1]}"`);
+    return typeof url === 'string' && /^https:\/\//i.test(url) ? url : null;
+  } catch {
+    return null;
+  }
 };
 
 /** Laedt die Bild-Bytes (max. 2 MB, muss image/* sein). */

@@ -261,6 +261,14 @@ const legacyHeaders = {
 const value = (record, key) => clean(record.values[key]);
 const joined = (...parts) => parts.map(clean).filter(Boolean).join('\n');
 
+// "Hast du einen Kuenstlernamen?" wird oft mit Nein/-/keine beantwortet. Das
+// ist kein Name -- sonst landet "Nein" als display_name in der Suche.
+const STAGE_NAME_PLACEHOLDER = /^\s*(nein|no|nope|nö|ja|yes|keine?[nr]?|n\/?a|-+|\/+|\.+)\s*$/i;
+const stageNameValue = (record, key) => {
+  const raw = value(record, key);
+  return raw && !STAGE_NAME_PLACEHOLDER.test(raw) ? raw : '';
+};
+
 const normalizeRecord = (record, source) => {
   const headers = source === 'tally_sheet' ? currentHeaders : legacyHeaders;
   const name = value(record, headers.name);
@@ -305,7 +313,7 @@ const normalizeRecord = (record, source) => {
     sourceFingerprint: fingerprint(record.raw),
     name,
     normalizedName: normalizedName(name),
-    stageName: value(record, headers.stageName),
+    stageName: stageNameValue(record, headers.stageName),
     birthYear: parseBirthYear(value(record, headers.birthDate)),
     gender: value(record, headers.gender),
     heightCm: parseHeight(value(record, headers.height)),
