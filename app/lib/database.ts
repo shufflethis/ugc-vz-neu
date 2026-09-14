@@ -9,6 +9,12 @@ export const getDatabase = () => {
     throw new Error('DATABASE_URL is not configured.');
   }
 
-  if (!cachedSql) cachedSql = neon(process.env.DATABASE_URL);
+  // Next.js patcht globalThis.fetch und legt POST-Antworten des Neon-HTTP-Drivers
+  // im Vercel Data Cache ab -- auch in force-dynamic-Routen ohne headers()/cookies()
+  // (Symptom: /api/avatar lieferte ein Bild fuer ein geloeschtes Profil, bis
+  // `vercel cache purge --type all` lief). no-store schaltet das aus.
+  if (!cachedSql) {
+    cachedSql = neon(process.env.DATABASE_URL, { fetchOptions: { cache: 'no-store' } });
+  }
   return cachedSql;
 };

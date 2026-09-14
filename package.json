@@ -16,6 +16,7 @@
     "db:migrate": "node scripts/migrate-neon.mjs",
     "db:import-creators": "node scripts/import-google-sheet-creators.mjs",
     "db:audit": "node scripts/audit-neon.mjs",
+    "db:delete-creator": "node scripts/delete-creator.mjs",
     "content:audit": "node scripts/audit-content.mjs",
     "content:export-wordpress": "node scripts/export-wordpress-content.mjs",
     "content:related": "node scripts/build-related-articles.mjs",
