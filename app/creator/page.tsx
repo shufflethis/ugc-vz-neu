@@ -27,7 +27,7 @@ export const metadata: Metadata = {
 export default function CreatorPage({
   searchParams,
 }: {
-  searchParams?: { verified?: string; invalid?: string; error?: string };
+  searchParams?: { verified?: string; confirmed?: string; invalid?: string; error?: string };
 }) {
   const breadcrumbs = [
     { name: 'Home', url: 'https://ugc-vz.de' },
@@ -111,6 +111,7 @@ export default function CreatorPage({
         </section>
 
         <CreatorRegistrationForm
+          newlyVerified={searchParams?.verified === '1' && searchParams?.confirmed === '1'}
           verified={searchParams?.verified === '1'}
           invalid={searchParams?.invalid === '1'}
           failed={searchParams?.error === '1'}

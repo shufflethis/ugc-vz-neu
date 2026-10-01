@@ -1,294 +1,110 @@
 import Link from 'next/link';
-import Image from 'next/image';
-
-// Make sure the search.css is imported in your main page or layout
-import './styles/search.css';
 import SearchBox from './components/SearchBox';
-import ResponsiveCTAButton from '@/src/components/ResponsiveCTAButton';
 import LogoImage from './components/LogoImage';
 import TrustElements from './components/TrustElements';
-import ContentCascade from './components/ContentCascade';
+import CreatorWorkflow from './components/CreatorWorkflow';
 import HomePageSchema from './components/HomePageSchema';
 import { CREATOR_COUNT_LABEL } from './lib/creator-count';
 
-/**
- * Check-Icon als Inline-SVG. Diese Seite ist eine Server Component;
- * lucide-react nutzt forwardRef und laesst sich hier nicht einbinden.
- * Pfad und Strichfuehrung entsprechen exakt lucide "check", damit die
- * Optik zu den Icons in den Client-Komponenten passt.
- */
-function CheckIcon({ className = '' }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2.5}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d="M20 6 9 17l-5-5" />
-    </svg>
-  );
+function Arrow() {
+  return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7" /></svg>;
 }
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-white flex flex-col">
-      {/* Schema.org structured data for SEO */}
+    <div className="home-page min-h-screen bg-white text-ink">
       <HomePageSchema />
-      
-      <header className="py-6 px-4 sm:px-8 md:px-16 lg:px-24">
-        <div className="container mx-auto flex justify-between items-center">
-          <div className="flex items-center">
-            <LogoImage
-              width={32}
-              height={32}
-              className="mr-2"
-              priority
-            />
-            <span className="text-xl font-bold gradient-text">
-              UGC VZ
-            </span>
-          </div>
-
-          <nav className="flex items-center gap-3">
-            <Link href="/brands" className="hidden sm:inline-flex text-sm font-medium text-ink-soft hover:text-ink transition-colors">
-              Fuer Brands
-            </Link>
-            <Link href="/creator" className="hidden sm:inline-flex text-sm font-medium text-ink-soft hover:text-ink transition-colors">
-              Fuer Creator
-            </Link>
-            <ResponsiveCTAButton />
+      <header className="border-b border-hairline bg-white px-5 sm:px-8">
+        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 sm:h-20">
+          <Link href="/" aria-label="UGC VZ – Startseite" className="flex shrink-0 items-center gap-2 font-bold tracking-tight focus-visible:ring-2 focus-visible:ring-geo-violet">
+            <LogoImage width={32} height={32} priority />
+            <span className="text-xl">UGC VZ<span className="text-geo-violet">.</span></span>
+          </Link>
+          <nav aria-label="Hauptnavigation" className="flex items-center gap-4 sm:gap-7">
+            <Link href="/brands" className="hidden text-sm font-medium text-ink-soft hover:text-ink sm:block">Für Brands</Link>
+            <Link href="/konto" className="hidden text-sm font-medium text-ink-soft hover:text-ink sm:block">Login</Link>
+            <Link href="/creator#creator-form" className="whitespace-nowrap rounded-full border border-hairline px-3 py-2.5 text-xs font-semibold transition-colors hover:border-ink sm:px-4 sm:text-sm"><span className="hidden sm:inline">Als </span>Creator anmelden</Link>
           </nav>
         </div>
       </header>
 
-      <main className="flex-grow flex flex-col w-full">
-        {/* Full-width Hero Section */}
-        <section className="relative w-full min-h-[85vh] flex flex-col items-center justify-center pt-20 pb-32 overflow-visible">
-          
-          {/* Background Image */}
-          <div className="absolute inset-0 z-0">
-            <Image 
-              src="/ugc-tool.webp"
-              alt="UGC VZ Plattform Background"
-              fill
-              className="object-cover object-center"
-              priority
-            />
-            {/* Dark & Blurry Overlay */}
-            <div className="absolute inset-0 bg-slate-900/75 backdrop-blur-sm"></div>
-          </div>
-
-          {/* Foreground Content */}
-          <div className="relative z-10 flex flex-col items-center text-center max-w-5xl mx-auto w-full px-4 sm:px-8 mt-12">
-            
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 text-white text-sm font-semibold mb-8 border border-white/20 backdrop-blur-md shadow-lg">
-              <span className="relative flex h-2.5 w-2.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-400"></span>
-              </span>
-              Vermutlich das größte kostenfreie UGC Verzeichnis
-            </div>
-            
-            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-[4.5rem] font-extrabold mb-6 text-white leading-[1.1] tracking-tight shadow-sm">
-              UGC Creator finden oder als <br className="hidden md:block" /><span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-300 to-geo-violet-soft">Creator anmelden</span>
+      <section className="home-hero px-5 pb-10 pt-6 sm:px-8 sm:pb-16 sm:pt-12" aria-labelledby="home-title">
+        <div className="mx-auto max-w-6xl">
+          <div className="mx-auto max-w-3xl text-center">
+            <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#dce9d1] bg-[#edf5e5] px-3 py-1.5 text-xs font-semibold text-[#385523] sm:mb-5 sm:text-sm">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#527b33]" aria-hidden="true" />
+              {CREATOR_COUNT_LABEL} Creator-Profile · Kostenlos suchen
+            </p>
+            <h1 id="home-title" className="text-[2rem] font-bold leading-[1.08] tracking-[-0.055em] min-[375px]:text-[2.25rem] sm:text-6xl lg:text-[4.5rem]">
+              Dein Produkt.<br />
+              <span className="text-geo-violet">Passende Creator.</span>
             </h1>
-            
-            <p className="text-lg sm:text-xl md:text-2xl text-gray-200 max-w-3xl mb-12 leading-relaxed">
-              Die kostenlose Plattform für User Generated Content in Deutschland. Brands beschreiben ihre Kampagne und finden passende Creator aus {CREATOR_COUNT_LABEL} echten Profilen.
+            <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-ink-soft sm:mt-5 sm:text-lg sm:leading-7">
+              Finde UGC Creator, prüfe Arbeitsproben und frage deine Favoriten kostenlos an.
             </p>
-            
-            <div className="flex flex-col sm:flex-row gap-4 mb-8 w-full sm:w-auto">
-              <Link
-                href="/brands"
-                className="bg-geo-violet hover:bg-geo-violet-soft text-white font-semibold py-4 px-10 rounded-xl transition-all shadow-xl shadow-geo-violet/40 flex items-center justify-center gap-2 group text-lg"
-              >
-                Creator finden
-                <svg className="w-6 h-6 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                </svg>
-              </Link>
-              <Link
-                href="/creator"
-                className="bg-white/10 hover:bg-white/20 border border-white/30 text-white font-semibold py-4 px-10 rounded-xl transition-all flex items-center justify-center backdrop-blur-md text-lg"
-              >
-                Als Creator anmelden
-              </Link>
-            </div>
           </div>
 
-          {/* SearchBox Overlapping the bottom edge */}
-          <div id="search" className="w-full max-w-5xl mx-auto scroll-mt-24 relative z-20 mt-auto translate-y-32 px-4 sm:px-8">
-            <div className="absolute inset-4 sm:-inset-1 bg-gradient-to-r from-geo-violet/40 via-teal-400/40 to-geo-violet/40 blur-xl -z-10 rounded-[2.5rem]"></div>
-            <div className="bg-white/95 backdrop-blur-2xl rounded-[2rem] shadow-2xl border border-white p-6 sm:p-10">
-              <h2 className="text-2xl sm:text-3xl font-bold text-center mb-8 text-ink">
-                Passende UGC Creator <span className="text-geo-violet">direkt finden</span>
-              </h2>
-              <SearchBox />
+          <div id="search" className="home-search-panel mt-6 scroll-mt-6 rounded-2xl border border-hairline bg-white p-4 sm:mt-8 sm:rounded-3xl sm:p-8 lg:p-8">
+            <div className="mb-4 flex flex-col gap-2 sm:mb-5 sm:flex-row sm:items-center sm:justify-between">
+              <h2 className="text-lg font-semibold tracking-tight sm:text-xl">Wofür suchst du Creator?</h2>
+              <p className="flex items-center gap-1.5 text-xs text-ink-soft"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#527b33" strokeWidth="2" aria-hidden="true"><path d="m5 12 4 4L19 6" /></svg>Kostenlos · Ohne Brand-Login</p>
             </div>
+            <SearchBox showFeatured />
           </div>
-        </section>
-        
-        {/* Spacer to account for overlapping search box */}
-        <div className="h-40 w-full bg-white"></div>
-      </main>
+          <p className="mt-5 text-center text-xs leading-5 text-ink-soft">Suche und Kontaktanfrage sind kostenlos. Produktion und Nutzungsrechte vereinbart ihr direkt.</p>
+        </div>
+      </section>
 
-      {/* Trust Elements Section */}
-      <TrustElements />
+      <TrustElements compact />
+      <CreatorWorkflow />
 
-      {/* SEO-Optimized Content Section */}
-      <section className="px-4 sm:px-8 md:px-16 lg:px-24 py-16 grad-subtle">
-        <div className="max-w-6xl mx-auto">
-          {/* Main Content Grid */}
-          <div className="grid md:grid-cols-2 gap-12 mb-16">
-            {/* UGC Creator finden */}
-            <div className="surface-card rounded-2xl p-8">
-              <h2 className="text-2xl font-bold mb-4 text-geo-violet">
-                UGC Creator finden - kostenlos fuer Brands
-              </h2>
-              <p className="text-ink-soft leading-relaxed mb-4">
-                Du willst <strong>UGC Creators finden</strong>, die zu Produkt, Zielgruppe und Content-Stil passen? Beschreibe deine Kampagne in der Suche, waehle passende Profile aus und fordere die Details kostenlos an.
-              </p>
-              <p className="text-ink-soft leading-relaxed">
-                Das ist kein klassischer Agentur-Retainer und keine teure Datenbank-Lizenz. UGC VZ funktioniert als niedrigschwelliger Einstieg fuer Marketing-Teams, die Creator testen, briefen und direkt anfragen wollen.
-              </p>
-            </div>
-
-            {/* Was ist UGC Creator */}
-            <div className="surface-card rounded-2xl p-8">
-              <h2 className="text-2xl font-bold mb-4 text-geo-violet">
-                Als UGC Creator anmelden
-              </h2>
-              <p className="text-ink-soft leading-relaxed mb-4">
-                Creator koennen sich kostenlos registrieren und ihr Portfolio hinterlegen. Wichtig sind klare Beispiele, Themenbereiche, Social-Links, Preise oder grobe Ranges und die Art von Marken, fuer die du Content erstellen willst.
-              </p>
-              <p className="text-ink-soft leading-relaxed">
-                Je vollstaendiger dein Fragebogen ist, desto besser kann dein Profil bei passenden Brand-Anfragen beruecksichtigt werden.
-              </p>
-              <Link href="/creator" className="inline-flex mt-5 text-geo-violet hover:text-geo-violet-soft font-semibold">
-                Zum Creator-Fragebogen
-              </Link>
-            </div>
+      <section className="px-5 py-14 sm:px-8 sm:py-20" aria-labelledby="home-proof-title">
+        <div className="mx-auto grid max-w-6xl items-center gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16">
+          <div>
+            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-ink-soft">Einmal anschauen. Direkt loslegen.</p>
+            <h2 id="home-proof-title" className="text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">Von deiner Idee<br />zur Creator-Auswahl.</h2>
+            <p className="mt-4 max-w-md leading-7 text-ink-soft">So formulierst du dein Briefing, vergleichst Profile und erhältst die verfügbaren Kontaktdaten deiner Favoriten per E-Mail.</p>
+            <Link href="#search" className="mt-6 inline-flex items-center gap-2 font-semibold text-geo-violet hover:underline">Deine Creator finden <Arrow /></Link>
           </div>
-
-          {/* Full Width Content */}
-          <div className="surface-card rounded-2xl p-8 mb-12">
-            <h2 className="text-3xl font-bold mb-6 text-center">
-              <span className="gradient-text">User Generated Content & Geld verdienen</span>
-            </h2>
-            <div className="grid md:grid-cols-2 gap-8">
-              <div>
-                <h3 className="text-xl font-semibold mb-4 text-geo-violet">Als Creator Geld verdienen</h3>
-                <p className="text-ink-soft leading-relaxed mb-3">
-                  Du bist kreativ und möchtest mit <strong>User Generated Content Geld verdienen</strong>? Bei UGC-VZ kannst du 
-                  dich kostenlos registrieren und dein Portfolio präsentieren. Unternehmen finden dich und kontaktieren dich 
-                  direkt für bezahlte Kooperationen.
-                </p>
-                <ul className="text-ink-soft space-y-2">
-                  <li className="flex items-start">
-                    <CheckIcon className="text-green-deep mr-2 mt-1 shrink-0" />
-                    <span>Kostenlose Registrierung für Creator</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckIcon className="text-green-deep mr-2 mt-1 shrink-0" />
-                    <span>Direkte Bezahlung durch Unternehmen</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckIcon className="text-green-deep mr-2 mt-1 shrink-0" />
-                    <span>Flexible Projekte nach deinem Zeitplan</span>
-                  </li>
-                </ul>
-              </div>
-              
-              <div>
-                <h3 className="text-xl font-semibold mb-4 text-geo-violet">Für Unternehmen</h3>
-                <p className="text-ink-soft leading-relaxed mb-3">
-                  Mit <strong>UGC Creators</strong> erreichst du authentische Kundenbindung und bessere Conversion-Raten. 
-                  User Generated Content wirkt bis zu 8x glaubwürdiger als klassische Werbung und kostet einen Bruchteil 
-                  von Influencer-Marketing.
-                </p>
-                <ul className="text-ink-soft space-y-2">
-                  <li className="flex items-start">
-                    <CheckIcon className="text-green-deep mr-2 mt-1 shrink-0" />
-                    <span>Höhere Conversion durch Authentizität</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckIcon className="text-green-deep mr-2 mt-1 shrink-0" />
-                    <span>Kosteneffizient im Vergleich zu Influencern</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckIcon className="text-green-deep mr-2 mt-1 shrink-0" />
-                    <span>Direkter Kontakt ohne Agentur-Gebühren</span>
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </div>
-
-          {/* CTA Section */}
-          <div className="text-center surface-card rounded-2xl p-12">
-            <h2 className="text-3xl font-bold mb-4 text-ink">
-              Bereit für <span className="gradient-text">authentischen Content</span>?
-            </h2>
-            <p className="text-xl text-ink-soft mb-8 max-w-2xl mx-auto">
-              Egal ob du als Creator durchstarten oder als Unternehmen <strong>UGC Creators finden</strong> möchtest – 
-              UGC-VZ bringt euch zusammen. Komplett kostenlos.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link
-                href="/#search"
-                className="bg-geo-violet hover:bg-geo-violet-soft text-white font-semibold py-4 px-8 rounded-lg transition-all transform hover:scale-105"
-              >
-                Jetzt Creator finden
-              </Link>
-              <Link
-                href="/creator#creator-form"
-                className="border-2 border-geo-violet text-geo-violet hover:bg-geo-violet hover:text-white font-semibold py-4 px-8 rounded-lg transition-all transform hover:scale-105"
-              >
-                Als Creator registrieren
-              </Link>
-            </div>
+          <div className="overflow-hidden rounded-2xl border border-hairline bg-surface">
+            <video className="aspect-video w-full" controls preload="none" poster="/ugc-creator-finden-poster.webp" width={1280} height={720} playsInline controlsList="nodownload" aria-label="So funktioniert die Creator-Suche bei UGC VZ">
+              <source src="/ugc-creator-finden.mp4" type="video/mp4" />
+              Dein Browser unterstützt keine Videos.
+            </video>
           </div>
         </div>
       </section>
 
-      {/* Video Section */}
-      <section className="px-4 sm:px-8 md:px-16 lg:px-24 py-16 grad-subtle">
-        <div className="max-w-5xl mx-auto">
-          <div className="surface-card rounded-2xl p-8">
-            <h2 className="text-3xl font-bold mb-6 text-center text-ink">
-              <span className="gradient-text">So findest du deinen UGC Creator</span>
-            </h2>
-            <p className="text-ink-soft text-center mb-8 max-w-2xl mx-auto">
-              Schau dir an, wie einfach es ist, den perfekten Creator für deine Kampagne zu finden
-            </p>
-            <div className="relative rounded-xl overflow-hidden shadow-2xl">
-              <video
-                className="w-full h-auto"
-                controls
-                preload="none"
-                poster="/ugc-creator-finden-poster.webp"
-                width={1280}
-                height={720}
-                playsInline
-                controlsList="nodownload"
-              >
-                <source src="/ugc-creator-finden.mp4" type="video/mp4" />
-                Dein Browser unterstützt keine Videos.
-              </video>
-            </div>
+      <section className="px-5 pb-14 sm:px-8 sm:pb-20" aria-labelledby="home-creator-title">
+        <div className="mx-auto grid max-w-6xl gap-8 rounded-3xl bg-[#f0ece6] p-6 sm:p-10 lg:grid-cols-[1.2fr_0.8fr] lg:items-center lg:p-14">
+          <div>
+            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-ink-soft">Für die Menschen hinter dem Content</p>
+            <h2 id="home-creator-title" className="text-3xl font-semibold tracking-tight sm:text-4xl">Du machst den Content.<br />Mach dich auffindbar.</h2>
+            <p className="mt-4 max-w-lg leading-7 text-ink-soft">Als UGC Creator anmelden, dein Portfolio zeigen und von Brands für passende Projekte gefunden werden. Kostenlos und ohne Provision.</p>
+            <Link href="/creator#creator-form" className="mt-6 inline-flex items-center justify-center gap-3 rounded-xl bg-ink px-6 py-3.5 font-semibold text-white transition-colors hover:bg-[#333333]">Kostenloses Creator-Profil erstellen <Arrow /></Link>
           </div>
+          <ul className="space-y-4 text-sm leading-6 text-ink-soft">
+            {[
+              ['Deine Arbeitsproben im Mittelpunkt', 'Zeige Marken, welche Themen und Formate zu dir passen.'],
+              ['Direkte Zusammenarbeit', 'Honorar, Timing und Nutzungsrechte klärst du selbst mit der Brand.'],
+              ['Dein Profil, dein Angebot', 'Ergänze Preisvorstellungen und halte deine Angaben aktuell.'],
+            ].map(([title, description]) => <li key={title} className="flex gap-3"><span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white text-[#527b33]" aria-hidden="true">✓</span><div><span className="font-semibold text-ink">{title}</span><p>{description}</p></div></li>)}
+          </ul>
         </div>
       </section>
 
-      {/* Content Cascade Section */}
-      <ContentCascade />
+      <section className="border-t border-hairline px-5 py-12 sm:px-8" aria-labelledby="home-faq-title">
+        <div className="mx-auto grid max-w-6xl gap-6 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16">
+          <div><h2 id="home-faq-title" className="text-2xl font-semibold tracking-tight">Noch kurz gefragt.</h2><Link href="/faq" className="mt-3 inline-flex items-center gap-2 text-sm text-ink-soft hover:text-geo-violet">Alle häufigen Fragen <Arrow /></Link></div>
+          <div className="divide-y divide-hairline">
+            {[
+              ['Ist UGC VZ wirklich kostenlos?', 'Ja. Creator suchen, Profile prüfen, Kontaktdaten anfordern und ein Creator-Profil anlegen ist kostenlos. Content-Produktion und optionale Agenturleistungen werden separat vereinbart.'],
+              ['Was passiert nach meiner Kontaktanfrage?', 'Du erhältst deine Auswahl und die verfügbaren Kontaktinformationen per E-Mail. Anschließend kontaktierst du die Creator selbst. Die Anfrage bucht keinen Auftrag.'],
+              ['Welche Creator passen zu meinem Produkt?', 'Nenne Produkt, Zielgruppe und gewünschtes Format in deiner Suche. Vergleiche danach Profilangaben, Preisvorstellungen und vorhandene Arbeitsproben. Verfügbarkeit und Details klärst du direkt.'],
+            ].map(([question, answer]) => <details key={question} className="group py-4 first:pt-0"><summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-2 font-medium [&::-webkit-details-marker]:hidden"><span>{question}</span><span className="text-xl font-normal text-ink-soft group-open:rotate-45" aria-hidden="true">+</span></summary><p className="max-w-xl pb-2 pt-2 text-sm leading-7 text-ink-soft">{answer}</p></details>)}
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

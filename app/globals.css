@@ -40,12 +40,25 @@ body {
   background: var(--geo-violet);
 }
 .search-button-gradient:hover {
-  background: var(--geo-violet-soft);
+  background: #7531ae;
 }
 
 /* Secondary action button (e.g. mic) */
 .mic-button-gradient {
-  background: var(--geo-violet-soft);
+  background: var(--surface-2);
+  color: var(--ink-soft);
+}
+
+/* Quiet canvas; the search is the primary action on the homepage. */
+.home-hero {
+  background: radial-gradient(ellipse at 85% 0%, rgba(139, 63, 202, 0.045), transparent 48%), #f7f7f5;
+}
+.home-search-panel {
+  box-shadow: 0 12px 40px rgba(35, 22, 47, 0.045);
+}
+.home-page a:focus-visible, .home-page summary:focus-visible {
+  outline: 2px solid var(--geo-violet);
+  outline-offset: 4px;
 }
 
 /* Subtle brand wash for hero / section backgrounds */

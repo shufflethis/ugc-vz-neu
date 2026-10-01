@@ -14,6 +14,9 @@ type ProcessedCreator = {
   hasCustomImage: boolean;
   networks: string[];
   priceRange: string;
+  city: string;
+  topics: string;
+  preferredContent: string;
   gender: string | undefined;
   score?: number; // AI-based relevance score
 };
@@ -742,6 +745,9 @@ export async function POST(req: Request) {
             hasCustomImage: hasCustomImage,
             networks: socialLinks.split('\n').filter(Boolean),
             priceRange: profile.priceRange,
+            city: profile.location,
+            topics: profile.topicsText,
+            preferredContent: profile.formatsText,
             gender: gender, // Add gender for debugging
             score: score // Add AI score for sorting
           };

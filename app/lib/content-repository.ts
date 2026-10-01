@@ -31,7 +31,7 @@ export type ContentPostSummary = {
 
 export type ContentPost = ContentPostSummary & {
   version: number;
-  source: { system: 'wordpress'; id: number; link: string };
+  source: { system: 'wordpress' | 'native'; id: number; link: string };
   contentHtml: string;
   featuredImageAlt: string;
   faqs: Array<{ question: string; answer: string }>;

@@ -8,42 +8,57 @@
 .searchInputContainer {
   display: flex;
   width: 100%;
-  max-width: 100%; /* Use full width of container */
-  margin-bottom: 30px;
+  max-width: 100%;
+  margin-bottom: 0;
   gap: 10px;
   align-items: center;
-  background-color: rgba(128, 128, 128, 0.1);
+  background: #f7f7f5;
   padding: 10px;
-  border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  border-radius: 16px;
+  border: 1px solid #e8e8e4;
 }
 
 .searchInput {
   flex-grow: 1;
-  padding: 16px 20px;
+  min-width: 0;
+  padding: 12px;
   border: none;
-  border-radius: 12px;
-  font-size: 1.2rem;
-  font-weight: 500;
-  background-color: transparent;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 400;
+  background: transparent;
   color: #171717;
   outline: none;
-  transition: all 0.3s ease;
   min-height: 60px;
   width: 100%;
   resize: none;
   overflow: hidden;
   text-align: left;
-  letter-spacing: 0.02em;
   line-height: 1.5;
-  font-family: 'Inter', sans-serif;
-  placeholder-color: #888;
+  font-family: inherit;
 }
 
 .searchInput:focus {
   border-color: #8b3fca; /* Violet border on focus */
-  box-shadow: 0 0 0 3px rgba(139, 63, 202, 0.3), inset 0 2px 8px rgba(0, 0, 0, 0.05); /* Violet glow on focus */
+  box-shadow: 0 0 0 2px rgba(139, 63, 202, 0.3); /* Violet glow on focus */
   background-color: #ffffff; /* Light background on focus */
+}
+
+@media (max-width: 639px) {
+  .searchInputContainer {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    padding: 8px;
+    gap: 8px;
+  }
+  .searchInput {
+    grid-column: 1 / -1;
+    font-size: 1rem;
+    padding: 12px;
+  }
+  .searchInputContainer > button {
+    width: 100%;
+  }
 }
 
 .searchButton {
@@ -115,14 +130,15 @@
 }
 
 .userBubble {
-  background-color: #8b3fca; /* Violet color for user bubble */
-  color: #171717; /* Dark text for contrast */
-  padding: 12px 18px; /* Increased padding */
-  border-radius: 20px 20px 5px 20px; /* More organic shape */
-  max-width: 75%; /* Slightly wider bubble */
-  word-wrap: break-word;
+  background: #efebf5;
+  color: #171717;
+  padding: 12px 18px;
+  border-radius: 12px;
+  max-width: 100%;
+  overflow-wrap: anywhere;
   font-weight: 500;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  font-size: 0.875rem;
+  line-height: 1.6;
 }
 
 .loadingContainer {
@@ -223,12 +239,11 @@
 /* Removed @keyframes pulse as it's now in tailwind.config.js */
 
 .reasoningContainer {
-  background-color: #f7f7f5; /* Darker background */
-  padding: 20px; /* Increased padding */
-  border-radius: 12px; /* More rounded corners */
-  margin-top: 20px; /* Increased margin */
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5); /* Prominent shadow */
-  border: 1px solid rgba(139, 63, 202, 0.2); /* Subtle violet border */
+  background: #f7f7f5;
+  padding: 20px;
+  border-radius: 12px;
+  margin-top: 20px;
+  border: 1px solid #e8e8e4;
 }
 
 .reasoningContainer h3 {
@@ -241,55 +256,73 @@
 
 .reasoningText {
   white-space: pre-wrap;
-  word-wrap: break-word;
-  font-family: 'Roboto Mono', monospace; /* More modern monospace font */
-  font-size: 1rem; /* Slightly larger font */
+  overflow-wrap: anywhere;
+  font-family: inherit;
+  font-size: 0.875rem;
   color: #171717;
-  line-height: 1.6; /* Better readability */
+  line-height: 1.6;
 }
 
 .resultsHeader {
-  text-align: center;
-  margin-bottom: 30px; /* Increased margin */
+  text-align: left;
+  margin: 0;
   color: #171717;
-  font-size: 1.8rem; /* Larger font */
-  font-weight: 700; /* Bolder font */
-  text-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+  font-size: 1.125rem;
+  font-weight: 600;
 }
 
 .creatorsGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); /* Adjusted minmax for larger cards */
-  gap: 24px; /* Increased gap */
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr));
+  gap: 16px;
   width: 100%;
-  margin-bottom: 100px; /* Add 100px space to footer */
+  margin-bottom: 0;
 }
 
 .creatorCard {
-  background-color: #f7f7f5; /* Darker background */
-  border-radius: 16px; /* More rounded corners */
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4); /* More prominent shadow */
-  padding: 20px; /* Increased padding */
+  background: #fff;
+  border-radius: 16px;
+  padding: 20px;
   text-align: center;
-  cursor: pointer;
-  transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out, border-color 0.3s ease-in-out; /* Added border-color transition */
-  border: 1px solid rgba(139, 63, 202, 0.1); /* Subtle violet border */
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+  border: 1px solid #e8e8e4;
+}
+
+@media (max-width: 639px) {
+  .featuredGrid {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding: 2px 2px 12px;
+    gap: 12px;
+  }
+  .featuredGrid > .creatorCard {
+    flex: 0 0 88%;
+    scroll-snap-align: start;
+  }
+  .featuredGrid:focus-visible {
+    outline: 2px solid #8b3fca;
+    outline-offset: 3px;
+    border-radius: 16px;
+  }
 }
 
 .creatorCard:hover {
-  transform: translateY(-8px) scale(1.02); /* More pronounced hover effect */
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6); /* Stronger shadow on hover */
+  box-shadow: 0 8px 24px rgba(35, 22, 47, 0.1);
   border-color: rgba(139, 63, 202, 0.5); /* More visible border on hover */
 }
 
 .creatorCard img {
-  width: 100px; /* Larger image */
-  height: 100px; /* Larger image */
+  width: 88px;
+  height: 88px;
   border-radius: 50%;
   object-fit: cover;
-  margin-bottom: 15px; /* Increased margin */
-  border: 3px solid #8b3fca; /* Violet border for image */
-  box-shadow: 0 0 10px rgba(139, 63, 202, 0.5); /* Glow effect */
+  margin-bottom: 15px;
+  align-self: center;
+  border: 1px solid #e8e8e4;
 }
 
 .creatorCard h3 {
@@ -300,38 +333,58 @@
 }
 
 .creatorCard p {
-  margin: 0 0 8px 0; /* Increased margin */
-  font-size: 1rem; /* Larger font */
-  color: #5a5a5a; /* Lighter text color */
+  margin: 0 0 8px;
+  font-size: 0.8125rem;
+  color: #5a5a5a;
+  line-height: 1.6;
+}
+
+.creatorIdentity {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  text-align: left;
+  margin-bottom: 20px;
+}
+.creatorIdentity img {
+  flex: 0 0 64px;
+  width: 64px;
+  height: 64px;
+  margin-bottom: 0;
+}
+.creatorIdentity h3 {
+  font-size: 1.125rem;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.creatorIdentity p {
+  margin: 3px 0 0;
 }
 
 .networks {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 10px;
-  margin: 15px 0;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 12px 0;
 }
 
 .networkTag {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #efefec; /* Darker background */
-  color: #8b3fca; /* Violet color */
-  border-radius: 50%; /* Circular shape for icons */
-  font-size: 1.2rem; /* Larger font for icons */
-  width: 40px; /* Larger width */
-  height: 40px; /* Larger height */
-  transition: all 0.2s ease-in-out;
-  box-shadow: 0 0 8px rgba(139, 63, 202, 0.3);
+  background: #f7f7f5;
+  color: #5a5a5a;
+  border-radius: 50%;
+  font-size: 1rem;
+  width: 32px;
+  height: 32px;
 }
 
 .networkTag:hover {
-  transform: scale(1.1);
-  color: #171717;
-  background-color: #8b3fca;
-  box-shadow: 0 0 12px rgba(139, 63, 202, 0.7);
+  color: #8b3fca;
+  background: #efebf5;
 }
 
 .price {
@@ -342,9 +395,10 @@
 
 /* Add a style for selected cards */
 .selected {
-  border: 2px solid #8b3fca; /* Violet highlight for selected cards */
-  box-shadow: 0 0 15px rgba(139, 63, 202, 0.7); /* Stronger violet glow */
-  transform: scale(1.03); /* Slightly larger when selected */
+  border: 1px solid #8b3fca;
+  box-shadow: 0 0 0 1px #8b3fca;
+  background: #fcfaff;
+  transform: none;
 }
 
 /* Selected creators bar */

@@ -125,16 +125,14 @@ export default function CreatorSelectionPopup({
       {/* Backdrop - subtle, doesn't block interaction */}
       <div 
         className={`fixed inset-0 bg-black/20 transition-opacity duration-300 pointer-events-none z-40 ${
-          isVisible ? 'opacity-100' : 'opacity-0'
+          isVisible && showForm ? 'opacity-100' : 'opacity-0'
         }`} 
       />
 
       {/* Bottom Popup */}
       <div 
-        className={`fixed bottom-0 left-0 right-0 z-50 transform transition-all duration-500 ease-out ${
-          isVisible 
-            ? (isMinimized ? 'translate-y-[calc(100%-7.5rem)]' : 'translate-y-0') 
-            : 'translate-y-full'
+        className={`fixed bottom-0 left-0 right-0 z-50 overflow-y-auto transform transition-all duration-300 ease-out ${
+          isVisible ? 'translate-y-0' : 'translate-y-full'
         }`}
         style={{
           maxHeight: '90vh',
@@ -155,26 +153,24 @@ export default function CreatorSelectionPopup({
                }}>
             
             {/* Header */}
-            <div className="px-6 pt-8 pb-4 border-b border-hairline">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className={`${isMinimized ? 'px-4 pt-6 pb-4 sm:px-6' : 'px-6 pt-8 pb-4'} border-b border-hairline`}>
+              <div className="mx-auto flex max-w-6xl flex-col justify-between gap-3 sm:flex-row sm:items-center">
                 <div className="flex items-center space-x-4">
                   <div className="flex items-center space-x-3">
-                    <div className="relative">
-                      <div className="w-4 h-4 bg-geo-violet rounded-full animate-pulse shadow-lg" />
-                      <div className="absolute inset-0 w-4 h-4 bg-geo-violet rounded-full animate-ping opacity-75" />
-                    </div>
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#edf5e5] text-[#385523]" aria-hidden="true">✓</div>
                     <div>
-                      <h3 className="text-2xl font-bold text-ink">
-                        {selectedCreators.length} Creator{selectedCreators.length !== 1 ? 's' : ''} ausgewählt
+                      <h3 className="text-lg font-semibold text-ink" aria-live="polite">
+                        {selectedCreators.length} Creator in deiner Auswahl
                       </h3>
                       <p className="text-sm text-ink-soft mt-1">
                         Kostenlos anfragen, Kontaktinfos per E-Mail erhalten.
                       </p>
+                      {!isMinimized && <p className="mt-2 max-w-xl text-xs leading-5 text-ink-soft">Du erhältst deine Auswahl und die verfügbaren Kontaktinfos per E-Mail. Du kontaktierst die Creator selbst; es wird kein Auftrag gebucht. Honorare und Nutzungsrechte vereinbart ihr direkt.</p>}
                     </div>
                   </div>
                 </div>
                 
-                <div className="flex items-center justify-end space-x-2">
+                <div className="flex shrink-0 items-center justify-end space-x-2">
                   {!showForm && (
                     <button
                       onClick={() => {
@@ -182,7 +178,7 @@ export default function CreatorSelectionPopup({
                         setShowForm(true);
                         trackUGCEvents.leadFormOpened('creator_selection', selectedCreators.length);
                       }}
-                      className="px-4 py-3 bg-geo-violet text-white rounded-xl hover:bg-geo-violet-soft transition-all font-semibold text-sm sm:text-base shadow-md"
+                      className="flex-1 rounded-xl bg-geo-violet px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#7531ae] focus-visible:ring-2 focus-visible:ring-geo-violet focus-visible:ring-offset-2 sm:flex-none"
                     >
                       Kostenlos Anfrage senden
                     </button>
@@ -192,6 +188,8 @@ export default function CreatorSelectionPopup({
                       onClick={() => setIsMinimized(!isMinimized)}
                       className="p-3 text-ink-soft hover:text-ink hover:bg-surface rounded-xl transition-all duration-200 group"
                       title={isMinimized ? "Erweitern" : "Minimieren"}
+                      aria-label={isMinimized ? 'Auswahl anzeigen' : 'Auswahl minimieren'}
+                      aria-expanded={!isMinimized}
                     >
                       <svg className={`w-5 h-5 transform transition-transform duration-200 ${isMinimized ? 'rotate-180' : ''}`} 
                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -204,6 +202,7 @@ export default function CreatorSelectionPopup({
                     onClick={onClose}
                     className="p-3 text-ink-soft hover:text-ink hover:bg-surface rounded-xl transition-all duration-200"
                     title="Schließen"
+                    aria-label="Auswahl schließen und leeren"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -215,7 +214,7 @@ export default function CreatorSelectionPopup({
 
             {/* Content - only show when not minimized */}
             {!isMinimized && (
-              <div className="px-6 py-6">
+              <div className="mx-auto max-w-6xl px-6 py-6">
                 {!showForm ? (
                   /* Creator Preview */
                   <div className="space-y-6">

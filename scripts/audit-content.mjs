@@ -9,9 +9,10 @@ const goneSlugs = JSON.parse(readFileSync(path.join(root, 'content/gone-slugs.js
 const report = JSON.parse(readFileSync(path.join(root, 'content/wordpress-export-report.json'), 'utf8'));
 
 const fail = (message) => { throw new Error(message); };
-if (manifest.length !== 678) fail(`Expected 678 archived posts, received ${manifest.length}.`);
+const nativePosts = manifest.filter(post => JSON.parse(readFileSync(path.join(root, 'content/wissen', `${post.slug}.json`), 'utf8')).source.system === 'native');
+if (manifest.length - nativePosts.length !== 678) fail('Expected 678 archived WordPress posts.');
 if (new Set(manifest.map((post) => post.slug)).size !== manifest.length) fail('Duplicate slugs found.');
-if (publishedSlugs.length !== 64) fail(`Expected 64 published posts, received ${publishedSlugs.length}.`);
+if (publishedSlugs.length !== 64 + nativePosts.filter(post => post.indexable && post.contentStatus === 'published').length) fail('Published article count differs from the archive plus native posts.');
 if (goneSlugs.length !== 614) fail(`Expected 614 gone posts, received ${goneSlugs.length}.`);
 if (report.mediaDownloaded !== 638 || report.missingMedia.length) fail('Media export is incomplete.');
 

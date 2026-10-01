@@ -68,6 +68,7 @@ const NoResults: React.FC<NoResultsProps> = ({ query }) => {
 
       // Track successful contact form submission
       trackUGCEvents.contactForm('no_results');
+      trackUGCEvents.requestSuccess('no_results', 0);
     } catch (error) {
       console.error('Error submitting request:', error);
       trackUGCEvents.leadFormError('no_results', 'submit_failed');

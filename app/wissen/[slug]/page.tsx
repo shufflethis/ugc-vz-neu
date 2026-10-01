@@ -3,6 +3,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import ContactButton from '../../components/ContactButton';
+import ArticleAction from '../../components/ArticleAction';
+import { getArticleQuickStart } from '../../lib/article-quick-start';
 import ResponsiveCTAButton from '@/src/components/ResponsiveCTAButton';
 import { getArticleAudience, getAudienceCta } from '../../lib/article-audience';
 import LogoImage from '../../components/LogoImage';
@@ -72,6 +74,7 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
   // Ein Artikel ueber Creator-Honorare braucht einen anderen Abschluss als einer
   // ueber Kampagnen-Briefings. Bis hierher bekamen beide denselben.
   const cta = getAudienceCta(getArticleAudience(post.slug));
+  const quickStart = getArticleQuickStart(post.slug);
   const image = absoluteContentUrl(post.featuredImage);
   const readingTime = Math.max(1, Math.ceil(post.wordCount / 220));
   const articleSchema = {
@@ -151,8 +154,16 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
             <div className="flex flex-wrap items-center gap-5 text-ink-soft mb-8 text-sm">
               <Link href={author.url} className="font-semibold text-geo-violet hover:text-geo-violet-soft">{author.name}</Link>
               <time dateTime={post.publishedAt}>{formatDate(post.publishedAt)}</time>
+              {post.modifiedAt !== post.publishedAt && <span>Überarbeitet: <time dateTime={post.modifiedAt}>{formatDate(post.modifiedAt)}</time></span>}
               <span>{readingTime} Min. Lesezeit</span>
             </div>
+            {quickStart && <section className="mb-8 rounded-2xl border border-hairline bg-surface p-5 sm:p-7" aria-labelledby="article-quick-start">
+              <h2 id="article-quick-start" className="text-xl font-bold text-ink">Das Wichtigste für deinen nächsten Schritt</h2>
+              <p className="mt-3 leading-7 text-ink-soft">{quickStart.answer}</p>
+              <ul className="my-5 list-disc space-y-2 pl-5 text-ink-soft">{quickStart.checklist.map((item) => <li key={item}>{item}</li>)}</ul>
+              <ArticleAction slug={post.slug} target={quickStart.target} placement="quick_start" href={quickStart.href}>{quickStart.label}</ArticleAction>
+              {quickStart.target === 'brand' && <p className="mt-3 text-sm text-ink-soft">Die Suche ist kostenlos. Das Creator-Honorar vereinbart ihr direkt.</p>}
+            </section>}
             {post.featuredImage !== '/placeholder-blog.svg' && (
               <div className="relative aspect-video w-full rounded-xl overflow-hidden mb-12">
                 <Image src={post.featuredImage} alt={post.featuredImageAlt} fill className="object-cover" priority sizes="(max-width: 896px) 100vw, 896px" />
@@ -188,12 +199,9 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
           <h2 className="text-3xl font-bold mb-6"><span className="gradient-text">{cta.footer.heading}</span></h2>
           <p className="text-xl text-ink-soft mb-8 max-w-2xl mx-auto">{cta.footer.text}</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Link
-              href={cta.footer.primary.href}
-              className="bg-geo-violet hover:bg-geo-violet-soft text-white font-semibold py-3 px-6 rounded-lg transition-colors"
-            >
+            <ArticleAction slug={post.slug} target={cta.footer.primary.href.startsWith('/creator') ? 'creator' : 'brand'} placement="footer" href={cta.footer.primary.href}>
               {cta.footer.primary.label}
-            </Link>
+            </ArticleAction>
             <ContactButton>Kontakt aufnehmen</ContactButton>
           </div>
           {cta.footer.secondary && (

@@ -95,6 +95,16 @@ Typical flow: `search_creators` → `get_creator` → `request_outreach` →
 `readOnlyHint` / `openWorldHint` / `destructiveHint` annotations; per-tool JSON
 schemas at `/api/agent-schemas/<tool>.json`.
 
+## MCP Events: monitor newly eligible creators
+
+The server implements `creator.verified` subscriptions with city and topic filters.
+Eligibility means an active profile, a confirmed email, and at least one social
+and portfolio link; it is not an identity check. Events deliver public profile
+summaries through signed webhooks. Setup requires per-account bearer tokens,
+encrypted persistent subscriptions, the event migration and the delivery cron.
+See [setup and lifecycle testing](docs/mcp-events.md). Event discovery is enabled
+only after the required configuration is present.
+
 ## WebMCP — site tools in the browser
 
 The homepage registers **7 tools** via `modelContext` (both

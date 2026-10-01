@@ -9,7 +9,7 @@ import { CREATOR_COUNT_LABEL } from '../lib/creator-count';
 
 export const metadata: Metadata = {
   title: 'UGC Creator finden fuer Brands',
-  description: 'Finde kostenlos passende UGC Creator fuer Kampagnen in Deutschland. Beschreibe Zielgruppe, Produkt und Content-Stil und fordere Creator-Details an.',
+  description: 'UGC Creator finden: Produktbriefing beschreiben, Profile, Arbeitsproben und Preisvorstellungen vergleichen und Kontaktdaten kostenlos anfordern.',
   keywords: 'UGC Creator finden, UGC Agentur, UGC Plattform Deutschland, Creator fuer Brands, UGC Creator buchen, User Generated Content Agentur',
   alternates: {
     canonical: 'https://ugc-vz.de/brands',
@@ -67,7 +67,7 @@ export default function BrandsPage({ searchParams }: { searchParams?: { query?: 
         name: 'Koennen Brands bei UGC VZ automatisch Creator kontaktieren?',
         acceptedAnswer: {
           '@type': 'Answer',
-          text: 'Brands geben ihren Demand ein, erhalten passende Creator-Vorschlaege und koennen eine Auswahl an UGC VZ senden. Die Anfrage wird nicht vollautomatisch an alle Creator verschickt, sondern von UGC VZ weiterbearbeitet.',
+          text: 'Brands beschreiben ihr Produkt, prüfen Creator-Profile und wählen Favoriten aus. Nach ihrer Kontaktanfrage erhalten sie die verfügbaren Kontaktdaten per E-Mail. Creator werden dadurch weder automatisch angeschrieben noch gebucht.',
         },
       },
       {
@@ -134,12 +134,12 @@ export default function BrandsPage({ searchParams }: { searchParams?: { query?: 
 
       <main className="px-4 sm:px-8 md:px-16 lg:px-24 pb-24">
         <section className="max-w-5xl mx-auto py-16 text-center">
-          <p className="text-geo-violet font-semibold mb-4">Kostenlose UGC Creator Suche</p>
+          <p className="text-geo-violet font-semibold mb-4">Vom Produktbriefing zur Creator-Auswahl</p>
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 text-ink">
             UGC Creator <span className="gradient-text">fuer deine Brand finden</span>
           </h1>
           <p className="text-xl text-ink-soft max-w-3xl mx-auto leading-relaxed mb-10">
-            Beschreibe Produkt, Zielgruppe, Plattform und Content-Wunsch. UGC VZ zeigt passende Creator und du kannst die Details kostenlos anfordern.
+            Beschreibe Produkt, Zielgruppe und gewünschtes Format. Vergleiche Profile, Arbeitsproben und Preisvorstellungen, wähle deine Favoriten und fordere Kontaktdaten kostenlos an. Verfügbarkeit, Honorar und Nutzungsrechte vereinbart ihr direkt.
           </p>
           <div className="max-w-2xl mx-auto">
             <SearchBox initialQuery={searchParams?.query || ''} />
@@ -276,7 +276,7 @@ export default function BrandsPage({ searchParams }: { searchParams?: { query?: 
           <div className="space-y-4">
             {[
               ['Bekomme ich die Kontaktinfos per E-Mail?', 'Ja. Nach der Anfrage senden wir dir eine E-Mail mit deiner Creator-Auswahl und den verfuegbaren Kontakt- oder Social-Daten aus dem Profil.'],
-              ['Werden Creator automatisch angeschrieben?', 'Standardmaessig bekommst du die Kontaktinfos und kannst direkt starten. Eine automatische Creator-Mail ist technisch vorbereitet, wird aber nur genutzt, wenn die Creator-Daten und Einwilligungen dafuer sauber sind.'],
+              ['Werden Creator automatisch angeschrieben?', 'Nein. Nach deiner Kontaktanfrage erhältst du die verfügbaren Kontaktinfos per E-Mail. Du kontaktierst deine Auswahl selbst und klärst Verfügbarkeit, Honorar und Nutzungsrechte direkt.'],
               ['Kann ich auch eine UGC Agentur anfragen?', 'Ja. Wenn du mehr brauchst als reine Creator-Auswahl, kannst du in der Projektbeschreibung optional Strategie, Briefing, Produktion oder Kampagnensteuerung erwaehnen.'],
               ['Welche Branchen funktionieren?', 'Besonders gut funktionieren E-Commerce, Beauty, Food, Tech, Fashion, Apps, lokale Angebote und erklaerungsbeduerftige Produkte.'],
             ].map(([question, answer]) => (

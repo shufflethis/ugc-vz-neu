@@ -86,7 +86,7 @@ const CREATOR_CTA: AudienceCta = {
   header: { href: '/creator', label: 'Als Creator anmelden' },
   footer: {
     heading: 'Bereit für die ersten Anfragen?',
-    text: 'Leg ein kostenloses Profil mit Portfolio, Themen und Verfügbarkeit an. Marken finden dich darüber direkt — ohne Agentur dazwischen.',
+    text: 'Leg ein kostenloses Profil mit Arbeitsproben, Themen, Formaten und Preisvorstellungen an. So können Marken dein Angebot prüfen und dich direkt anfragen. Ein Profil garantiert keine Aufträge.',
     primary: { href: '/creator', label: 'Kostenloses Creator-Profil anlegen' },
   },
 };

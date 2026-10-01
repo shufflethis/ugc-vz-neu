@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useState } from 'react';
 import ContactPopup from '../../app/components/ContactPopup';
 import LogoImage from '../../app/components/LogoImage';
@@ -77,15 +78,26 @@ export default function Footer() {
               <li><Link href="/wissen" className="text-gray-400 hover:text-white transition-colors duration-200 text-sm">Wissen</Link></li>
             </ul>
 
+            <a
+              href="https://chatgpt.com/plugins/plugin_asdk_app_6a90f71483e081919574c5f8578607bc?search=ugc"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="UGC VZ Plugin in ChatGPT öffnen (neuer Tab)"
+              className="mt-6 inline-flex items-center gap-3 rounded-xl bg-white px-4 py-3 text-sm font-semibold text-gray-900 transition-colors hover:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+            >
+              <Image src="/images/chatgpt-logo.svg" width={24} height={24} alt="" aria-hidden="true" className="shrink-0" />
+              <span>In ChatGPT öffnen<span className="mt-0.5 block text-xs font-normal text-gray-600">Unser UGC VZ Plugin</span></span>
+            </a>
+
             {/* WebMCP-Badge: die Seite registriert Site-Tools im Browser
                 (document.modelContext) - Details auf /developers#webmcp. */}
             <Link
               href="/developers#webmcp"
               className="mt-6 inline-flex items-center gap-2 rounded-full border border-gray-700 px-3 py-1.5 text-xs text-gray-400 hover:text-white hover:border-gray-500 transition-colors duration-200"
-              title="Diese Seite registriert 6 Site-Tools für KI-Agenten"
+              title="Diese Seite registriert 7 Site-Tools für KI-Agenten"
             >
               <span aria-hidden="true">⚡</span>
-              WebMCP ready — 6 Site-Tools
+              WebMCP ready — 7 Site-Tools
             </Link>
 
             {/* Vertrauenssignale: offener Quellcode des MCP-Servers und der

@@ -31,9 +31,10 @@ const publicIdFromEmail = (email: string) => `UGC-${crypto.createHash('sha256')
   .slice(0, 10)
   .toUpperCase()}`;
 
-const redirectToCreator = (request: Request, state: 'verified' | 'invalid' | 'error') => {
+const redirectToCreator = (request: Request, state: 'verified' | 'invalid' | 'error', newlyVerified = false) => {
   const url = new URL('/creator', request.url);
   url.searchParams.set(state, '1');
+  if (state === 'verified' && newlyVerified) url.searchParams.set('confirmed', '1');
   url.hash = 'creator-form';
   return NextResponse.redirect(url, 303);
 };
@@ -251,7 +252,7 @@ export async function GET(request: Request) {
       }
     }
 
-    return redirectToCreator(request, 'verified');
+    return redirectToCreator(request, 'verified', true);
   } catch (error) {
     console.error('Creator verification failed', error instanceof Error ? error.message : 'unknown error');
     return redirectToCreator(request, 'error');

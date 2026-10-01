@@ -42,17 +42,28 @@ export const trackUGCEvents = {
   },
 
   // Suche Events
-  searchStart: (query: string) => {
-    trackEvent('search_start', 'UGC_Search', query);
+  searchStart: (_query: string) => {
+    trackEvent('search_start', 'UGC_Search');
   },
 
-  search: (query: string, resultsCount: number) => {
-    trackEvent('search', 'UGC_Search', query, resultsCount);
+  search: (_query: string, resultsCount: number) => {
+    trackEvent('search', 'UGC_Search', undefined, resultsCount);
   },
 
-  searchNoResults: (query: string) => {
-    trackEvent('search_no_results', 'UGC_Search', query);
+  searchNoResults: (_query: string) => {
+    trackEvent('search_no_results', 'UGC_Search');
   },
+  searchError: () => trackEvent('search_error', 'UGC_Search'),
+  articleCTA: (slug: string, target: 'creator' | 'brand', placement: string) => {
+    trackEvent('article_cta', 'Navigation', `${slug}:${target}:${placement}`);
+  },
+  registrationStart: () => trackEvent('creator_registration_start', 'Registration'),
+  registrationStep: (step: number) => trackEvent('creator_registration_step', 'Registration', undefined, step),
+  registrationSubmitted: () => trackEvent('creator_registration_submitted', 'Registration'),
+  registrationConfirmed: () => trackEvent('creator_registration_confirmed', 'Registration'),
+  registrationError: () => trackEvent('creator_registration_error', 'Registration'),
+  requestSuccess: (formType: string, count: number) => trackEvent('request_success', 'Engagement', formType, count),
+  creatorSelected: (creatorId: string, platform: string) => trackEvent('creator_selected', 'UGC_Creator', `${platform}_${creatorId}`),
   
   // Creator Events
   creatorView: (creatorId: string, platform: string) => {

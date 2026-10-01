@@ -55,31 +55,31 @@ const partnerLogos: PartnerLogo[] = [
   },
 ];
 
-export default function TrustElements() {
+export default function TrustElements({ compact = false }: { compact?: boolean }) {
   return (
-    <section className="py-20 px-4 sm:px-8 md:px-16 lg:px-24 bg-surface">
-      <div className="container mx-auto">
+    <section className={`${compact ? 'border-y border-hairline py-8 sm:py-10' : 'py-20 bg-surface'} px-5 sm:px-8 md:px-16 lg:px-24`}>
+      <div className="mx-auto max-w-6xl">
         {/* Section Heading */}
-        <div className="text-center mb-16">
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-ink mb-8">
+        <div className={`text-center ${compact ? 'mb-6' : 'mb-16'}`}>
+          <h2 className={compact ? 'text-xs font-medium leading-5 text-ink-soft sm:text-sm' : 'text-2xl sm:text-3xl md:text-4xl font-bold text-ink mb-8'}>
             Folgende Partner vertrauen auf unsere{' '}
-            <span className="gradient-text">Agenturarbeit</span>
+            <span className={compact ? '' : 'gradient-text'}>Agenturarbeit</span>
           </h2>
         </div>
 
         {/* Partner Logos Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-8 lg:gap-12 items-center justify-items-center">
+        <div className={`grid ${compact ? 'grid-cols-3 gap-5 sm:grid-cols-6' : 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-8 lg:gap-12'} items-center justify-items-center`}>
           {partnerLogos.map((logo) => (
             <div
               key={logo.name}
-              className="group flex items-center justify-center transition-all duration-300 hover:scale-110 w-full h-20 sm:h-24 md:h-28"
+              className={`group flex items-center justify-center w-full ${compact ? 'h-10' : 'h-20 sm:h-24 md:h-28'}`}
             >
               <Image
                 src={logo.src}
                 alt={logo.alt}
                 width={logo.width}
                 height={logo.height}
-                className="max-w-full max-h-full object-contain partner-logo"
+                className={`${compact ? 'max-w-[100px]' : 'max-w-full'} max-h-full object-contain partner-logo`}
               />
             </div>
           ))}

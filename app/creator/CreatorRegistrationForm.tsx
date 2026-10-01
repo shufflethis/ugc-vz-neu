@@ -1,6 +1,7 @@
 'use client';
 
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
+import { trackUGCEvents } from '../lib/analytics';
 import Link from 'next/link';
 import { ArrowLeft, ArrowRight, Check, Mail, ShieldCheck, Sparkles } from 'lucide-react';
 
@@ -70,10 +71,12 @@ const splitLinks = (value: string) => value
 
 export default function CreatorRegistrationForm({
   verified = false,
+  newlyVerified = false,
   invalid = false,
   failed = false,
 }: {
   verified?: boolean;
+  newlyVerified?: boolean;
   invalid?: boolean;
   failed?: boolean;
 }) {
@@ -83,6 +86,18 @@ export default function CreatorRegistrationForm({
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [message, setMessage] = useState('');
+  const startedRef = useRef(false);
+  const confirmedRef = useRef(false);
+
+  useEffect(() => {
+    if (!newlyVerified || confirmedRef.current) return;
+    confirmedRef.current = true;
+    trackUGCEvents.registrationConfirmed();
+    // A refresh of the success page is not another confirmation.
+    const url = new URL(window.location.href);
+    url.searchParams.delete('confirmed');
+    window.history.replaceState(window.history.state, '', url);
+  }, [newlyVerified]);
 
   useEffect(() => {
     try {
@@ -97,12 +112,17 @@ export default function CreatorRegistrationForm({
 
   useEffect(() => {
     if (!hydrated || submitted) return;
-    window.localStorage.setItem('ugc-vz-creator-draft-v1', JSON.stringify(form));
+    try { window.localStorage.setItem('ugc-vz-creator-draft-v1', JSON.stringify(form)); } catch { /* Storage is optional. */ }
   }, [form, hydrated, submitted]);
 
   const progress = useMemo(() => Math.round(((step + 1) / steps.length) * 100), [step]);
 
   const update = <K extends keyof CreatorFormState>(key: K, value: CreatorFormState[K]) => {
+    if (!startedRef.current) {
+      startedRef.current = true;
+      trackUGCEvents.registrationStart();
+      trackUGCEvents.registrationStep(1);
+    }
     setForm((current) => ({ ...current, [key]: value }));
     if (message) setMessage('');
   };
@@ -133,6 +153,7 @@ export default function CreatorRegistrationForm({
 
   const next = () => {
     if (!validateStep()) return;
+    trackUGCEvents.registrationStep(Math.min(step + 2, steps.length));
     setStep((current) => Math.min(current + 1, steps.length - 1));
     document.getElementById('creator-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
@@ -158,9 +179,11 @@ export default function CreatorRegistrationForm({
       if (!response.ok || !result.success) throw new Error(result.error || 'Anmeldung fehlgeschlagen.');
 
       setSubmitted(true);
+      trackUGCEvents.registrationSubmitted();
       setForm(initialState);
-      window.localStorage.removeItem('ugc-vz-creator-draft-v1');
+      try { window.localStorage.removeItem('ugc-vz-creator-draft-v1'); } catch { /* Storage is optional. */ }
     } catch (error) {
+      trackUGCEvents.registrationError();
       setMessage(error instanceof Error ? error.message : 'Anmeldung fehlgeschlagen. Bitte versuche es erneut.');
     } finally {
       setSubmitting(false);
@@ -193,7 +216,7 @@ export default function CreatorRegistrationForm({
               <h2 className="mt-4 text-3xl font-bold leading-tight">Von Brands gefunden werden – ohne Provision.</h2>
               <p className="mt-4 text-sm leading-6 text-white/70">In etwa 5 Minuten. Deine privaten Kontaktdaten bleiben geschützt und werden nur bei konkreten Anfragen genutzt.</p>
 
-              <div className="mt-9 space-y-5">
+              <div className="mt-9 hidden space-y-5 lg:block">
                 {steps.map((item, index) => (
                   <div key={item.title} className="flex gap-3">
                     <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border text-sm font-bold ${index < step ? 'border-geo-green bg-geo-green text-ink' : index === step ? 'border-white bg-white text-ink' : 'border-white/25 text-white/50'}`}>
@@ -204,9 +227,9 @@ export default function CreatorRegistrationForm({
                 ))}
               </div>
 
-              <div className="mt-10 rounded-2xl border border-white/10 bg-white/5 p-4 text-xs leading-5 text-white/60">
+              <div className="mt-10 hidden rounded-2xl border border-white/10 bg-white/5 p-4 text-xs leading-5 text-white/60 lg:block">
                 <ShieldCheck className="mb-2 text-geo-green" size={20} />
-                Keine vollständige Anschrift. Kein vollständiges Geburtsdatum. Newsletter nur mit eigener, freiwilliger Einwilligung.
+                Brands sehen deine öffentlichen Profilangaben, Preisvorstellung und Portfolio-Links. Deine E-Mail-Adresse erscheint nicht im öffentlichen Profil. Keine vollständige Anschrift. Newsletter nur mit eigener, freiwilliger Einwilligung.
               </div>
             </div>
           </aside>
@@ -227,6 +250,7 @@ export default function CreatorRegistrationForm({
                   <div className="mt-2 h-2 overflow-hidden rounded-full bg-surface-2"><div className="h-full rounded-full bg-gradient-to-r from-geo-violet to-geo-green transition-all duration-300" style={{ width: `${progress}%` }} /></div>
                   <h2 className="mt-6 text-2xl font-bold sm:text-3xl">{steps[step].title}</h2>
                   <p className="mt-2 text-ink-soft">{steps[step].description}</p>
+                  {step === 0 && <p className="mt-3 text-xs leading-5 text-ink-soft">Brands sehen deine öffentlichen Profilangaben und Arbeitsproben. Deine E-Mail bleibt im öffentlichen Profil verborgen. Du bestätigst die Anmeldung anschließend per E-Mail.</p>}
                 </div>
 
                 {step === 0 && (

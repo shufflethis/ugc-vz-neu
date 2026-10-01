@@ -7,6 +7,8 @@ import { toast } from 'react-toastify';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import NoResults from '../../components/NoResults';
 import CreatorSelectionPopup from './CreatorSelectionPopup';
+import CreatorProfileDialog from './CreatorProfileDialog';
+import type { SearchCreator } from '../lib/creator-public';
 import { trackUGCEvents } from '../lib/analytics';
 import { CREATOR_COUNT_LABEL } from '../lib/creator-count';
 import { MAX_CREATORS_PER_REQUEST } from '../lib/lead-limits';
@@ -29,10 +31,14 @@ import { AGENT_UI_EVENTS } from './WebMcpProvider';
 
 interface SearchBoxProps {
   initialQuery?: string;
+  showFeatured?: boolean;
 }
 
-export default function SearchBox({ initialQuery = '' }: SearchBoxProps) {
+export default function SearchBox({ initialQuery = '', showFeatured = false }: SearchBoxProps) {
   const [searchQuery, setSearchQuery] = useState(initialQuery);
+  const [featuredCreators, setFeaturedCreators] = useState<SearchCreator[]>([]);
+  const [featuredLoading, setFeaturedLoading] = useState(showFeatured);
+  const [profileCreator, setProfileCreator] = useState<SearchCreator | null>(null);
   const searchInputRef = useRef<HTMLTextAreaElement>(null);
   const lastTrackedResultsRef = useRef('');
   const lastTrackedNoResultsRef = useRef('');
@@ -40,18 +46,42 @@ export default function SearchBox({ initialQuery = '' }: SearchBoxProps) {
   // Use custom hooks
   const { isIOSDeviceState, isMobileDeviceState } = useDeviceDetection();
   const {
-    creators,
+    creators: searchCreators,
     reasoning,
     isLoading,
     searchSubmitted,
     submittedQuery,
     selectedCreators,
     showNoResults,
+    searchError,
     performSearch,
     toggleCreatorSelection,
     resetSearch,
     clearSelection
   } = useSearch();
+
+  const creators = searchSubmitted ? searchCreators : featuredCreators;
+
+  useEffect(() => {
+    if (!showFeatured) return;
+    const controller = new AbortController();
+    async function loadFeatured() {
+      try {
+        const response = await fetch('/api/creators/featured', { signal: controller.signal });
+        if (!response.ok) return;
+        const data = await response.json();
+        if (!controller.signal.aborted && Array.isArray(data.creators)) setFeaturedCreators(data.creators);
+      } catch {
+        // The search stays usable when the optional preview is unavailable.
+      } finally {
+        if (!controller.signal.aborted) setFeaturedLoading(false);
+      }
+    }
+    void loadFeatured();
+    return () => controller.abort();
+  }, [showFeatured]);
+
+  useEffect(() => { setProfileCreator(null); }, [submittedQuery]);
 
   // Handle voice transcript
   const handleVoiceTranscript = useCallback((transcript: string) => {
@@ -191,7 +221,7 @@ export default function SearchBox({ initialQuery = '' }: SearchBoxProps) {
   useEffect(() => {
     if (searchInputRef.current) {
       searchInputRef.current.style.height = 'auto';
-      searchInputRef.current.style.height = Math.max(90, searchInputRef.current.scrollHeight) + 'px';
+      searchInputRef.current.style.height = Math.max(72, searchInputRef.current.scrollHeight) + 'px';
     }
   }, [searchQuery]);
 
@@ -234,12 +264,10 @@ export default function SearchBox({ initialQuery = '' }: SearchBoxProps) {
       else if (reachText.includes('youtube')) platform = 'youtube';
       else if (reachText.includes('facebook')) platform = 'facebook';
 
-      trackUGCEvents.creatorView(creatorId, platform);
+      if (selectedCreators.includes(creatorId)) trackUGCEvents.creatorDeselected(creatorId, platform);
+      else if (selectedCreators.length < MAX_CREATORS_PER_REQUEST) trackUGCEvents.creatorSelected(creatorId, platform);
     }
   };
-
-  // State for contact form
-  const [showContactForm, setShowContactForm] = useState(false);
 
   // Handle form submission
   const handleSubmitSelection = async (clientInfo: {
@@ -267,7 +295,7 @@ export default function SearchBox({ initialQuery = '' }: SearchBoxProps) {
       });
 
       const data = await res.json();
-      if (!data.success) {
+      if (!res.ok || !data.success) {
         // `message` ist die deutsche Meldung vom Server (z.B. zu viele
         // Creator), `error` der englische Code -- das Popup zeigt userMessage.
         const submitError = new Error(data.error || 'Failed to submit') as Error & { userMessage?: string };
@@ -277,6 +305,7 @@ export default function SearchBox({ initialQuery = '' }: SearchBoxProps) {
 
       // Track successful contact form submission
       trackUGCEvents.contactForm('creator_selection');
+      trackUGCEvents.requestSuccess('creator_selection', selectedCreators.length);
       // Track individual creator contacts
       selectedCreators.forEach(creatorId => {
         const creator = creators.find(c => c.id === creatorId);
@@ -309,6 +338,14 @@ export default function SearchBox({ initialQuery = '' }: SearchBoxProps) {
 
   return (
     <div className={styles.searchContainer}>
+      <div className="mb-4 flex w-full flex-wrap items-center gap-2" aria-label="Beispiel-Briefings">
+        <span className="mr-1 hidden text-xs text-ink-soft sm:inline">Zum Beispiel:</span>
+        {[
+          ['Beauty-Reels', 'Ich suche Creator für eine Produktdemo einer Hautpflege-Marke auf Instagram Reels.'],
+          ['Food-Videos', 'Ich suche Food-Creator für kurze deutschsprachige Rezept- und Produktvideos.'],
+          ['App-Demo', 'Ich suche Creator für eine deutschsprachige App-Demo als TikTok-Video.'],
+        ].map(([label, query]) => <button key={label} type="button" disabled={isLoading} onClick={() => { setSearchQuery(query); searchInputRef.current?.focus(); }} className="rounded-full border border-hairline bg-surface px-1 py-2 text-[11px] font-medium text-ink transition-colors hover:border-geo-violet hover:bg-white focus-visible:ring-2 focus-visible:ring-geo-violet disabled:opacity-50 min-[375px]:px-2 sm:px-3 sm:text-sm">{label}</button>)}
+      </div>
       {/* Search input */}
       <div className={styles.searchInputContainer}>
         <textarea
@@ -326,7 +363,8 @@ export default function SearchBox({ initialQuery = '' }: SearchBoxProps) {
               handleStartSearch();
             }
           }}
-          placeholder="z.B. Kosmetik, unter 35 Jahre, TikTok..."
+          aria-label="Beschreibe dein Produkt und den gewünschten Content"
+          placeholder="Dein Produkt, Zielgruppe und Videoformat …"
           className={`${styles.searchInput} text-slate-900 bg-white placeholder-slate-500`}
           disabled={isLoading}
           rows={1}
@@ -336,53 +374,55 @@ export default function SearchBox({ initialQuery = '' }: SearchBoxProps) {
           onClick={handleStartSearch}
           disabled={isLoading}
           aria-label="Suche starten"
-          className="search-button-gradient p-4 rounded-lg flex items-center justify-center focus:outline-none hover:opacity-90 transition-opacity"
+          className="search-button-gradient shrink-0 px-5 py-3 rounded-xl flex items-center justify-center focus-visible:ring-2 focus-visible:ring-geo-violet focus-visible:ring-offset-2 transition-colors disabled:cursor-wait"
           style={{
             minWidth: '60px',
-            height: '60px'
+            minHeight: '52px'
           }}
         >
           {isLoading ? (
-            <span className="text-white text-sm font-medium">...</span>
+            <span className="text-white text-sm font-medium">Suche läuft …</span>
           ) : (
+            <>
+            <span className="mr-2 whitespace-nowrap text-sm font-semibold text-white">Creator suchen</span>
             <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-4.35-4.35M17 10.5a6.5 6.5 0 11-13 0 6.5 6.5 0 0113 0z" />
             </svg>
+            </>
           )}
         </button>
 
-        <div className="relative group">
+        <div className={`relative group ${isIOSDeviceState || !browserSupportsSpeechRecognition ? 'hidden' : ''}`}>
           <button
             onClick={toggleVoiceInput}
             disabled={isLoading || isIOSDeviceState || !browserSupportsSpeechRecognition}
             aria-label={isListening ? 'Sprachaufnahme beenden' : 'Sprachsuche starten'}
-            className={`p-4 rounded-lg flex items-center justify-center focus:outline-none transition-opacity ${
+            className={`p-3 rounded-xl flex items-center justify-center focus-visible:ring-2 focus-visible:ring-geo-violet focus-visible:ring-offset-2 transition-colors ${
               isIOSDeviceState || !browserSupportsSpeechRecognition
                 ? 'bg-hairline cursor-not-allowed opacity-50'
-                : 'mic-button-gradient hover:opacity-90'
+                : 'mic-button-gradient hover:bg-hairline'
             }`}
             style={{
-              minWidth: '60px',
-              height: '60px'
+              minWidth: '52px',
+              height: '52px'
             }}
             title={isIOSDeviceState ? 'Spracherkennung ist auf iOS-Geräten nicht verfügbar' : !browserSupportsSpeechRecognition ? 'Spracherkennung wird von Ihrem Browser nicht unterstützt' : isListening ? 'Sprachaufnahme beenden' : 'Sprachsuche starten'}
           >
             {isListening ? (
-              <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <svg className="w-5 h-5 text-red-700" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M12 14a3 3 0 003-3V6a3 3 0 10-6 0v5a3 3 0 003 3z" />
                 <path d="M19 11a7 7 0 01-14 0H3a9 9 0 008 8.94V23h2v-3.06A9 9 0 0021 11h-2z" />
               </svg>
             ) : (
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <svg className="w-5 h-5 text-ink-soft" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-                <line x1="4" y1="4" x2="20" y2="20" strokeLinecap="round" strokeWidth={2} />
               </svg>
             )}
           </button>
 
           {/* CRITICAL: Only show listening indicator if NOT on iOS */}
           {isListening && !isIOSDeviceState && <span className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 rounded-full animate-pulse"></span>}
-          <span className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 bg-ink text-white text-xs rounded py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none">
+          <span className="absolute bottom-full right-0 mb-2 w-56 max-w-[calc(100vw-2rem)] bg-ink text-white text-xs text-left rounded py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-normal pointer-events-none">
             {isIOSDeviceState
               ? 'Spracherkennung ist auf iOS-Geräten nicht verfügbar'
               : !browserSupportsSpeechRecognition
@@ -396,14 +436,17 @@ export default function SearchBox({ initialQuery = '' }: SearchBoxProps) {
       </div>
 
       {/* Privacy / KI-Hinweis – dezent unter der Eingabe */}
-      <p className="mt-3 text-xs text-ink-soft/80 leading-relaxed flex items-start gap-2">
+      <details className="mt-3 w-full text-xs leading-relaxed text-ink-soft">
+        <summary className="w-fit cursor-pointer rounded focus-visible:ring-2 focus-visible:ring-geo-violet">Wie funktioniert die KI-Suche?</summary>
+        <p className="mt-2 flex items-start gap-2">
         <svg className="w-3.5 h-3.5 mt-0.5 shrink-0 text-geo-violet" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
         </svg>
         <span>
           Die KI hilft nur, deine Suchanfrage zu verstehen und passende Creator zu sortieren. Die finale Auswahl triffst du selbst. An OpenRouter wird nur deine Suchanfrage gesendet, keine Creator-Datenbank.
         </span>
-      </p>
+        </p>
+      </details>
 
       {/* We don't need to display the transcript separately anymore since it's shown in the chat bubble */}
 
@@ -425,8 +468,10 @@ export default function SearchBox({ initialQuery = '' }: SearchBoxProps) {
         </div>
       )}
 
+      {searchError && <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-ink"><p role="alert">{searchError}</p><button type="button" onClick={() => performSearch(submittedQuery)} className="mt-3 rounded-lg border border-hairline bg-white px-4 py-2 focus-visible:ring-2 focus-visible:ring-geo-violet">Suche erneut versuchen</button></div>}
+
       {/* Chat container and Results display */}
-      <div>
+      <div className="w-full">
         {/* Chat container - just show user message in bubble */}
         {searchSubmitted && (
           <div className={styles.chatContainer}>
@@ -450,20 +495,26 @@ export default function SearchBox({ initialQuery = '' }: SearchBoxProps) {
         {/* Results display */}
         {creators.length > 0 && (
           <> {/* Use fragment to group elements */}
-            <h2 className={styles.resultsHeader}>Klicke dir die passenden UGC Creator zusammen. Die Anfrage ist kostenlos und du bekommst die verfuegbaren Kontaktinfos per E-Mail.</h2> {/* Add header */}
-            <p className="mb-5 text-center text-sm text-ink-soft">
-              Die Sortierung ist ein Vorschlag aus deiner Suche und den Profilangaben. Es findet keine automatische Entscheidung ueber Creator oder Auftraege statt.
+            <div className="mt-7 flex flex-col justify-between gap-2 border-t border-hairline pt-6 sm:flex-row sm:items-center">
+              <h2 className={styles.resultsHeader}>{searchSubmitted ? 'Deine Creator-Vorschläge' : 'Ein Einblick ins Verzeichnis'}</h2>
+              <span className="text-xs text-ink-soft">{searchSubmitted ? `${creators.length} Profile · Stell deine Auswahl zusammen` : 'Öffentliche Profile mit Arbeitsproben'}</span>
+            </div>
+            <p className="mb-5 mt-2 text-left text-xs leading-5 text-ink-soft sm:text-sm">
+              {searchSubmitted ? 'Prüfe Profile und Arbeitsproben. Die Sortierung basiert auf deiner Suche und den Profilangaben; die Auswahl triffst du.' : 'Lerne erste Creator kennen. Für Vorschläge zu deinem Produkt nutze die Suche oben.'}
             </p>
-            <div className={styles.creatorsGrid}>
+            <div className={`${styles.creatorsGrid} ${!searchSubmitted ? styles.featuredGrid : ''}`} tabIndex={!searchSubmitted ? 0 : undefined} role={!searchSubmitted ? 'region' : undefined} aria-label={!searchSubmitted ? 'Creator-Vorschau' : undefined}>
               {creators.map(creator => (
                 <div
                   key={creator.id}
                   className={`${styles.creatorCard} ${selectedCreators.includes(creator.id) ? styles.selected : ''}`} // Add selected class
-                  onClick={() => handleSelectCreator(creator.id)} // Add click handler
                 >
+                  <div className={styles.creatorIdentity}>
                   <img
                     src={creator.image || (creator.gender === 'Weiblich' ? '/female-placeholder.webp' : '/placeholder.jpg')}
                     alt={creator.name}
+                    loading="lazy"
+                    width={100}
+                    height={100}
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;
                       // Ensure correct gender-specific placeholder on error
@@ -475,7 +526,13 @@ export default function SearchBox({ initialQuery = '' }: SearchBoxProps) {
                       console.log(`Image error for ${creator.name} (${creator.gender}), using: ${target.src}`);
                     }}
                   />
-                  <h3>{creator.name}</h3>
+                  <div className="min-w-0"><h3 className="break-words">{creator.name}</h3>{creator.city && <p className="line-clamp-1 break-words">{creator.city}</p>}</div>
+                  </div>
+                  <div className="min-w-0 space-y-2 text-left">
+                    {creator.topics && <p className="line-clamp-2 break-words text-sm">{creator.topics}</p>}
+                    {creator.preferredContent && <p className="line-clamp-2 break-words text-sm">{creator.preferredContent}</p>}
+                    <p className="line-clamp-3 break-words text-sm"><span className="font-semibold">Preisvorstellung: </span>{creator.priceRange?.trim() || 'Nicht angegeben'}</p>
+                  </div>
                   <div className={styles.networks}>
                     {/* Check which networks are mentioned in the reach text */}
                     {(() => {
@@ -519,6 +576,10 @@ export default function SearchBox({ initialQuery = '' }: SearchBoxProps) {
                       ));
                     })()}
                   </div>
+                  <div className="mt-auto grid gap-2 pt-4">
+                    <button type="button" onClick={() => { setProfileCreator(creator); trackUGCEvents.creatorView(creator.id, 'profile'); }} aria-label={`Profil von ${creator.name} ansehen`} className="rounded-xl border border-hairline bg-white px-3 py-3 text-sm font-semibold text-ink hover:border-geo-violet focus-visible:ring-2 focus-visible:ring-geo-violet">Profil & Arbeitsproben ↗</button>
+                    <button type="button" aria-pressed={selectedCreators.includes(creator.id)} aria-label={`${creator.name} ${selectedCreators.includes(creator.id) ? 'aus Auswahl entfernen' : 'zur Auswahl hinzufügen'}`} onClick={() => handleSelectCreator(creator.id)} className={`rounded-xl px-3 py-3 text-sm font-semibold focus-visible:ring-2 focus-visible:ring-geo-violet focus-visible:ring-offset-2 ${selectedCreators.includes(creator.id) ? 'bg-[#edf5e5] text-[#385523]' : 'bg-geo-violet text-white hover:bg-[#7531ae]'}`}>{selectedCreators.includes(creator.id) ? '✓ In deiner Auswahl' : '+ Zur Auswahl'}</button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -539,7 +600,9 @@ export default function SearchBox({ initialQuery = '' }: SearchBoxProps) {
 
         {/* No results message */}
         {showNoResults && <NoResults query={submittedQuery} />}
+        {showFeatured && !searchSubmitted && featuredLoading && <div className="mt-7 border-t border-hairline pt-6" role="status" aria-label="Creator-Vorschau wird geladen"><h2 className={styles.resultsHeader}>Ein Einblick ins Verzeichnis</h2><p className="mb-5 mt-2 text-xs leading-5 text-ink-soft sm:text-sm">Lerne erste Creator kennen. Für Vorschläge zu deinem Produkt nutze die Suche oben.</p><div className={`${styles.creatorsGrid} ${styles.featuredGrid}`}>{[1, 2, 3].map(index => <div key={index} className={`${styles.creatorCard} min-h-[380px] bg-surface motion-safe:animate-pulse`} />)}</div></div>}
       </div>
+      {profileCreator && <CreatorProfileDialog key={profileCreator.id} creator={profileCreator} selected={selectedCreators.includes(profileCreator.id)} onClose={() => setProfileCreator(null)} onSelect={() => handleSelectCreator(profileCreator.id)} />}
     </div>
   );
 }

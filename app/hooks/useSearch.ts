@@ -3,19 +3,12 @@
 import { useState } from 'react';
 import { toast } from 'react-toastify';
 import { MAX_CREATORS_PER_REQUEST } from '@/app/lib/lead-limits';
-
-interface Creator {
-  id: string;
-  name: string;
-  image: string;
-  reach: string;
-  networks: string[];
-  priceRange: string;
-  gender?: string;
-}
+import type { SearchCreator } from '../lib/creator-public';
+import { trackUGCEvents } from '../lib/analytics';
 
 export const useSearch = () => {
-  const [creators, setCreators] = useState<Creator[]>([]);
+  const [creators, setCreators] = useState<SearchCreator[]>([]);
+  const [searchError, setSearchError] = useState('');
   const [reasoning, setReasoning] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [searchSubmitted, setSearchSubmitted] = useState(false);
@@ -32,8 +25,10 @@ export const useSearch = () => {
 
     // Reset previous search state
     setCreators([]);
+    setSelectedCreators([]);
     setReasoning('');
     setShowNoResults(false);
+    setSearchError('');
     setIsLoading(true);
 
     const requestId = Date.now().toString();
@@ -68,10 +63,11 @@ export const useSearch = () => {
           setShowNoResults(true);
         }
       } else {
-        toast.error(`Suche fehlgeschlagen: ${data.error || 'Unbekannter Fehler'}`);
+        throw new Error('search_failed');
       }
     } catch (error: any) {
-      toast.error(`Fehler bei der Suche: ${error.message || 'Unbekannter Fehler'}`);
+      setSearchError('Die Suche ist gerade nicht verfügbar. Bitte versuche es erneut.');
+      trackUGCEvents.searchError();
     } finally {
       setIsLoading(false);
     }
@@ -99,6 +95,7 @@ export const useSearch = () => {
     setSubmittedQuery('');
     setSelectedCreators([]);
     setShowNoResults(false);
+    setSearchError('');
   };
 
   const clearSelection = () => {
@@ -113,6 +110,7 @@ export const useSearch = () => {
     submittedQuery,
     selectedCreators,
     showNoResults,
+    searchError,
     performSearch,
     toggleCreatorSelection,
     resetSearch,
