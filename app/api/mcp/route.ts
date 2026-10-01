@@ -18,6 +18,7 @@ import { createMcpHandler } from 'mcp-handler';
 import { MCP_TOOLS } from '@/app/lib/agent-tools';
 import { verifyWebBotAuth, checkRateLimit, peekRateLimit, getRateLimitKey } from '@/app/lib/web-bot-auth';
 import { AGENT_LAYER_VERSION } from '@/app/lib/agent-version';
+import { handleEventRequest, advertiseEvents } from '@/app/lib/mcp-events';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60;
@@ -204,7 +205,11 @@ async function withWebBotAuthGate(request: Request): Promise<Response> {
   }
 
   const originalAccept = (request.headers.get('accept') || '').toLowerCase();
-  const response = await handler(await withCompatibleAccept(request));
+  const eventResponse = await handleEventRequest(request);
+  if (eventResponse) return eventResponse;
+  // Preserve discovery metadata before the SDK consumes the request body.
+  const discoveryRequest = request.clone();
+  const response = await advertiseEvents(discoveryRequest, await handler(await withCompatibleAccept(request)));
 
   // Clients, die nur application/json akzeptieren (typisch: einfache
   // JSON-RPC-Prober), koennen die SSE-Antwort des SDK nicht parsen. Fuer sie

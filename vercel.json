@@ -2,5 +2,8 @@
   "crons": [{
     "path": "/api/cron/update-images",
     "schedule": "0 0 1 */6 *"
+  }, {
+    "path": "/api/cron/mcp-events",
+    "schedule": "*/5 * * * *"
   }]
 }
