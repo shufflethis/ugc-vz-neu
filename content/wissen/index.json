@@ -1,10 +1,27 @@
 [
   {
+    "slug": "ugc-vz-agenten-creator-suche-mcp-events",
+    "title": "UGC VZ: Echte Creator finden – auf der Website und mit KI-Agenten",
+    "excerpt": "Kostenlose Creator-Suche, öffentliche Profile und offene Schnittstellen: So verbindet UGC VZ menschliche Kreativität mit agentengestützter Recherche und MCP Events.",
+    "publishedAt": "2026-09-30T08:00:00Z",
+    "modifiedAt": "2026-09-30T08:00:00Z",
+    "authorId": "ugc-vz-redaktion",
+    "categories": [
+      "Allgemein"
+    ],
+    "featuredImage": "/images/ugc-vz-agenten-creator-suche.webp",
+    "redirectTo": null,
+    "contentStatus": "published",
+    "wordCount": 1046,
+    "indexable": true,
+    "checksum": "8bc686ac0b5f51eca5316799423ade6a29f4c9bd46e1bfa3bc190c84feea9717"
+  },
+  {
     "slug": "ugc-video-preise-komplette-kosten-uebersicht-2025",
-    "title": "UGC Video Preise: Komplette Kosten-Übersicht 2025",
-    "excerpt": "UGC Video Preise 2025: Echte Kosten, Preis-Tabellen und Strategien für Marketing-Entscheider. So budgetieren Sie User-Generated Content richtig.",
+    "title": "UGC Video Preise: Leistungen und Angebote richtig vergleichen",
+    "excerpt": "Was ein UGC-Video kostet, hängt vom Briefing ab. Vergleiche Produktion, Varianten, Korrekturen und Nutzungsrechte anhand eines konkreten Leistungsumfangs.",
     "publishedAt": "2026-01-29T07:24:42Z",
-    "modifiedAt": "2026-01-29T07:24:42Z",
+    "modifiedAt": "2026-09-30T00:49:53.392Z",
     "authorId": "gorden-wuebbe",
     "categories": [
       "Allgemein"
@@ -12,9 +29,9 @@
     "featuredImage": "/wp-content/uploads/2026/01/ugc-video-preise.jpg",
     "redirectTo": null,
     "contentStatus": "published",
-    "wordCount": 2629,
+    "wordCount": 325,
     "indexable": true,
-    "checksum": "25fa813b4cdaeea7fa9f571106925f8d26a9cdfa671d1096da9caf3ec8417abf"
+    "checksum": "a16c4aa20b153f0c4a22b8ff8ff7ca725baa1f919e6dac039b8c8adfbe9c4fd8"
   },
   {
     "slug": "content-creator-beauftragen-strategie-guide-fuer-marketing-entscheider",
@@ -562,10 +579,10 @@
   },
   {
     "slug": "ugc-creator-pitches-wie-sie-marken-ueberzeugen",
-    "title": "UGC Creator Pitches: Wie Sie Marken überzeugen",
-    "excerpt": "Pitch-Deck Framework für Marketing-Verantwortliche: So stellen Sie UGC Creator Kooperationen erfolgreich auf. Inklusive Vorlagen und Strategien.",
+    "title": "UGC Pitch: Eine konkrete Content-Idee statt einer Standardnachricht",
+    "excerpt": "So formulierst du einen UGC-Pitch mit Produktbezug, passender Arbeitsprobe und klarem nächsten Schritt. Mit einer anpassbaren Nachrichtenvorlage.",
     "publishedAt": "2026-01-12T07:00:33Z",
-    "modifiedAt": "2026-01-12T07:00:33Z",
+    "modifiedAt": "2026-09-30T00:49:53.410Z",
     "authorId": "gorden-wuebbe",
     "categories": [
       "Allgemein"
@@ -573,9 +590,9 @@
     "featuredImage": "/wp-content/uploads/2026/01/ugc-creator-x-brands-so-pitchst-du-dich-bei-marken-mit-pitch-deck-framework.jpg",
     "redirectTo": null,
     "contentStatus": "published",
-    "wordCount": 2409,
+    "wordCount": 325,
     "indexable": true,
-    "checksum": "f6d47fb5d0b47e8e562b71e91d1b14adf2cd115a6ded4d332d6386006928c231"
+    "checksum": "11353fdf2d618af0696353959fa4e06d3cf9be9927bb14bbe53a4f2861a258e8"
   },
   {
     "slug": "ugc-berlin-creator-styles-die-wirklich-funktionieren",
@@ -852,9 +869,9 @@
   {
     "slug": "ugc-portfolio-so-ueberzeugst-du-brands-in-7-schritten",
     "title": "UGC Portfolio: So überzeugst du Brands in 7 Schritten",
-    "excerpt": "Erfahren Sie, wie Marketing-Entscheider ein UGC-Portfolio aufbauen, das Brands sofort überzeugt. Mit Checklisten, Tools und konkreten Strategien.",
+    "excerpt": "Baue ein UGC-Portfolio mit passenden Arbeitsproben, klarer Beschreibung und erreichbaren Links. Sieben praktische Schritte für dein Creator-Angebot.",
     "publishedAt": "2025-12-26T07:03:02Z",
-    "modifiedAt": "2025-12-26T07:03:02Z",
+    "modifiedAt": "2026-09-30T00:49:53.367Z",
     "authorId": "gorden-wuebbe",
     "categories": [
       "Allgemein"
@@ -862,16 +879,16 @@
     "featuredImage": "/wp-content/uploads/2025/12/ugc-portfolio-so-baust-du-es-auf-dass-brands-sofort-ja-sagen.jpg",
     "redirectTo": null,
     "contentStatus": "published",
-    "wordCount": 2606,
+    "wordCount": 475,
     "indexable": true,
-    "checksum": "2a2af1c772a05d39d9fd3c8a653b37e4b025d25f3ae1f4228d60121cf6b8f836"
+    "checksum": "a412e02745fca13c777f57fd1bf74ec307d931fa6632d2843f6b9a33f3eef3fb"
   },
   {
     "slug": "ugc-verdienst-wie-viel-kann-man-wirklich-verdienen",
-    "title": "UGC Verdienst: Wie viel kann man wirklich verdienen?",
-    "excerpt": "Konkrete Zahlen und Strategien für UGC-Verdienst nach Level. Erfahren Sie, wie Marketing-Experten mit User-Generated Content Werte schaffen.",
+    "title": "UGC Verdienst: Honorare, Aufwand und Einnahmen realistisch planen",
+    "excerpt": "Wie sich UGC-Einnahmen zusammensetzen: Aufträge, Produktionszeit, Kosten und Nutzungsrechte. Mit einem klar gekennzeichneten Rechenbeispiel.",
     "publishedAt": "2025-12-25T16:57:54Z",
-    "modifiedAt": "2025-12-25T16:57:54Z",
+    "modifiedAt": "2026-09-30T00:49:53.387Z",
     "authorId": "gorden-wuebbe",
     "categories": [
       "Allgemein"
@@ -879,16 +896,16 @@
     "featuredImage": "/wp-content/uploads/2025/12/ugc-verdienst-wie-viel-kann-man-wirklich-verdienen-beispiele-nach-level.jpg",
     "redirectTo": null,
     "contentStatus": "published",
-    "wordCount": 2482,
+    "wordCount": 375,
     "indexable": true,
-    "checksum": "58c316d418e7fc46db2ea7453a331e66d54332d405364061322d289943db0b95"
+    "checksum": "1b11215a8f0ada6addcfd1e8b3d229c3c767f5d8c09488ef6f70c07b2369b053"
   },
   {
     "slug": "ugc-creator-preise-in-deutschland-realistische-ranges-2024",
-    "title": "UGC Creator Preise in Deutschland: Realistische Ranges 2024",
-    "excerpt": "Konkrete Preisranges für UGC Creator in Deutschland. So begründen Sie Ihre Budgetanfragen mit klaren Faktoren. Für Marketing-Entscheider.",
+    "title": "UGC Creator Preise in Deutschland: So prüfst du ein Angebot",
+    "excerpt": "Preisvorstellungen von UGC Creatorn einordnen: Leistungsumfang, Arbeitsproben, Nutzungsrechte und Zusatzkosten vor der Beauftragung prüfen.",
     "publishedAt": "2025-12-25T07:32:50Z",
-    "modifiedAt": "2025-12-25T07:32:50Z",
+    "modifiedAt": "2026-09-30T00:49:53.399Z",
     "authorId": "gorden-wuebbe",
     "categories": [
       "Allgemein"
@@ -896,9 +913,9 @@
     "featuredImage": "/wp-content/uploads/2025/12/ugc-creator-preise-deutschland-realistische-ranges-so-begruendest-du-sie.jpg",
     "redirectTo": null,
     "contentStatus": "published",
-    "wordCount": 2537,
+    "wordCount": 323,
     "indexable": true,
-    "checksum": "ad2e54fc69e2d135e132b03399c36d570af2b27ef4ecc1c2b272260e1787a676"
+    "checksum": "b43228e615ea12eecc2d4f67ee8b8af461bda9234e3472b684926499c428057d"
   },
   {
     "slug": "ugc-roi-messen-die-8-kennzahlen-die-wirklich-zaehlen",
