@@ -8,7 +8,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import NoResults from '../../components/NoResults';
 import CreatorSelectionPopup from './CreatorSelectionPopup';
 import CreatorProfileDialog from './CreatorProfileDialog';
-import type { SearchCreator } from '../lib/creator-public';
+import { humanizeCreatorText, type SearchCreator } from '../lib/creator-public';
 import { trackUGCEvents } from '../lib/analytics';
 import { CREATOR_COUNT_LABEL } from '../lib/creator-count';
 import { MAX_CREATORS_PER_REQUEST } from '../lib/lead-limits';
@@ -531,7 +531,7 @@ export default function SearchBox({ initialQuery = '', showFeatured = false }: S
                   <div className="min-w-0 space-y-2 text-left">
                     {creator.topics && <p className="line-clamp-2 break-words text-sm">{creator.topics}</p>}
                     {creator.preferredContent && <p className="line-clamp-2 break-words text-sm">{creator.preferredContent}</p>}
-                    <p className="line-clamp-3 break-words text-sm"><span className="font-semibold">Preisvorstellung: </span>{creator.priceRange?.trim() || 'Nicht angegeben'}</p>
+                    <p className="line-clamp-3 whitespace-pre-line break-words text-sm"><span className="font-semibold">Preisvorstellung: </span>{humanizeCreatorText(creator.priceRange) || 'Nicht angegeben'}</p>
                   </div>
                   <div className={styles.networks}>
                     {/* Check which networks are mentioned in the reach text */}

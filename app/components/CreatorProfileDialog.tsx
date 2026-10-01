@@ -2,7 +2,7 @@
 
 import { Dialog } from '@headlessui/react';
 import { useEffect, useRef, useState } from 'react';
-import { safePortfolioUrl, type PublicCreatorProfile, type SearchCreator } from '../lib/creator-public';
+import { humanizeCreatorText, safePortfolioUrl, type PublicCreatorProfile, type SearchCreator } from '../lib/creator-public';
 
 export default function CreatorProfileDialog({ creator, selected, onClose, onSelect }: {
   creator: SearchCreator;
@@ -63,7 +63,7 @@ export default function CreatorProfileDialog({ creator, selected, onClose, onSel
                   ['Content-Formate', profile.preferred_content],
                   ['Preisvorstellung', profile.rate_text],
                   ['Equipment', profile.equipment],
-                ].map(([label, value]) => <div key={label} className="min-w-0 rounded-xl bg-surface p-4"><dt className="text-xs font-semibold uppercase tracking-wide text-ink-soft">{label}</dt><dd className="mt-2 whitespace-pre-line break-words text-sm text-ink">{value?.trim() || 'Nicht angegeben'}</dd></div>)}
+                ].map(([label, value]) => <div key={label} className="min-w-0 rounded-xl bg-surface p-4"><dt className="text-xs font-semibold uppercase tracking-wide text-ink-soft">{label}</dt><dd className="mt-2 whitespace-pre-line break-words text-sm text-ink">{humanizeCreatorText(value) || 'Nicht angegeben'}</dd></div>)}
               </dl>
               <section aria-labelledby="creator-portfolio-title">
                 <h3 id="creator-portfolio-title" className="text-lg font-semibold text-ink">Portfolio & Arbeitsproben</h3>

@@ -34,3 +34,22 @@ export function safePortfolioUrl(value: string): string | null {
     return null;
   }
 }
+
+/** Creator-Freitexte enthalten oft Markdown (Tabellen, **fett**, Listen); hier als lesbarer Klartext. */
+export function humanizeCreatorText(raw: string | null | undefined): string {
+  let text = (raw ?? '').replace(/\r/g, '');
+  if (/\|\s*:?-{3,}/.test(text)) {
+    // ponytail: nur 2-spaltige Tabellen (Leistung | Preis), Kopfzeile entfällt
+    const rows = [...text.matchAll(/\|([^|\n]+)\|([^|\n]+)\|/g)]
+      .map(([, a, b]) => [a.trim(), b.trim()])
+      .filter(([a, b]) => !/^:?-{3,}:?$/.test(a) && !/^:?-{3,}:?$/.test(b));
+    if (rows.length > 1) text = rows.slice(1).map(([a, b]) => `${a}: ${b}`).join('\n');
+  }
+  return text
+    .replace(/^\s*#{1,6}\s+/gm, '')
+    .replace(/^\s*[-*]\s+/gm, '• ')
+    .replace(/(\*\*|__)(.+?)\1/g, '$2')
+    .replace(/`([^`]+)`/g, '$1')
+    .replace(/\[([^\]]+)\]\((https?:[^)]+)\)/g, '$1 ($2)')
+    .trim();
+}
