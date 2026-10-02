@@ -260,7 +260,7 @@ export default function CreatorSelectionPopup({
                             Bereit für Ihr UGC-Projekt?
                           </h4>
                           <p className="text-ink-soft text-sm max-w-md mx-auto">
-                            Senden Sie Ihre Auswahl an UGC VZ. Wir pruefen die Anfrage und verbinden Sie mit den passenden Creatorn.
+                            Mit dem Absenden erhalten Sie die Kontaktdaten per E-Mail, und wir schreiben die erreichbaren Creator in Ihrem Namen an – kostenlos.
                           </p>
                         </div>
                         
@@ -289,7 +289,7 @@ export default function CreatorSelectionPopup({
                         Fast geschafft! <PartyPopper className="inline-block w-5 h-5 ml-1 align-[-3px]" strokeWidth={1.5} aria-hidden="true" />
                       </h4>
                       <p className="text-ink-soft text-sm">
-                        Tragen Sie Ihre E-Mail ein. Die ausgewählten Kontakte und Preisangaben werden automatisch versendet.
+                        Tragen Sie Ihre E-Mail ein. Dies ist eine echte Anfrage, es werden sofort E-Mails versendet.
                       </p>
                     </div>
 
@@ -401,6 +401,15 @@ export default function CreatorSelectionPopup({
                         Viele Creator arbeiten nicht kostenlos. Mit Vergütung und Budget bekommen Sie schneller eine Antwort.
                       </p>
 
+                      <div className="rounded-xl border border-geo-violet bg-geo-violet/5 p-4 text-sm leading-6 text-ink">
+                        <p className="font-bold">Das passiert nach dem Absenden – echt und sofort:</p>
+                        <ol className="mt-2 list-decimal space-y-1 pl-5 text-ink-soft">
+                          <li>Sie erhalten die Kontaktdaten der gewählten Creator per E-Mail.</li>
+                          <li>Wir schreiben die per E-Mail erreichbaren Creator in Ihrem Namen an. Dazu übermitteln wir ihnen Ihren Namen, Ihre E-Mail-Adresse und Ihre Projektbeschreibung. Antworten gehen direkt an Sie.</li>
+                          <li>Kostenlos und ohne Provision. Bitte nur echte, eigene Anfragen stellen (<a href="/datenschutz" className="underline">Datenschutz</a>).</li>
+                        </ol>
+                      </div>
+
                       <button
                         type="button"
                         onClick={async () => {
@@ -439,7 +448,7 @@ export default function CreatorSelectionPopup({
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                               </svg>
-                              <span>Anfrage senden</span>
+                              <span>Echte Anfrage jetzt senden</span>
                             </>
                           )}
                         </button>
