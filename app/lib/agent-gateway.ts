@@ -318,7 +318,18 @@ type RequestOutreachParams = {
 // Client frei waehlbar, also nur ein Hinweis fuer die interne Zuordnung.
 type RequestOutreachCtx = { origin: string; protocol: 'mcp' | 'a2a' | 'rest'; client?: string | null };
 
+// Datengeneratoren (z. B. "Toucan-Datagen/1.0") spielen den Server mit
+// erfundenen Brands durch: jede Anfrage kostet eine interne Mail und einen
+// Bounce. Lesen duerfen sie, echte Anfragen ausloesen nicht.
+const SYNTHETIC_CLIENT_RE = /datagen/i;
+
 export async function requestOutreach(params: RequestOutreachParams, ctx: RequestOutreachCtx): Promise<{ requestId: string }> {
+  if (ctx.client && SYNTHETIC_CLIENT_RE.test(ctx.client)) {
+    throw gatewayError(
+      'synthetic_client_not_allowed',
+      'request_outreach triggers real e-mails to real people and is not available to data-generation or test clients. Searching and reading profiles remains allowed. Genuine requests: https://ugc-vz.de/brands or hi@ugc-vz.de.',
+    );
+  }
   // Gleiche Deckelung wie app/a2a/route.ts:271 (submitCreatorRequest).
   const creatorPublicIds = (Array.isArray(params.creatorPublicIds) ? params.creatorPublicIds : []).slice(0, 10);
   if (!creatorPublicIds.length || creatorPublicIds.some((id) => !CREATOR_PUBLIC_ID_RE.test(id))) {
