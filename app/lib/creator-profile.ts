@@ -21,6 +21,10 @@ export type CreatorProfileView = {
   socialLinks: string[];
   portfolioLinks: string[];
   newsletterConsent: boolean;
+  /** Opt-in fuer Projektanfragen per E-Mail ist aktiv und nicht pausiert. */
+  projectNotifications?: boolean;
+  /** Wie oft Brands das Profil in einer Anfrage ausgewaehlt haben. */
+  selectedCount?: number;
 };
 
 type ProfileRow = {
@@ -42,6 +46,9 @@ type ProfileRow = {
   pet_context: string | null;
   email: string | null;
   newsletter_enabled: boolean | null;
+  project_notifications_enabled: boolean | null;
+  notification_paused_at: string | null;
+  selected_count: number | null;
   social_links: string | null;
   portfolio_links: string | null;
 };
@@ -78,6 +85,9 @@ export const loadCreatorProfile = async (
       p.pet_context,
       c.email,
       c.newsletter_enabled,
+      c.project_notifications_enabled,
+      c.notification_paused_at,
+      (SELECT count(*)::int FROM lead_creator_matches m WHERE m.creator_id = p.id) AS selected_count,
       s.social_links,
       f.portfolio_links
     FROM creator_profiles p
@@ -122,6 +132,8 @@ export const loadCreatorProfile = async (
     socialLinks: lines(row.social_links),
     portfolioLinks: lines(row.portfolio_links),
     newsletterConsent: row.newsletter_enabled === true,
+    projectNotifications: row.project_notifications_enabled === true && !row.notification_paused_at,
+    selectedCount: row.selected_count ?? 0,
   };
 };
 

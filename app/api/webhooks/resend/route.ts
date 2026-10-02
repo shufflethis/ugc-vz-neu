@@ -198,7 +198,7 @@ export async function POST(req: Request) {
           r.failedNames.length ? `❌ Fehlgeschlagen: ${names(r.failedNames)}` : '',
           r.dailyNames.length ? `⏭️ Heute bereits informiert: ${names(r.dailyNames)}` : '',
           r.noEmail.length
-            ? `📵 Nur über Social erreichbar (manuell nachfassen):\n${r.noEmail.map((c) => `• ${c.name} · ${c.links || 'kein Kontakt hinterlegt'}`).join('\n')}`
+            ? `📵 Nur über Social erreichbar (per DM nachfassen, Einladung: ugc-vz.de/konto → Projektanfragen aktivieren):\n${r.noEmail.map((c) => `• ${c.name} · ${c.links || 'kein Kontakt hinterlegt'}`).join('\n')}`
             : '',
         ].filter(Boolean).join('\n').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').slice(0, 2_800);
       }

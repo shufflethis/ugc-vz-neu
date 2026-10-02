@@ -32,6 +32,62 @@ export default function KontoClient({
   );
 }
 
+function ProjectRequests({ profile }: { profile: CreatorProfileView }) {
+  const [enabled, setEnabled] = useState(Boolean(profile.projectNotifications));
+  const [consent, setConsent] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const selected = profile.selectedCount ?? 0;
+
+  const save = async (next: boolean) => {
+    setBusy(true);
+    setError('');
+    try {
+      const response = await fetch('/api/creator/notifications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled: next }),
+      });
+      const result = await response.json();
+      if (!response.ok || !result.success) throw new Error(result.error || 'Speichern fehlgeschlagen.');
+      setEnabled(next);
+      setConsent(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Speichern fehlgeschlagen.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <section className={`mb-8 rounded-2xl border p-5 ${enabled ? 'border-hairline bg-surface' : 'border-geo-violet bg-geo-violet/5'}`}>
+      <h2 className="text-lg font-bold">Projektanfragen per E-Mail: {enabled ? 'aktiv' : 'aus'}</h2>
+      {selected > 0 && (
+        <p className="mt-1 text-sm text-ink-soft">
+          Brands haben dein Profil bereits <strong className="text-ink">{selected}-mal</strong> für eine Anfrage ausgewählt.
+          {!enabled && ' Weil Anfragen per E-Mail aus sind, konnten wir dich dabei nicht benachrichtigen.'}
+        </p>
+      )}
+      {enabled ? (
+        <button type="button" disabled={busy} onClick={() => save(false)} className="mt-3 text-sm font-semibold text-ink-soft underline disabled:opacity-50">
+          Anfragen pausieren
+        </button>
+      ) : (
+        <div className="mt-3 space-y-3">
+          <label className="flex cursor-pointer items-start gap-3">
+            <input type="checkbox" className="mt-1 h-4 w-4 accent-geo-violet" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
+            <span className="text-sm leading-6 text-ink-soft">UGC VZ darf mich bei konkreten passenden Brand-Anfragen per E-Mail informieren und meine hinterlegten Kontaktdaten an die anfragende Brand übermitteln. Ich kann dies jederzeit widerrufen.</span>
+          </label>
+          <button type="button" disabled={!consent || busy} onClick={() => save(true)} className="rounded-xl bg-geo-violet px-5 py-3 text-sm font-semibold text-white disabled:opacity-50">
+            Projektanfragen aktivieren
+          </button>
+        </div>
+      )}
+      {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+    </section>
+  );
+}
+
 function Header() {
   return (
     <header className="py-6 px-4 sm:px-8 md:px-16 lg:px-24">
@@ -205,6 +261,7 @@ function EditView({ profile }: { profile: CreatorProfileView }) {
   return (
     <main className="px-4 sm:px-8 md:px-16 lg:px-24 pb-24">
       <div className="max-w-4xl mx-auto py-10">
+        <ProjectRequests profile={profile} />
         <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
           <div>
             <p className="text-sm font-bold uppercase tracking-[0.15em] text-geo-violet">Creator-Konto</p>
