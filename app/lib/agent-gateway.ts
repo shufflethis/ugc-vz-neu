@@ -74,7 +74,8 @@ export async function searchCreators(params: SearchCreatorsParams, ctx: SearchCr
       'Content-Type': 'application/json',
       'X-Request-ID': ctx.requestId,
     },
-    body: JSON.stringify({ query: params.query }),
+    // city/topics filtert /api/search selbst, VOR seiner 24er-Kappung.
+    body: JSON.stringify({ query: params.query, city: params.city, topics: params.topics }),
   });
 
   const data = await response.json();
@@ -180,6 +181,16 @@ export async function searchCreators(params: SearchCreatorsParams, ctx: SearchCr
     totalCount,
     returnedCount: creators.length,
     creators,
+    // Text fuer das aufrufende Sprachmodell: mehrere Creator zeigen und am Ende
+    // zur Kontaktanfrage fuehren (sonst endet der Dialog nach der Trefferliste).
+    hint: [
+      'Present the top 3-5 creators as a short comparison (name, city, rate, why they fit) - never just one.',
+      params.city && creators.length < 3
+        ? `Only ${creators.length} creator(s) list "${params.city}" as their city. Most creators list no city and UGC is usually produced remotely - search again without city and add those as remote options.`
+        : '',
+      'Then close by offering to contact them: ask which creators the user wants and for their brand name and e-mail, then call request_outreach with all chosen creator IDs at once (up to 10; a message containing [Name] is personalised per creator).',
+      'It is free and without commission: UGC VZ e-mails the contact details to the brand and forwards the request to the creators.',
+    ].filter(Boolean).join(' '),
   };
 }
 

@@ -816,7 +816,20 @@ export async function POST(req: Request) {
       );
     }
 
-    const displayCreators = genderFilteredCreators.slice(0, 24);
+    // Harte Filter der Agenten-Schnittstellen (app/lib/agent-gateway.ts). Muessen
+    // VOR der 24er-Kappung greifen: danach blieb von 12 Berliner Profilen nur
+    // uebrig, wer zufaellig schon in den Top 24 stand.
+    const cityFilter = typeof reqBody.city === 'string' ? reqBody.city.trim().toLowerCase() : '';
+    const topicFilter: string[] = Array.isArray(reqBody.topics)
+      ? reqBody.topics.filter((t: unknown) => typeof t === 'string' && t.trim()).map((t: string) => t.trim().toLowerCase())
+      : [];
+    const matchedCreators = genderFilteredCreators.filter((creator) => {
+      if (cityFilter && !String(creator.city || '').toLowerCase().includes(cityFilter)) return false;
+      if (topicFilter.length && !topicFilter.some((t) => String(creator.topics || '').toLowerCase().includes(t))) return false;
+      return true;
+    });
+
+    const displayCreators = matchedCreators.slice(0, 24);
 
     // Remove helper properties before sending (but keep gender for frontend placeholder logic)
     const finalCreators = displayCreators.map(({ hasCustomImage, totalReach, score, ...rest }) => rest);
@@ -827,7 +840,7 @@ export async function POST(req: Request) {
     return NextResponse.json({
       success: true,
       creators: finalCreators,
-      totalCount: genderFilteredCreators.length,
+      totalCount: matchedCreators.length,
       // Herkunft der Zahl offenlegen: poolSize ist der aktive Bestand aus
       // creator_search_public, der Rest zeigt, wo Profile verloren gehen.
       pool: {
