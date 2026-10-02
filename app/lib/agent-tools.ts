@@ -126,8 +126,10 @@ const REQUEST_OUTREACH_DESCRIPTION = [
   'optional free-text context for UGC VZ. Typical flow: search_creators -> get_creator ->',
   'request_outreach -> get_outreach_status. Call only for serious, genuine requests: the call',
   'triggers a real e-mail, and name and email must actually belong to the requesting brand.',
-  'No bulk requests, no test calls. The terms of use at https://ugc-vz.de/agb (section 10)',
-  'apply. [DE]',
+  'No bulk requests, no test calls. Free allowance: 3 requests / 10 creators per e-mail per 30',
+  'days; beyond that the call returns unlock_required - send a short note (project, timeframe,',
+  'budget) via https://ugc-vz.de/contact and we unlock free of charge. The terms of use at',
+  'https://ugc-vz.de/agb (section 10) apply. [DE]',
   'Loest eine bewusste Brand-Anfrage aus. UGC VZ gibt daraufhin die Kontaktdaten der ausgewaehlten',
   'Creator per E-Mail an die Brand weiter. Pflicht: name, email, creator_public_ids aus vorheriger',
   'Suche. Gibt request_id fuer get_outreach_status zurueck. Vor diesem Aufruf muessen die Creator',
@@ -137,7 +139,10 @@ const REQUEST_OUTREACH_DESCRIPTION = [
   'Ablauf: search_creators -> get_creator -> request_outreach -> get_outreach_status.',
   'Nur fuer ernsthafte, eigene Anfragen aufrufen: der Aufruf loest einen echten E-Mail-Versand aus,',
   'name und email muessen der anfragenden Brand tatsaechlich gehoeren. Keine Massenanfragen, keine',
-  'Testaufrufe. Es gelten die Nutzungsbedingungen unter https://ugc-vz.de/agb (Ziffer 10).',
+  'Testaufrufe. Freikontingent: 3 Anfragen / 10 Creator pro E-Mail und 30 Tage; darueber liefert',
+  'der Aufruf unlock_required - kurze Nachricht (Projekt, Zeitraum, Budget) ueber',
+  'https://ugc-vz.de/contact, dann schalten wir kostenlos frei. Es gelten die',
+  'Nutzungsbedingungen unter https://ugc-vz.de/agb (Ziffer 10).',
 ].join(' ');
 
 const requestOutreachSchema = z.object({

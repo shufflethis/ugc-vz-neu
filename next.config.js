@@ -2,14 +2,14 @@ const isDevelopment = process.env.NODE_ENV !== 'production';
 
 const contentSecurityPolicy = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline'${isDevelopment ? " 'unsafe-eval'" : ''} https://analytics.polymarkt.de`,
+  `script-src 'self' 'unsafe-inline'${isDevelopment ? " 'unsafe-eval'" : ''} https://analytics.polymarkt.de https://agenttracking.co`,
   "style-src 'self' 'unsafe-inline'",
   // https: ist noetig, damit von Creatorn selbst eingetragene Bild-URLs
   // (beliebige Hosts) laden. Die Middleware-CSP hatte das bereits; live gewinnt
   // aber diese Header-Definition, darum muss es auch hier stehen.
   "img-src 'self' data: blob: https:",
   "font-src 'self'",
-  "connect-src 'self' https://analytics.polymarkt.de",
+  "connect-src 'self' https://analytics.polymarkt.de https://agenttracking.co",
   "media-src 'self'",
   "frame-src 'self' https://www.youtube-nocookie.com https://www.youtube.com",
   "object-src 'none'",

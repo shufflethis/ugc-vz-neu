@@ -20,6 +20,7 @@ import {
 } from '@/app/lib/lead-email';
 import { renderInternalMatchEmail } from '@/app/lib/internal-dossier-email';
 import { MAX_CREATORS_PER_REQUEST } from '@/app/lib/lead-limits';
+import { checkBrandGate } from '@/app/lib/lead-gate';
 
 export const maxDuration = 30;
 export const dynamic = 'force-dynamic';
@@ -50,13 +51,10 @@ type EmailDispatchResult = {
 
 const globalRateLimit = globalThis as typeof globalThis & {
   __ugcLeadRateLimit?: Map<string, RateLimitEntry>;
-  __ugcCreatorOutreachDay?: Map<string, string>;
 };
 
 const rateLimitStore = globalRateLimit.__ugcLeadRateLimit
   ?? (globalRateLimit.__ugcLeadRateLimit = new Map<string, RateLimitEntry>());
-const creatorOutreachDays = globalRateLimit.__ugcCreatorOutreachDay
-  ?? (globalRateLimit.__ugcCreatorOutreachDay = new Map<string, string>());
 
 const allowedOrigins = new Set([
   'https://ugc-vz.de',
@@ -645,68 +643,19 @@ async function dispatchLeadEmails({
     idempotencyKey: `ugc-vz/internal/${leadId}`,
   });
 
-  // Interne Recherche ist keine Brand-Anfrage. Wuerden hier Creator-Mails
-  // rausgehen, bekaemen Creator ein Interessenssignal fuer eine Anfrage, die
-  // keine ist.
-  const shouldEmailCreators = process.env.SEND_CREATOR_OUTREACH_EMAILS === 'true'
-    && kind === 'creator_match'
-    && !isInternal;
-  const configuredMax = Number.parseInt(process.env.CREATOR_OUTREACH_MAX_PER_LEAD || '8', 10);
-  const maxPerLead = Number.isFinite(configuredMax)
-    ? Math.max(0, Math.min(MAX_CREATORS_PER_REQUEST, configuredMax))
-    : 8;
+  // Creator-Mails gehen NICHT hier raus, sondern erst nach email.delivered der
+  // Brand-Mail (app/api/webhooks/resend + app/lib/creator-outreach.ts). Interne
+  // Recherchen loesen nie Creator-Mails aus.
   const withEmail = selectedCreators.filter((creator) => creator.contactEmail);
-  const limitedCreators = withEmail.slice(0, maxPerLead);
-  const today = new Date().toISOString().slice(0, 10);
-
-  if (creatorOutreachDays.size > 5_000) {
-    for (const [creatorId, notifiedDay] of creatorOutreachDays.entries()) {
-      if (notifiedDay !== today) creatorOutreachDays.delete(creatorId);
-    }
-  }
-
   const creators: DeliveryResult[] = [];
-  let skippedDaily = 0;
-  if (shouldEmailCreators) {
-    for (const creator of limitedCreators) {
-      if (creatorOutreachDays.get(creator.id) === today) {
-        skippedDaily += 1;
-        continue;
-      }
-
-      const result = await sendEmail({
-        resend,
-        from,
-        to: creator.contactEmail as string,
-        replyTo: clientInfo.email,
-        email: renderCreatorOutreachEmail({
-          leadId,
-          creator,
-          clientInfo,
-          internalEmail,
-        }),
-        tags: emailTags(kind, 'creator', leadId, creator.id),
-        // Resend provides the durable second layer for the one-mail-per-day
-        // frequency cap when separate Vercel instances handle requests.
-        idempotencyKey: `ugc-vz/creator/${creator.id}/${today}`,
-      });
-      creators.push(result);
-      if (result.status === 'queued') creatorOutreachDays.set(creator.id, today);
-
-      // Resend starts at five API requests/second. Keep optional outreach below
-      // that rate without delaying the customer-facing message.
-      await new Promise((resolve) => setTimeout(resolve, 225));
-    }
-  }
-
   const creatorOutreach: CreatorOutreachSummary = {
-    enabled: shouldEmailCreators,
-    eligible: limitedCreators.length,
-    queued: creators.filter((result) => result.status === 'queued').length,
-    failed: creators.filter((result) => result.status === 'failed').length,
+    enabled: process.env.SEND_CREATOR_OUTREACH_EMAILS === 'true' && kind === 'creator_match' && !isInternal,
+    eligible: withEmail.length,
+    queued: 0,
+    failed: 0,
     skippedNoEmail: selectedCreators.length - withEmail.length,
-    skippedDaily,
-    skippedLimit: Math.max(0, withEmail.length - limitedCreators.length),
+    skippedDaily: 0,
+    skippedLimit: 0,
     skippedInternal: isInternal ? selectedCreators.length : 0,
   };
 
@@ -744,7 +693,7 @@ async function sendSlackNotification({
   const creatorMailStatus = isInternal
     ? `🔒 Interne Recherche · ${outreach.skippedInternal} Creator nicht benachrichtigt`
     : outreach.enabled
-      ? `📨 Creator-Mails: ${outreach.queued} angenommen, ${outreach.failed} fehlgeschlagen, ${outreach.skippedNoEmail} ohne E-Mail, ${outreach.skippedDaily} heute bereits informiert${outreach.skippedLimit ? `, ${outreach.skippedLimit} wegen Versandlimit zurückgestellt` : ''}`
+      ? `⏳ Creator-Mails folgen, sobald die Brand-Mail zugestellt ist · ${outreach.eligible} mit E-Mail, ${outreach.skippedNoEmail} ohne hinterlegte E-Mail`
       : `⏸️ Creator-Mails deaktiviert · ${outreach.eligible} mit E-Mail versandfähig, ${outreach.skippedNoEmail} ohne hinterlegte E-Mail`;
   // Die interne Query hebt das Notification-Gate auf und liefert ungekuerzte
   // Preistexte (1500 statt 200 Zeichen). Die Slack-Zusammenfassung darf diese
@@ -877,6 +826,20 @@ export async function POST(req: Request) {
 
     const leadId = createLeadId(clientInfo.submissionId);
     const isInternal = isInternalRequest(clientInfo.email);
+    if (!isInternal) {
+      const rejection = await checkBrandGate({
+        email: clientInfo.email,
+        leadId,
+        newCreators: kind === 'creator_match' ? creatorIds.length : 0,
+      });
+      if (rejection) {
+        console.warn(`[${leadId}] gate ${rejection.code} (kind=${kind}, creators=${creatorIds.length})`);
+        return NextResponse.json(
+          { success: false, error: rejection.code, code: rejection.code, message: rejection.message, message_en: rejection.messageEn },
+          { status: rejection.status },
+        );
+      }
+    }
     const selectedCreators = kind === 'creator_match'
       ? await fetchSelectedCreators(creatorIds, { internal: isInternal })
       : [];

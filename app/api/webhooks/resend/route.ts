@@ -3,6 +3,7 @@ import { IncomingWebhook } from '@slack/webhook';
 import { Resend } from 'resend';
 import { createHash } from 'crypto';
 import { getDatabase, isDatabaseConfigured } from '@/app/lib/database';
+import { sendCreatorOutreach } from '@/app/lib/creator-outreach';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -182,6 +183,22 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Event persistence failed' }, { status: 500 });
   }
 
+  // Brand-Mail zugestellt -> jetzt (und erst jetzt) die Creator informieren.
+  // Fehler hier muessen den Webhook nicht wiederholen lassen: die Beanspruchung
+  // ueber creator_notified_at macht einen Retry ohnehin zum No-op.
+  let outreachNote = '';
+  if (audience === 'brand' && event.type === 'email.delivered' && leadId !== 'unbekannt') {
+    try {
+      const r = await sendCreatorOutreach(leadId);
+      if (r) {
+        outreachNote = `📨 Creator-Mails: ${r.queued} angenommen, ${r.failed} fehlgeschlagen, ${r.skippedNoEmail} ohne E-Mail, ${r.skippedDaily} heute bereits informiert${r.skippedLimit ? `, ${r.skippedLimit} wegen Versandlimit zurückgestellt` : ''}`;
+      }
+    } catch (error) {
+      console.error(`[${leadId}] Creator outreach failed`, error instanceof Error ? error.message : 'unknown');
+      outreachNote = '❌ Creator-Mails: Versand nach Zustellung fehlgeschlagen, bitte Log prüfen';
+    }
+  }
+
   // Creator-Erfolgsereignisse erzeugen bewusst keine Einzelmeldungen. Der
   // initiale Lead-Report enthält die Zahl der angenommenen Creator-Mails;
   // Bounce, Suppression, Complaint und Fehler werden hier separat gemeldet.
@@ -219,6 +236,10 @@ export async function POST(req: Request) {
             ...(creatorId ? [{ type: 'mrkdwn' as const, text: `*Creator-ID*\n${creatorId}` }] : []),
           ],
         },
+        ...(outreachNote ? [{
+          type: 'section' as const,
+          text: { type: 'mrkdwn' as const, text: outreachNote },
+        }] : []),
         ...(reason ? [{
           type: 'section' as const,
           text: { type: 'mrkdwn' as const, text: `*Hinweis*\n${plainText(reason).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}` },

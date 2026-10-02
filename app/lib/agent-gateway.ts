@@ -346,6 +346,9 @@ export async function requestOutreach(params: RequestOutreachParams, ctx: Reques
 
   const data = await response.json();
   if (!response.ok || !data.success) {
+    // Gate-Ablehnungen (unlock_required, email_undeliverable) mit Code und
+    // erklaerender Nachricht an Agenten durchreichen.
+    if (data.code) throw gatewayError(String(data.code), String(data.message_en || data.message || data.error));
     throw new Error(data.error || data.message || 'Submit request failed');
   }
 

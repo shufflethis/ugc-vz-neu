@@ -491,6 +491,14 @@ export async function POST(request: Request) {
       return jsonRpcError(id, -32001, error.message, undefined, 404);
     }
 
+    if (error.code === 'unlock_required') {
+      return jsonRpcError(id, -32002, error.message, { code: error.code }, 429);
+    }
+
+    if (error.code === 'email_undeliverable') {
+      return jsonRpcError(id, -32602, error.message, { code: error.code }, 422);
+    }
+
     if (error.code === 'invalid_public_id' || error.code === 'invalid_creator_public_ids') {
       return jsonRpcError(id, -32602, error.message, undefined, 400);
     }
