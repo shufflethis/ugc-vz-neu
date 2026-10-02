@@ -344,6 +344,13 @@ export default function SearchBox({ initialQuery = '', showFeatured = false }: S
           ['Beauty-Reels', 'Ich suche Creator für eine Produktdemo einer Hautpflege-Marke auf Instagram Reels.'],
           ['Food-Videos', 'Ich suche Food-Creator für kurze deutschsprachige Rezept- und Produktvideos.'],
           ['App-Demo', 'Ich suche Creator für eine deutschsprachige App-Demo als TikTok-Video.'],
+          ['Mode & Fashion', 'Ich suche Creator für kurze TikTok-Videos zu einer Mode-Marke (z. B. Poloshirts), gegen Vergütung.'],
+          ['Home & Interior', 'Ich suche Creator zwischen 18 und 35 für Unboxing- und Anwendungsvideos zu Lampen und Wohn-Deko in gemütlicher Wohnumgebung.'],
+          ['Mama & Familie', 'Ich suche Mamas zwischen 30 und 45 mit Kindern (2 bis 8 Jahre) für authentische Alltagsvideos zu einem Familienprodukt.'],
+          ['Finanzen & Talking-Head', 'Ich suche glaubwürdige deutschsprachige Creator zwischen 20 und 35 für kurze Talking-Head-Videos (hochkant, Skript wird gestellt) für Meta- und TikTok-Anzeigen.'],
+          ['Fitness & Wellness', 'Ich suche Fitness-Creatorinnen für ein TikTok-Produktvideo zu einer Wellness-Marke.'],
+          ['Männer & Grooming', 'Ich suche männliche Creator zwischen 28 und 45 für Produktvideos zu Pflege- und Rasierprodukten.'],
+          ['Reisen & Outdoor', 'Ich suche Creator aus den Bereichen Camping, Outdoor und Reisen für ehrliche Alltagsvideos zu einem Outdoor-Produkt.'],
         ].map(([label, query]) => <button key={label} type="button" disabled={isLoading} onClick={() => { setSearchQuery(query); searchInputRef.current?.focus(); }} className="rounded-full border border-hairline bg-surface px-1 py-2 text-[11px] font-medium text-ink transition-colors hover:border-geo-violet hover:bg-white focus-visible:ring-2 focus-visible:ring-geo-violet disabled:opacity-50 min-[375px]:px-2 sm:px-3 sm:text-sm">{label}</button>)}
       </div>
       {/* Search input */}
@@ -364,7 +371,7 @@ export default function SearchBox({ initialQuery = '', showFeatured = false }: S
             }
           }}
           aria-label="Beschreibe dein Produkt und den gewünschten Content"
-          placeholder="Dein Produkt, Zielgruppe und Videoformat …"
+          placeholder="Produkt, Zielgruppe, Videoformat – und ob bezahlt oder gegen Ware …"
           className={`${styles.searchInput} text-slate-900 bg-white placeholder-slate-500`}
           disabled={isLoading}
           rows={1}
