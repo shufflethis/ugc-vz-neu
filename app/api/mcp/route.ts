@@ -16,6 +16,7 @@
 // Befund und die Controller-Entscheidung fuer 2.x.
 import { createMcpHandler } from 'mcp-handler';
 import { MCP_TOOLS } from '@/app/lib/agent-tools';
+import { CREATOR_LIST_WIDGET_DESCRIPTION, CREATOR_LIST_WIDGET_HTML, CREATOR_LIST_WIDGET_URI } from '@/app/lib/mcp-widget';
 import { verifyWebBotAuth, checkRateLimit, peekRateLimit, getRateLimitKey } from '@/app/lib/web-bot-auth';
 import { AGENT_LAYER_VERSION } from '@/app/lib/agent-version';
 import { handleEventRequest, advertiseEvents } from '@/app/lib/mcp-events';
@@ -40,6 +41,18 @@ const SERVER_INSTRUCTIONS = [
 
 const handler = createMcpHandler(
   (server) => {
+    // Auswahl-Liste fuer search_creators (MCP Apps / ChatGPT), siehe app/lib/mcp-widget.ts.
+    server.registerResource('creator-list', CREATOR_LIST_WIDGET_URI, {}, async () => ({
+      contents: [
+        {
+          uri: CREATOR_LIST_WIDGET_URI,
+          mimeType: 'text/html;profile=mcp-app',
+          text: CREATOR_LIST_WIDGET_HTML,
+          _meta: { ui: { prefersBorder: true }, 'openai/widgetDescription': CREATOR_LIST_WIDGET_DESCRIPTION },
+        },
+      ],
+    }));
+
     for (const tool of MCP_TOOLS) {
       server.registerTool(
         tool.name,
@@ -48,6 +61,7 @@ const handler = createMcpHandler(
           description: tool.description,
           inputSchema: tool.inputSchema,
           annotations: tool.annotations,
+          _meta: tool._meta,
         },
         async (args, ctx) => {
           const req = ctx.http?.req;

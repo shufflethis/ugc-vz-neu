@@ -184,7 +184,7 @@ export async function searchCreators(params: SearchCreatorsParams, ctx: SearchCr
     // Text fuer das aufrufende Sprachmodell: mehrere Creator zeigen und am Ende
     // zur Kontaktanfrage fuehren (sonst endet der Dialog nach der Trefferliste).
     hint: [
-      'Present the top 3-5 creators as a short comparison (name, city, rate, why they fit) - never just one.',
+      'If your client shows this result as a selectable list with a request form, add only a one-line summary and let the user pick there. Otherwise present the top 3-5 creators as a short comparison (name, city, rate, why they fit) - never just one.',
       params.city && creators.length < 3
         ? `Only ${creators.length} creator(s) list "${params.city}" as their city. Most creators list no city and UGC is usually produced remotely - search again without city and add those as remote options.`
         : '',

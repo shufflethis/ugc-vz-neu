@@ -13,6 +13,7 @@ import {
   getOutreachStatus,
   getVocab,
 } from '@/app/lib/agent-gateway';
+import { CREATOR_LIST_WIDGET_URI } from '@/app/lib/mcp-widget';
 
 // Gleiches Format wie CREATOR_PUBLIC_ID_RE in app/lib/agent-gateway.ts.
 // Dort nicht exportiert -- deshalb hier dupliziert statt eines Exports quer
@@ -23,10 +24,16 @@ const CREATOR_PUBLIC_ID_RE = /^UGC-[A-F0-9]{10}$/;
 export type ToolRequestCtx = { origin: string; requestId: string; client?: string | null };
 
 type ToolTextContent = { type: 'text'; text: string };
-export type ToolResult = { content: ToolTextContent[]; isError?: boolean };
+export type ToolResult = {
+  content: ToolTextContent[];
+  structuredContent?: Record<string, unknown>;
+  isError?: boolean;
+};
 
-function toolResult(value: unknown): ToolResult {
-  return { content: [{ type: 'text', text: JSON.stringify(value) }] };
+// structuredContent traegt dieselben Daten wie der Text: MCP-Apps-Hosts reichen
+// es an das Widget (app/lib/mcp-widget.ts) weiter, reine Text-Clients lesen content.
+function toolResult(value: Record<string, unknown>): ToolResult {
+  return { content: [{ type: 'text', text: JSON.stringify(value) }], structuredContent: value };
 }
 
 // MCP-Tool-Fehlerform: niemals einen Stacktrace nach aussen geben, immer eine
@@ -55,6 +62,8 @@ export type McpToolDefinition = {
   description: string;
   inputSchema: z.ZodObject<z.ZodRawShape>;
   annotations: McpToolAnnotations;
+  // Tool-Descriptor-Metadaten fuer MCP-Apps-Hosts (UI-Verknuepfung).
+  _meta?: Record<string, unknown>;
   handler: (args: any, ctx: ToolRequestCtx) => Promise<ToolResult>;
 };
 
@@ -200,6 +209,8 @@ export const MCP_TOOLS: McpToolDefinition[] = [
     description: SEARCH_CREATORS_DESCRIPTION,
     inputSchema: searchCreatorsSchema,
     annotations: READ_ONLY_ANNOTATIONS,
+    // Ergebnis als Auswahl-Liste rendern; zweiter Key ist der ChatGPT-Alias.
+    _meta: { ui: { resourceUri: CREATOR_LIST_WIDGET_URI }, 'openai/outputTemplate': CREATOR_LIST_WIDGET_URI },
     handler: async (args, ctx) => {
       try {
         const result = await searchCreators(
@@ -239,6 +250,8 @@ export const MCP_TOOLS: McpToolDefinition[] = [
     // Loest echten E-Mail-Versand aus (openWorld), legt aber nur additiv eine
     // Anfrage an -- loescht/ueberschreibt nichts (nicht destructive).
     annotations: { readOnlyHint: false, openWorldHint: true, destructiveHint: false },
+    // Die Auswahl-Liste ruft dieses Tool direkt per Button auf.
+    _meta: { ui: { visibility: ['model', 'app'] }, 'openai/widgetAccessible': true },
     handler: async (args, ctx) => {
       try {
         const result = await requestOutreach(
