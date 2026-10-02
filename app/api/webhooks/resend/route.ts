@@ -191,7 +191,16 @@ export async function POST(req: Request) {
     try {
       const r = await sendCreatorOutreach(leadId);
       if (r) {
-        outreachNote = `📨 Creator-Mails: ${r.queued} angenommen, ${r.failed} fehlgeschlagen, ${r.skippedNoEmail} ohne E-Mail, ${r.skippedDaily} heute bereits informiert${r.skippedLimit ? `, ${r.skippedLimit} wegen Versandlimit zurückgestellt` : ''}`;
+        const names = (list: string[]) => list.join(', ');
+        outreachNote = [
+          `📨 *Creator-Mails*: ${r.queued} angenommen, ${r.failed} fehlgeschlagen, ${r.skippedNoEmail} ohne E-Mail, ${r.skippedDaily} heute bereits informiert${r.skippedLimit ? `, ${r.skippedLimit} wegen Versandlimit zurückgestellt` : ''}`,
+          r.reached.length ? `✅ Erreicht: ${names(r.reached)}` : '',
+          r.failedNames.length ? `❌ Fehlgeschlagen: ${names(r.failedNames)}` : '',
+          r.dailyNames.length ? `⏭️ Heute bereits informiert: ${names(r.dailyNames)}` : '',
+          r.noEmail.length
+            ? `📵 Nur über Social erreichbar (manuell nachfassen):\n${r.noEmail.map((c) => `• ${c.name} · ${c.links || 'kein Kontakt hinterlegt'}`).join('\n')}`
+            : '',
+        ].filter(Boolean).join('\n').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').slice(0, 2_800);
       }
     } catch (error) {
       console.error(`[${leadId}] Creator outreach failed`, error instanceof Error ? error.message : 'unknown');

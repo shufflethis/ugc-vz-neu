@@ -9,6 +9,11 @@ export type CreatorOutreachResult = {
   skippedNoEmail: number;
   skippedDaily: number;
   skippedLimit: number;
+  // Namen fuer den Slack-Report; noEmail mit Social-Links zum manuellen Nachfassen.
+  reached: string[];
+  failedNames: string[];
+  dailyNames: string[];
+  noEmail: { name: string; links: string }[];
 };
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -66,12 +71,19 @@ export async function sendCreatorOutreach(leadId: string): Promise<CreatorOutrea
     RETURNING m.creator_public_id
   `, [lead.id, JSON.stringify(limited)])).map((row: any) => String(row.creator_public_id));
 
+  const nameOf = (id: string) => text(byId.get(id)?.display_name, 100) || 'UGC Creator';
   const result: CreatorOutreachResult = {
     queued: 0,
     failed: 0,
     skippedNoEmail: pending.length - withEmail.length,
     skippedDaily: limited.length - claimed.length,
     skippedLimit: withEmail.length - limited.length,
+    reached: [],
+    failedNames: [],
+    dailyNames: limited.filter((id) => !claimed.includes(id)).map(nameOf),
+    noEmail: pending
+      .filter((id) => !withEmail.includes(id))
+      .map((id) => ({ name: nameOf(id), links: text(byId.get(id)?.social_links, 160) })),
   };
 
   const resend = new Resend(process.env.RESEND_API_KEY);
@@ -119,8 +131,10 @@ export async function sendCreatorOutreach(leadId: string): Promise<CreatorOutrea
     }
     if (ok) {
       result.queued += 1;
+      result.reached.push(creator.name);
     } else {
       result.failed += 1;
+      result.failedNames.push(creator.name);
       // Fehlversand darf den Creator nicht fuer den Tag sperren.
       await sql.query(
         `UPDATE lead_creator_matches SET creator_notified_at = NULL WHERE lead_id = $1 AND creator_public_id = $2`,
