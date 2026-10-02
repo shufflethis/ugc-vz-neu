@@ -22,6 +22,7 @@ import { renderInternalMatchEmail } from '@/app/lib/internal-dossier-email';
 import { MAX_CREATORS_PER_REQUEST } from '@/app/lib/lead-limits';
 import { checkBrandGate } from '@/app/lib/lead-gate';
 import { composeBrief } from '@/app/lib/lead-brief';
+import { leadFeedbackUrl } from '@/app/lib/lead-feedback';
 
 export const maxDuration = 30;
 export const dynamic = 'force-dynamic';
@@ -611,7 +612,7 @@ async function dispatchLeadEmails({
   const brandEmail = kind === 'creator_match'
     ? (isInternal
       ? renderInternalMatchEmail({ leadId, clientInfo, selectedCreators, internalEmail })
-      : renderBrandMatchEmail({ leadId, clientInfo, selectedCreators, internalEmail }))
+      : renderBrandMatchEmail({ leadId, clientInfo, selectedCreators, internalEmail, feedbackUrl: leadFeedbackUrl(leadId) }))
     : kind === 'no_results'
       ? renderNoResultsEmail({ leadId, clientInfo })
       : renderContactAcknowledgementEmail({ leadId, clientInfo });

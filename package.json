@@ -11,6 +11,7 @@
     "test:lead-flow": "node scripts/test-lead-flow.mjs",
     "test:name-placeholder": "node --import tsx scripts/test-name-placeholder.ts",
     "test:lead-brief": "node --import tsx scripts/test-lead-brief.ts",
+    "test:lead-feedback": "node --import tsx scripts/test-lead-feedback.ts",
     "test:creator-registration": "node --import tsx scripts/test-creator-registration.ts",
     "test:creator-dashboard": "node --import tsx scripts/test-creator-dashboard.ts",
     "test:creator-export": "node --import tsx scripts/test-creator-export.ts",
