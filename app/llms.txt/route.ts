@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getPublishedPosts } from '@/app/lib/content-repository';
+import { NICHES, nichePath } from '@/app/lib/niches';
 
 export async function GET() {
   const baseUrl = 'https://ugc-vz.de';
@@ -58,6 +59,7 @@ get_outreach_status. Achtung: request_outreach löst echte E-Mails aus.
 - ${baseUrl}/wissen: geprüfter Wissensbereich mit ${posts.length} veröffentlichten Artikeln
 - ${baseUrl}/vergleich: UGC-Plattformen im Vergleich, mit Quellen und Prüfdatum
 - ${baseUrl}/brands/ugc-vertrag-vorlage: Briefing- und Vertragsgrundlage
+${NICHES.map((n) => `- ${baseUrl}${nichePath(n)}: UGC Creator ${n.chip} – Kennzahlen aus den Profilen, Kampagnen-Ideen, FAQ`).join('\n')}
 - ${baseUrl}/about: Betreiber, Team und Hintergrund
 - ${baseUrl}/contact: Kontaktseite
 - ${baseUrl}/datenschutz: Datenschutzerklärung (${baseUrl}/privacy: English summary)
