@@ -195,16 +195,6 @@ const nextConfig = {
         ],
       },
       {
-        // Nischen-Landingpages: serverseitig gerendert, aber ohne Nutzerbezug und
-        // stuendlich aktuell genug -> am CDN halten (schnelle Antwort fuer Crawler).
-        source: '/brands/ugc-creator/:nische',
-        headers: [{ key: 'Cache-Control', value: 'public, s-maxage=3600, stale-while-revalidate=86400' }],
-      },
-      {
-        source: '/brands/ugc-creator-beauty',
-        headers: [{ key: 'Cache-Control', value: 'public, s-maxage=3600, stale-while-revalidate=86400' }],
-      },
-      {
         // API-Routen
         source: '/api/:path*',
         headers: [
