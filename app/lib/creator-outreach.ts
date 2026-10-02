@@ -19,6 +19,11 @@ export type CreatorOutreachResult = {
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const text = (value: unknown, max: number) => String(value ?? '').replace(/\s+/g, ' ').trim().slice(0, max);
 
+// Brands schreiben "Hallo [Name]," / "Hallo {name},": pro Creator ersetzen, damit
+// eine Anfrage mit mehreren Creatorn trotzdem persoenlich anspricht.
+export const fillCreatorName = (message: string, name: string) =>
+  message.replace(/\{\{?\s*name\s*\}?\}|\[\s*name\s*\]/gi, name);
+
 /**
  * Creator-Mails gehen erst raus, wenn Resend die Brand-Mail als zugestellt
  * meldet (Webhook email.delivered) -- eine erfundene Brand-Adresse erreicht so
@@ -106,7 +111,7 @@ export async function sendCreatorOutreach(leadId: string): Promise<CreatorOutrea
     const email = renderCreatorOutreachEmail({
       leadId,
       creator,
-      clientInfo: { name: lead.name, email: lead.email, company: lead.company || '', message: lead.message || '', searchQuery },
+      clientInfo: { name: lead.name, email: lead.email, company: lead.company || '', message: fillCreatorName(lead.message || '', creator.name), searchQuery },
       internalEmail,
     });
     let ok = false;

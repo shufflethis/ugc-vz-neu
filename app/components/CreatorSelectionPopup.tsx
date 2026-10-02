@@ -353,6 +353,9 @@ export default function CreatorSelectionPopup({
                           className="w-full px-4 py-3 bg-white border border-hairline rounded-xl text-ink placeholder-ink-soft focus:outline-none focus:ring-2 focus:ring-geo-violet focus:border-transparent transition-all resize-none text-sm"
                           placeholder="Beschreiben Sie kurz Ihr UGC-Projekt, Budget oder besondere Anforderungen..."
                         />
+                        <p className="text-xs text-ink-soft">
+                          Tipp: Mit „Hallo [Name],“ sprechen wir jeden gewählten Creator persönlich an.
+                        </p>
                       </div>
 
                       <div className="flex flex-col sm:flex-row gap-3 pt-4">
