@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { NICHE_INDEX, nichePath } from '@/app/lib/niche-index';
 import Image from 'next/image';
 import { useState } from 'react';
 import ContactPopup from '../../app/components/ContactPopup';
@@ -153,6 +154,16 @@ export default function Footer() {
               <li><Link href="/vergleich/boksi-alternative" className="text-gray-400 hover:text-white transition-colors duration-200 text-sm">Boksi Alternative</Link></li>
             </ul>
           </div>
+        </div>
+
+        {/* Branchen: sitewide interne Links auf die Nischen-Landingpages */}
+        <div className="border-t border-gray-800 pt-8 mb-8">
+          <h3 className="text-lg font-semibold text-white mb-4">UGC Creator nach Branche</h3>
+          <ul className="flex flex-wrap gap-x-5 gap-y-2">
+            {NICHE_INDEX.map((niche) => (
+              <li key={niche.slug}><Link href={nichePath(niche)} className="text-gray-400 hover:text-white transition-colors duration-200 text-sm">{niche.chip}</Link></li>
+            ))}
+          </ul>
         </div>
 
         {/* Copyright bar */}

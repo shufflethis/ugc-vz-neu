@@ -9,7 +9,7 @@ import NoResults from '../../components/NoResults';
 import CreatorSelectionPopup from './CreatorSelectionPopup';
 import CreatorProfileDialog from './CreatorProfileDialog';
 import { humanizeCreatorText, type SearchCreator } from '../lib/creator-public';
-import { NICHES } from '../lib/niches';
+import { NICHE_INDEX } from '../lib/niche-index';
 import { trackUGCEvents } from '../lib/analytics';
 import { CREATOR_COUNT_LABEL } from '../lib/creator-count';
 import { MAX_CREATORS_PER_REQUEST } from '../lib/lead-limits';
@@ -341,7 +341,7 @@ export default function SearchBox({ initialQuery = '', showFeatured = false }: S
     <div className={styles.searchContainer}>
       <div className="mb-4 flex w-full flex-wrap items-center gap-2" aria-label="Beispiel-Briefings">
         <span className="mr-1 hidden text-xs text-ink-soft sm:inline">Zum Beispiel:</span>
-        {NICHES.map(({ chip: label, query }) => <button key={label} type="button" disabled={isLoading} onClick={() => { setSearchQuery(query); searchInputRef.current?.focus(); }} className="rounded-full border border-hairline bg-surface px-1 py-2 text-[11px] font-medium text-ink transition-colors hover:border-geo-violet hover:bg-white focus-visible:ring-2 focus-visible:ring-geo-violet disabled:opacity-50 min-[375px]:px-2 sm:px-3 sm:text-sm">{label}</button>)}
+        {NICHE_INDEX.map(({ chip: label, query }) => <button key={label} type="button" disabled={isLoading} onClick={() => { setSearchQuery(query); searchInputRef.current?.focus(); }} className="rounded-full border border-hairline bg-surface px-1 py-2 text-[11px] font-medium text-ink transition-colors hover:border-geo-violet hover:bg-white focus-visible:ring-2 focus-visible:ring-geo-violet disabled:opacity-50 min-[375px]:px-2 sm:px-3 sm:text-sm">{label}</button>)}
       </div>
       {/* Search input */}
       <div className={styles.searchInputContainer}>

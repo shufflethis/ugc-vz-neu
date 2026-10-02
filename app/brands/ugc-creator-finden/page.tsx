@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { pageMetadata } from '@/utils/seo-metadata';
 import Link from 'next/link';
 import SearchBox from '../../components/SearchBox';
+import { NICHE_INDEX, nichePath } from '@/app/lib/niche-index';
 
 export const metadata: Metadata = pageMetadata({
   path: '/brands/ugc-creator-finden',
@@ -25,13 +26,24 @@ export default function UGCCreatorFindenPage() {
           {[
             ['Demand statt endloser Recherche', 'Du startest mit Zielgruppe, Plattform, Produkt und Stil.'],
             ['Profile vergleichen', 'Die Suche liefert Creator-Vorschlaege aus der UGC VZ Datenbank.'],
-            ['Anfrage an UGC VZ senden', 'Deine Auswahl wird nicht blind automatisiert, sondern als Anfrage weiterbearbeitet.'],
+            ['Anfrage an UGC VZ senden', 'Du erhältst die Kontaktdaten per E-Mail, und wir schreiben die erreichbaren Creator in deinem Namen an. Antworten gehen direkt an dich.'],
           ].map(([title, copy]) => (
             <div key={title} className="surface-card rounded-lg p-6">
               <h2 className="font-bold text-geo-violet mb-3">{title}</h2>
               <p className="text-ink-soft">{copy}</p>
             </div>
           ))}
+        </section>
+        <section className="py-14" aria-labelledby="branchen-heading">
+          <h2 id="branchen-heading" className="text-2xl font-bold mb-6">UGC Creator nach Branche</h2>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {NICHE_INDEX.map((niche) => (
+              <Link key={niche.slug} href={nichePath(niche)} className="surface-card rounded-lg p-5 hover:border-geo-violet transition-colors">
+                <h3 className="font-bold text-geo-violet mb-1">{niche.chip}</h3>
+                <p className="text-ink-soft text-sm">Creator, Preise und Kampagnen-Ideen ansehen.</p>
+              </Link>
+            ))}
+          </div>
         </section>
       </div>
     </main>

@@ -135,6 +135,8 @@ export default async function NichePage({ niche }: { niche: Niche }) {
             <Link href="/brands/ugc-vertrag-vorlage" className="font-semibold text-geo-violet underline">Kostenlose Briefing- und Vertragsvorlage</Link>
             {' · '}
             <Link href="/brands/ugc-creator-preise" className="font-semibold text-geo-violet underline">UGC Preise im Überblick</Link>
+            {' · '}
+            <Link href="/brands/ugc-creator-finden" className="font-semibold text-geo-violet underline">UGC Creator finden</Link>
           </p>
         </section>
 

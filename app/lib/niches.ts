@@ -3,14 +3,9 @@
 // auf den Seiten kommen live aus den Profilen (app/lib/niche-data.ts); hier
 // steht nur redaktioneller Text. Die Tipps stammen aus echten Brand-Anfragen.
 import type { NicheMatch } from '@/app/lib/niche-data';
+import { NICHE_INDEX, nichePath, type NicheIndexEntry } from '@/app/lib/niche-index';
 
-export type Niche = {
-  slug: string;
-  /** Abweichender Pfad fuer bereits bestehende Seiten (Beauty). */
-  path?: string;
-  chip: string;
-  /** Vorbelegung der Suche, zugleich das Beispiel-Briefing am Chip. */
-  query: string;
+export type Niche = NicheIndexEntry & {
   h1: string;
   title: string;
   description: string;
@@ -22,12 +17,11 @@ export type Niche = {
   related: string[];
 };
 
-export const NICHES: Niche[] = [
+type NicheDetails = Omit<Niche, 'path' | 'chip' | 'query'>;
+
+const DETAILS: NicheDetails[] = [
   {
     slug: 'beauty',
-    path: '/brands/ugc-creator-beauty',
-    chip: 'Beauty-Reels',
-    query: 'Ich suche Creator für eine Produktdemo einer Hautpflege-Marke auf Instagram Reels.',
     h1: 'UGC Creator für Beauty & Hautpflege finden',
     title: 'UGC Creator für Beauty Brands finden',
     description: 'Beauty UGC Creator finden: Produktdemo, Routine, Testimonial oder Social Ad für Kosmetik-, Pflege- und Beauty-Marken. Kostenlos, mit Preisen und Portfolio.',
@@ -54,8 +48,6 @@ export const NICHES: Niche[] = [
   },
   {
     slug: 'food',
-    chip: 'Food-Videos',
-    query: 'Ich suche Food-Creator für kurze deutschsprachige Rezept- und Produktvideos.',
     h1: 'UGC Creator für Food-Videos & Rezepte finden',
     title: 'UGC Creator für Food-Videos finden',
     description: 'Food UGC Creator finden: Rezeptvideos, Taste Tests und Produktvideos für Lebensmittel- und Getränkemarken. Kostenlos, mit Preisen und Portfolio.',
@@ -82,8 +74,6 @@ export const NICHES: Niche[] = [
   },
   {
     slug: 'app-demo',
-    chip: 'App-Demo',
-    query: 'Ich suche Creator für eine deutschsprachige App-Demo als TikTok-Video.',
     h1: 'UGC Creator für App-Demos & Tech-Produkte finden',
     title: 'UGC Creator für App-Demos finden',
     description: 'UGC Creator für App-Demos und Tech-Produkte finden: Screen-Recording, Erklärvideo und Testimonial für TikTok und Reels. Kostenlos, mit Preisen.',
@@ -110,8 +100,6 @@ export const NICHES: Niche[] = [
   },
   {
     slug: 'mode-fashion',
-    chip: 'Mode & Fashion',
-    query: 'Ich suche Creator für kurze TikTok-Videos zu einer Mode-Marke (z. B. Poloshirts), gegen Vergütung.',
     h1: 'UGC Creator für Mode & Fashion finden',
     title: 'UGC Creator für Mode & Fashion finden',
     description: 'Mode UGC Creator finden: Outfit-Videos, Try-on und Styling für Fashion-, Schmuck- und Accessoire-Marken. Kostenlos, mit Preisen und Portfolio.',
@@ -138,8 +126,6 @@ export const NICHES: Niche[] = [
   },
   {
     slug: 'home-interior',
-    chip: 'Home & Interior',
-    query: 'Ich suche Creator zwischen 18 und 35 für Unboxing- und Anwendungsvideos zu Lampen und Wohn-Deko in gemütlicher Wohnumgebung.',
     h1: 'UGC Creator für Home & Interior finden',
     title: 'UGC Creator für Home & Interior finden',
     description: 'Interior UGC Creator finden: Unboxing, Room-Makeover und Wohnstyling für Möbel-, Deko- und Haushaltsmarken. Kostenlos, mit Preisen und Portfolio.',
@@ -166,8 +152,6 @@ export const NICHES: Niche[] = [
   },
   {
     slug: 'mama-familie',
-    chip: 'Mama & Familie',
-    query: 'Ich suche Mamas zwischen 30 und 45 mit Kindern (2 bis 8 Jahre) für authentische Alltagsvideos zu einem Familienprodukt.',
     h1: 'UGC Creator für Mama & Familie finden',
     title: 'UGC Creator für Mama & Familie finden',
     description: 'Mama-Creator und Familien-UGC finden: Alltagsvideos, Back-to-School und Baby-Produkte. Kostenlos, mit Preisen und Portfolio.',
@@ -194,8 +178,6 @@ export const NICHES: Niche[] = [
   },
   {
     slug: 'finanzen-talking-head',
-    chip: 'Finanzen & Talking-Head',
-    query: 'Ich suche glaubwürdige deutschsprachige Creator zwischen 20 und 35 für kurze Talking-Head-Videos (hochkant, Skript wird gestellt) für Meta- und TikTok-Anzeigen.',
     h1: 'UGC Creator für Finanzen & Talking-Head-Videos finden',
     title: 'UGC Creator für Finanzen & Talking-Head finden',
     description: 'Creator für Talking-Head-Videos zu Finanzen, Versicherung und Beruf finden: Skriptvideos für Meta- und TikTok-Ads. Kostenlos, mit Preisen.',
@@ -222,8 +204,6 @@ export const NICHES: Niche[] = [
   },
   {
     slug: 'fitness-wellness',
-    chip: 'Fitness & Wellness',
-    query: 'Ich suche Fitness-Creatorinnen für ein TikTok-Produktvideo zu einer Wellness-Marke.',
     h1: 'UGC Creator für Fitness & Wellness finden',
     title: 'UGC Creator für Fitness & Wellness finden',
     description: 'Fitness UGC Creator finden: Workout-Videos, Supplements und Wellness-Produkte für TikTok und Reels. Kostenlos, mit Preisen und Portfolio.',
@@ -250,8 +230,6 @@ export const NICHES: Niche[] = [
   },
   {
     slug: 'maenner-grooming',
-    chip: 'Männer & Grooming',
-    query: 'Ich suche männliche Creator zwischen 28 und 45 für Produktvideos zu Pflege- und Rasierprodukten.',
     h1: 'Männliche UGC Creator für Grooming & Pflege finden',
     title: 'Männliche UGC Creator & Grooming finden',
     description: 'Männliche UGC Creator finden: Grooming, Rasur, Pflege und Lifestyle. Talking-Head und Produktvideos, kostenlos mit Preisen und Portfolio.',
@@ -278,8 +256,6 @@ export const NICHES: Niche[] = [
   },
   {
     slug: 'reisen-outdoor',
-    chip: 'Reisen & Outdoor',
-    query: 'Ich suche Creator aus den Bereichen Camping, Outdoor und Reisen für ehrliche Alltagsvideos zu einem Outdoor-Produkt.',
     h1: 'UGC Creator für Reisen & Outdoor finden',
     title: 'UGC Creator für Reisen & Outdoor finden',
     description: 'Reise- und Outdoor-Creator finden: Camping, Wandern, Vanlife und Travel-Produkte als UGC. Kostenlos, mit Preisen und Portfolio.',
@@ -306,8 +282,6 @@ export const NICHES: Niche[] = [
   },
   {
     slug: 'hunde-haustiere',
-    chip: 'Hunde & Haustiere',
-    query: 'Ich suche Creator mit Hund oder Katze für authentische Alltagsvideos zu einem Haustier-Produkt (z. B. Futter, Spielzeug oder Zubehör).',
     h1: 'UGC Creator mit Hund & Haustier finden',
     title: 'UGC Creator für Hunde & Haustiere finden',
     description: 'Creator mit Hund oder Katze finden: Futter, Spielzeug und Zubehör als UGC für Haustier-Marken. Kostenlos, mit Preisen und Portfolio.',
@@ -334,5 +308,11 @@ export const NICHES: Niche[] = [
   },
 ];
 
+export const NICHES: Niche[] = DETAILS.map((details) => {
+  const entry = NICHE_INDEX.find((item) => item.slug === details.slug);
+  if (!entry) throw new Error(`Nische ohne Index-Eintrag: ${details.slug}`);
+  return { ...entry, ...details };
+});
+
 export const nicheBySlug = (slug: string) => NICHES.find((niche) => niche.slug === slug);
-export const nichePath = (niche: Niche) => niche.path || `/brands/ugc-creator/${niche.slug}`;
+export { nichePath };
