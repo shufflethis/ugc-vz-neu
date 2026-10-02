@@ -48,7 +48,17 @@ const handler = createMcpHandler(
           uri: CREATOR_LIST_WIDGET_URI,
           mimeType: 'text/html;profile=mcp-app',
           text: CREATOR_LIST_WIDGET_HTML,
-          _meta: { ui: { prefersBorder: true }, 'openai/widgetDescription': CREATOR_LIST_WIDGET_DESCRIPTION },
+          _meta: {
+            ui: {
+              prefersBorder: true,
+              // Eigene Origin ist fuer eingereichte ChatGPT-Apps mit UI Pflicht
+              // (eindeutig pro App). Leere CSP: das Widget laedt nichts nach.
+              domain: FALLBACK_ORIGIN,
+              csp: { connectDomains: [], resourceDomains: [] },
+            },
+            'openai/widgetDomain': FALLBACK_ORIGIN,
+            'openai/widgetDescription': CREATOR_LIST_WIDGET_DESCRIPTION,
+          },
         },
       ],
     }));
