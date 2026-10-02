@@ -1,3 +1,4 @@
+import { NICHES, nichePath } from '@/app/lib/niches';
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -307,6 +308,12 @@ export default function BrandsPage({ searchParams }: { searchParams?: { query?: 
               <h3 className="font-bold text-geo-violet mb-2">Beauty UGC Creator</h3>
               <p className="text-ink-soft text-sm">Creator fuer Kosmetik und Pflege finden.</p>
             </Link>
+            {NICHES.filter((niche) => !niche.path).map((niche) => (
+              <Link key={niche.slug} href={nichePath(niche)} className="surface-card rounded-lg p-5 hover:border-geo-violet transition-colors">
+                <h3 className="font-bold text-geo-violet mb-2">UGC Creator: {niche.chip}</h3>
+                <p className="text-ink-soft text-sm">Creator, Preise und Kampagnen-Ideen.</p>
+              </Link>
+            ))}
             <Link href="/brands/ugc-plattform-deutschland" className="surface-card rounded-lg p-5 hover:border-geo-violet transition-colors">
               <h3 className="font-bold text-geo-violet mb-2">UGC Plattform Deutschland</h3>
               <p className="text-ink-soft text-sm">UGC VZ als Plattform fuer beide Seiten.</p>

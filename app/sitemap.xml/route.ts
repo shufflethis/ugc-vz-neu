@@ -1,11 +1,13 @@
 import { NextResponse } from 'next/server';
 import { getPageCount, getPublishedPosts } from '@/app/lib/content-repository';
 import { SUFFIX, getPageCompetitors } from '@/app/lib/competitors';
+import { NICHES, nichePath } from '@/app/lib/niches';
 
 const baseUrl = 'https://ugc-vz.de';
 // Detailseiten aus der Single Source of Truth ableiten, damit ein neues
 // hasOwnPage: true automatisch in der Sitemap landet.
 const vergleichPages = getPageCompetitors().map((c) => `/vergleich/${c.slug}${SUFFIX}`);
+const nichePages = NICHES.map(nichePath);
 const staticPages = [
   '',
   '/about',
@@ -25,7 +27,7 @@ const staticPages = [
   '/brands/ugc-creator-finden',
   '/brands/ugc-creator-preise',
   '/brands/ugc-creator-deutschland',
-  '/brands/ugc-creator-beauty',
+  ...nichePages,
   '/brands/ugc-plattform-deutschland',
   '/brands/ugc-agentur-berlin',
   '/brands/ugc-agentur-hamburg',
