@@ -14,6 +14,7 @@
     "test:gender": "node --import tsx scripts/test-gender.ts",
     "test:niche-data": "node --import tsx scripts/test-niche-data.ts",
     "test:lead-feedback": "node --import tsx scripts/test-lead-feedback.ts",
+    "test:lead-gate": "node --import tsx scripts/test-lead-gate.ts",
     "test:creator-registration": "node --import tsx scripts/test-creator-registration.ts",
     "test:creator-dashboard": "node --import tsx scripts/test-creator-dashboard.ts",
     "test:creator-export": "node --import tsx scripts/test-creator-export.ts",

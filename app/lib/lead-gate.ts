@@ -1,4 +1,5 @@
 import { createHash } from 'crypto';
+import { Resolver } from 'dns/promises';
 import { getDatabase, isDatabaseConfigured } from '@/app/lib/database';
 import { FREE_CREATORS_PER_30D, FREE_DOMAIN_LEADS_PER_30D, FREE_LEADS_PER_30D } from '@/app/lib/lead-limits';
 
@@ -15,6 +16,34 @@ const FREEMAIL = new Set([
 // Reservierte Domains (RFC 2606) sind nie zustellbar - Agenten erfinden gern
 // Adressen wie jane@brand.example.
 const RESERVED_DOMAIN_RE = /(^|\.)(example|test|invalid|localhost)$|^example\.(com|org|net)$/;
+
+const NO_RECORD = new Set(['ENOTFOUND', 'ENODATA']);
+const isNoRecord = (error: unknown) => NO_RECORD.has(String((error as { code?: string })?.code));
+
+/**
+ * Kann die Domain ueberhaupt Mail empfangen? false nur bei eindeutigem Befund:
+ * MX zeigt ausschliesslich auf "."/localhost, oder es gibt weder MX noch
+ * A/AAAA (RFC 5321: ohne MX gilt der A-Record als Mailserver). Timeout,
+ * SERVFAIL o. Ae. zaehlen als zustellbar -- ein DNS-Schluckauf darf keinen
+ * Lead kosten.
+ */
+export async function domainAcceptsMail(domain: string): Promise<boolean> {
+  const resolver = new Resolver({ timeout: 2000, tries: 2 });
+  try {
+    const mx = await resolver.resolveMx(domain);
+    if (mx.length) return mx.some(({ exchange }) => !['', '.', 'localhost'].includes(exchange.toLowerCase()));
+  } catch (error) {
+    if (!isNoRecord(error)) return true;
+  }
+  const hasAddress = async (lookup: () => Promise<string[]>) => {
+    try {
+      return (await lookup()).length > 0;
+    } catch (error) {
+      return !isNoRecord(error);
+    }
+  };
+  return (await hasAddress(() => resolver.resolve4(domain))) || (await hasAddress(() => resolver.resolve6(domain)));
+}
 
 /**
  * Prueft Brand-Anfragen gegen die Datenbank (haelt ueber Serverless-Instanzen
@@ -38,6 +67,14 @@ export async function checkBrandGate({
       code: 'email_undeliverable',
       message: 'Diese E-Mail-Adresse existiert nicht. Bitte geben Sie eine funktionierende Adresse an.',
       messageEn: 'This e-mail address cannot exist (reserved domain). Please provide a working e-mail address of the requesting brand.',
+    };
+  }
+  if (!FREEMAIL.has(domain) && !(await domainAcceptsMail(domain))) {
+    return {
+      status: 422,
+      code: 'email_undeliverable',
+      message: `Die Domain „${domain}“ kann keine E-Mails empfangen. Bitte prüfen Sie die Adresse auf Tippfehler. Falls sie stimmt, schreiben Sie uns kurz an hi@ugc-vz.de – wir helfen weiter.`,
+      messageEn: `The domain "${domain}" cannot receive e-mail. Do not guess an address - ask the user for the real, working e-mail address of the requesting brand. If the address is correct, the user can write to hi@ugc-vz.de for help.`,
     };
   }
   if (!isDatabaseConfigured()) return null;
