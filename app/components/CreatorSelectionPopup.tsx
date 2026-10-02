@@ -26,6 +26,10 @@ interface CreatorSelectionPopupProps {
     email: string;
     message: string;
     website: string;
+    compensation: string;
+    budget: string;
+    deadline: string;
+    usageRights: string;
     submissionId: string;
   }) => Promise<void>;
 }
@@ -41,7 +45,11 @@ export default function CreatorSelectionPopup({
     name: '',
     email: '',
     message: '',
-    website: ''
+    website: '',
+    compensation: '',
+    budget: '',
+    deadline: '',
+    usageRights: ''
   });
   const [submissionId, setSubmissionId] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -58,7 +66,7 @@ export default function CreatorSelectionPopup({
     if (!isVisible) {
       setShowForm(false);
       setIsMinimized(true);
-      setFormData({ name: '', email: '', message: '', website: '' });
+      setFormData({ name: '', email: '', message: '', website: '', compensation: '', budget: '', deadline: '', usageRights: '' });
       setSubmissionId('');
       setEmailError('');
     }
@@ -68,7 +76,7 @@ export default function CreatorSelectionPopup({
     selectedCreators.includes(creator.id)
   );
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
@@ -105,7 +113,7 @@ export default function CreatorSelectionPopup({
     try {
       await onSubmit({ ...formData, submissionId });
       
-      setFormData({ name: '', email: '', message: '', website: '' });
+      setFormData({ name: '', email: '', message: '', website: '', compensation: '', budget: '', deadline: '', usageRights: '' });
       toast.success('Geschafft! Die Creator-Kontakte sind per E-Mail auf dem Weg.');
       onClose();
     } catch (error) {
@@ -357,6 +365,41 @@ export default function CreatorSelectionPopup({
                           Tipp: Mit „Hallo [Name],“ sprechen wir jeden gewählten Creator persönlich an.
                         </p>
                       </div>
+
+                      <div className="grid md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <label htmlFor="compensation" className="block text-sm font-semibold text-ink">
+                            Vergütung (optional)
+                          </label>
+                          <select id="compensation" name="compensation" value={formData.compensation} onChange={handleInputChange} className="w-full px-4 py-3 bg-white border border-hairline rounded-xl text-ink placeholder-ink-soft focus:outline-none focus:ring-2 focus:ring-geo-violet focus:border-transparent transition-all text-sm">
+                            <option value="">Bitte wählen</option>
+                            <option value="paid">Bezahlt</option>
+                            <option value="barter">Ware gegen Content (Barter)</option>
+                            <option value="both">Bezahlt oder Ware – verhandelbar</option>
+                          </select>
+                        </div>
+                        <div className="space-y-2">
+                          <label htmlFor="budget" className="block text-sm font-semibold text-ink">
+                            Budget pro Video (optional)
+                          </label>
+                          <input type="text" id="budget" name="budget" maxLength={80} value={formData.budget} onChange={handleInputChange} className="w-full px-4 py-3 bg-white border border-hairline rounded-xl text-ink placeholder-ink-soft focus:outline-none focus:ring-2 focus:ring-geo-violet focus:border-transparent transition-all text-sm" placeholder="z. B. 150 €" />
+                        </div>
+                        <div className="space-y-2">
+                          <label htmlFor="deadline" className="block text-sm font-semibold text-ink">
+                            Frist (optional)
+                          </label>
+                          <input type="text" id="deadline" name="deadline" maxLength={80} value={formData.deadline} onChange={handleInputChange} className="w-full px-4 py-3 bg-white border border-hairline rounded-xl text-ink placeholder-ink-soft focus:outline-none focus:ring-2 focus:ring-geo-violet focus:border-transparent transition-all text-sm" placeholder="z. B. erste Videos bis Ende Oktober" />
+                        </div>
+                        <div className="space-y-2">
+                          <label htmlFor="usageRights" className="block text-sm font-semibold text-ink">
+                            Nutzungsrechte (optional)
+                          </label>
+                          <input type="text" id="usageRights" name="usageRights" maxLength={80} value={formData.usageRights} onChange={handleInputChange} className="w-full px-4 py-3 bg-white border border-hairline rounded-xl text-ink placeholder-ink-soft focus:outline-none focus:ring-2 focus:ring-geo-violet focus:border-transparent transition-all text-sm" placeholder="z. B. 12 Monate Paid Ads" />
+                        </div>
+                      </div>
+                      <p className="text-xs text-ink-soft">
+                        Viele Creator arbeiten nicht kostenlos. Mit Vergütung und Budget bekommen Sie schneller eine Antwort.
+                      </p>
 
                       <div className="flex flex-col sm:flex-row gap-3 pt-4">
                         <button

@@ -21,6 +21,7 @@ import {
 import { renderInternalMatchEmail } from '@/app/lib/internal-dossier-email';
 import { MAX_CREATORS_PER_REQUEST } from '@/app/lib/lead-limits';
 import { checkBrandGate } from '@/app/lib/lead-gate';
+import { composeBrief } from '@/app/lib/lead-brief';
 
 export const maxDuration = 30;
 export const dynamic = 'force-dynamic';
@@ -184,7 +185,7 @@ function normalizeRequestBody(rawBody: unknown) {
     email: plainText(rawClient.email, 160).toLowerCase(),
     company: plainText(rawClient.company, 120),
     subject: plainText(rawClient.subject, 160),
-    message: multilineText(rawClient.message, 1_500),
+    message: composeBrief(rawClient, multilineText(rawClient.message, 1_500)),
     searchQuery: multilineText(rawClient.searchQuery, 500),
     noResultsQuery: multilineText(rawClient.noResultsQuery, 500),
     sourceUrl: plainText(rawClient.sourceUrl, 500),
