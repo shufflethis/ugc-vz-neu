@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
           searchQuery: data.search_query,
         },
       },
-      { origin: requestOrigin(request), protocol: 'rest' },
+      { origin: requestOrigin(request), protocol: 'rest', client: request.headers.get('user-agent') },
     );
     return NextResponse.json({ request_id: result.requestId, status_url: `/api/v1/outreach/${result.requestId}` }, { status: 202, headers: rateHeaders });
   } catch (error) {

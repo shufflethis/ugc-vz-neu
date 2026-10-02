@@ -66,7 +66,7 @@ const handler = createMcpHandler(
           // (praktisch nie eintretenden) Fall ohne ctx.http.req.
           const origin = process.env.AGENT_INTERNAL_ORIGIN || (req ? new URL(req.url).origin : FALLBACK_ORIGIN);
           const requestId = `mcp:${String(ctx.mcpReq.id)}`;
-          return tool.handler(args, { origin, requestId });
+          return tool.handler(args, { origin, requestId, client: req?.headers.get('user-agent') });
         },
       );
     }

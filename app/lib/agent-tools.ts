@@ -20,7 +20,7 @@ import {
 // Skript importiert wird.
 const CREATOR_PUBLIC_ID_RE = /^UGC-[A-F0-9]{10}$/;
 
-export type ToolRequestCtx = { origin: string; requestId: string };
+export type ToolRequestCtx = { origin: string; requestId: string; client?: string | null };
 
 type ToolTextContent = { type: 'text'; text: string };
 export type ToolResult = { content: ToolTextContent[]; isError?: boolean };
@@ -251,7 +251,7 @@ export const MCP_TOOLS: McpToolDefinition[] = [
               searchQuery: args.search_query,
             },
           },
-          { origin: ctx.origin, protocol: 'mcp' },
+          { origin: ctx.origin, protocol: 'mcp', client: ctx.client },
         );
         return toolResult(result);
       } catch (error) {

@@ -303,7 +303,9 @@ type RequestOutreachParams = {
   brand: { name: string; email: string; message?: string; searchQuery?: string };
 };
 
-type RequestOutreachCtx = { origin: string; protocol: 'mcp' | 'a2a' | 'rest' };
+// client: User-Agent des aufrufenden Agenten (z. B. "openai-mcp/1.0.0"). Vom
+// Client frei waehlbar, also nur ein Hinweis fuer die interne Zuordnung.
+type RequestOutreachCtx = { origin: string; protocol: 'mcp' | 'a2a' | 'rest'; client?: string | null };
 
 export async function requestOutreach(params: RequestOutreachParams, ctx: RequestOutreachCtx): Promise<{ requestId: string }> {
   // Gleiche Deckelung wie app/a2a/route.ts:271 (submitCreatorRequest).
@@ -339,7 +341,8 @@ export async function requestOutreach(params: RequestOutreachParams, ctx: Reques
         message: brandMessageForApi,
         searchQuery: brandSearchQuery,
         sourcePath,
-        sourceUrl: `${ctx.origin}${sourcePath}`,
+        // Landet in brand_leads.source_url und als "Quelle" in interner Mail + Slack.
+        sourceUrl: `${ctx.origin}${sourcePath}${ctx.client ? `?client=${encodeURIComponent(ctx.client.slice(0, 200))}` : ''}`,
       },
     }),
   });

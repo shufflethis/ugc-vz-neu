@@ -326,7 +326,7 @@ async function submitCreatorRequest(request: Request, params: any, access: Agent
         searchQuery: clientInfo.searchQuery || params?.searchQuery,
       },
     },
-    { origin, protocol: 'a2a' },
+    { origin, protocol: 'a2a', client: request.headers.get('user-agent') },
   );
 
   return {
