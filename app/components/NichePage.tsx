@@ -6,6 +6,7 @@ import FAQSchema from './FAQSchema';
 import BreadcrumbSchema from './BreadcrumbSchema';
 import { humanizeCreatorText } from '@/app/lib/creator-public';
 import { NICHES, nichePath, nicheBySlug, type Niche } from '@/app/lib/niches';
+import { NICHE_EXTRAS } from '@/app/lib/niche-extras';
 import { loadNicheRows, matchesNiche, nicheStats, topCreators, type NicheRow } from '@/app/lib/niche-data';
 
 const euro = (value: number) => `${value.toLocaleString('de-DE')} €`;
@@ -54,11 +55,14 @@ export default async function NichePage({ niche }: { niche: Niche }) {
   const priceAnswer = price
     ? `Laut Selbstangabe von ${price.n} Creatorn in diesem Bereich liegt der Einstiegspreis pro Video meist zwischen ${euro(price.p25)} und ${euro(price.p75)}, der Median bei ${euro(price.median)} (Stand ${stand}). Der Endpreis hängt von Aufwand, Länge, Skript und Nutzungsrechten ab.`
     : 'Die Preise sind Selbstangaben der Creator und hängen von Aufwand, Länge, Skript und Nutzungsrechten ab. Die Vergütung steht in jedem Profil.';
+  const extras = NICHE_EXTRAS[niche.slug];
   const faq = [
     { question: `Was kostet UGC für ${niche.chip}?`, answer: priceAnswer },
     { question: 'Was kostet die Vermittlung über UGC VZ?', answer: 'Nichts. UGC VZ ist für Brands kostenlos und nimmt keine Provision. Das Honorar wird direkt mit dem Creator vereinbart.' },
     ...niche.faq,
+    ...(extras?.faq || []),
   ];
+  const share = (count: number) => (stats.count ? Math.round((count / stats.count) * 100) : 0);
   const related = niche.related.map(nicheBySlug).filter((n): n is Niche => Boolean(n));
 
   return (
@@ -98,6 +102,20 @@ export default async function NichePage({ niche }: { niche: Niche }) {
           </section>
         )}
 
+        {extras && stats.count > 0 && (
+          <section className="py-10" aria-labelledby="audience-heading">
+            <h2 id="audience-heading" className="text-2xl font-bold mb-4">Zielgruppe & Plattformen: {niche.chip}</h2>
+            <p className="text-ink-soft leading-7">{extras.audience}</p>
+            <h3 className="mt-6 text-lg font-bold">Das zeigen die Profile im Verzeichnis</h3>
+            <ul className="mt-3 list-disc space-y-1 pl-6 text-ink-soft">
+              <li>{stats.count} Creator mit diesem Schwerpunkt, {share(stats.withPortfolio)} % davon mit Portfolio-Links.</li>
+              <li>{share(stats.reachable)} % sind per E-Mail erreichbar, die übrigen nur über Social Media.</li>
+              {stats.platforms.length > 0 && <li>Plattformen: {stats.platforms.map((p) => `${p.name.charAt(0).toUpperCase()}${p.name.slice(1)} (${share(p.count)} %)`).join(', ')}.</li>}
+              {price && <li>Einstiegspreis pro Video: {euro(price.p25)} bis {euro(price.p75)}, Median {euro(price.median)} (Selbstangaben von {price.n} Creatorn).</li>}
+            </ul>
+          </section>
+        )}
+
         <section className="py-10" aria-labelledby="ideas-heading">
           <h2 id="ideas-heading" className="text-2xl font-bold mb-6">Kampagnen-Ideen: {niche.chip}</h2>
           <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
@@ -118,6 +136,31 @@ export default async function NichePage({ niche }: { niche: Niche }) {
             {' · '}
             <Link href="/brands/ugc-creator-preise" className="font-semibold text-geo-violet underline">UGC Preise im Überblick</Link>
           </p>
+        </section>
+
+        {extras && (
+          <section className="py-10" aria-labelledby="mistakes-heading">
+            <h2 id="mistakes-heading" className="text-2xl font-bold mb-6">Typische Fehler vermeiden</h2>
+            <div className="grid gap-5 md:grid-cols-3">
+              {extras.mistakes.map((m) => (
+                <div key={m.title} className="surface-card rounded-lg p-6">
+                  <h3 className="font-bold mb-2">{m.title}</h3>
+                  <p className="text-ink-soft">{m.text}</p>
+                </div>
+              ))}
+            </div>
+            <h3 className="mt-8 text-lg font-bold">Rechte und Recht</h3>
+            <p className="mt-2 text-ink-soft leading-7">{extras.legal} Das ist eine allgemeine Orientierung, keine Rechtsberatung.</p>
+          </section>
+        )}
+
+        <section className="py-10" aria-labelledby="flow-heading">
+          <h2 id="flow-heading" className="text-2xl font-bold mb-4">So läuft die Anfrage über UGC VZ</h2>
+          <ol className="list-decimal space-y-2 pl-6 text-ink-soft leading-7">
+            <li><strong className="text-ink">Creator auswählen:</strong> Oben das Briefing beschreiben oder einen Beispiel-Chip anklicken, Profile vergleichen und passende Creator markieren.</li>
+            <li><strong className="text-ink">Anfrage senden:</strong> Name, E-Mail und Projektbeschreibung eintragen, optional Vergütung, Budget, Frist und Nutzungsrechte. Dies ist eine echte Anfrage: Sie erhalten die Kontaktdaten per E-Mail, und wir schreiben die erreichbaren Creator in Ihrem Namen an.</li>
+            <li><strong className="text-ink">Direkt abstimmen:</strong> Creator antworten direkt an Sie. Preis, Umfang und Nutzungsrechte vereinbaren Sie ohne Provision für UGC VZ.</li>
+          </ol>
         </section>
 
         <section className="py-10" aria-labelledby="faq-heading">
