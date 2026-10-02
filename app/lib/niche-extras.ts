@@ -8,11 +8,6 @@ export type NicheExtras = {
   faq: { question: string; answer: string }[];
 };
 
-const RIGHTS_FAQ = {
-  question: 'Welche Nutzungsrechte brauche ich für Paid Ads?',
-  answer: 'Üblich sind Rechte für Meta und TikTok Ads über 3 bis 12 Monate. Vorab festlegen: Plattformen, Laufzeit, Region und ob Schnitt, Untertitel oder Kürzungen erlaubt sind. Je länger und breiter die Nutzung, desto höher in der Regel das Honorar.',
-};
-
 export const NICHE_EXTRAS: Record<string, NicheExtras> = {
   beauty: {
     audience: 'Beauty-UGC läuft vor allem auf Instagram Reels und TikTok. Reels eignen sich für Routinen und Vorher/Nachher, TikTok für schnelle Hooks. Für Paid Ads sollte das Material hochkant (9:16) und ohne eingebrannte Plattform-Logos geliefert werden. Wichtiger als Reichweite ist die passende Haut- und Haarsituation: Ein Creator mit demselben Hauttyp wie die Zielgruppe wirkt glaubwürdiger als der größte Account.',
@@ -24,7 +19,7 @@ export const NICHE_EXTRAS: Record<string, NicheExtras> = {
     legal: 'Bei Kosmetik gelten Regeln für Werbeaussagen: keine Heil- oder Behandlungsversprechen, Vorher/Nachher nur mit realen, unbearbeiteten Ergebnissen. Als Werbung gekennzeichnete Beiträge müssen erkennbar sein, die Kennzeichnung liegt bei Creator und Brand gemeinsam in der Verantwortung.',
     faq: [
       { question: 'Wie lange dauert es bis zum ersten Beauty-Video?', answer: 'Nach der Zusage meist ein bis drei Wochen, je nach Versand und Testzeitraum. Ein Express-Dreh ohne Anwendung ist möglich, wirkt aber weniger glaubwürdig.' },
-      RIGHTS_FAQ,
+      { question: 'Welche Rechte brauche ich für Beauty-Videos in Anzeigen?', answer: "Üblich sind Rechte für Meta und TikTok Ads über 3 bis 12 Monate. Bei Beauty zusätzlich festhalten, ob Schnitt, Untertitel, Kürzungen und Hook-Varianten erlaubt sind und ob Vorher/Nachher-Material auch separat genutzt werden darf." },
       { question: 'Kann ich mehrere Hook-Varianten bestellen?', answer: 'Ja. Üblich sind zwei bis drei Einstiege zur selben Botschaft. Das lässt sich als Paket mit dem Creator vereinbaren und ist meist günstiger als Einzelvideos.' },
       { question: 'Was gehört in ein Beauty-Briefing?', answer: 'Produkt und Hauptnutzen, Zielgruppe (Alter, Hauttyp), Tonalität, Pflichtaussagen und No-Gos, Format und Länge, Frist, Vergütung und Nutzungsrechte.' },
     ],
@@ -39,7 +34,7 @@ export const NICHE_EXTRAS: Record<string, NicheExtras> = {
     legal: 'Bei Lebensmitteln sind gesundheitsbezogene Aussagen („stärkt“, „entgiftet“) streng geregelt (Health-Claims-Verordnung). Creator sollten Geschmack und Anwendung beschreiben, keine Wirkung versprechen. Werbung muss gekennzeichnet sein.',
     faq: [
       { question: 'Wie viele Rezeptvideos sollte ich bestellen?', answer: 'Für einen Test reichen zwei bis drei verschiedene Rezepte von zwei Creatorn. So zeigt sich, welcher Einstieg und welches Gericht besser funktioniert.' },
-      RIGHTS_FAQ,
+      { question: 'Wie lange darf ich Food-Videos in Anzeigen nutzen?', answer: "Die Laufzeit steht im Vertrag, oft 3 bis 12 Monate. Bei saisonalen Produkten reicht eine Saison. Eine Option zur Verlängerung sowie die Nutzung auf Shop, Produktseite und Marktplätzen lassen sich gleich mitvereinbaren." },
       { question: 'Muss das Produkt im Rezept die Hauptrolle spielen?', answer: 'Für Anzeigen ja, das Produkt sollte in den ersten Sekunden sichtbar sein. Für organische Inhalte darf es Teil des Rezepts sein, solange es klar benannt wird.' },
       { question: 'Wie lange dauert ein Food-UGC-Projekt?', answer: 'Meist ein bis drei Wochen: Versand, Einkauf, Dreh und Schnitt. Bei saisonalen Produkten (Weihnachten, Grillen) früh anfragen.' },
     ],
@@ -54,7 +49,7 @@ export const NICHE_EXTRAS: Record<string, NicheExtras> = {
     legal: 'Bei Apps zählen Datenschutz und Wahrheitsgehalt: Keine Versprechen, die die App nicht hält (z. B. Verdienst- oder Sparbeträge ohne Beleg). Werbung muss erkennbar sein. Bei Fremdinhalten im Screen-Recording (Marken, Personen) auf Rechte achten.',
     faq: [
       { question: 'Brauche ich ein Skript für App-Demos?', answer: 'Ein Skript oder eine Stichpunktliste hilft sehr. Kernnutzen in den ersten Sekunden, ein Call-to-Action am Ende und eine Liste der Dinge, die nicht gesagt werden dürfen.' },
-      RIGHTS_FAQ,
+      { question: 'Dürfen App-Videos auch im Store und auf der Website laufen?', answer: "Nur, wenn es vereinbart ist. Rechte lassen sich nach Orten staffeln: Paid Ads, App-Store-Seite, Website, Social-Kanäle der Brand. Auch festlegen, was nach einem größeren App-Update passiert, wenn das Video nicht mehr zur Oberfläche passt." },
       { question: 'Wie viele Creator für den ersten Test?', answer: 'Drei Creator mit unterschiedlichem Stil und je einem Hook liefern genug Daten, um Gesichter und Einstiege zu vergleichen.' },
       { question: 'Kann ich Screen-Recordings selbst liefern?', answer: 'Ja, das ist oft sinnvoll. Der Creator nimmt Stimme und Gesicht auf, die Brand liefert die Bildschirmaufnahme und Details zum Ablauf.' },
     ],
@@ -69,7 +64,7 @@ export const NICHE_EXTRAS: Record<string, NicheExtras> = {
     legal: 'Bei Mode gilt: Werbung kennzeichnen, Materialangaben und Pflegehinweise nicht falsch darstellen. Markennamen Dritter im Bild nur mit Absprache. Nutzungsrechte für Shop und Paid Ads sind getrennt zu vereinbaren.',
     faq: [
       { question: 'Bekommen Creator die Teile zum Behalten?', answer: 'Häufig ja, bei hochwertigen Stücken kann das Teil Teil der Vergütung sein. Das sollte im Briefing stehen, am besten mit Warenwert.' },
-      RIGHTS_FAQ,
+      { question: 'Brauche ich für Shop und Produktseite eigene Rechte?', answer: "Ja, Rechte gelten nur für das, was vereinbart wurde. Shop, Produktseite, Newsletter und Paid Ads getrennt aufführen. Wer das Gesicht des Creators zeigt, braucht außerdem dessen Einwilligung für Zweck und Laufzeit." },
       { question: 'Welche Creator passen zu Premium-Mode?', answer: 'Creator mit gepflegtem Bild, ruhigem Schnitt und Erfahrung mit Marken. Portfolio-Videos zeigen schnell, ob der Stil passt.' },
       { question: 'Wie plane ich Mode-UGC saisonal?', answer: 'Vier bis sechs Wochen vor Saisonstart anfragen. Winter- und Weihnachtsmode wird oft schon im Spätsommer gedreht.' },
     ],
@@ -84,7 +79,7 @@ export const NICHE_EXTRAS: Record<string, NicheExtras> = {
     legal: 'Bei Elektro-Dekoration (Lampen, Lichterketten) gelten Sicherheitskennzeichnungen. Aussagen zu Material, Herkunft und Nachhaltigkeit müssen belegbar sein. Werbung kennzeichnen.',
     faq: [
       { question: 'Welche Videoformate eignen sich für Interior?', answer: 'Unboxing, Room-Makeover, Abendstimmung und Styling-Tipps. Hochkant, mit ruhiger Kamera und gutem Licht.' },
-      RIGHTS_FAQ,
+      { question: 'Darf ich Interior-Videos auch auf Produktseiten und Marktplätzen nutzen?', answer: "Nur mit entsprechender Vereinbarung. Shop, Marktplätze und Paid Ads getrennt festlegen. Auf Fremdmarken im Hintergrund, Personen und persönliche Gegenstände achten, die im Bild sichtbar sind." },
       { question: 'Wie wichtig ist Tageslicht?', answer: 'Sehr. Möbel und Textilien wirken bei Tageslicht natürlicher, Lampen dagegen am Abend. Im Briefing die gewünschte Lichtstimmung nennen.' },
       { question: 'Kann ich Produkte vor dem Dreh testen lassen?', answer: 'Ja, besonders bei größeren Stücken sinnvoll. Ein Testzeitraum von einigen Tagen macht die Darstellung ehrlicher.' },
     ],
@@ -99,7 +94,7 @@ export const NICHE_EXTRAS: Record<string, NicheExtras> = {
     legal: 'Bei Videos mit Kindern sind Persönlichkeitsrechte besonders sensibel: Einwilligung der Sorgeberechtigten und klare Regeln zur Nutzung (Dauer, Plattform) sind wichtig. Produkte für Babys und Kleinkinder unterliegen Sicherheitsvorgaben, Aussagen dazu müssen stimmen.',
     faq: [
       { question: 'Zeigen Mama-Creator ihre Kinder in Videos?', answer: 'Nicht alle. Manche drehen bewusst ohne Kinder. Im Briefing klar sagen, ob Kinder im Bild sein sollen, und passende Creator gezielt anfragen.' },
-      RIGHTS_FAQ,
+      { question: 'Wie sind Nutzungsrechte bei Videos mit Kindern geregelt?', answer: "Sorgeberechtigte müssen der Nutzung zustimmen, am besten schriftlich mit Zweck, Plattformen und Laufzeit. Kürzere Laufzeiten und eine klare Löschregel nach Ablauf sind üblich, ebenso das Verbot, das Material für andere Zwecke zu nutzen." },
       { question: 'Wann sollte ich Back-to-School-Videos anfragen?', answer: 'Sechs bis acht Wochen vor Schul- oder Kita-Start. So bleibt Zeit für Versand, Dreh und Schnitt.' },
       { question: 'Welche Reichweite ist bei Mama-Creatorn sinnvoll?', answer: 'Mittlere Reichweiten mit aktiver Community funktionieren oft besser als große Accounts. Entscheidend ist die Glaubwürdigkeit im Familienalltag.' },
     ],
@@ -114,7 +109,7 @@ export const NICHE_EXTRAS: Record<string, NicheExtras> = {
     legal: 'Finanz-, Versicherungs- und Gesundheitsthemen unterliegen strengen Vorgaben zur Werbung. Skript und Aussagen sollte die Brand rechtlich prüfen lassen; Creator sprechen, was vorgegeben ist. Werbung muss gekennzeichnet sein.',
     faq: [
       { question: 'Wie lang sollte ein Talking-Head-Video sein?', answer: 'Meist 30 bis 45 Sekunden. Kürzere Clips (15 bis 20 Sekunden) eignen sich als Hook-Variante für Anzeigen.' },
-      RIGHTS_FAQ,
+      { question: 'Welche Rechte und Laufzeit sind bei Talking-Head-Ads üblich?', answer: "Oft 12 Monate für Meta und TikTok. Weil das Gesicht des Creators im Mittelpunkt steht, sollten Laufzeit, Plattformen und Ende der Nutzung genau festgehalten werden. Das Material darf nicht für andere Produkte oder Kampagnen weiterverwendet werden." },
       { question: 'Wer schreibt das Skript?', answer: 'Bei erklärungsbedürftigen Themen meist die Brand, damit Aussagen und Pflichtangaben stimmen. Der Creator passt Sprache und Tonalität an.' },
       { question: 'Wie finde ich glaubwürdige Gesichter?', answer: 'Portfolio-Videos ansehen und auf Sprechweise, Ruhe und Natürlichkeit achten. Berufsnahe Creator können für bestimmte Zielgruppen besonders glaubwürdig wirken.' },
     ],
@@ -129,7 +124,7 @@ export const NICHE_EXTRAS: Record<string, NicheExtras> = {
     legal: 'Gesundheitsbezogene Aussagen und Wirkversprechen bei Supplements und Ernährung sind streng reguliert (Health-Claims-Verordnung). Creator dürfen Erfahrung schildern, keine Heil- oder Abnehmversprechen machen. Werbung muss gekennzeichnet sein.',
     faq: [
       { question: 'Welche Plattform eignet sich für Fitness-UGC?', answer: 'TikTok und Instagram Reels für Reichweite und Hooks, YouTube Shorts für langlebigere Inhalte. Für Anzeigen reicht hochkantes Material.' },
-      RIGHTS_FAQ,
+      { question: 'Darf ich Fitness-Videos nach dem Test weiter in Anzeigen nutzen?', answer: "Nur im vereinbarten Rahmen. Ändert sich das Produkt (Rezeptur, Verpackung), stimmen Aussagen im Video eventuell nicht mehr. Deshalb Laufzeit begrenzen und Vorher/Nachher-Material sowie Produktaussagen gesondert regeln." },
       { question: 'Brauche ich Creator mit Fitness-Ausbildung?', answer: 'Nicht zwingend. Für Erfahrungsberichte reicht echte Nutzung. Bei Trainingsanleitungen sind Qualifikation und Sicherheit wichtiger.' },
       { question: 'Wann ist die beste Zeit für Fitness-Kampagnen?', answer: 'Januar bis März und der Herbst-Neustart. Für diese Phasen vier bis sechs Wochen vorher anfragen.' },
     ],
@@ -144,7 +139,7 @@ export const NICHE_EXTRAS: Record<string, NicheExtras> = {
     legal: 'Bei Pflege- und Rasierprodukten gelten die Regeln für Kosmetik: keine Heilversprechen, nur belegbare Aussagen. Werbung muss gekennzeichnet sein. Rasur und Pflege vor der Kamera gehören ins Briefing, damit der Creator zustimmen kann.',
     faq: [
       { question: 'Gibt es genug männliche Creator für Grooming?', answer: 'Männliche Creator machen einen kleineren Teil der Profile aus. Mit klaren Anforderungen und früher Anfrage steigt die Antwortquote.' },
-      RIGHTS_FAQ,
+      { question: 'Wie lange darf ich Grooming-Videos mit dem Gesicht des Creators nutzen?', answer: "Typisch sind 6 bis 12 Monate für Paid Ads, mit Option auf Verlängerung. Persönlichkeitsrechte bleiben beim Creator: keine Nutzung für andere Produkte und keine Weitergabe an Dritte ohne neue Absprache." },
       { question: 'Können Creator vor der Kamera rasieren?', answer: 'Viele ja, wenn es im Briefing steht. Vorbereitungszeit (z. B. Bartwuchs) und mehrere Takes sollten vorab abgestimmt werden.' },
       { question: 'Welche Videolänge ist üblich?', answer: 'Zwischen 20 und 45 Sekunden. Für Anzeigen funktionieren kurze Hooks mit Problem und Lösung gut.' },
     ],
@@ -159,7 +154,7 @@ export const NICHE_EXTRAS: Record<string, NicheExtras> = {
     legal: 'Bei Outdoor-Aufnahmen sind Drohnen-, Ort- und Personenrechte zu beachten. Sicherheitsaussagen zu Produkten (z. B. Wasserdichtigkeit, Belastbarkeit) müssen belegbar sein. Werbung muss gekennzeichnet sein.',
     faq: [
       { question: 'Wie lange dauert ein Outdoor-Produkttest?', answer: 'Ein bis vier Wochen sind realistisch, je nach Wetter und Anlass. Das sollte im Terminplan stehen.' },
-      RIGHTS_FAQ,
+      { question: 'Welche Rechte gelten bei Outdoor- und Reisevideos?', answer: "Neben den Nutzungsrechten am Video zählen Musik, Drohnenaufnahmen, Orte und abgebildete Personen. Eigene oder lizenzfreie Musik verwenden, Genehmigungen für Drohnen und Drehorte klären und Fremde nur mit Einwilligung zeigen." },
       { question: 'Eignen sich Reise-Creator auch für Alltagsprodukte?', answer: 'Ja, etwa für Gepäck, Pflege oder Tech unterwegs, wenn das Produkt in einer Reisesituation sinnvoll vorkommt.' },
       { question: 'Brauchen Creator eigene Ausrüstung?', answer: 'Bei Outdoor-Produkten oft ja, z. B. für Wandern oder Camping. Passende Ausrüstung im Profil oder Portfolio prüfen.' },
     ],
@@ -174,7 +169,7 @@ export const NICHE_EXTRAS: Record<string, NicheExtras> = {
     legal: 'Für Tierfutter und -zubehör gelten Kennzeichnungs- und Sicherheitsvorgaben. Gesundheitsaussagen (z. B. „für gesundes Fell“) müssen belegbar sein, am besten zurückhaltend formulieren. Werbung muss gekennzeichnet sein.',
     faq: [
       { question: 'Brauchen Creator ein eigenes Tier?', answer: 'Ja, glaubwürdige Videos entstehen mit dem eigenen Tier. Art, Größe und Alter sollten zum Produkt passen und im Briefing stehen.' },
-      RIGHTS_FAQ,
+      { question: 'Wem gehören die Rechte an Videos mit dem Tier des Creators?', answer: "Die Urheberrechte liegen beim Creator, die Brand erhält ein Nutzungsrecht für Zweck, Plattformen und Laufzeit. Auch das Tier erscheint im Bild: Weiterverwendung für andere Produkte oder Kanäle gesondert vereinbaren." },
       { question: 'Wie lange dauert ein Haustier-Video?', answer: 'Länger als bei Produkten ohne Tier, weil mehrere Takes nötig sind. Das sollte bei Frist und Budget bedacht werden.' },
       { question: 'Welche Produkte eignen sich gut als UGC?', answer: 'Snacks, Spielzeug, Zubehör und Pflegeprodukte, bei denen die Reaktion des Tiers sichtbar ist. Für erklärungsbedürftige Produkte helfen kurze Erklär-Clips.' },
     ],
