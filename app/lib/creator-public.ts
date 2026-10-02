@@ -6,6 +6,8 @@ export interface SearchCreator {
   reach: string;
   networks: string[];
   priceRange: string;
+  /** Nur ein Flag (per Projekt-Mail erreichbar), nie die Adresse. */
+  contactReachable?: boolean;
   gender?: string;
   city?: string;
   topics?: string;

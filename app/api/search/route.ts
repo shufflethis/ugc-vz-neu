@@ -14,6 +14,7 @@ type ProcessedCreator = {
   hasCustomImage: boolean;
   networks: string[];
   priceRange: string;
+  contactReachable: boolean;
   city: string;
   topics: string;
   preferredContent: string;
@@ -266,7 +267,7 @@ const fetchNeonCreatorRecords = async (): Promise<CreatorRecord[]> => {
       public_id, display_name, birth_year, gender, city, special_traits,
       industries, topics, preferred_content, equipment, rate_text, reach_text,
       total_reach, profile_image_url, social_links, portfolio_links, networks,
-      has_social_avatar
+      has_social_avatar, contact_reachable
     FROM creator_search_public
     ORDER BY profile_quality_score DESC, total_reach DESC, display_name ASC
     LIMIT 1000
@@ -289,6 +290,7 @@ const fetchNeonCreatorRecords = async (): Promise<CreatorRecord[]> => {
       'Ausrüstung': String(row.equipment || ''),
       'cached_image_url': String(row.profile_image_url || ''),
       'has_social_avatar': Boolean(row.has_social_avatar),
+      'contact_reachable': Boolean(row.contact_reachable),
     },
   }));
 };
@@ -662,6 +664,10 @@ export async function POST(req: Request) {
       if (profile.languages) score += 8;
       if (profile.availability) score += 6;
 
+      // 9. Per Mail erreichbare Creator zuerst: Anfragen an nicht erreichbare
+      // Profile enden bei der Brand sonst in einem manuellen DM-Versuch.
+      if (record.fields['contact_reachable']) score += 25;
+
       return score;
     };
 
@@ -745,6 +751,7 @@ export async function POST(req: Request) {
             hasCustomImage: hasCustomImage,
             networks: socialLinks.split('\n').filter(Boolean),
             priceRange: profile.priceRange,
+            contactReachable: Boolean(fields['contact_reachable']),
             city: profile.location,
             topics: profile.topicsText,
             preferredContent: profile.formatsText,

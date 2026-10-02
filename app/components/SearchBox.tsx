@@ -532,6 +532,7 @@ export default function SearchBox({ initialQuery = '', showFeatured = false }: S
                     {creator.topics && <p className="line-clamp-2 break-words text-sm">{creator.topics}</p>}
                     {creator.preferredContent && <p className="line-clamp-2 break-words text-sm">{creator.preferredContent}</p>}
                     <p className="line-clamp-3 whitespace-pre-line break-words text-sm"><span className="font-semibold">Preisvorstellung: </span>{humanizeCreatorText(creator.priceRange) || 'Nicht angegeben'}</p>
+                    <p className="text-xs text-ink-soft">{creator.contactReachable ? '✉ Per E-Mail erreichbar' : 'Kontakt über Social Media'}</p>
                   </div>
                   <div className={styles.networks}>
                     {/* Check which networks are mentioned in the reach text */}
