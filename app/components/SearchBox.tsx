@@ -350,6 +350,7 @@ export default function SearchBox({ initialQuery = '', showFeatured = false }: S
           ['Finanzen & Talking-Head', 'Ich suche glaubwürdige deutschsprachige Creator zwischen 20 und 35 für kurze Talking-Head-Videos (hochkant, Skript wird gestellt) für Meta- und TikTok-Anzeigen.'],
           ['Fitness & Wellness', 'Ich suche Fitness-Creatorinnen für ein TikTok-Produktvideo zu einer Wellness-Marke.'],
           ['Männer & Grooming', 'Ich suche männliche Creator zwischen 28 und 45 für Produktvideos zu Pflege- und Rasierprodukten.'],
+          ['Hunde & Haustiere', 'Ich suche Creator mit Hund oder Katze für authentische Alltagsvideos zu einem Haustier-Produkt (z. B. Futter, Spielzeug oder Zubehör).'],
           ['Reisen & Outdoor', 'Ich suche Creator aus den Bereichen Camping, Outdoor und Reisen für ehrliche Alltagsvideos zu einem Outdoor-Produkt.'],
         ].map(([label, query]) => <button key={label} type="button" disabled={isLoading} onClick={() => { setSearchQuery(query); searchInputRef.current?.focus(); }} className="rounded-full border border-hairline bg-surface px-1 py-2 text-[11px] font-medium text-ink transition-colors hover:border-geo-violet hover:bg-white focus-visible:ring-2 focus-visible:ring-geo-violet disabled:opacity-50 min-[375px]:px-2 sm:px-3 sm:text-sm">{label}</button>)}
       </div>
