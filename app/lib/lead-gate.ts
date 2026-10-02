@@ -12,6 +12,10 @@ const FREEMAIL = new Set([
 ]);
 
 
+// Reservierte Domains (RFC 2606) sind nie zustellbar - Agenten erfinden gern
+// Adressen wie jane@brand.example.
+const RESERVED_DOMAIN_RE = /(^|\.)(example|test|invalid|localhost)$|^example\.(com|org|net)$/;
+
 /**
  * Prueft Brand-Anfragen gegen die Datenbank (haelt ueber Serverless-Instanzen
  * hinweg, anders als die In-Memory-Rate-Limits): (1) Adresse ist in den letzten
@@ -27,8 +31,16 @@ export async function checkBrandGate({
   leadId: string;
   newCreators: number;
 }): Promise<GateRejection | null> {
-  if (!isDatabaseConfigured()) return null;
   const domain = email.split('@')[1] || '';
+  if (RESERVED_DOMAIN_RE.test(domain)) {
+    return {
+      status: 422,
+      code: 'email_undeliverable',
+      message: 'Diese E-Mail-Adresse existiert nicht. Bitte geben Sie eine funktionierende Adresse an.',
+      messageEn: 'This e-mail address cannot exist (reserved domain). Please provide a working e-mail address of the requesting brand.',
+    };
+  }
+  if (!isDatabaseConfigured()) return null;
   try {
     const [r] = await getDatabase().query(`
       WITH recent AS (
