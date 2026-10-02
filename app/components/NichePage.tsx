@@ -41,7 +41,7 @@ function CreatorCard({ row }: { row: NicheRow }) {
       {price && <p className="mt-2 text-sm"><span className="font-semibold">Preisvorstellung:</span> {price}</p>}
       <p className="mt-3 flex items-center justify-between text-xs">
         <span className="text-ink-soft">{row.contact_reachable ? '✉ Per E-Mail erreichbar' : 'Kontakt über Social Media'}</span>
-        <Link href={`/auswahl?ids=${row.public_id}`} className="font-semibold text-geo-violet underline">Profil ansehen</Link>
+        <Link href={`/auswahl?ids=${row.public_id}`} rel="nofollow" className="font-semibold text-geo-violet underline">Profil ansehen</Link>
       </p>
     </li>
   );
@@ -97,7 +97,7 @@ export default async function NichePage({ niche }: { niche: Niche }) {
             <p className="text-ink-soft mb-6">Profile mit Portfolio, die per E-Mail erreichbar sind, stehen zuerst. Die Suche oben findet weitere passende Creator zu Ihrem Briefing.</p>
             <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">{creators.map((row) => <CreatorCard key={row.public_id} row={row} />)}</ul>
             <p className="mt-6 text-center">
-              <Link href={`/auswahl?ids=${creators.map((row) => row.public_id).join(',')}`} className="font-semibold text-geo-violet underline">
+              <Link href={`/auswahl?ids=${creators.map((row) => row.public_id).join(',')}`} rel="nofollow" className="font-semibold text-geo-violet underline">
                 Diese {creators.length} Creator als Auswahl ansehen und weiterleiten
               </Link>
             </p>
