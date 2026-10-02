@@ -208,6 +208,7 @@ export function renderBrandMatchEmail({
   feedbackUrl?: string | null;
 }): RenderedEmail {
   const count = selectedCreators.length;
+  const selectionUrl = `https://ugc-vz.de/auswahl?ids=${selectedCreators.map((creator) => creator.id).join(',')}`;
   const searchQuery = clientInfo.searchQuery || 'Deine ausgewählten UGC Creator';
   const managementSubject = encodeURIComponent(`UGC-Kampagne übernehmen – ${leadId}`);
   const managementBody = encodeURIComponent(`Hallo UGC VZ,\n\nbitte unterstützt uns bei der Abwicklung unserer UGC-Kampagne.\n\nLead-ID: ${leadId}\n`);
@@ -242,6 +243,7 @@ export function renderBrandMatchEmail({
           <tr><td width="30" valign="top" style="font-weight:800;color:#8b3fca;">3.</td><td style="font-size:14px;line-height:21px;color:#4a4052;">Produktion starten – oder die komplette Abwicklung an uns geben.</td></tr>
         </table>
         <p style="margin:17px 0 0;"><a href="https://ugc-vz.de/brands/ugc-vertrag-vorlage?utm_source=email&amp;utm_medium=transactional&amp;utm_campaign=brand-match" style="color:#6f2fa9;font-size:14px;font-weight:800;">Kostenlose Briefing- und Vertragsvorlage ansehen →</a></p>
+        <p style="margin:12px 0 0;font-size:14px;line-height:21px;color:#4a4052;"><a href="${htmlEscape(selectionUrl)}" style="color:#6f2fa9;font-weight:800;">Auswahl als Profilseite ansehen und weiterleiten →</a></p>
         ${feedbackUrl ? `<p style="margin:12px 0 0;font-size:14px;line-height:21px;color:#4a4052;">Ein paar Tage später: <a href="${htmlEscape(feedbackUrl)}" style="color:#6f2fa9;font-weight:800;">Hat sich ein Creator gemeldet? Kurze Rückmeldung (1 Klick) →</a></p>` : ''}
       </td>
     </tr>
@@ -279,7 +281,7 @@ Bitte Verfügbarkeit, Leistungsumfang, Nutzungsrechte und finalen Preis direkt b
 
 Briefing- und Vertragsvorlage:
 https://ugc-vz.de/brands/ugc-vertrag-vorlage
-${feedbackUrl ? `\nEin paar Tage später – hat sich ein Creator gemeldet? Kurze Rückmeldung (1 Klick):\n${feedbackUrl}\n` : ''}
+\nAuswahl als Profilseite (zum Weiterleiten):\n${selectionUrl}\n${feedbackUrl ? `\nEin paar Tage später – hat sich ein Creator gemeldet? Kurze Rückmeldung (1 Klick):\n${feedbackUrl}\n` : ''}
 OPTIONALER KAMPAGNEN-SUPPORT
 famefact kann Auswahl, Verhandlung, Briefing, Rechteklärung, Produktion, Paid-Social-Aussteuerung und Community Management übernehmen.
 Antworte mit "Bitte abwickeln" oder schreibe an ${internalEmail}.

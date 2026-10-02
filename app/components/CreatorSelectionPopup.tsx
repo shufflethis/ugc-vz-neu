@@ -401,6 +401,21 @@ export default function CreatorSelectionPopup({
                         Viele Creator arbeiten nicht kostenlos. Mit Vergütung und Budget bekommen Sie schneller eine Antwort.
                       </p>
 
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          try {
+                            await navigator.clipboard.writeText(`${window.location.origin}/auswahl?ids=${selectedCreators.join(',')}`);
+                            toast.success('Link zur Auswahl kopiert – zum Weiterleiten an Kollegen oder Kunden.');
+                          } catch {
+                            toast.error('Link konnte nicht kopiert werden.');
+                          }
+                        }}
+                        className="text-sm font-semibold text-geo-violet underline"
+                      >
+                        Auswahl als Link kopieren (zum Weiterleiten)
+                      </button>
+
                       <div className="flex flex-col sm:flex-row gap-3 pt-4">
                         <button
                           type="button"
