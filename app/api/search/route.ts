@@ -1,3 +1,4 @@
+import { normalizeGenderValue } from '@/app/lib/normalize-gender';
 import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
@@ -192,7 +193,11 @@ const getFieldValue = (fields: Record<string, any>, candidates: string[]): strin
     if (value) return value;
   }
 
-  const normalizedCandidates = candidates.map(candidate => candidate.toLowerCase().replace(/\s|&nbsp;|[?:()]/g, ''));
+  // Kurze Kandidaten ('Ort', 'Age') nur exakt zulassen: per Teilstring steckt 'ort' in
+  // 'Portfolio' und 'age' in 'Languages' - dann stand die Portfolio-URL als Ort an der Karte.
+  const normalizedCandidates = candidates
+    .map(candidate => candidate.toLowerCase().replace(/\s|&nbsp;|[?:()]/g, ''))
+    .filter(candidate => candidate.length >= 5);
   for (const [key, rawValue] of Object.entries(fields)) {
     const normalizedKey = key.toLowerCase().replace(/\s|&nbsp;|[?:()]/g, '');
     if (normalizedCandidates.some(candidate => normalizedKey.includes(candidate) || candidate.includes(normalizedKey))) {
@@ -225,13 +230,6 @@ const parseAge = (ageText: string, birthDateText: string): number | null => {
 const parsePriceValue = (priceText: string): number | null => {
   const match = priceText.replace(/\./g, '').match(/(\d{2,5})/);
   return match ? Number(match[1]) : null;
-};
-
-const normalizeGenderValue = (gender?: string) => {
-  const normalized = String(gender || '').toLowerCase();
-  if (normalized.includes('männ') || normalized.includes('mann') || normalized.includes('male')) return 'male';
-  if (normalized.includes('weib') || normalized.includes('frau') || normalized.includes('female')) return 'female';
-  return 'any';
 };
 
 const mapCreatorProfile = (record: CreatorRecord): CreatorProfile => {

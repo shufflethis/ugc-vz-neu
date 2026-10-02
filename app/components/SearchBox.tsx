@@ -10,6 +10,7 @@ import CreatorSelectionPopup from './CreatorSelectionPopup';
 import CreatorProfileDialog from './CreatorProfileDialog';
 import { humanizeCreatorText, type SearchCreator } from '../lib/creator-public';
 import { NICHE_INDEX } from '../lib/niche-index';
+import CreatorAvatar from './CreatorAvatar';
 import { trackUGCEvents } from '../lib/analytics';
 import { CREATOR_COUNT_LABEL } from '../lib/creator-count';
 import { MAX_CREATORS_PER_REQUEST } from '../lib/lead-limits';
@@ -24,7 +25,7 @@ import {
 
 // Import custom hooks
 import { useDeviceDetection } from '../hooks/useDeviceDetection';
-import { useSearch } from '../hooks/useSearch';
+import { useSearch, type SearchAnalysis } from '../hooks/useSearch';
 import { useVoiceRecognition } from '../hooks/useVoiceRecognition';
 
 // WebMCP-Anbindung: Events, ueber die der Agent-Layer diese UI steuert
@@ -34,6 +35,17 @@ interface SearchBoxProps {
   initialQuery?: string;
   showFeatured?: boolean;
 }
+
+const understoodSummary = (analysis: SearchAnalysis | null): string => {
+  if (!analysis) return '';
+  const { min, max } = analysis.ageRange || { min: null, max: null };
+  return [
+    analysis.gender === 'male' ? 'Männlich' : analysis.gender === 'female' ? 'Weiblich' : '',
+    min !== null || max !== null ? `${min ?? '?'}–${max ?? '?'} Jahre` : '',
+    Array.isArray(analysis.topics) ? analysis.topics.slice(0, 3).join(', ') : '',
+    Array.isArray(analysis.platforms) ? analysis.platforms.join(', ') : '',
+  ].filter(Boolean).join(' · ');
+};
 
 export default function SearchBox({ initialQuery = '', showFeatured = false }: SearchBoxProps) {
   const [searchQuery, setSearchQuery] = useState(initialQuery);
@@ -49,6 +61,7 @@ export default function SearchBox({ initialQuery = '', showFeatured = false }: S
   const {
     creators: searchCreators,
     reasoning,
+    analysis,
     isLoading,
     searchSubmitted,
     submittedQuery,
@@ -479,12 +492,15 @@ export default function SearchBox({ initialQuery = '', showFeatured = false }: S
               </div>
             </div>
 
-            {/* Show reasoning only when available */}
+            {/* Verstaendnis der Anfrage: kompakte Zusammenfassung, Langfassung zuklappbar */}
             {reasoning && (
-              <div className={styles.reasoningContainer}>
-                <h3>Analyse der Suchanfrage:</h3>
-                <pre className={styles.reasoningText}>{reasoning}</pre>
-              </div>
+              <details className="mt-4 rounded-xl border border-hairline bg-surface p-4 text-sm">
+                <summary className="cursor-pointer font-semibold text-ink">
+                  So haben wir deine Anfrage verstanden
+                  {understoodSummary(analysis) && <span className="font-normal text-ink-soft"> · {understoodSummary(analysis)}</span>}
+                </summary>
+                <pre className={`${styles.reasoningText} mt-3`}>{reasoning}</pre>
+              </details>
             )}
           </div>
         )}
@@ -506,23 +522,7 @@ export default function SearchBox({ initialQuery = '', showFeatured = false }: S
                   className={`${styles.creatorCard} ${selectedCreators.includes(creator.id) ? styles.selected : ''}`} // Add selected class
                 >
                   <div className={styles.creatorIdentity}>
-                  <img
-                    src={creator.image || (creator.gender === 'Weiblich' ? '/female-placeholder.webp' : '/placeholder.jpg')}
-                    alt={creator.name}
-                    loading="lazy"
-                    width={100}
-                    height={100}
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      // Ensure correct gender-specific placeholder on error
-                      if (creator.gender === 'Weiblich') {
-                        target.src = '/female-placeholder.webp';
-                      } else {
-                        target.src = '/placeholder.jpg'; // For 'Männlich' and any other values
-                      }
-                      console.log(`Image error for ${creator.name} (${creator.gender}), using: ${target.src}`);
-                    }}
-                  />
+                  <CreatorAvatar name={creator.name} image={creator.image} />
                   <div className="min-w-0"><h3 className="break-words">{creator.name}</h3>{creator.city && <p className="line-clamp-1 break-words">{creator.city}</p>}</div>
                   </div>
                   <div className="min-w-0 space-y-2 text-left">

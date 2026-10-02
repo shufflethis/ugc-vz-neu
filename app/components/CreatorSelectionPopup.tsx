@@ -1,5 +1,6 @@
 'use client';
 
+import CreatorAvatar from './CreatorAvatar';
 import { PartyPopper } from 'lucide-react';
 
 import { useState, useEffect } from 'react';
@@ -232,15 +233,9 @@ export default function CreatorSelectionPopup({
                         <div key={creator.id} 
                              className="bg-white rounded-2xl p-4 shadow-sm border border-hairline hover:shadow-md transition-all duration-200 group">
                           <div className="text-center">
-                            <img
-                              src={creator.image || (creator.gender === 'Weiblich' ? '/female-placeholder.webp' : '/placeholder.jpg')}
-                              alt={creator.name}
-                              className="w-16 h-16 mx-auto rounded-full object-cover border-2 border-hairline group-hover:border-geo-violet transition-colors"
-                              onError={(e) => {
-                                const target = e.target as HTMLImageElement;
-                                target.src = creator.gender === 'Weiblich' ? '/female-placeholder.webp' : '/placeholder.jpg';
-                              }}
-                            />
+                            <div className="flex justify-center">
+                              <CreatorAvatar name={creator.name} image={creator.image} imgClassName="w-16 h-16 rounded-full object-cover border-2 border-hairline group-hover:border-geo-violet transition-colors" />
+                            </div>
                             <h4 className="text-sm font-semibold text-ink mt-2 leading-tight">
                               {creator.name}
                             </h4>

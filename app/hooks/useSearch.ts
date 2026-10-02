@@ -6,10 +6,18 @@ import { MAX_CREATORS_PER_REQUEST } from '@/app/lib/lead-limits';
 import type { SearchCreator } from '../lib/creator-public';
 import { trackUGCEvents } from '../lib/analytics';
 
+export type SearchAnalysis = {
+  gender?: string;
+  platforms?: string[];
+  topics?: string[];
+  ageRange?: { min: number | null; max: number | null };
+};
+
 export const useSearch = () => {
   const [creators, setCreators] = useState<SearchCreator[]>([]);
   const [searchError, setSearchError] = useState('');
   const [reasoning, setReasoning] = useState('');
+  const [analysis, setAnalysis] = useState<SearchAnalysis | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [searchSubmitted, setSearchSubmitted] = useState(false);
   const [submittedQuery, setSubmittedQuery] = useState('');
@@ -27,6 +35,7 @@ export const useSearch = () => {
     setCreators([]);
     setSelectedCreators([]);
     setReasoning('');
+    setAnalysis(null);
     setShowNoResults(false);
     setSearchError('');
     setIsLoading(true);
@@ -59,6 +68,7 @@ export const useSearch = () => {
           if (data.reasoning) {
             setReasoning(data.reasoning);
           }
+          if (data.analysis) setAnalysis(data.analysis);
         } else {
           setShowNoResults(true);
         }
@@ -105,6 +115,7 @@ export const useSearch = () => {
   return {
     creators,
     reasoning,
+    analysis,
     isLoading,
     searchSubmitted,
     submittedQuery,
