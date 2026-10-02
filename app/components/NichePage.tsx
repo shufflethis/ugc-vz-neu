@@ -78,14 +78,16 @@ export default async function NichePage({ niche }: { niche: Niche }) {
 
         <section className="py-12 text-center">
           <h1 className="text-4xl sm:text-5xl font-bold mb-6 text-ink">{niche.h1}</h1>
-          <p className="text-xl text-ink-soft max-w-3xl mx-auto mb-8">{niche.intro}</p>
-          {stats.count > 0 && (
-            <p className="text-base text-ink max-w-3xl mx-auto mb-10">
-              <strong>{stats.count} Creator</strong> mit diesem Schwerpunkt im Verzeichnis
-              {price ? <>, Einstieg meist <strong>{euro(price.p25)} bis {euro(price.p75)}</strong> pro Video (Median {euro(price.median)})</> : null}.
-              {' '}Kostenlos für Brands, ohne Provision.
-            </p>
-          )}
+          <p className="text-xl text-ink-soft max-w-3xl mx-auto mb-10">
+            {niche.intro}
+            {stats.count > 0 && (
+              <>
+                {' '}Im UGC-VZ-Verzeichnis gibt es <strong className="text-ink">{stats.count} Creator</strong> mit diesem Schwerpunkt
+                {price ? <>, der Einstieg liegt meist bei <strong className="text-ink">{euro(price.p25)} bis {euro(price.p75)}</strong> pro Video (Median {euro(price.median)})</> : null}
+                . Die Vermittlung ist kostenlos und ohne Provision.
+              </>
+            )}
+          </p>
           <SearchBox initialQuery={niche.query} />
         </section>
 
@@ -107,12 +109,19 @@ export default async function NichePage({ niche }: { niche: Niche }) {
             <h2 id="audience-heading" className="text-2xl font-bold mb-4">Zielgruppe & Plattformen: {niche.chip}</h2>
             <p className="text-ink-soft leading-7">{extras.audience}</p>
             <h3 className="mt-6 text-lg font-bold">Das zeigen die Profile im Verzeichnis</h3>
-            <ul className="mt-3 list-disc space-y-1 pl-6 text-ink-soft">
-              <li>{stats.count} Creator mit diesem Schwerpunkt, {share(stats.withPortfolio)} % davon mit Portfolio-Links.</li>
-              <li>{share(stats.reachable)} % sind per E-Mail erreichbar, die übrigen nur über Social Media.</li>
-              {stats.platforms.length > 0 && <li>Plattformen: {stats.platforms.map((p) => `${p.name.charAt(0).toUpperCase()}${p.name.slice(1)} (${share(p.count)} %)`).join(', ')}.</li>}
-              {price && <li>Einstiegspreis pro Video: {euro(price.p25)} bis {euro(price.p75)}, Median {euro(price.median)} (Selbstangaben von {price.n} Creatorn).</li>}
-            </ul>
+            <table className="mt-3 w-full max-w-2xl border-collapse text-left text-sm">
+              <thead>
+                <tr className="border-b border-hairline"><th className="py-2 pr-4 font-semibold">Kennzahl</th><th className="py-2 font-semibold">Wert</th></tr>
+              </thead>
+              <tbody className="text-ink-soft">
+                <tr className="border-b border-hairline"><td className="py-2 pr-4">Creator mit diesem Schwerpunkt</td><td className="py-2">{stats.count}</td></tr>
+                <tr className="border-b border-hairline"><td className="py-2 pr-4">Mit Portfolio-Links</td><td className="py-2">{share(stats.withPortfolio)} %</td></tr>
+                <tr className="border-b border-hairline"><td className="py-2 pr-4">Per E-Mail erreichbar</td><td className="py-2">{share(stats.reachable)} %</td></tr>
+                {stats.platforms.length > 0 && <tr className="border-b border-hairline"><td className="py-2 pr-4">Plattformen</td><td className="py-2">{stats.platforms.map((p) => `${p.name.charAt(0).toUpperCase()}${p.name.slice(1)} (${share(p.count)} %)`).join(', ')}</td></tr>}
+                {price && <tr className="border-b border-hairline"><td className="py-2 pr-4">Einstiegspreis pro Video (mittlere Hälfte)</td><td className="py-2">{euro(price.p25)} bis {euro(price.p75)}</td></tr>}
+                {price && <tr><td className="py-2 pr-4">Median Einstiegspreis (n = {price.n})</td><td className="py-2">{euro(price.median)}</td></tr>}
+              </tbody>
+            </table>
           </section>
         )}
 
