@@ -102,10 +102,6 @@ const headline = (details: InternalCreatorDetails) => [
   details.city,
 ].filter(Boolean).join(' · ');
 
-const pausedBadge = (details: InternalCreatorDetails) => details.notificationsPaused
-  ? '<div style="margin-top:10px;padding:9px 12px;border-radius:8px;background:#fdeaea;border:1px solid #f0c4c4;color:#a12727;font-size:12px;font-weight:800;">Benachrichtigungen pausiert – nicht automatisiert anschreiben</div>'
-  : '';
-
 const contactBlock = (creator: SelectedCreator, details: InternalCreatorDetails) => {
   const rows = [
     creator.contactEmail
@@ -143,7 +139,6 @@ const dossierCard = (creator: SelectedCreator) => {
                   </td>
                 </tr>
               </table>
-              ${pausedBadge(details)}
               <div style="margin-top:14px;">${socialButtons(details.socialAccounts) || '<span style="font-size:13px;color:#817688;">Keine Social-Accounts hinterlegt</span>'}</div>
               <div style="margin-top:14px;padding:12px 14px;border-radius:10px;background:#f8f6fa;font-size:13px;line-height:20px;color:#31283a;">
                 <strong>Kontakt:</strong><br />${contactBlock(creator, details)}
@@ -174,7 +169,6 @@ const dossierText = (creator: SelectedCreator, index: number) => {
 
   return [
     `${index + 1}. ${creator.name || 'UGC Creator'} (${creator.id})`,
-    details.notificationsPaused ? 'ACHTUNG: Benachrichtigungen pausiert – nicht automatisiert anschreiben' : '',
     headline(details),
     `E-Mail: ${creator.contactEmail || 'nicht hinterlegt'}`,
     `Telefon: ${details.phone || 'nicht hinterlegt'}`,

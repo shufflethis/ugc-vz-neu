@@ -216,7 +216,7 @@ assert.match(dossier.html, /Zwillinge im Haushalt/);
 assert.match(dossier.text, /\+49 170 1234567/);
 
 // Pausierte Creator: Kontakt sichtbar, aber deutlich markiert
-assert.match(dossier.html, /Benachrichtigungen pausiert/);
+assert.doesNotMatch(dossier.html, /Benachrichtigungen pausiert/); // kein Warnhinweis: Team kontaktiert Creator individuell
 assert.match(dossier.html, /pausiert@example\.test/);
 
 // Leere Felder werden ausgelassen statt als "Nicht angegeben" gerendert
