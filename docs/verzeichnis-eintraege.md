@@ -52,6 +52,30 @@ Badge/Backlink).
 | collabnix awesome-mcp-lists | PR | Fork+Commit fertig, PR-Klick offen | | |
 | punkpeye/awesome-mcp-servers | PR | PR #12835 offen (älter) | | |
 | Launching Next | A | eingereicht 03.10. | Review 2–4 Monate | |
+| SaaSHub | A | eingereicht 03.10. | ohne Account; Verifizieren über @ugc-vz.de-Adresse erhöht die Priorität; Logo/Details dort nachtragen | |
+| Startup Tracker | A | eingereicht 03.10. | wirkt veraltet (© 2020) | gering |
+| startups.gallery | M | offen | Captcha (Tally); ignoriert automatische Einträge | |
+| Startup Stash | M | offen | Captcha | |
+| Startup Buffer | M | offen | Captcha | |
+| AlternativeTo | M | offen | E-Mail+Passwort-Account | |
+| PitchWall | M | offen | nur Social-Login (Google/GitHub/MS/Discord) | **dofollow, DR 70**, gratis |
+| Startup Inspire | M | offen | Account (E-Mail oder Google) | |
+| 10words | M | offen | E-Mail+Passwort-Account | |
+| StartupBase | M | offen | Login per E-Mail-Code | |
+| LaunchIgniter | M | offen | nur Google/GitHub | |
+| Awesome Indie | M | offen | Account | dofollow ab 20 Upvotes |
+| TinyLaunch | M | offen | Login | dofollow nur Top 3 + Badge |
+| Website Hunt | M | offen | Login | |
+| StackShare | M | offen | Login | |
+| G2 / Capterra / GetApp / Software Advice | M | offen | Vendor-Account, Bot-Block | **für US-Brands am wertvollsten** |
+| Crunchbase / F6S | M | offen | Account | |
+| Getworm | M | – | /submit kaputt (400) | |
+| Land-book | – | – | nur Design-Templates, passt nicht | |
+| Simple Lister | $ | – | Gratis-Slots 9 Monate voll | |
+| Postmake | $ | – | $79+; gratis nur gegen Badge | DR 45 |
+| Micro SaaS Examples | $ | – | ab $3 | |
+| All Top Startups | $ | – | Gratis ausgesetzt | |
+| Slant | tot | – | HTTP 526 | |
 | IndieTool | $ | – | nur bezahlt | |
 | AI Directories (aidirectori.es) | $ | – | bezahlter Service | |
 | LaunchPanda | $ | – | kein Verzeichnis, Service $99+ | |
