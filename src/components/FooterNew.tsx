@@ -8,6 +8,16 @@ import ContactPopup from '../../app/components/ContactPopup';
 import LogoImage from '../../app/components/LogoImage';
 import PreferredSourceBadge from '../../app/components/PreferredSourceBadge';
 
+// Verzeichnis-Eintraege. Viele Launch-Seiten vergeben dofollow nur, wenn ihr
+// Badge hier verlinkt ist: Badge-Bild-URL aus der jeweiligen Einreichung als
+// `img` eintragen (img-src erlaubt https:), sonst erscheint der Name als Pille.
+const FEATURED_ON: { name: string; href: string; img?: string; width?: number; height?: number }[] = [
+  { name: 'MCP Registry', href: 'https://registry.modelcontextprotocol.io/v0/servers?search=ugc-vz' },
+  { name: 'Glama', href: 'https://glama.ai/mcp/connectors/de.ugc-vz/creator-search' },
+  { name: 'Smithery', href: 'https://smithery.ai/servers/ugc-vz/creator-search' },
+  { name: 'MCP Market', href: 'https://mcpmarket.com/server/ugc-vz' },
+];
+
 export default function Footer() {
   const [isContactPopupOpen, setIsContactPopupOpen] = useState(false);
   return (
@@ -162,6 +172,22 @@ export default function Footer() {
           <ul className="flex flex-wrap gap-x-5 gap-y-2">
             {NICHE_INDEX.map((niche) => (
               <li key={niche.slug}><Link href={nichePath(niche)} className="text-gray-400 hover:text-white transition-colors duration-200 text-sm">{niche.chip}</Link></li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="border-t border-gray-800 pt-8 mb-8">
+          <h3 className="text-lg font-semibold text-white mb-4">Featured on</h3>
+          <ul className="flex flex-wrap items-center gap-3">
+            {FEATURED_ON.map((entry) => (
+              <li key={entry.name}>
+                <a href={entry.href} target="_blank" rel="noopener" className="inline-flex items-center rounded-full border border-gray-700 px-3 py-1.5 text-xs text-gray-400 hover:text-white hover:border-gray-500 transition-colors duration-200">
+                  {entry.img
+                    // eslint-disable-next-line @next/next/no-img-element -- Badge muss von der Verzeichnis-Domain laden (Pruefung)
+                    ? <img src={entry.img} alt={`UGC VZ auf ${entry.name}`} width={entry.width ?? 150} height={entry.height ?? 40} loading="lazy" />
+                    : entry.name}
+                </a>
+              </li>
             ))}
           </ul>
         </div>
