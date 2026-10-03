@@ -35,7 +35,7 @@ Badge/Backlink).
 | mcpservers.org | A | eingereicht 03.10. | Review ~2 Wochen, Bestätigung per Mail | frei nofollow; $39 dofollow |
 | llmstxt.site | A | eingereicht 03.10. | – | |
 | AllMCPs | M | offen | Cloudflare-Turnstile-Captcha | nofollow; dofollow mit Badge |
-| Turbo0 | A+M | Backlink live, Abschluss läuft | Account + Mailbestätigung automatisch; Gratis-Plan erst nach Badge im Footer (`turbo0.com/item/<slug>`) | DR 81, dofollow gegen Backlink |
+| Turbo0 | A+M | eingereicht 03.10. (pending, Review ~2 Wo.) | Account + Mailbestätigung automatisch; Gratis-Plan erst nach Badge im Footer (`turbo0.com/item/<slug>`) | DR 81, dofollow gegen Backlink |
 | Stork.ai | M | offen | nur „Continue with Google“ | 8 Sprachen |
 | Twelve Tools | A | „existiert schon in DB“ | ohne Account; Badge-Pflicht (`twelve.tools/badge0-*.svg`) | dofollow |
 | ConfettiSaaS | M | offen | Login per E-Mail-Code oder Google | |

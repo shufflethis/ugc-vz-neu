@@ -26,5 +26,8 @@
       "Bash(git commit:*)"
     ],
     "deny": []
-  }
+  },
+  "enabledMcpjsonServers": [
+    "ugc-vz"
+  ]
 }
