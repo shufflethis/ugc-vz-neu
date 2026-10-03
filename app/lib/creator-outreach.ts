@@ -24,6 +24,15 @@ const text = (value: unknown, max: number) => String(value ?? '').replace(/\s+/g
 export const fillCreatorName = (message: string, name: string) =>
   message.replace(/\{\{?\s*name\s*\}?\}|\[\s*name\s*\]/gi, name);
 
+// Reine Affiliate-/Provisions-/Produkt-gegen-Video-Angebote ohne Honorar gehen
+// nicht direkt an Creator (die arbeiten gegen Preis), sondern werden persoenlich
+// mit der Brand geklaert. Fixhonorar + Affiliate obendrauf bleibt normal.
+// ponytail: Stichwort-Heuristik; Fehlalarm kostet nur ein persoenliches Gespraech.
+const UNPAID_OFFER_RE = /affiliate|umsatzbeteiligung|umsatz-?beteiligung|beteiligung an (den )?ums[aä]tzen|provision|revenue.?share|commission|barter|gegen (das |ein )?produkt|produkt (gratis|kostenlos)|(kostenlos|gratis)e[sn]? produkt/i;
+const PAID_OFFER_RE = /\d[\d.,]*\s*(€|eur\b|euro)|€\s*\d|budget|honorar|festpreis|fixum|pauschal|bezahl|verg[uü]tung pro|pro video|fee\b/i;
+export const isUnpaidOffer = (message: string) =>
+  UNPAID_OFFER_RE.test(message) && !PAID_OFFER_RE.test(message);
+
 /**
  * Creator-Mails gehen erst raus, wenn Resend die Brand-Mail als zugestellt
  * meldet (Webhook email.delivered) -- eine erfundene Brand-Adresse erreicht so
@@ -41,7 +50,7 @@ export async function sendCreatorOutreach(leadId: string): Promise<CreatorOutrea
     `SELECT id, name, email, company, search_query, message, is_internal FROM brand_leads WHERE public_id = $1`,
     [leadId],
   );
-  if (!lead || lead.is_internal) return null;
+  if (!lead || lead.is_internal || isUnpaidOffer(String(lead.message || ''))) return null;
 
   const pending = (await sql.query(
     `SELECT creator_public_id FROM lead_creator_matches

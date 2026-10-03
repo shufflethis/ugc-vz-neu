@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
       },
       { origin: requestOrigin(request), protocol: 'rest', client: request.headers.get('user-agent') },
     );
-    return NextResponse.json({ request_id: result.requestId, status_url: `/api/v1/outreach/${result.requestId}` }, { status: 202, headers: rateHeaders });
+    return NextResponse.json({ request_id: result.requestId, status_url: `/api/v1/outreach/${result.requestId}`, ...(result.note && { note: result.note }) }, { status: 202, headers: rateHeaders });
   } catch (error) {
     const code = (error as { code?: string })?.code;
     if (code) return badRequest(error instanceof Error ? error.message : 'Ungueltige Anfrage.', code);

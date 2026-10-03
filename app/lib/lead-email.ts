@@ -358,6 +358,35 @@ export function renderContactAcknowledgementEmail({
   };
 }
 
+// Reines Affiliate-/Provisionsangebot (isUnpaidOffer): keine Kontaktdaten, wir
+// klaeren das Modell persoenlich mit der Brand.
+export function renderUnpaidOfferHoldEmail({
+  leadId,
+  clientInfo,
+}: {
+  leadId: string;
+  clientInfo: LeadClientInfo;
+}): RenderedEmail {
+  const children = `
+    <tr><td class="email-pad" style="padding:8px 42px 34px;">
+      <p style="margin:0;font-size:17px;line-height:27px;color:#4a4052;">Hallo ${htmlEscape(clientInfo.name)},</p>
+      <p style="margin:12px 0;font-size:17px;line-height:27px;color:#4a4052;">danke für deine Anfrage. Die Creator auf UGC VZ arbeiten gegen Honorar. Reine Affiliate-, Provisions- oder Produkt-gegen-Video-Modelle geben wir deshalb nicht direkt weiter.</p>
+      <p style="margin:12px 0;font-size:17px;line-height:27px;color:#4a4052;">Wir melden uns persönlich über diese E-Mail-Adresse und finden mit dir ein passendes Modell, zum Beispiel ein Fixhonorar pro Video mit Affiliate-Beteiligung obendrauf.</p>
+      <div style="margin:20px 0;padding:17px;border-radius:12px;background:#f5f1f8;color:#31283a;font-size:14px;line-height:22px;"><strong>Deine Suche:</strong> ${htmlEscape(clientInfo.searchQuery || 'UGC Creator')}<br /><span style="color:#817688;">Referenz: ${htmlEscape(leadId)}</span></div>
+    </td></tr>`;
+
+  return {
+    subject: `Deine Creator-Anfrage bei UGC VZ – wir melden uns persönlich (${leadId})`,
+    html: emailShell({
+      preheader: 'Affiliate-Anfragen klären wir persönlich',
+      eyebrow: 'Anfrage erhalten',
+      title: 'Wir melden uns persönlich',
+      children,
+    }),
+    text: `Hallo ${clientInfo.name},\n\ndanke für deine Anfrage. Die Creator auf UGC VZ arbeiten gegen Honorar. Reine Affiliate-, Provisions- oder Produkt-gegen-Video-Modelle geben wir deshalb nicht direkt weiter.\n\nWir melden uns persönlich über diese E-Mail-Adresse und finden mit dir ein passendes Modell, zum Beispiel ein Fixhonorar pro Video mit Affiliate-Beteiligung obendrauf.\n\nReferenz: ${leadId}\n\nViele Grüße\nUGC VZ`,
+  };
+}
+
 export function renderInternalLeadEmail({
   leadId,
   kind,

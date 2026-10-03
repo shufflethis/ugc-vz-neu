@@ -10,6 +10,7 @@
     "test:lead-email": "node --import tsx scripts/test-lead-email.ts",
     "test:lead-flow": "node scripts/test-lead-flow.mjs",
     "test:name-placeholder": "node --import tsx scripts/test-name-placeholder.ts",
+    "test:unpaid-offer": "node --import tsx scripts/test-unpaid-offer.ts",
     "test:lead-brief": "node --import tsx scripts/test-lead-brief.ts",
     "test:gender": "node --import tsx scripts/test-gender.ts",
     "test:niche-data": "node --import tsx scripts/test-niche-data.ts",

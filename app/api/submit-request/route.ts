@@ -16,6 +16,7 @@ import {
   renderCreatorOutreachEmail,
   renderInternalLeadEmail,
   renderNoResultsEmail,
+  renderUnpaidOfferHoldEmail,
   isInternalRequest,
 } from '@/app/lib/lead-email';
 import { renderInternalMatchEmail } from '@/app/lib/internal-dossier-email';
@@ -23,6 +24,7 @@ import { MAX_CREATORS_PER_REQUEST } from '@/app/lib/lead-limits';
 import { checkBrandGate } from '@/app/lib/lead-gate';
 import { composeBrief } from '@/app/lib/lead-brief';
 import { leadFeedbackUrl } from '@/app/lib/lead-feedback';
+import { isUnpaidOffer } from '@/app/lib/creator-outreach';
 
 export const maxDuration = 30;
 export const dynamic = 'force-dynamic';
@@ -580,12 +582,15 @@ async function dispatchLeadEmails({
   clientInfo,
   selectedCreators,
   isInternal,
+  held,
 }: {
   leadId: string;
   kind: LeadKind;
   clientInfo: LeadClientInfo;
   selectedCreators: SelectedCreator[];
   isInternal: boolean;
+  // Reines Affiliate-Angebot: keine Kontaktdaten, keine Creator-Mails.
+  held: boolean;
 }): Promise<EmailDispatchResult> {
   const resendApiKey = process.env.RESEND_API_KEY;
   if (!resendApiKey) {
@@ -609,7 +614,9 @@ async function dispatchLeadEmails({
   const resend = new Resend(resendApiKey);
   const from = process.env.RESEND_FROM || 'UGC VZ <hi@ugc-vz.de>';
   const internalEmail = process.env.UGC_INTERNAL_EMAIL || 'hi@ugc-vz.de';
-  const brandEmail = kind === 'creator_match'
+  const brandEmail = held
+    ? renderUnpaidOfferHoldEmail({ leadId, clientInfo })
+    : kind === 'creator_match'
     ? (isInternal
       ? renderInternalMatchEmail({ leadId, clientInfo, selectedCreators, internalEmail })
       : renderBrandMatchEmail({ leadId, clientInfo, selectedCreators, internalEmail, feedbackUrl: leadFeedbackUrl(leadId) }))
@@ -651,7 +658,7 @@ async function dispatchLeadEmails({
   const withEmail = selectedCreators.filter((creator) => creator.contactEmail);
   const creators: DeliveryResult[] = [];
   const creatorOutreach: CreatorOutreachSummary = {
-    enabled: process.env.SEND_CREATOR_OUTREACH_EMAILS === 'true' && kind === 'creator_match' && !isInternal,
+    enabled: process.env.SEND_CREATOR_OUTREACH_EMAILS === 'true' && kind === 'creator_match' && !isInternal && !held,
     eligible: withEmail.length,
     queued: 0,
     failed: 0,
@@ -671,6 +678,7 @@ async function sendSlackNotification({
   selectedCreators,
   delivery,
   isInternal,
+  held,
 }: {
   leadId: string;
   kind: LeadKind;
@@ -678,12 +686,13 @@ async function sendSlackNotification({
   selectedCreators: SelectedCreator[];
   delivery: EmailDispatchResult;
   isInternal: boolean;
+  held: boolean;
 }) {
   const webhookUrl = process.env.SLACK_WEBHOOK_URL;
   if (!webhookUrl) return false;
 
   const webhook = new IncomingWebhook(webhookUrl);
-  const kindLabel = `${isInternal ? '[INTERN] ' : ''}${kind === 'creator_match'
+  const kindLabel = `${isInternal ? '[INTERN] ' : ''}${held ? '[AFFILIATE] ' : ''}${kind === 'creator_match'
     ? 'Creator-Anfrage'
     : kind === 'no_results'
       ? 'Anfrage ohne Treffer'
@@ -692,7 +701,9 @@ async function sendSlackNotification({
     ? `✅ Brand-Mail von Resend angenommen${delivery.brand.id ? ` (${delivery.brand.id})` : ''}`
     : `❌ Brand-Mail ${delivery.brand.status}${delivery.brand.error ? `: ${delivery.brand.error}` : ''}`;
   const outreach = delivery.creatorOutreach;
-  const creatorMailStatus = isInternal
+  const creatorMailStatus = held
+    ? '🤝 Reines Affiliate-/Provisionsangebot · Creator-Mails und Kontaktdaten angehalten – bitte persönlich mit der Brand sprechen'
+    : isInternal
     ? `🔒 Interne Recherche · ${outreach.skippedInternal} Creator nicht benachrichtigt`
     : outreach.enabled
       ? `⏳ Creator-Mails folgen, sobald die Brand-Mail zugestellt ist · ${outreach.eligible} mit E-Mail, ${outreach.skippedNoEmail} ohne hinterlegte E-Mail`
@@ -842,6 +853,7 @@ export async function POST(req: Request) {
         );
       }
     }
+    const held = kind === 'creator_match' && !isInternal && isUnpaidOffer(clientInfo.message || '');
     const selectedCreators = kind === 'creator_match'
       ? await fetchSelectedCreators(creatorIds, { internal: isInternal })
       : [];
@@ -860,6 +872,7 @@ export async function POST(req: Request) {
       clientInfo,
       selectedCreators,
       isInternal,
+      held,
     });
 
     await persistInitialDelivery({
@@ -877,6 +890,7 @@ export async function POST(req: Request) {
         selectedCreators,
         delivery,
         isInternal,
+        held,
       });
     } catch (error) {
       console.error(`[${leadId}] Slack notification failed`, error);
@@ -902,6 +916,7 @@ export async function POST(req: Request) {
       success: true,
       leadId,
       delivery: 'queued',
+      ...(held && { heldForReview: true }),
     });
   } catch (error) {
     console.error('UGC VZ submit-request failed', error);

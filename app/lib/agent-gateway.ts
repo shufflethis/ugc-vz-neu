@@ -323,7 +323,7 @@ type RequestOutreachCtx = { origin: string; protocol: 'mcp' | 'a2a' | 'rest'; cl
 // Bounce. Lesen duerfen sie, echte Anfragen ausloesen nicht.
 const SYNTHETIC_CLIENT_RE = /datagen/i;
 
-export async function requestOutreach(params: RequestOutreachParams, ctx: RequestOutreachCtx): Promise<{ requestId: string }> {
+export async function requestOutreach(params: RequestOutreachParams, ctx: RequestOutreachCtx): Promise<{ requestId: string; note?: string }> {
   if (ctx.client && SYNTHETIC_CLIENT_RE.test(ctx.client)) {
     throw gatewayError(
       'synthetic_client_not_allowed',
@@ -413,6 +413,13 @@ export async function requestOutreach(params: RequestOutreachParams, ctx: Reques
     }
   }
 
+  // Reines Affiliate-Angebot: angenommen, aber ohne Creator-Kontakt (siehe isUnpaidOffer).
+  if (data.heldForReview) {
+    return {
+      requestId: leadId,
+      note: 'Held for personal review: the message offers only affiliate/commission/product-for-video terms without a fee. UGC VZ creators work for a fee, so no creator was contacted and no contact details are sent. UGC VZ will reach out to the brand by e-mail to agree on a model (e.g. fixed fee per video plus affiliate on top). Tell the user exactly this.',
+    };
+  }
   return { requestId: leadId };
 }
 
