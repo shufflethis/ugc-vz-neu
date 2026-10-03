@@ -360,6 +360,8 @@ export function renderContactAcknowledgementEmail({
 
 // Reines Affiliate-/Provisionsangebot (isUnpaidOffer): keine Kontaktdaten, wir
 // klaeren das Modell persoenlich mit der Brand.
+const INTRO_CALL_URL = 'https://book.agentifizierung.de/gorden/intro-call?overlayCalendar=true';
+
 export function renderUnpaidOfferHoldEmail({
   leadId,
   clientInfo,
@@ -367,23 +369,31 @@ export function renderUnpaidOfferHoldEmail({
   leadId: string;
   clientInfo: LeadClientInfo;
 }): RenderedEmail {
+  // Persoenlich von Gorden: Antworten gehen per replyTo an das UGC-VZ-Postfach.
+  const paragraphs = [
+    'danke für deine Anfrage und das ausführliche Briefing – das klingt nach einem spannenden Projekt.',
+    'Ein kurzer Hinweis vorab: Die Creator auf UGC VZ arbeiten gegen Honorar. Reine Affiliate- oder Provisionsmodelle leiten wir deshalb nicht direkt weiter, damit bei den Creatorn nur Anfragen ankommen, die zu ihrem Angebot passen.',
+    'Ein Affiliate-Modell ist damit aber nicht vom Tisch – im Gegenteil: Zusammen mit einem fairen Honorar pro Video wird daraus oft ein Angebot, bei dem gute Creator gern einsteigen. Wie das für dein Projekt aussehen kann, positionieren wir am besten gemeinsam in einem kurzen Call.',
+  ];
   const children = `
     <tr><td class="email-pad" style="padding:8px 42px 34px;">
       <p style="margin:0;font-size:17px;line-height:27px;color:#4a4052;">Hallo ${htmlEscape(clientInfo.name)},</p>
-      <p style="margin:12px 0;font-size:17px;line-height:27px;color:#4a4052;">danke für deine Anfrage. Die Creator auf UGC VZ arbeiten gegen Honorar. Reine Affiliate-, Provisions- oder Produkt-gegen-Video-Modelle geben wir deshalb nicht direkt weiter.</p>
-      <p style="margin:12px 0;font-size:17px;line-height:27px;color:#4a4052;">Wir melden uns persönlich über diese E-Mail-Adresse und finden mit dir ein passendes Modell, zum Beispiel ein Fixhonorar pro Video mit Affiliate-Beteiligung obendrauf.</p>
-      <div style="margin:20px 0;padding:17px;border-radius:12px;background:#f5f1f8;color:#31283a;font-size:14px;line-height:22px;"><strong>Deine Suche:</strong> ${htmlEscape(clientInfo.searchQuery || 'UGC Creator')}<br /><span style="color:#817688;">Referenz: ${htmlEscape(leadId)}</span></div>
+      ${paragraphs.map((text) => `<p style="margin:12px 0;font-size:17px;line-height:27px;color:#4a4052;">${htmlEscape(text)}</p>`).join('')}
+      <p style="margin:22px 0;"><a href="${htmlEscape(INTRO_CALL_URL)}" style="display:inline-block;padding:12px 18px;border-radius:9px;background:#8b3fca;color:#ffffff;text-decoration:none;font-size:15px;font-weight:800;">Termin für einen kurzen Call wählen</a></p>
+      <p style="margin:12px 0;font-size:17px;line-height:27px;color:#4a4052;">Oder antworte einfach auf diese Mail mit zwei, drei Terminvorschlägen.</p>
+      <p style="margin:20px 0 0;font-size:17px;line-height:27px;color:#4a4052;">Viele Grüße<br />Gorden<br /><span style="color:#817688;">UGC VZ</span></p>
+      <p style="margin:20px 0 0;font-size:12px;line-height:19px;color:#817688;">Referenz: ${htmlEscape(leadId)}</p>
     </td></tr>`;
 
   return {
-    subject: `Deine Creator-Anfrage bei UGC VZ – wir melden uns persönlich (${leadId})`,
+    subject: `Deine Creator-Anfrage – lass uns kurz sprechen (${leadId})`,
     html: emailShell({
-      preheader: 'Affiliate-Anfragen klären wir persönlich',
-      eyebrow: 'Anfrage erhalten',
-      title: 'Wir melden uns persönlich',
+      preheader: 'Honorar plus Affiliate: lass uns das gemeinsam aufsetzen',
+      eyebrow: 'Persönliche Rückmeldung',
+      title: 'Lass uns kurz sprechen',
       children,
     }),
-    text: `Hallo ${clientInfo.name},\n\ndanke für deine Anfrage. Die Creator auf UGC VZ arbeiten gegen Honorar. Reine Affiliate-, Provisions- oder Produkt-gegen-Video-Modelle geben wir deshalb nicht direkt weiter.\n\nWir melden uns persönlich über diese E-Mail-Adresse und finden mit dir ein passendes Modell, zum Beispiel ein Fixhonorar pro Video mit Affiliate-Beteiligung obendrauf.\n\nReferenz: ${leadId}\n\nViele Grüße\nUGC VZ`,
+    text: `Hallo ${clientInfo.name},\n\n${paragraphs.join('\n\n')}\n\nTermin für einen kurzen Call wählen:\n${INTRO_CALL_URL}\n\nOder antworte einfach auf diese Mail mit zwei, drei Terminvorschlägen.\n\nViele Grüße\nGorden\nUGC VZ\n\nReferenz: ${leadId}`,
   };
 }
 

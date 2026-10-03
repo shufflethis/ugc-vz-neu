@@ -417,7 +417,7 @@ export async function requestOutreach(params: RequestOutreachParams, ctx: Reques
   if (data.heldForReview) {
     return {
       requestId: leadId,
-      note: 'Held for personal review: the message offers only affiliate/commission/product-for-video terms without a fee. UGC VZ creators work for a fee, so no creator was contacted and no contact details are sent. UGC VZ will reach out to the brand by e-mail to agree on a model (e.g. fixed fee per video plus affiliate on top). Tell the user exactly this.',
+      note: 'Held for personal review: the message offers only affiliate/commission/product-for-video terms without a fee. UGC VZ creators work for a fee, so no creator was contacted and no contact details are sent. The brand receives an e-mail with a link to book a short call with UGC VZ to set up a model together (e.g. fixed fee per video plus affiliate on top): https://book.agentifizierung.de/gorden/intro-call. Tell the user exactly this.',
     };
   }
   return { requestId: leadId };
