@@ -35,7 +35,10 @@ Badge/Backlink).
 | mcpservers.org | A | eingereicht 03.10. | Review ~2 Wochen, Bestätigung per Mail | frei nofollow; $39 dofollow |
 | llmstxt.site | A | eingereicht 03.10. | – | |
 | AllMCPs | M | offen | Cloudflare-Turnstile-Captcha | nofollow; dofollow mit Badge |
-| Turbo0 | A+M | in Arbeit | Account + Mailbestätigung klappt automatisch | DR 81, dofollow gegen Backlink |
+| Turbo0 | A+M | Backlink live, Abschluss läuft | Account + Mailbestätigung automatisch; Gratis-Plan erst nach Badge im Footer (`turbo0.com/item/<slug>`) | DR 81, dofollow gegen Backlink |
+| Stork.ai | M | offen | nur „Continue with Google“ | 8 Sprachen |
+| Twelve Tools | A | „existiert schon in DB“ | ohne Account; Badge-Pflicht (`twelve.tools/badge0-*.svg`) | dofollow |
+| ConfettiSaaS | M | offen | Login per E-Mail-Code oder Google | |
 | AI Indigo | M | offen | Login nötig – oder Details an contact@aiindigo.com mailen | |
 | Acid Tools | M | offen | nur „Sign up with Google“ | dofollow |
 | Findly.tools | M | offen | Account-Anlage durch Claude Code blockiert | |
@@ -63,6 +66,8 @@ Badge/Backlink).
 - Classifier: Formulare ohne Login gehen automatisch durch. Das Anlegen
   neuer Accounts mit Passwort wird teils blockiert. Freigabe nur über eine
   Permission-Regel für `mcp__tinyfish__run_web_automation`.
+- Captcha-Lösedienste (z. B. YesCaptcha) setzen wir bewusst nicht ein. Ein
+  Captcha ist eine klare Absage der Seite an Bots; der Mensch braucht 10 Sekunden.
 - Google-only-Logins und Captchas sind immer manuell. Sie gleich auf die
   Restliste setzen, statt es automatisch zu versuchen.
 - Erst prüfen, ob der Eintrag schon existiert: Viele MCP-Seiten importieren
