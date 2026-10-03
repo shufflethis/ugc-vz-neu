@@ -41,6 +41,9 @@ export default function Footer() {
             <p className="text-sm leading-relaxed mb-6 text-gray-400">
               Die Plattform, um User Generated Content Creators zu finden und zu beauftragen.
             </p>
+            <p lang="en" className="text-sm leading-relaxed mb-6 text-gray-400">
+              The UGC creator directory for Germany, Austria &amp; Switzerland – free for brands and AI agents.
+            </p>
             <p className="text-xs mb-6 text-gray-500">track by track GmbH</p>
 
             {/* Kontaktdaten in der ersten Spalte */}
