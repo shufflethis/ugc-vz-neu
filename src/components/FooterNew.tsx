@@ -16,6 +16,7 @@ const FEATURED_ON: { name: string; href: string; img?: string; width?: number; h
   { name: 'Glama', href: 'https://glama.ai/mcp/connectors/de.ugc-vz/creator-search' },
   { name: 'Smithery', href: 'https://smithery.ai/servers/ugc-vz/creator-search' },
   { name: 'MCP Market', href: 'https://mcpmarket.com/server/ugc-vz' },
+  { name: 'Twelve Tools', href: 'https://twelve.tools', img: 'https://twelve.tools/badge0-dark.svg', width: 150, height: 40 },
   { name: 'Turbo0', href: 'https://turbo0.com/item/ugc-vz', img: 'https://img.turbo0.com/badge-listed-light.svg', width: 150, height: 40 },
 ];
 
