@@ -38,6 +38,7 @@ export default function HomePageSchema() {
       "https://www.linkedin.com/company/track-by-track-gmbh",
       "https://www.linkedin.com/in/tobias-famefact/",
       "https://x.com/UGC_VZ",
+      "https://www.instagram.com/UGC_VZ/",
       "https://www.youtube.com/@ugcvz",
       "https://github.com/ugcvz"
     ],
