@@ -37,7 +37,7 @@ Badge/Backlink).
 | AllMCPs | M | offen | Cloudflare-Turnstile-Captcha | nofollow; dofollow mit Badge |
 | Turbo0 | A+M | eingereicht 03.10. (pending, Review ~2 Wo.) | Account + Mailbestätigung automatisch; Gratis-Plan erst nach Badge im Footer (`turbo0.com/item/<slug>`) | DR 81, dofollow gegen Backlink |
 | Stork.ai | M | offen | nur „Continue with Google“ | 8 Sprachen |
-| Twelve Tools | A | „existiert schon in DB“ | ohne Account; Badge-Pflicht (`twelve.tools/badge0-*.svg`) | dofollow |
+| Twelve Tools | A | **live** 03.10. (twelve.tools/ugc-vz-de) | ohne Account; Badge im Footer + Bestätigungslink aus Mail binnen 24 h | dofollow |
 | ConfettiSaaS | M | offen | Login per E-Mail-Code oder Google | |
 | AI Indigo | M | offen | Login nötig – oder Details an contact@aiindigo.com mailen | |
 | Acid Tools | M | offen | nur „Sign up with Google“ | dofollow |
@@ -51,6 +51,7 @@ Badge/Backlink).
 | MobinX awesome-mcp-list | PR | Fork+Commit fertig, PR-Klick offen | | |
 | collabnix awesome-mcp-lists | PR | Fork+Commit fertig, PR-Klick offen | | |
 | punkpeye/awesome-mcp-servers | PR | PR #12835 offen (älter) | | |
+| Launching Next | A | eingereicht 03.10. | Review 2–4 Monate | |
 | IndieTool | $ | – | nur bezahlt | |
 | AI Directories (aidirectori.es) | $ | – | bezahlter Service | |
 | LaunchPanda | $ | – | kein Verzeichnis, Service $99+ | |
