@@ -5,12 +5,14 @@ import TrustElements from './components/TrustElements';
 import CreatorWorkflow from './components/CreatorWorkflow';
 import HomePageSchema from './components/HomePageSchema';
 import { CREATOR_COUNT_LABEL } from './lib/creator-count';
+import { getRecentBrandRequestLabel } from './lib/brand-request-count';
 
 function Arrow() {
   return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7" /></svg>;
 }
 
-export default function Home() {
+export default async function Home() {
+  const brandRequests = await getRecentBrandRequestLabel();
   return (
     <div className="home-page min-h-screen bg-white text-ink">
       <HomePageSchema />
@@ -33,7 +35,7 @@ export default function Home() {
           <div className="mx-auto max-w-3xl text-center">
             <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#dce9d1] bg-[#edf5e5] px-3 py-1.5 text-xs font-semibold text-[#385523] sm:mb-5 sm:text-sm">
               <span className="h-1.5 w-1.5 rounded-full bg-[#527b33]" aria-hidden="true" />
-              {CREATOR_COUNT_LABEL} Creator-Profile · Kostenlos suchen
+              {CREATOR_COUNT_LABEL} Creator-Profile · {brandRequests ? `${brandRequests} Brand-Anfragen in 4 Wochen` : 'Kostenlos suchen'}
             </p>
             <h1 id="home-title" className="text-[2rem] font-bold leading-[1.08] tracking-[-0.055em] min-[375px]:text-[2.25rem] sm:text-6xl lg:text-[4.5rem]">
               Dein Produkt.<br />
