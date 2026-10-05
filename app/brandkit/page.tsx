@@ -8,7 +8,7 @@ import { Metadata } from 'next';
 import { CREATOR_COUNT_LABEL } from '../lib/creator-count';
 
 export const metadata: Metadata = {
-  title: 'Brand Kit – UGC VZ',
+  title: 'Brand Kit: Logo, Farben & Typografie',
   description:
     'Logo, Farben, Typografie und Anwendungsregeln von UGC VZ, dem kostenlosen Verzeichnis für echte UGC Creator im DACH-Raum. Für Presse, Partner und Verzeichnisse.',
   alternates: { canonical: 'https://ugc-vz.de/brandkit' },
