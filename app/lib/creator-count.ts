@@ -10,7 +10,7 @@
  * das Skript liest die Live-Suche, rundet auf volle Zehner ab und hebt diesen
  * Wert nur an, nie ab. Format deshalb stabil halten: Zahl + "+".
  */
-export const CREATOR_COUNT_LABEL = '570+';
+export const CREATOR_COUNT_LABEL = '590+';
 
 /** Reine Zahl ohne "+", z. B. fuer Fliesstext im Vergleich. */
 export const CREATOR_COUNT_NUMBER = Number(CREATOR_COUNT_LABEL.replace('+', ''));
