@@ -12,6 +12,7 @@ const staticPages = [
   '',
   '/about',
   '/agb',
+  '/brandkit',
   '/contact',
   '/cookies',
   '/datenschutz',
