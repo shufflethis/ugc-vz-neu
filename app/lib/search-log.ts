@@ -8,7 +8,12 @@ import { getDatabase, isDatabaseConfigured } from './database';
  */
 const RETENTION_DAYS = 90;
 
+// Erst kuerzen, dann bereinigen: Die Regexe sind bei langen Eingaben quadratisch
+// (200k Zeichen ohne Leerzeichen = ~100 s), die Suche nimmt aber beliebig lange Texte an.
+const MAX_INPUT = 500;
+
 export const sanitizeQuery = (query: string) => query
+  .slice(0, MAX_INPUT)
   .replace(/[^\s@]+@[^\s@]+\.[^\s@]+/g, '')
   .replace(/https?:\/\/\S+/gi, '')
   .replace(/\+?\d[\d\s/().-]{6,}\d/g, '')
