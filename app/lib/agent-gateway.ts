@@ -73,6 +73,7 @@ export async function searchCreators(params: SearchCreatorsParams, ctx: SearchCr
     headers: {
       'Content-Type': 'application/json',
       'X-Request-ID': ctx.requestId,
+      'X-Search-Source': 'agent',
     },
     // city/topics filtert /api/search selbst, VOR seiner 24er-Kappung.
     body: JSON.stringify({ query: params.query, city: params.city, topics: params.topics }),

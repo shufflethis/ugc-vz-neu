@@ -357,6 +357,27 @@ export default function DatenschutzPage() {
               </div>
             </section>
 
+
+            {/* Section 7 */}
+            <section>
+              <h2 className="text-3xl font-bold mb-6 text-ink">7. Anonymes Suchprotokoll</h2>
+
+              <div className="space-y-6">
+                <p className="text-ink-soft leading-relaxed">
+                  Wenn Sie über die Website oder über einen KI-Agenten (z. B. per MCP oder A2A) nach Creatorn suchen,
+                  speichern wir den Suchtext, die Anzahl der Treffer und die Herkunft der Suche (Website oder Agent).
+                  Wir speichern dabei keine IP-Adresse und keine Kennung, ein Rückschluss auf Sie ist uns nicht möglich.
+                  E-Mail-Adressen, Telefonnummern und Links im Suchtext entfernen wir vor dem Speichern, der Text wird auf
+                  200 Zeichen gekürzt. Bitte geben Sie in Suchfeldern keine personenbezogenen Daten ein.
+                </p>
+                <p className="text-ink-soft leading-relaxed">
+                  Zweck ist die Verbesserung des Verzeichnisses: Wir sehen, welche Themen gesucht werden und wo es keine
+                  passenden Creator gibt. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an der
+                  Weiterentwicklung unseres Angebots). Die Einträge werden nach 90 Tagen automatisch gelöscht.
+                </p>
+              </div>
+            </section>
+
           </div>
 
           {/* Back to Home Button */}

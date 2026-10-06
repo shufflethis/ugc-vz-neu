@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 import { getDatabase, isDatabaseConfigured } from '@/app/lib/database';
+import { logSearch } from '@/app/lib/search-log';
 import { isUsableCustomImageUrl } from '@/app/lib/social-avatar';
 
 // Define a proper type for processed creators
@@ -835,6 +836,9 @@ export async function POST(req: Request) {
     const finalCreators = displayCreators.map(({ hasCustomImage, totalReach, score, ...rest }) => rest);
 
     console.log(`[${requestId}] Returning ${finalCreators.length} creators to client after AI filtering`);
+
+    // Header setzt nur app/lib/agent-gateway.ts (MCP/A2A); Statistik, kein Zugriffsschutz.
+    await logSearch(query, matchedCreators.length, req.headers.get('x-search-source') === 'agent' ? 'agent' : 'web');
 
     // Include reasoning and AI analysis in the response
     return NextResponse.json({
