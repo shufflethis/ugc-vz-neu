@@ -26,7 +26,6 @@ export default function KontoClient({
 }) {
   return (
     <div className="min-h-screen bg-white text-ink">
-      <Header />
       {profile ? <EditView profile={profile} /> : <LoginView invalid={loginInvalid} error={loginError} />}
     </div>
   );
@@ -85,21 +84,6 @@ function ProjectRequests({ profile }: { profile: CreatorProfileView }) {
       )}
       {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
     </section>
-  );
-}
-
-function Header() {
-  return (
-    <header className="py-6 px-4 sm:px-8 md:px-16 lg:px-24">
-      <div className="container mx-auto flex justify-between items-center">
-        <Link href="/" className="flex items-center">
-          <span className="text-xl font-bold gradient-text">UGC VZ</span>
-        </Link>
-        <Link href="/creator" className="text-sm font-medium text-ink-soft hover:text-ink">
-          Creator werden
-        </Link>
-      </div>
-    </header>
   );
 }
 

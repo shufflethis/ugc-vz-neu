@@ -1,19 +1,8 @@
 import Link from 'next/link';
-import ResponsiveCTAButton from '@/src/components/ResponsiveCTAButton';
-import LogoImage from '../components/LogoImage';
 
 export default function CookiesPage() {
   return (
     <div className="min-h-screen bg-white text-ink">
-      <header className="py-6 px-4 sm:px-8 md:px-16 lg:px-24">
-        <div className="container mx-auto flex justify-between items-center">
-          <Link href="/" className="flex items-center">
-            <LogoImage width={32} height={32} className="mr-2" priority />
-            <span className="text-xl font-bold gradient-text">UGC VZ</span>
-          </Link>
-          <ResponsiveCTAButton />
-        </div>
-      </header>
 
       <main className="container mx-auto px-4 py-12 sm:px-8 md:px-16 lg:px-24">
         <div className="mx-auto max-w-4xl">

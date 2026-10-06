@@ -2,33 +2,12 @@
 
 import { Lightbulb, ClipboardList, Wallet, AlertTriangle } from 'lucide-react';
 
-import Image from 'next/image';
 import Link from 'next/link';
-import ResponsiveCTAButton from '@/src/components/ResponsiveCTAButton';
 
 export default function AGBPage() {
   return (
     <div className="min-h-screen bg-white text-ink">
       {/* Header */}
-      <header className="py-6 px-4 sm:px-8 md:px-16 lg:px-24">
-        <div className="container mx-auto flex justify-between items-center">
-          <Link href="/" className="flex items-center">
-            <Image
-              src="/ugc-vz-logo.webp"
-              alt="UGC VZ"
-              width={32}
-              height={32}
-              className="mr-2"
-              priority
-            />
-            <span className="text-xl font-bold gradient-text">
-              UGC VZ
-            </span>
-          </Link>
-
-          <ResponsiveCTAButton />
-        </div>
-      </header>
 
       <main className="container mx-auto px-4 sm:px-8 md:px-16 lg:px-24 py-12">
         <div className="max-w-5xl mx-auto">

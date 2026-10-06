@@ -15,9 +15,12 @@
   --geo-violet: #8b3fca;
   --geo-violet-soft: #a870e0;
   --void: #060606;
-  --grad-main: linear-gradient(135deg, #a8e06a 0%, #8b3fca 100%);
-  --grad-text: linear-gradient(120deg, #8b3fca 0%, #5f9128 100%);
-  --grad-subtle: linear-gradient(135deg, rgba(168,224,106,0.10) 0%, rgba(139,63,202,0.10) 100%);
+  /* Logo-Verlauf (Brand Kit, gemessen aus ugc-vz-logo.png) */
+  --grad-logo: linear-gradient(152deg, #0396F8 0%, #1F6FF4 25%, #3F58F2 50%, #653AED 75%, #9131EF 100%);
+  --grad-main: var(--grad-logo);
+  /* Text-Variante startet dunkler (#1F6FF4 statt Cyan), damit auch kurze Woerter AA-lesbar bleiben */
+  --grad-text: linear-gradient(120deg, #1F6FF4 0%, #5B46F0 50%, #8B3FCA 100%);
+  --grad-subtle: linear-gradient(135deg, rgba(31,111,244,0.08) 0%, rgba(139,63,202,0.10) 100%);
 }
 
 body {
@@ -26,8 +29,7 @@ body {
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
 }
 
-/* Brand gradient text — violet→deep-green, kept AA-readable on white
-   (no bright lime: short words must not land in low-contrast lime) */
+/* Brand gradient text — Logo-Verlauf Blau→Violett, AA-lesbar auf Weiss */
 .gradient-text {
   background: var(--grad-text);
   -webkit-background-clip: text;
@@ -206,7 +208,7 @@ body {
 
 /* Animated gradient text */
 .gradient-text-animated {
-  background: linear-gradient(-45deg, #8b3fca, #5f9128, #6e35a8, #8b3fca);
+  background: linear-gradient(-45deg, #1F6FF4, #5B46F0, #8B3FCA, #1F6FF4);
   background-size: 400% 400%;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;

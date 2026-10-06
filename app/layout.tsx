@@ -3,6 +3,7 @@ import { GeistSans } from 'geist/font/sans'
 import { GeistMono } from 'geist/font/mono'
 import "./globals.css";
 import Footer from "@/src/components/FooterNew";
+import SiteHeader from "./components/SiteHeader";
 import WebMcpAgentLayer from "./components/WebMcpAgentLayer";
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -94,6 +95,7 @@ export default function RootLayout({
         />
       </head>
       <body className="flex flex-col min-h-screen">
+        <SiteHeader />
         <main className="flex-grow">{children}</main>
         <Footer />
         <ToastContainer position="top-center" autoClose={3000} hideProgressBar={false} />

@@ -1,6 +1,5 @@
 import { NICHES, nichePath } from '@/app/lib/niches';
 import type { Metadata } from 'next';
-import Image from 'next/image';
 import Link from 'next/link';
 import BreadcrumbSchema from '../components/BreadcrumbSchema';
 import JsonLdScript from '../wissen/[slug]/JsonLdScript';
@@ -121,17 +120,6 @@ export default function BrandsPage({ searchParams }: { searchParams?: { query?: 
       <JsonLdScript data={faqSchema} />
       <JsonLdScript data={videoSchema} />
 
-      <header className="py-6 px-4 sm:px-8 md:px-16 lg:px-24">
-        <div className="container mx-auto flex justify-between items-center">
-          <Link href="/" className="flex items-center">
-            <Image src="/ugc-vz-logo.webp" alt="UGC VZ" width={32} height={32} className="mr-2" priority />
-            <span className="text-xl font-bold gradient-text">UGC VZ</span>
-          </Link>
-          <Link href="/creator" className="text-sm font-medium text-ink-soft hover:text-ink">
-            Fuer Creator
-          </Link>
-        </div>
-      </header>
 
       <main className="px-4 sm:px-8 md:px-16 lg:px-24 pb-24">
         <section className="max-w-5xl mx-auto py-16 text-center">

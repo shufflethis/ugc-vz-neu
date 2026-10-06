@@ -1,8 +1,6 @@
-import Image from 'next/image';
 import Link from 'next/link';
 import { Metadata } from 'next';
 import ContactButton from '../components/ContactButton';
-import ResponsiveCTAButton from '@/src/components/ResponsiveCTAButton';
 import FAQSchema from '../components/FAQSchema';
 import BreadcrumbSchema from '../components/BreadcrumbSchema';
 
@@ -145,25 +143,6 @@ export default function FAQPage() {
       <BreadcrumbSchema items={breadcrumbs} />
 
       {/* Header */}
-      <header className="py-6 px-4 sm:px-8 md:px-16 lg:px-24">
-        <div className="container mx-auto flex justify-between items-center">
-          <Link href="/" className="flex items-center">
-            <Image
-              src="/ugc-vz-logo.webp"
-              alt="UGC VZ"
-              width={32}
-              height={32}
-              className="mr-2"
-              priority
-            />
-            <span className="text-xl font-bold gradient-text">
-              UGC VZ
-            </span>
-          </Link>
-
-          <ResponsiveCTAButton />
-        </div>
-      </header>
 
       {/* Breadcrumb Navigation */}
       <nav className="px-4 sm:px-8 md:px-16 lg:px-24 mb-8">

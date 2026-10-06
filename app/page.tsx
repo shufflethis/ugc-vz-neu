@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import SearchBox from './components/SearchBox';
-import LogoImage from './components/LogoImage';
 import TrustElements from './components/TrustElements';
 import HomePageSchema from './components/HomePageSchema';
 import HeroVisual from './components/home/HeroVisual';
@@ -85,19 +84,6 @@ export default async function Home() {
   return (
     <div className="home-page min-h-screen bg-white text-ink">
       <HomePageSchema />
-      <header className="border-b border-hairline bg-white px-5 sm:px-8">
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 sm:h-20">
-          <Link href="/" aria-label="UGC VZ – Startseite" className="flex shrink-0 items-center gap-2 font-bold tracking-tight focus-visible:ring-2 focus-visible:ring-geo-violet">
-            <LogoImage width={32} height={32} priority />
-            <span className="text-xl">UGC VZ<span className="text-geo-violet">.</span></span>
-          </Link>
-          <nav aria-label="Hauptnavigation" className="flex items-center gap-4 sm:gap-7">
-            <Link href="/brands" className="hidden text-sm font-medium text-ink-soft hover:text-ink sm:block">Für Brands</Link>
-            <Link href="/konto" className="hidden text-sm font-medium text-ink-soft hover:text-ink sm:block">Login</Link>
-            <Link href="/creator#creator-form" className="whitespace-nowrap rounded-full border border-hairline px-3 py-2.5 text-xs font-semibold transition-colors hover:border-ink sm:px-4 sm:text-sm"><span className="hidden sm:inline">Als </span>Creator anmelden</Link>
-          </nav>
-        </div>
-      </header>
 
       {/* ---------- Hero ---------- */}
       <section className="relative overflow-hidden bg-surface px-5 pb-24 pt-10 sm:px-8 sm:pb-32 sm:pt-16" aria-labelledby="home-title">

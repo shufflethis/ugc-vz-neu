@@ -1,7 +1,5 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import ResponsiveCTAButton from '@/src/components/ResponsiveCTAButton';
-import LogoImage from '../components/LogoImage';
 import PreferredSourceBadge from '../components/PreferredSourceBadge';
 import BreadcrumbSchema from '../components/BreadcrumbSchema';
 import JsonLdScript from './[slug]/JsonLdScript';
@@ -45,15 +43,6 @@ export default function WissenListingPage({ page }: { page: number }) {
         ...(page > 1 ? [{ name: `Seite ${page}`, url: `https://ugc-vz.de${pageHref(page)}` }] : []),
       ]} />
 
-      <header className="py-6 px-4 sm:px-8 md:px-16 lg:px-24">
-        <div className="container mx-auto flex justify-between items-center">
-          <Link href="/" className="flex items-center">
-            <LogoImage width={32} height={32} className="mr-2" priority />
-            <span className="text-xl font-bold gradient-text">UGC VZ</span>
-          </Link>
-          <ResponsiveCTAButton />
-        </div>
-      </header>
 
       <main className="px-4 sm:px-8 md:px-16 lg:px-24 pb-24">
         <div className="max-w-7xl mx-auto">

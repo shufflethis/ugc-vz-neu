@@ -1,8 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { Metadata } from 'next';
-import ResponsiveCTAButton from '@/src/components/ResponsiveCTAButton';
-import LogoImage from '../components/LogoImage';
 import BreadcrumbSchema from '../components/BreadcrumbSchema';
 import HomePageSchema from '../components/HomePageSchema';
 
@@ -61,23 +59,6 @@ export default function AboutPage() {
       <BreadcrumbSchema items={breadcrumbs} />
       
       {/* Header */}
-      <header className="py-6 px-4 sm:px-8 md:px-16 lg:px-24">
-        <div className="container mx-auto flex justify-between items-center">
-          <Link href="/" className="flex items-center">
-            <LogoImage
-              width={32}
-              height={32}
-              className="mr-2"
-              priority
-            />
-            <span className="text-xl font-bold gradient-text">
-              UGC VZ
-            </span>
-          </Link>
-
-          <ResponsiveCTAButton />
-        </div>
-      </header>
 
       {/* Main Content */}
       <main className="px-4 sm:px-8 md:px-16 lg:px-24 pb-24">
