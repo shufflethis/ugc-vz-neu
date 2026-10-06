@@ -5,7 +5,9 @@ import {
   faTiktok,
   faYoutube,
   faFacebook,
-  faLinkedin
+  faLinkedin,
+  faTwitch,
+  faSnapchat
 } from '@fortawesome/free-brands-svg-icons';
 
 interface Creator {
@@ -40,6 +42,8 @@ export default function CreatorCard({ creator, isSelected, onSelect, className }
       if (networkLower.includes('youtube.com')) detectedNetworks.add('youtube');
       if (networkLower.includes('facebook.com')) detectedNetworks.add('facebook');
       if (networkLower.includes('linkedin.com')) detectedNetworks.add('linkedin');
+      if (networkLower.includes('twitch.tv')) detectedNetworks.add('twitch');
+      if (networkLower.includes('snapchat.com')) detectedNetworks.add('snapchat');
 
       // Check for mentions
       if (networkLower.includes('instagram')) detectedNetworks.add('instagram');
@@ -47,6 +51,8 @@ export default function CreatorCard({ creator, isSelected, onSelect, className }
       if (networkLower.includes('youtube')) detectedNetworks.add('youtube');
       if (networkLower.includes('facebook')) detectedNetworks.add('facebook');
       if (networkLower.includes('linkedin')) detectedNetworks.add('linkedin');
+      if (networkLower.includes('twitch')) detectedNetworks.add('twitch');
+      if (networkLower.includes('snapchat')) detectedNetworks.add('snapchat');
     });
 
     return Array.from(detectedNetworks);
@@ -63,6 +69,8 @@ export default function CreatorCard({ creator, isSelected, onSelect, className }
       case 'youtube': return faYoutube;
       case 'facebook': return faFacebook;
       case 'linkedin': return faLinkedin;
+      case 'twitch': return faTwitch;
+      case 'snapchat': return faSnapchat;
       default: return null;
     }
   };

@@ -528,7 +528,9 @@ export async function POST(req: Request) {
         tiktok: socialLinks.toLowerCase().includes('tiktok'),
         instagram: socialLinks.toLowerCase().includes('instagram'),
         youtube: socialLinks.toLowerCase().includes('youtube'),
-        facebook: socialLinks.toLowerCase().includes('facebook')
+        facebook: socialLinks.toLowerCase().includes('facebook'),
+        twitch: socialLinks.toLowerCase().includes('twitch'),
+        snapchat: socialLinks.toLowerCase().includes('snapchat')
       };
 
       // If specific platforms are requested, they must be present
@@ -942,7 +944,7 @@ async function analyzeQueryWithOpenRouter(query: string, requestId: string): Pro
 Antworte NUR mit einem JSON-Objekt in diesem exakten Format (keine zusätzlichen Erklärungen):
 {
   "gender": "male" | "female" | "any",
-  "platforms": ["tiktok", "instagram", "youtube", "facebook"],
+  "platforms": ["tiktok", "instagram", "youtube", "facebook", "twitch", "snapchat"],
   "topics": ["beauty", "fashion", "travel", "fitness", "food", "lifestyle", "tech", "family", "gaming", "business", "finance", "health", "home", "pets", "automotive"],
   "minFollowers": 0,
   "maxFollowers": null,
@@ -1104,6 +1106,12 @@ function analyzeQueryWithAI(query: string, requestId: string): QueryAnalysis {
   }
   if (queryLower.includes('facebook') || queryLower.includes('fb')) {
     analysis.platforms.push('facebook');
+  }
+  if (queryLower.includes('twitch')) {
+    analysis.platforms.push('twitch');
+  }
+  if (queryLower.includes('snapchat')) {
+    analysis.platforms.push('snapchat');
   }
 
   // Step 3: Extract topics/niches with fuzzy matching for typo tolerance

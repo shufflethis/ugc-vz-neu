@@ -22,6 +22,8 @@ export const socialPlatformNames = [
   ['facebook', 'Facebook'],
   ['pinterest', 'Pinterest'],
   ['twitter', 'X'],
+  ['twitch', 'Twitch'],
+  ['snapchat', 'Snapchat'],
 ] as const;
 
 export const extractUrls = (value: unknown) => {

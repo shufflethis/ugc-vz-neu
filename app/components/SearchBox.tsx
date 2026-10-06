@@ -20,7 +20,9 @@ import {
   faYoutube,
   faFacebook,
   faLinkedin,
-  faTwitter
+  faTwitter,
+  faTwitch,
+  faSnapchat
 } from '@fortawesome/free-brands-svg-icons';
 
 // Import custom hooks
@@ -565,6 +567,14 @@ export default function SearchBox({ initialQuery = '', showFeatured = false }: S
                       // Check for Twitter in reach
                       if (reachText.includes('twitter') || reachText.includes('x.com')) {
                         networks.push({ name: 'Twitter', icon: faTwitter });
+                      }
+
+                      if (reachText.includes('twitch')) {
+                        networks.push({ name: 'Twitch', icon: faTwitch });
+                      }
+
+                      if (reachText.includes('snapchat')) {
+                        networks.push({ name: 'Snapchat', icon: faSnapchat });
                       }
 
                       return networks.map((network, index) => (

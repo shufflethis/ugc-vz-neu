@@ -91,6 +91,8 @@ export const socialPlatform = (url: string) => {
   if (host.includes('facebook')) return 'facebook';
   if (host.includes('linkedin')) return 'linkedin';
   if (host.includes('pinterest')) return 'pinterest';
+  if (host.includes('twitch')) return 'twitch';
+  if (host.includes('snapchat')) return 'snapchat';
   return 'other';
 };
 
