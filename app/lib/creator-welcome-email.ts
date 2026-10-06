@@ -33,6 +33,16 @@ const escapeHtml = (value: string) => value
 export const CREATOR_REFERRAL_URL = 'https://ugc-vz.de/brands?ref=creator-empfehlung';
 /** Weiterempfehlung an andere Creator - eigener ref-Wert, damit sich beide Wege getrennt messen lassen. */
 export const CREATOR_INVITE_URL = 'https://ugc-vz.de/creator?ref=creator-einladung';
+/** Login-Seite: schickt einen Einmal-Anmeldelink (15 Min, nur einmal gueltig). */
+export const CREATOR_KONTO_URL = 'https://ugc-vz.de/konto';
+
+/**
+ * "Weiterleiten" oeffnet das Mailprogramm mit vorformuliertem Text, statt auf
+ * die Anmeldeseite zu fuehren (die bei bereits angemeldeten Creatorn verwirrt).
+ */
+const INVITE_SUBJECT = 'Kostenloses Creator-Verzeichnis für UGC';
+const INVITE_BODY = `Hey, ich bin bei UGC VZ gelistet, einem Verzeichnis für UGC-Creator. Anmeldung, Profil und Vermittlung sind kostenlos, und es gibt keine Provision auf das Honorar. Schau mal: ${CREATOR_INVITE_URL}`;
+const INVITE_MAILTO = `mailto:?subject=${encodeURIComponent(INVITE_SUBJECT)}&body=${encodeURIComponent(INVITE_BODY)}`;
 
 export const buildCreatorWelcomeEmail = ({
   name,
@@ -72,13 +82,18 @@ export const buildCreatorWelcomeEmail = ({
               <p style="margin:10px 0 0;font-size:15px;line-height:24px;color:#5f5666;">Kennst du andere Creator, die noch nach Aufträgen suchen? Schick ihnen den Link. Anmeldung, Profil und Vermittlung kosten nichts, und es gibt keine Provision auf das Honorar. Je größer und vielfältiger das Verzeichnis wird, desto eher finden Marken hier, was sie suchen — und desto mehr Anfragen kommen bei allen an.</p>
               <table role="presentation" cellspacing="0" cellpadding="0" style="margin:18px 0 0;">
                 <tr><td style="border-radius:10px;background:#8b3fca;">
-                  <a href="${CREATOR_INVITE_URL}" style="display:inline-block;padding:13px 22px;color:#ffffff;text-decoration:none;font-size:15px;font-weight:800;">Anderen Creatorn weiterleiten</a>
+                  <a href="${escapeHtml(INVITE_MAILTO)}" style="display:inline-block;padding:13px 22px;color:#ffffff;text-decoration:none;font-size:15px;font-weight:800;">Anderen Creatorn weiterleiten</a>
                 </td></tr>
               </table>
               <p style="margin:16px 0 0;padding-top:14px;border-top:1px solid #e0d2f2;font-size:14px;line-height:22px;color:#5f5666;">Und falls du gerade mit einer Marke im Gespräch bist, die Content braucht: <a href="${CREATOR_REFERRAL_URL}" style="color:#8b3fca;font-weight:700;">Die Creator-Suche</a> ist für Marken ebenfalls kostenlos — und sie kann dich darüber direkt finden.</p>
             </div>
 
-            <p style="margin:26px 0 0;font-size:14px;line-height:22px;color:#7a717f;">Du willst etwas an deinem Profil ändern oder es löschen lassen? Antworte einfach auf diese E-Mail.</p>
+            <div style="margin:26px 0 0;padding:17px 18px;border-radius:12px;background:#f7f7f5;border:1px solid #e8e8e4;font-size:14px;line-height:22px;color:#5f5666;">
+              <strong style="color:#21172a;">Profil ergänzen oder ändern</strong><br />
+              Du willst Portfolio-Links ergänzen oder Preise anpassen? Dann <a href="${CREATOR_KONTO_URL}" style="color:#8b3fca;font-weight:700;">fordere hier einen Anmeldelink an</a>. Nur dafür musst du dich anmelden, dein Profil ist auch ohne Login schon aktiv. Klicke den Link bitte gleich nach dem Eintreffen an: Er gilt 15 Minuten und lässt sich nur einmal verwenden.
+            </div>
+
+            <p style="margin:18px 0 0;font-size:14px;line-height:22px;color:#7a717f;">Du willst dein Profil löschen lassen oder hast eine Frage? Antworte einfach auf diese E-Mail.</p>
           </td></tr>
           <tr><td style="padding:20px 30px;border-top:1px solid #ece8ee;font-size:12px;line-height:19px;color:#817887;">UGC VZ ist ein Service der track by track GmbH · Schliemannstr. 23, 10437 Berlin<br /><a href="https://ugc-vz.de/impressum" style="color:#6f2fa9;text-decoration:none;">Impressum</a> · <a href="https://ugc-vz.de/datenschutz" style="color:#6f2fa9;text-decoration:none;">Datenschutz</a> · Kontakt: <a href="mailto:hi@ugc-vz.de" style="color:#6f2fa9;text-decoration:none;">hi@ugc-vz.de</a></td></tr>
         </table>
@@ -102,7 +117,11 @@ Anmeldung, Profil und Vermittlung kosten nichts, und es gibt keine Provision auf
 Und falls du gerade mit einer Marke im Gespräch bist, die Content braucht: Die Creator-Suche ist für Marken ebenfalls kostenlos, und sie kann dich darüber direkt finden:
 ${CREATOR_REFERRAL_URL}
 
-Du willst etwas an deinem Profil ändern oder es löschen lassen? Antworte einfach auf diese E-Mail.
+Profil ergänzen oder ändern:
+Du willst Portfolio-Links ergänzen oder Preise anpassen? Fordere hier einen Anmeldelink an: ${CREATOR_KONTO_URL}
+Nur dafür musst du dich anmelden, dein Profil ist auch ohne Login schon aktiv. Klicke den Link bitte gleich nach dem Eintreffen an: Er gilt 15 Minuten und lässt sich nur einmal verwenden.
+
+Du willst dein Profil löschen lassen oder hast eine Frage? Antworte einfach auf diese E-Mail.
 
 UGC VZ ist ein Service der track by track GmbH · Schliemannstr. 23, 10437 Berlin
 Impressum: https://ugc-vz.de/impressum · Datenschutz: https://ugc-vz.de/datenschutz · Kontakt: hi@ugc-vz.de`,
