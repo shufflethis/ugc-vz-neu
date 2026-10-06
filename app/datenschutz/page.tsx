@@ -367,8 +367,8 @@ export default function DatenschutzPage() {
                   Wenn Sie über die Website oder über einen KI-Agenten (z. B. per MCP oder A2A) nach Creatorn suchen,
                   speichern wir den Suchtext, die Anzahl der Treffer und die Herkunft der Suche (Website oder Agent).
                   Wir speichern dabei keine IP-Adresse und keine Kennung, ein Rückschluss auf Sie ist uns nicht möglich.
-                  E-Mail-Adressen, Telefonnummern und Links im Suchtext entfernen wir vor dem Speichern, der Text wird auf
-                  200 Zeichen gekürzt. Bitte geben Sie in Suchfeldern keine personenbezogenen Daten ein.
+                  E-Mail-Adressen, Telefonnummern, Links und @-Namen im Suchtext entfernen wir vor dem Speichern automatisch, soweit
+                  wir sie erkennen. Der Text wird auf 200 Zeichen gekürzt. Bitte geben Sie in Suchfeldern keine personenbezogenen Daten ein.
                 </p>
                 <p className="text-ink-soft leading-relaxed">
                   Zweck ist die Verbesserung des Verzeichnisses: Wir sehen, welche Themen gesucht werden und wo es keine

@@ -3,7 +3,8 @@ import { getDatabase, isDatabaseConfigured } from './database';
 /**
  * Anonymes Suchprotokoll fuer die Nachfrage-Analyse (siehe Datenschutz, Abschnitt 7).
  * Bewusst ohne IP/Kennung. Freitext wird gekuerzt und von Mail-Adressen,
- * Telefonnummern und Links bereinigt, weil Suchtexte Personenbezug enthalten koennen.
+ * Telefonnummern, Links und @-Handles bereinigt (Best Effort: in Worten
+ * verschleierte Adressen wie "max at mail punkt de" erkennen wir nicht), weil Suchtexte Personenbezug enthalten koennen.
  * Ein Fehler hier darf die Suche nie kippen.
  */
 const RETENTION_DAYS = 90;
@@ -14,8 +15,12 @@ const MAX_INPUT = 500;
 
 export const sanitizeQuery = (query: string) => query
   .slice(0, MAX_INPUT)
+  .normalize('NFKC') // vollbreite Zeichen (＠, ０-９) auf ASCII, sonst greifen die Regexe nicht
+  .replace(/[^\s@]+\s*[[(]\s*at\s*[\])]\s*[^\s@]+/gi, '')
   .replace(/[^\s@]+@[^\s@]+\.[^\s@]+/g, '')
-  .replace(/https?:\/\/\S+/gi, '')
+  .replace(/(?:https?:\/\/|www\.)\S+/gi, '')
+  .replace(/\b[\w-]+\.(?:com|de|net|org|io|at|ch|me|tv)\b\S*/gi, '')
+  .replace(/@\w+/g, '')
   .replace(/\+?\d[\d\s/().-]{6,}\d/g, '')
   .replace(/\s+/g, ' ')
   .trim()
