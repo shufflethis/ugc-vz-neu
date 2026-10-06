@@ -89,6 +89,17 @@ export const buildCreatorWelcomeEmail = ({
             </div>
 
             <div style="margin:26px 0 0;padding:17px 18px;border-radius:12px;background:#f7f7f5;border:1px solid #e8e8e4;font-size:14px;line-height:22px;color:#5f5666;">
+              <strong style="color:#21172a;">So wirst du von Marken gefunden</strong><br />
+              Marken suchen nach Thema, Stadt, Plattform, Alter und Preis. Je genauer dein Profil das beantwortet, desto öfter wirst du vorgeschlagen:
+              <ul style="margin:10px 0 0;padding-left:20px;">
+                <li style="margin:0 0 6px;"><strong style="color:#21172a;">Konkrete Themen statt „Content“:</strong> „Skincare, Haarpflege, Mama von zwei Kita-Kindern“ wird gefunden, „Lifestyle“ allein kaum.</li>
+                <li style="margin:0 0 6px;"><strong style="color:#21172a;">Stadt eintragen:</strong> Viele Marken suchen regional, ohne Stadt fällst du da raus.</li>
+                <li style="margin:0 0 6px;"><strong style="color:#21172a;">Portfolio-Link, Formate und Preis ergänzen:</strong> Diese Angaben zählen mit, und Marken sehen sofort, was du lieferst.</li>
+                <li style="margin:0;"><strong style="color:#21172a;">Social-Links angeben:</strong> Daran erkennen wir TikTok, Instagram und YouTube.</li>
+              </ul>
+            </div>
+
+            <div style="margin:26px 0 0;padding:17px 18px;border-radius:12px;background:#f7f7f5;border:1px solid #e8e8e4;font-size:14px;line-height:22px;color:#5f5666;">
               <strong style="color:#21172a;">Profil ergänzen oder ändern</strong><br />
               Du willst Portfolio-Links ergänzen oder Preise anpassen? Dann <a href="${CREATOR_KONTO_URL}" style="color:#8b3fca;font-weight:700;">fordere hier einen Anmeldelink an</a>. Nur dafür musst du dich anmelden, dein Profil ist auch ohne Login schon aktiv. Klicke den Link bitte gleich nach dem Eintreffen an: Er gilt 15 Minuten und lässt sich nur einmal verwenden.
             </div>
@@ -116,6 +127,13 @@ Anmeldung, Profil und Vermittlung kosten nichts, und es gibt keine Provision auf
 
 Und falls du gerade mit einer Marke im Gespräch bist, die Content braucht: Die Creator-Suche ist für Marken ebenfalls kostenlos, und sie kann dich darüber direkt finden:
 ${CREATOR_REFERRAL_URL}
+
+So wirst du von Marken gefunden:
+Marken suchen nach Thema, Stadt, Plattform, Alter und Preis. Je genauer dein Profil das beantwortet, desto öfter wirst du vorgeschlagen:
+- Konkrete Themen statt "Content": "Skincare, Haarpflege, Mama von zwei Kita-Kindern" wird gefunden, "Lifestyle" allein kaum.
+- Stadt eintragen: Viele Marken suchen regional, ohne Stadt fällst du da raus.
+- Portfolio-Link, Formate und Preis ergänzen: Diese Angaben zählen mit, und Marken sehen sofort, was du lieferst.
+- Social-Links angeben: Daran erkennen wir TikTok, Instagram und YouTube.
 
 Profil ergänzen oder ändern:
 Du willst Portfolio-Links ergänzen oder Preise anpassen? Fordere hier einen Anmeldelink an: ${CREATOR_KONTO_URL}
