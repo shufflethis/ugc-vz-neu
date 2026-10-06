@@ -96,7 +96,11 @@ export default function RootLayout({
       </head>
       <body className="flex flex-col min-h-screen">
         <SiteHeader />
-        <main className="flex-grow">{children}</main>
+        <main className="relative isolate flex-grow">
+          {/* Logo-Glow hinter jedem Seitenkopf (Brand Kit); Seiten mit eigener Flaeche decken ihn ab */}
+          <div aria-hidden="true" className="page-glow pointer-events-none absolute inset-x-0 top-0 -z-10 h-[560px] overflow-hidden" />
+          {children}
+        </main>
         <Footer />
         <ToastContainer position="top-center" autoClose={3000} hideProgressBar={false} />
         {/* WebMCP: Agent-Tools via navigator.modelContext (rendert nichts) */}

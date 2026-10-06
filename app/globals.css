@@ -240,3 +240,24 @@ body {
   to { opacity: 1; transform: translateY(0); }
 }
 .reveal-up { animation: reveal-up 0.8s ease-out forwards; }
+
+/* ---- Redesign (Brand Kit) ---- */
+@layer base {
+  h1 { letter-spacing: -0.045em; }
+  h2 { letter-spacing: -0.035em; }
+}
+.page-glow::before,
+.page-glow::after {
+  content: '';
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(90px);
+}
+.page-glow::before {
+  width: 620px; height: 420px; right: -160px; top: -220px;
+  background: var(--grad-logo); opacity: 0.16;
+}
+.page-glow::after {
+  width: 520px; height: 360px; left: -220px; top: -180px;
+  background: var(--grad-logo); opacity: 0.08;
+}

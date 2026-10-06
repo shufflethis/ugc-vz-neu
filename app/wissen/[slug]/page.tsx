@@ -113,7 +113,7 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
   const relatedPosts = getRelatedPosts(post.slug);
 
   return (
-    <div className="min-h-screen bg-white text-ink">
+    <div className="min-h-screen text-ink">
       <JsonLdScript data={articleSchema} />
       {faqSchema && <JsonLdScript data={faqSchema} />}
       <BreadcrumbSchema items={[
@@ -123,7 +123,7 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
       ]} />
 
 
-      <nav className="px-4 sm:px-8 md:px-16 lg:px-24 mb-8" aria-label="Breadcrumb">
+      <nav className="px-4 sm:px-8 md:px-16 lg:px-24 pt-8 mb-6" aria-label="Breadcrumb">
         <div className="max-w-4xl mx-auto flex items-center gap-2 text-sm text-ink-soft">
           <Link href="/" className="hover:text-geo-violet">Home</Link><span>/</span>
           <Link href="/wissen" className="hover:text-geo-violet">Wissen</Link><span>/</span>

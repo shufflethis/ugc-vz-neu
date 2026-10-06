@@ -247,7 +247,7 @@ export default function CreatorRegistrationForm({
               <form onSubmit={submit} noValidate>
                 <div className="mb-8">
                   <div className="flex items-center justify-between text-xs font-semibold text-ink-soft"><span>Schritt {step + 1} von {steps.length}</span><span>{progress}%</span></div>
-                  <div className="mt-2 h-2 overflow-hidden rounded-full bg-surface-2"><div className="h-full rounded-full bg-gradient-to-r from-geo-violet to-geo-green transition-all duration-300" style={{ width: `${progress}%` }} /></div>
+                  <div className="mt-2 h-2 overflow-hidden rounded-full bg-surface-2"><div className="h-full rounded-full bg-gradient-to-r from-[#1F6FF4] via-[#5B46F0] to-[#9131EF] transition-all duration-300" style={{ width: `${progress}%` }} /></div>
                   <h2 className="mt-6 text-2xl font-bold sm:text-3xl">{steps[step].title}</h2>
                   <p className="mt-2 text-ink-soft">{steps[step].description}</p>
                   {step === 0 && <p className="mt-3 text-xs leading-5 text-ink-soft">Brands sehen deine öffentlichen Profilangaben und Arbeitsproben. Deine E-Mail bleibt im öffentlichen Profil verborgen. Du bestätigst die Anmeldung anschließend per E-Mail.</p>}

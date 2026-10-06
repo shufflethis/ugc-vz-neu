@@ -2,7 +2,7 @@ import Link from 'next/link';
 
 export default function CookiesPage() {
   return (
-    <div className="min-h-screen bg-white text-ink">
+    <div className="min-h-screen text-ink">
 
       <main className="container mx-auto px-4 py-12 sm:px-8 md:px-16 lg:px-24">
         <div className="mx-auto max-w-4xl">

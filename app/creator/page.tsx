@@ -65,12 +65,12 @@ export default function CreatorPage({
   };
 
   return (
-    <div className="min-h-screen bg-white text-ink">
+    <div className="min-h-screen text-ink">
       <BreadcrumbSchema items={breadcrumbs} />
       <JsonLdScript data={faqSchema} />
 
 
-      <main className="px-4 sm:px-8 md:px-16 lg:px-24 pb-24">
+      <main className="px-4 sm:px-8 md:px-16 lg:px-24 pb-24 pt-10 sm:pt-14">
         <section className="max-w-5xl mx-auto py-16 text-center">
           <p className="text-geo-violet font-semibold mb-4">Kostenloses Creator-Verzeichnis</p>
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6">

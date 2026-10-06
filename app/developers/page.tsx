@@ -25,7 +25,7 @@ const h2 = 'text-2xl font-bold mb-4';
 
 export default function DevelopersPage() {
   return (
-    <main className="px-4 sm:px-8 md:px-16 lg:px-24 pb-24 bg-white text-ink">
+    <main className="px-4 sm:px-8 md:px-16 lg:px-24 pb-24 text-ink">
       <div className="max-w-4xl mx-auto py-14">
         <p className="text-sm font-bold uppercase tracking-[0.15em] text-geo-violet">Developer-Portal</p>
         <h1 className="mt-3 text-4xl font-bold">UGC VZ für Developer &amp; KI-Agenten</h1>

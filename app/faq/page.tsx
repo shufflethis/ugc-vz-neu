@@ -137,7 +137,7 @@ export default function FAQPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-white text-ink">
+    <div className="min-h-screen text-ink">
       {/* FAQ Schema for rich snippets */}
       <FAQSchema faqItems={allFAQItems} />
       <BreadcrumbSchema items={breadcrumbs} />
@@ -156,7 +156,7 @@ export default function FAQPage() {
       </nav>
 
       {/* Main Content */}
-      <main className="px-4 sm:px-8 md:px-16 lg:px-24 pb-24">
+      <main className="px-4 sm:px-8 md:px-16 lg:px-24 pb-24 pt-10 sm:pt-14">
         <div className="max-w-4xl mx-auto">
           {/* Hero Section */}
           <div className="text-center mb-16">

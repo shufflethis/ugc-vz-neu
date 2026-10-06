@@ -42,7 +42,7 @@ export default function VergleichPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white text-ink">
+    <div className="min-h-screen text-ink">
       <BreadcrumbSchema items={breadcrumbs} />
       <JsonLdScript data={itemListSchema} />
 

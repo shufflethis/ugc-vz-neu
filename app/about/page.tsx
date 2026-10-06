@@ -53,7 +53,7 @@ export default function AboutPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-white text-ink">
+    <div className="min-h-screen text-ink">
       {/* Schema.org structured data */}
       <HomePageSchema />
       <BreadcrumbSchema items={breadcrumbs} />
@@ -61,7 +61,7 @@ export default function AboutPage() {
       {/* Header */}
 
       {/* Main Content */}
-      <main className="px-4 sm:px-8 md:px-16 lg:px-24 pb-24">
+      <main className="px-4 sm:px-8 md:px-16 lg:px-24 pb-24 pt-10 sm:pt-14">
         <div className="max-w-4xl mx-auto">
           {/* Hero Section */}
           <div className="text-center mb-16">

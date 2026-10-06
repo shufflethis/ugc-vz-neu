@@ -47,6 +47,13 @@ function CreatorCard({ row }: { row: NicheRow }) {
   );
 }
 
+/** Hebt den Branchennamen in der H1 mit dem Logo-Verlauf hervor (Text bleibt identisch). */
+function highlight(h1: string, chip: string) {
+  const at = h1.indexOf(chip);
+  if (at < 0) return h1;
+  return <>{h1.slice(0, at)}<span className="gradient-text">{chip}</span>{h1.slice(at + chip.length)}</>;
+}
+
 export default async function NichePage({ niche }: { niche: Niche }) {
   const { stats, creators } = await loadNicheData(niche);
   const path = nichePath(niche);
@@ -66,7 +73,7 @@ export default async function NichePage({ niche }: { niche: Niche }) {
   const related = niche.related.map(nicheBySlug).filter((n): n is Niche => Boolean(n));
 
   return (
-    <main className="min-h-screen bg-white text-ink px-4 sm:px-8 md:px-16 lg:px-24 py-16">
+    <main className="min-h-screen text-ink px-4 sm:px-8 md:px-16 lg:px-24 pt-10 pb-16 sm:pt-14">
       <BreadcrumbSchema items={[
         { name: 'UGC VZ', url: 'https://ugc-vz.de' },
         { name: 'Für Brands', url: 'https://ugc-vz.de/brands' },
@@ -74,10 +81,10 @@ export default async function NichePage({ niche }: { niche: Niche }) {
       ]} />
       <FAQSchema faqItems={faq} />
       <div className="max-w-5xl mx-auto">
-        <Link href="/brands" className="text-sm text-ink-soft hover:text-ink">UGC VZ für Brands</Link>
+        <div className="text-center"><Link href="/brands" className="inline-flex items-center gap-2 rounded-full border border-hairline bg-white/80 px-3 py-1.5 text-xs font-semibold text-ink-soft backdrop-blur hover:text-ink sm:text-sm"><span className="h-1.5 w-1.5 rounded-full bg-geo-violet" aria-hidden="true" />UGC VZ für Brands</Link></div>
 
-        <section className="py-12 text-center">
-          <h1 className="text-4xl sm:text-5xl font-bold mb-6 text-ink">{niche.h1}</h1>
+        <section className="pb-12 pt-6 text-center">
+          <h1 className="mx-auto mb-6 max-w-4xl text-4xl font-bold leading-[1.05] text-ink sm:text-6xl">{highlight(niche.h1, niche.chip)}</h1>
           <p className="text-xl text-ink-soft max-w-3xl mx-auto mb-10">
             {niche.intro}
             {stats.count > 0 && (
@@ -88,12 +95,21 @@ export default async function NichePage({ niche }: { niche: Niche }) {
               </>
             )}
           </p>
-          <SearchBox initialQuery={niche.query} />
+          {stats.count > 0 && (
+            <ul className="mb-8 flex flex-wrap justify-center gap-2 text-xs font-semibold sm:text-sm">
+              <li className="rounded-full border border-[#dce9d1] bg-[#edf5e5] px-3 py-1.5 text-[#385523]">{stats.count} Creator</li>
+              {price && <li className="rounded-full border border-hairline bg-white px-3 py-1.5">Median {euro(price.median)} pro Video</li>}
+              <li className="rounded-full border border-hairline bg-white px-3 py-1.5">Kostenlos · ohne Provision</li>
+            </ul>
+          )}
+          <div className="rounded-3xl border border-hairline bg-white p-4 text-left shadow-[0_30px_90px_rgba(35,22,47,0.10)] sm:p-8">
+            <SearchBox initialQuery={niche.query} />
+          </div>
         </section>
 
         {creators.length > 0 && (
           <section className="py-10" aria-labelledby="creator-heading">
-            <h2 id="creator-heading" className="text-2xl font-bold mb-2">Ausgewählte Creator: {niche.chip}</h2>
+            <h2 id="creator-heading" className="text-2xl sm:text-3xl font-bold mb-2">Ausgewählte Creator: {niche.chip}</h2>
             <p className="text-ink-soft mb-6">Profile mit Portfolio, die per E-Mail erreichbar sind, stehen zuerst. Die Suche oben findet weitere passende Creator zu Ihrem Briefing.</p>
             <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">{creators.map((row) => <CreatorCard key={row.public_id} row={row} />)}</ul>
             <p className="mt-6 text-center">
@@ -106,7 +122,7 @@ export default async function NichePage({ niche }: { niche: Niche }) {
 
         {extras && stats.count > 0 && (
           <section className="py-10" aria-labelledby="audience-heading">
-            <h2 id="audience-heading" className="text-2xl font-bold mb-4">Zielgruppe & Plattformen: {niche.chip}</h2>
+            <h2 id="audience-heading" className="text-2xl sm:text-3xl font-bold mb-4">Zielgruppe & Plattformen: {niche.chip}</h2>
             <p className="text-ink-soft leading-7">{extras.audience}</p>
             <h3 className="mt-6 text-lg font-bold">Das zeigen die Profile im Verzeichnis</h3>
             <table className="mt-3 w-full max-w-2xl border-collapse text-left text-sm">
@@ -126,7 +142,7 @@ export default async function NichePage({ niche }: { niche: Niche }) {
         )}
 
         <section className="py-10" aria-labelledby="ideas-heading">
-          <h2 id="ideas-heading" className="text-2xl font-bold mb-6">Kampagnen-Ideen: {niche.chip}</h2>
+          <h2 id="ideas-heading" className="text-2xl sm:text-3xl font-bold mb-6">Kampagnen-Ideen: {niche.chip}</h2>
           <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
             {niche.ideas.map((idea) => (
               <div key={idea.title} className="surface-card rounded-lg p-6">
@@ -138,7 +154,7 @@ export default async function NichePage({ niche }: { niche: Niche }) {
         </section>
 
         <section className="py-10" aria-labelledby="tips-heading">
-          <h2 id="tips-heading" className="text-2xl font-bold mb-4">So gelingt das Briefing</h2>
+          <h2 id="tips-heading" className="text-2xl sm:text-3xl font-bold mb-4">So gelingt das Briefing</h2>
           <ul className="list-disc space-y-2 pl-6 text-ink-soft">{niche.tips.map((tip) => <li key={tip}>{tip}</li>)}</ul>
           <p className="mt-4 text-sm">
             <Link href="/brands/ugc-vertrag-vorlage" className="font-semibold text-geo-violet underline">Kostenlose Briefing- und Vertragsvorlage</Link>
@@ -151,7 +167,7 @@ export default async function NichePage({ niche }: { niche: Niche }) {
 
         {extras && (
           <section className="py-10" aria-labelledby="mistakes-heading">
-            <h2 id="mistakes-heading" className="text-2xl font-bold mb-6">Typische Fehler vermeiden</h2>
+            <h2 id="mistakes-heading" className="text-2xl sm:text-3xl font-bold mb-6">Typische Fehler vermeiden</h2>
             <div className="grid gap-5 md:grid-cols-3">
               {extras.mistakes.map((m) => (
                 <div key={m.title} className="surface-card rounded-lg p-6">
@@ -166,7 +182,7 @@ export default async function NichePage({ niche }: { niche: Niche }) {
         )}
 
         <section className="py-10" aria-labelledby="flow-heading">
-          <h2 id="flow-heading" className="text-2xl font-bold mb-4">So läuft die Anfrage über UGC VZ</h2>
+          <h2 id="flow-heading" className="text-2xl sm:text-3xl font-bold mb-4">So läuft die Anfrage über UGC VZ</h2>
           <ol className="list-decimal space-y-2 pl-6 text-ink-soft leading-7">
             <li><strong className="text-ink">Creator auswählen:</strong> Oben das Briefing beschreiben oder einen Beispiel-Chip anklicken, Profile vergleichen und passende Creator markieren.</li>
             <li><strong className="text-ink">Anfrage senden:</strong> Name, E-Mail und Projektbeschreibung eintragen, optional Vergütung, Budget, Frist und Nutzungsrechte. Dies ist eine echte Anfrage: Sie erhalten die Kontaktdaten per E-Mail, und wir schreiben die erreichbaren Creator in Ihrem Namen an.</li>
@@ -175,7 +191,7 @@ export default async function NichePage({ niche }: { niche: Niche }) {
         </section>
 
         <section className="py-10" aria-labelledby="faq-heading">
-          <h2 id="faq-heading" className="text-2xl font-bold mb-4">Häufige Fragen</h2>
+          <h2 id="faq-heading" className="text-2xl sm:text-3xl font-bold mb-4">Häufige Fragen</h2>
           <div className="space-y-3">
             {faq.map((item) => (
               <details key={item.question} className="surface-card rounded-lg p-5">

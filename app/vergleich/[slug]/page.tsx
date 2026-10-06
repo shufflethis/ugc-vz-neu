@@ -58,7 +58,7 @@ export default function VergleichDetailPage({ params }: { params: { slug: string
   };
 
   return (
-    <div className="min-h-screen bg-white text-ink">
+    <div className="min-h-screen text-ink">
       <BreadcrumbSchema items={breadcrumbs} />
       <JsonLdScript data={faqSchema} />
 

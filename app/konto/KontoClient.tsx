@@ -25,7 +25,7 @@ export default function KontoClient({
   loginError?: boolean;
 }) {
   return (
-    <div className="min-h-screen bg-white text-ink">
+    <div className="min-h-screen text-ink">
       {profile ? <EditView profile={profile} /> : <LoginView invalid={loginInvalid} error={loginError} />}
     </div>
   );
@@ -118,7 +118,7 @@ function LoginView({ invalid, error }: { invalid: boolean; error: boolean }) {
   };
 
   return (
-    <main className="px-4 sm:px-8 md:px-16 lg:px-24 pb-24">
+    <main className="px-4 sm:px-8 md:px-16 lg:px-24 pb-24 pt-10 sm:pt-14">
       <section className="max-w-lg mx-auto py-16">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold">Creator-Konto</h1>
@@ -243,7 +243,7 @@ function EditView({ profile }: { profile: CreatorProfileView }) {
   };
 
   return (
-    <main className="px-4 sm:px-8 md:px-16 lg:px-24 pb-24">
+    <main className="px-4 sm:px-8 md:px-16 lg:px-24 pb-24 pt-10 sm:pt-14">
       <div className="max-w-4xl mx-auto py-10">
         <ProjectRequests profile={profile} />
         <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
