@@ -35,8 +35,12 @@ const uiColors = [
 ];
 
 const downloads = [
-  { label: 'Wortmarke PNG', file: '/ugc-vz-logo.png', meta: 'Transparent · 205 × 126' },
-  { label: 'Wortmarke WebP', file: '/ugc-vz-logo.webp', meta: 'Transparent · Web' },
+  { label: 'Wortmarke SVG', file: '/brand/ugc-vz-logo.svg', meta: 'Vektor · Farbe' },
+  { label: 'Wortmarke PNG', file: '/brand/ugc-vz-logo-2400.png', meta: 'Transparent · 2400 px' },
+  { label: 'Weiß SVG', file: '/brand/ugc-vz-logo-white.svg', meta: 'Vektor · für dunkle Flächen', dark: true },
+  { label: 'Weiß PNG', file: '/brand/ugc-vz-logo-white-2400.png', meta: 'Transparent · 2400 px', dark: true },
+  { label: 'Schwarz SVG', file: '/brand/ugc-vz-logo-black.svg', meta: 'Vektor · einfarbig' },
+  { label: 'Schwarz PNG', file: '/brand/ugc-vz-logo-black-2400.png', meta: 'Transparent · 2400 px' },
   { label: 'App-Icon PNG', file: '/apple-touch-icon.png', meta: '180 × 180' },
   { label: 'Icon SVG', file: '/favicon.svg', meta: 'Favicon · skalierbar' },
 ];
@@ -69,9 +73,9 @@ function BubbleTail({ className = '', stroke = 'url(#bk-grad)' }: { className?: 
 }
 
 function Logo({ className = '', variant = 'color' }: { className?: string; variant?: 'color' | 'white' | 'black' }) {
-  const filter = variant === 'white' ? 'brightness(0) invert(1)' : variant === 'black' ? 'brightness(0)' : undefined;
+  const src = variant === 'color' ? '/brand/ugc-vz-logo.svg' : `/brand/ugc-vz-logo-${variant}.svg`;
   // eslint-disable-next-line @next/next/no-img-element
-  return <img src="/ugc-vz-logo.png" alt="UGC VZ Logo" className={className} style={{ filter }} />;
+  return <img src={src} alt="UGC VZ Logo" className={className} />;
 }
 
 function AppIcon({ size = 'h-16 w-16', rounded = 'rounded-[22%]' }: { size?: string; rounded?: string }) {
@@ -108,7 +112,7 @@ export default function BrandKitPage() {
           <div className="mt-16 grid items-end gap-12 lg:mt-24 lg:grid-cols-[1.2fr_1fr]">
             <div>
               <div className="inline-block rounded-3xl bg-white px-8 py-6 sm:px-10 sm:py-8">
-                <Logo className="h-20 w-auto sm:h-28" />
+                <Logo className="h-24 w-auto sm:h-36" />
               </div>
               <h1 className="mt-10 text-4xl font-bold leading-[1.02] tracking-[-0.055em] sm:text-6xl">
                 Echte Creator.<br />
@@ -167,7 +171,7 @@ export default function BrandKitPage() {
           <SectionHead no="02 — Logo" title="Wortmarke & Icon" intro="Die Wortmarke ist das Hauptlogo. Das U-Icon steht dort, wo der Platz für die Wortmarke fehlt: App, Favicon, Avatar." />
           <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr]">
             <div className="flex min-h-[320px] items-center justify-center rounded-3xl border border-hairline bg-white p-10">
-              <Logo className="h-24 w-auto sm:h-28" />
+              <Logo className="h-32 w-auto sm:h-48" />
             </div>
             <div className="grid gap-4">
               <div className="flex items-center justify-center gap-6 rounded-3xl bg-void p-8">
@@ -250,7 +254,7 @@ export default function BrandKitPage() {
               <div key={t as string}>
                 <div className="relative flex h-36 items-center justify-center overflow-hidden rounded-3xl bg-surface">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src="/ugc-vz-logo.png" alt="" className="h-14 w-auto opacity-80" style={style as React.CSSProperties} />
+                  <img src="/brand/ugc-vz-logo.svg" alt="" className="h-14 w-auto opacity-80" style={style as React.CSSProperties} />
                   <svg className="absolute inset-0 h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
                     <line x1="8" y1="92" x2="92" y2="8" stroke="#E5484D" strokeWidth="1.2" vectorEffect="non-scaling-stroke" />
                   </svg>
@@ -557,7 +561,7 @@ export default function BrandKitPage() {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {downloads.map((d) => (
               <a key={d.file} href={d.file} download className="group flex flex-col justify-between rounded-3xl border border-hairline p-6 transition-colors hover:border-ink">
-                <div className="flex h-20 items-center">
+                <div className={`flex h-20 items-center rounded-2xl px-3 ${d.dark ? 'bg-void' : ''}`}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={d.file} alt="" className="max-h-16 w-auto" />
                 </div>
