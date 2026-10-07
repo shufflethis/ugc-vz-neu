@@ -19,14 +19,16 @@ export default function KontoClient({
   profile,
   loginInvalid = false,
   loginError = false,
+  loginNoSession = false,
 }: {
   profile: CreatorProfileView | null;
   loginInvalid?: boolean;
   loginError?: boolean;
+  loginNoSession?: boolean;
 }) {
   return (
     <div className="min-h-screen text-ink">
-      {profile ? <EditView profile={profile} /> : <LoginView invalid={loginInvalid} error={loginError} />}
+      {profile ? <EditView profile={profile} /> : <LoginView invalid={loginInvalid} error={loginError} noSession={loginNoSession} />}
     </div>
   );
 }
@@ -87,7 +89,7 @@ function ProjectRequests({ profile }: { profile: CreatorProfileView }) {
   );
 }
 
-function LoginView({ invalid, error }: { invalid: boolean; error: boolean }) {
+function LoginView({ invalid, error, noSession }: { invalid: boolean; error: boolean; noSession: boolean }) {
   const [email, setEmail] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [sent, setSent] = useState(false);
@@ -134,6 +136,11 @@ function LoginView({ invalid, error }: { invalid: boolean; error: boolean }) {
           </div>
         ) : (
           <form onSubmit={submit} noValidate className="rounded-3xl border border-hairline bg-white p-8 shadow-[0_24px_80px_rgba(35,22,47,0.10)]">
+            {noSession && (
+              <div className="mb-5 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900" role="alert">
+                Dein Anmeldelink war gültig, aber dein Browser hat die Anmeldung nicht behalten. Das passiert oft, wenn eine Mail-App Links in einem eingebauten Fenster öffnet. Öffne den Link bitte direkt in Chrome oder Safari (Link lange drücken und „In Chrome öffnen“ wählen, oder die Adresse kopieren). Fordere dafür hier einen neuen Link an. Oder schreib uns an hi@ugc-vz.de, dann tragen wir deine Änderungen für dich ein.
+              </div>
+            )}
             {(invalid || error) && (
               <div className="mb-5 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900" role="alert">
                 {invalid ? 'Der Anmeldelink ist ungültig oder abgelaufen. Fordere einfach einen neuen an.' : 'Die Anmeldung konnte gerade nicht abgeschlossen werden. Bitte versuche es erneut oder schreibe an hi@ugc-vz.de.'}

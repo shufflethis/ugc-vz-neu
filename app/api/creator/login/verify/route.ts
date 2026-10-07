@@ -59,7 +59,9 @@ export async function GET(request: Request) {
     );
 
     const session = signSession(submission.creator_id);
-    const response = NextResponse.redirect(new URL('/konto', request.url), 303);
+    // login=1: Landet der Nutzer trotz gueltigem Link ohne Session auf /konto (Cookie wurde
+    // nicht behalten, z. B. im In-App-Browser einer Mail-App), erklaert die Seite das.
+    const response = NextResponse.redirect(new URL('/konto?login=1', request.url), 303);
     response.cookies.set(CREATOR_SESSION_COOKIE, session, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',

@@ -17,15 +17,15 @@ export const metadata: Metadata = {
 export default async function KontoPage({
   searchParams,
 }: {
-  searchParams?: { invalid?: string; error?: string };
+  searchParams?: { invalid?: string; error?: string; login?: string };
 }) {
   const token = cookies().get(CREATOR_SESSION_COOKIE)?.value;
   const creatorId = verifySession(token);
 
   if (!creatorId || !isDatabaseConfigured()) {
-    return <KontoClient profile={null} loginInvalid={searchParams?.invalid === '1'} loginError={searchParams?.error === '1'} />;
+    return <KontoClient profile={null} loginInvalid={searchParams?.invalid === '1'} loginError={searchParams?.error === '1'} loginNoSession={searchParams?.login === '1'} />;
   }
 
   const profile = await loadCreatorProfile(getDatabase(), creatorId);
-  return <KontoClient profile={profile} />;
+  return <KontoClient profile={profile} loginNoSession={!profile && searchParams?.login === '1'} />;
 }
