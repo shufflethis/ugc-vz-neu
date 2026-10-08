@@ -32,6 +32,8 @@ export interface Competitor {
 const V = '2026-08-14';
 // Eigener Creator-Count: gegen die Live-Suche (/api/v1/creators/search) nachgezaehlt.
 const V_OWN = '2026-08-26';
+// Creator Pool und LikeGroup: Angaben von den Anbieterseiten am 08.10.2026 gelesen.
+const V_OCT = '2026-10-08';
 
 const NOT_PUBLIC = 'nicht öffentlich';
 
@@ -203,6 +205,46 @@ export const competitors: Competitor[] = [
       'Verträge und Zahlungsabwicklung sind inklusive',
     ],
     bestFor: 'Brands, die ohne Abo buchen, die rechtliche und finanzielle Abwicklung aber trotzdem über eine Plattform laufen lassen wollen.',
+    faqs: [],
+  },
+  {
+    slug: 'creator-pool',
+    name: 'Creator Pool',
+    url: 'https://www.thecreatorpool.de',
+    model: 'Marktplatz mit Projekt-Ausschreibung',
+    isOwn: false,
+    hasOwnPage: false,
+    pricing: { value: 'Konto und Suche kostenlos; Konditionen vereinbaren Brand und Creator direkt', source: 'https://www.thecreatorpool.de', verifiedAt: V_OCT, isPublic: true },
+    creatorCount: { value: NOT_PUBLIC, source: 'https://www.thecreatorpool.de', verifiedAt: V_OCT, isPublic: false },
+    directContact: { value: 'Nein, Chat über die Plattform', source: 'https://www.thecreatorpool.de', verifiedAt: V_OCT, isPublic: true },
+    commission: { value: NOT_PUBLIC, source: 'https://www.thecreatorpool.de', verifiedAt: V_OCT, isPublic: false },
+    markets: { value: 'DACH', source: 'https://www.thecreatorpool.de', verifiedAt: V_OCT, isPublic: true },
+    strengths: [
+      'Marken stellen Projekte ein, Creator bewerben sich mit Preis und Leistungen',
+      'Nach eigener Angabe verbundene Social-Media-Kanäle statt Screenshots',
+      'Neben UGC auch Kampagnen und Affiliate-Modelle',
+    ],
+    bestFor: 'Kleine und mittelständische Marken, die ein Projekt ausschreiben und sich Angebote von Creatorn einholen wollen.',
+    faqs: [],
+  },
+  {
+    slug: 'likegroup',
+    name: 'LikeGroup',
+    url: 'https://likegroup.de',
+    model: 'Agentur (Full-Service, Projektmanagement, Contracting)',
+    isOwn: false,
+    hasOwnPage: false,
+    pricing: { value: NOT_PUBLIC, source: 'https://likegroup.de', verifiedAt: V_OCT, isPublic: false },
+    creatorCount: { value: '12.000+ (Eigenangabe, über CreatorJobs.com)', source: 'https://likegroup.de', verifiedAt: V_OCT, isPublic: true },
+    directContact: { value: 'Nein, Briefing und Abwicklung über die Agentur', source: 'https://likegroup.de', verifiedAt: V_OCT, isPublic: true },
+    commission: { value: NOT_PUBLIC, source: 'https://likegroup.de', verifiedAt: V_OCT, isPublic: false },
+    markets: { value: NOT_PUBLIC, source: 'https://likegroup.de', verifiedAt: V_OCT, isPublic: false },
+    strengths: [
+      'Strategie, Creator-Sourcing, Produktion und Reporting aus einer Hand',
+      'Drei Zusammenarbeitsmodelle: Full-Service, Projektmanagement oder nur Contracting',
+      'Nach eigener Angabe 80+ Marken im Netzwerk und 320+ Kampagnen',
+    ],
+    bestFor: 'Größere Marken, die Creator-Content als Dienstleistung einkaufen und ein externes Team die Umsetzung übernehmen lassen wollen.',
     faqs: [],
   },
 ];
