@@ -18,6 +18,7 @@
     "test:lead-gate": "node --import tsx scripts/test-lead-gate.ts",
     "test:creator-registration": "node --import tsx scripts/test-creator-registration.ts",
     "test:creator-dashboard": "node --import tsx scripts/test-creator-dashboard.ts",
+    "test:collaborations": "node --import tsx scripts/test-collaborations.ts",
     "test:creator-export": "node --import tsx scripts/test-creator-export.ts",
     "test:private-creator-export": "node --import tsx scripts/test-private-creator-export.ts",
     "db:migrate": "node scripts/migrate-neon.mjs",
@@ -59,6 +60,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.9",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",

@@ -253,6 +253,10 @@ function EditView({ profile }: { profile: CreatorProfileView }) {
     <main className="px-4 sm:px-8 md:px-16 lg:px-24 pb-24 pt-10 sm:pt-14">
       <div className="max-w-4xl mx-auto py-10">
         <ProjectRequests profile={profile} />
+        <Link href="/konto/kooperationen" className="mb-8 block rounded-2xl border border-geo-violet/30 bg-geo-violet/5 p-6 hover:bg-geo-violet/10">
+          <h2 className="text-xl font-semibold">Meine Kooperationen →</h2>
+          <p className="mt-2 text-sm leading-6 text-ink-soft">Einladungen ansehen, fehlende Angaben ergänzen und deine nächsten Schritte fortsetzen.</p>
+        </Link>
         <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
           <div>
             <p className="text-sm font-bold uppercase tracking-[0.15em] text-geo-violet">Creator-Konto</p>

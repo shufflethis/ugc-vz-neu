@@ -5,6 +5,8 @@ import "./globals.css";
 import Footer from "@/src/components/FooterNew";
 import SiteHeader from "./components/SiteHeader";
 import WebMcpAgentLayer from "./components/WebMcpAgentLayer";
+import PublicOnly from './components/PublicOnly';
+import SiteAnalytics from './components/SiteAnalytics';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -83,28 +85,19 @@ export default function RootLayout({
         <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
         <meta name="apple-mobile-web-app-title" content="UGC-VZ" />
         <link rel="manifest" href="/site.webmanifest" />
-        {/* Agent-Traffic-Analyse (agenttracking.co): cookielos, misst KI-Agenten-Zugriffe */}
-        <script defer data-domain="ugc-vz.de" src="https://agenttracking.co/agent.js" />
-        {/* Privacy-friendly analytics by Plausible */}
-        <script async src="https://analytics.polymarkt.de/js/pa-PUMsAuyv9o4MglSBuGfwG.js" />
-        <script
-          dangerouslySetInnerHTML={{
-            __html:
-              'window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};plausible.init()',
-          }}
-        />
       </head>
       <body className="flex flex-col min-h-screen">
-        <SiteHeader />
+        <PublicOnly><SiteHeader /></PublicOnly>
         <main className="relative isolate flex-grow">
           {/* Logo-Glow hinter jedem Seitenkopf (Brand Kit); Seiten mit eigener Flaeche decken ihn ab */}
           <div aria-hidden="true" className="page-glow pointer-events-none absolute inset-x-0 top-0 -z-10 h-[560px] overflow-hidden" />
           {children}
         </main>
-        <Footer />
+        <PublicOnly><Footer />
         <ToastContainer position="top-center" autoClose={3000} hideProgressBar={false} />
         {/* WebMCP: Agent-Tools via navigator.modelContext (rendert nichts) */}
-        <WebMcpAgentLayer />
+        <WebMcpAgentLayer /></PublicOnly>
+        <SiteAnalytics />
       </body>
     </html>
   )

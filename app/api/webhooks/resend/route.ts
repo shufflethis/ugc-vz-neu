@@ -4,6 +4,8 @@ import { Resend } from 'resend';
 import { createHash } from 'crypto';
 import { getDatabase, isDatabaseConfigured } from '@/app/lib/database';
 import { sendCreatorOutreach } from '@/app/lib/creator-outreach';
+import { CollabStore } from '@/app/lib/collaborations/store';
+import { enabled as collaborationsEnabled } from '@/app/lib/collaborations/security';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -162,8 +164,19 @@ export async function POST(req: Request) {
   }
 
   const data = event.data || {};
-  const tags = data.tags || {};
+  const tags = Array.isArray(data.tags) ? Object.fromEntries(data.tags.map((t: {name:string;value:string})=>[t.name,t.value])) : data.tags || {};
   const audience = plainText(tags.audience, 40);
+  if (audience === 'collaboration') {
+    if (!collaborationsEnabled()) return NextResponse.json({ error: 'Campaign events unavailable' }, {status:503});
+    const inviteId=plainText(tags.collab_invite,80);
+    if (!/^[a-f0-9-]{36}$/.test(inviteId)) return NextResponse.json({error:'Invalid campaign invitation'}, {status:400});
+    try {
+      const occurredAt=typeof event.created_at==='string' && !Number.isNaN(Date.parse(event.created_at))?event.created_at:new Date().toISOString();
+      await new CollabStore().emailEvent(inviteId,webhookId,plainText(event.type,80),plainText(data.email_id,160),occurredAt);
+      rememberWebhookId(webhookId);
+      return NextResponse.json({received:true});
+    } catch { return NextResponse.json({error:'Campaign event persistence failed'},{status:500}); }
+  }
   const leadId = plainText(tags.lead_id, 80) || 'unbekannt';
   const creatorId = plainText(tags.creator_id, 80);
   const label = audience === 'brand'

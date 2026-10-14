@@ -3,6 +3,7 @@
 .playwright-mcp
 .remember
 .next
+.next-demo
 node_modules
 TRASH
 .env*

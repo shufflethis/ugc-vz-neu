@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import goneSlugsJson from '@/content/gone-slugs.json';
 import publishedSlugsJson from '@/content/published-slugs.json';
+import { authorizeCollabDemo } from '@/app/lib/collab-demo-auth';
+import { isCollabDemoPath } from '@/app/lib/collab-demo-path';
+import { isCollaborationPath } from '@/app/lib/collaborations/model';
 
 const goneSlugs = new Set(goneSlugsJson as string[]);
 const publishedSlugs = new Set(publishedSlugsJson as string[]);
@@ -39,7 +42,40 @@ function gone(request: NextRequest) {
   }), request);
 }
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
+  const collabPath = request.nextUrl.pathname;
+  if (collabPath.startsWith('/md/') && isCollaborationPath(collabPath.slice(3))) {
+    return new NextResponse('Not found', {status:404,headers:{'Cache-Control':'private, no-store','X-Robots-Tag':'noindex, nofollow'}});
+  }
+  if (isCollaborationPath(collabPath)) {
+    const admin = /^\/admin\/kooperationen(\/|$)/.test(collabPath) || collabPath === '/api/collaborations/admin';
+    const allowed = !admin || await authorizeCollabDemo(request.headers.get('authorization'),process.env.COLLAB_ADMIN_PASSWORD || '');
+    const response=allowed?NextResponse.next():new NextResponse('Interner Zugang erforderlich.',{status:401,headers:{'WWW-Authenticate':'Basic realm="UGC VZ Verwaltung", charset="UTF-8"'}});
+    response.headers.set('Cache-Control','private, no-store, max-age=0');
+    response.headers.set('CDN-Cache-Control','no-store');
+    response.headers.set('Vercel-CDN-Cache-Control','no-store');
+    response.headers.set('X-Robots-Tag','noindex, nofollow, noarchive');
+    response.headers.set('Referrer-Policy','no-referrer');
+    return response;
+  }
+  // Authenticate before content negotiation, including RSC/prefetch requests.
+  // Never publish the demo through the Markdown mirror.
+  if (request.nextUrl.pathname.startsWith('/md/demo/')) {
+    return new NextResponse('Not found', { status: 404, headers: { 'Cache-Control': 'private, no-store', 'X-Robots-Tag': 'noindex, nofollow' } });
+  }
+  if (isCollabDemoPath(request.nextUrl.pathname)) {
+    const allowed = await authorizeCollabDemo(request.headers.get('authorization'));
+    const response = allowed ? NextResponse.next() : new NextResponse('Geschützte Vorschau. Bitte mit dem Demo-Zugang anmelden.', {
+      status: 401,
+      headers: { 'WWW-Authenticate': 'Basic realm="UGC VZ Vorschau", charset="UTF-8"', 'Content-Type': 'text/plain; charset=utf-8' },
+    });
+    response.headers.set('Cache-Control', 'private, no-store, max-age=0');
+    response.headers.set('CDN-Cache-Control', 'no-store');
+    response.headers.set('Vercel-CDN-Cache-Control', 'no-store');
+    response.headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive');
+    response.headers.set('Referrer-Policy', 'no-referrer');
+    return response;
+  }
   // Vercel may keep the deployment hostname in `Host` while preserving the
   // public custom domain in `x-forwarded-host` or the request URL. Check all
   // authoritative host representations so the retired WordPress subdomain is

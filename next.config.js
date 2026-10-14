@@ -21,6 +21,8 @@ const contentSecurityPolicy = [
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Isolate local demo verification from the running production build.
+  distDir: process.env.UGCVZ_BUILD_DIR || '.next',
   // Disable static optimization for problematic pages during build
   experimental: {
     missingSuspenseWithCSRBailout: false,

@@ -44,19 +44,23 @@ export async function GET(request: Request) {
     // damit ist die E-Mail verifiziert, auch wenn das Profil aus dem Sheet-Import
     // stammt und nie ein Double-Opt-in durchlaufen hat. coalesce haelt einen
     // bereits vorhandenen Zeitstempel fest, das CTE macht beides atomar.
-    await sql.query(
+    const verified = await sql.query(
       `WITH consumed AS (
          UPDATE creator_verification_tokens
          SET used_at = now()
-         WHERE id = $1 AND used_at IS NULL
+         WHERE id = $1 AND used_at IS NULL AND expires_at > now()
          RETURNING creator_id
        )
        UPDATE creator_private_contacts c
        SET email_verified_at = coalesce(c.email_verified_at, now()), updated_at = now()
        FROM consumed
-       WHERE c.creator_id = consumed.creator_id`,
+       WHERE c.creator_id = consumed.creator_id
+       RETURNING c.creator_id`,
       [submission.id],
     );
+
+    // Concurrent redemptions must not mint a session after another request consumed the token.
+    if (!verified.length) return redirectToKonto(request, 'invalid');
 
     const session = signSession(submission.creator_id);
     // login=1: Landet der Nutzer trotz gueltigem Link ohne Session auf /konto (Cookie wurde
