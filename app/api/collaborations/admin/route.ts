@@ -5,11 +5,9 @@ import { CollabStore,newBatchId } from '@/app/lib/collaborations/store';
 import { campaignSchema,baseUrl,decryptToken,enabled } from '@/app/lib/collaborations/security';
 import { adminAuthorized,bodyOf,json,apiError } from '@/app/lib/collaborations/http';
 import { invitationEmail } from '@/app/lib/collaborations/email';
-import { normalizeGenderValue } from '@/app/lib/normalize-gender';
 export const runtime='nodejs'; export const dynamic='force-dynamic'; export const maxDuration=60;
 const uuid=z.uuid();
-// Weibliche Profile bekommen die Creatorinnen-Variante des Briefings; männlich/unbekannt die Standardvariante.
-const invitationUrl=(slug:string,encrypted:string,gender?:string)=>`${baseUrl()}/kooperationen/${slug}${normalizeGenderValue(gender)==='female'?'?fuer=creatorinnen':''}#einladung=${decryptToken(encrypted)}`;
+const invitationUrl=(slug:string,encrypted:string)=>`${baseUrl()}/kooperationen/${slug}#einladung=${decryptToken(encrypted)}`;
 export async function GET(request:NextRequest) {
   if(!await adminAuthorized(request.headers.get('authorization'))) return json({error:'Anmeldung erforderlich.'},401);
   if(!enabled()) return json({error:'Kooperationen noch nicht eingerichtet.'},503);
@@ -74,7 +72,7 @@ export async function POST(request:NextRequest) {
         const claim=await store.claimSend(row.id,body.campaignVersion);
         if(!claim) {results.push({id:row.id,status:'übersprungen'});continue;}
         try {
-          const mail=invitationEmail({name:row.display_name,note:row.personal_note,content:row.content,url:invitationUrl(row.campaign_slug,row.token_encrypted,row.gender)});
+          const mail=invitationEmail({name:row.display_name,note:row.personal_note,content:row.content,url:invitationUrl(row.campaign_slug,row.token_encrypted)});
           const response=await resend.emails.send({from,to:row.recipient,replyTo:row.content.contactEmail,...mail,tags:[{name:'audience',value:'collaboration'},{name:'collab_invite',value:row.id}]},{idempotencyKey:`collab-${row.id}`});
           if(response.error||!response.data?.id) {
             await store.finishSend(row.id,null);

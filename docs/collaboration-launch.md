@@ -91,6 +91,22 @@ Ein „eingelöster Link“ bezeichnet den aktiven Klick auf „Weiter zum Start
 keine Messung jeder Seitenansicht. Öffnungsraten sind kein Erfolgsmaß. Antworten
 bleiben im Postfach. Kampagnendaten und Protokoll sind in der Verwaltung sichtbar.
 
+## FOMO-Seite nach Flos Content-Paket (14.10.2026)
+
+- Einladungslink führt auf den für alle gleichen oberen Teil (`/kooperationen/fomo`, Faktenkasten).
+  Erst nach „Weiter zum Start“ zeigt `/konto/kooperationen/<id>` das Briefing in der passenden Variante.
+- Variante serverseitig: Profil weiblich → `w`, männlich → `m`, sonst `n`. Testlinks `?v=w|m|n`
+  (nur Flo/Gorden, nicht verlinken; erscheinen in der Verwaltung als „Testaufruf“). Das Geschlecht
+  steht nie im HTML, im Link oder in der Verwaltung.
+- Alle Zahlen in `app/lib/collaborations/fomo-config.ts` (offene Werte dort kommentiert). Platzhalter
+  (Fotos, Discord-Link, Kontaktadresse, Firmierung) werden sichtbar als graue Box ausgegeben.
+- Vermittlungs-ID `UGCVZ-FOMO-0001` fortlaufend ab Einladung (Migration 014), auf der Bestätigungsseite
+  mit „ID kopieren“. Events in `collab_events`: invitation_opened, page_view, video_play, cta_click,
+  accept, declined (mit Gründen), handover, Übergabe/Aufnahme aus der Verwaltung.
+- Videos und Screenshots liegen unter `public/media/fomo/` (nicht unter `/kooperationen`, damit das CDN cacht).
+- Noch nicht gebaut: Bestätigungsmail mit ID an den Creator, Weiterleitung neuer Zusagen an Flo,
+  Datenschutzabschnitt „Weitergabe an fomo“ (rechtlich prüfen), optionale Module W1/W2/M1/M2.
+
 ## Störungen und Wiederaufnahme
 
 - Abgelaufener/eingelöster Link: Creator über `/konto` anmelden; vorhandene

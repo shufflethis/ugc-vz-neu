@@ -1,156 +1,192 @@
 import './fomo-brief.css';
+import { FOMO, earningsExamples, type Variant } from '../lib/collaborations/fomo-config';
+import DemoVideo from './DemoVideo';
 
-// Inhalte und Medien aus Flos Briefing-Seiten (fomo-creator-briefing[-women].vercel.app, Stand 14.10.2026).
-// Alle Handlungsaufrufe führen zurück zur UGC-VZ-Einladung (#start), damit Zusagen zugeordnet bleiben.
-export type FomoVariant = 'creator' | 'creatorin';
-export const fomoVariant = (fuer?: string | string[]): FomoVariant => fuer === 'creatorinnen' ? 'creatorin' : 'creator';
+// Unterer Teil der fomo-Kampagnenseite nach Flos Content-Paket (Kapitel 3 bis 8).
+// Copy wörtlich aus dem Paket; Zahlen ausschließlich aus FOMO (fomo-config.ts).
+const M = '/media/fomo/';
+const F = FOMO.fixumShort;
 
-const M = '/kooperationen/fomo/';
-const V = {
-  creator: {
-    eyebrow: 'Creator-Partnerprogramm · Deutschland',
-    title: ['Eine Partnerschaft für Creator,', 'die Reichweite aufbauen können.'],
-    lead: 'Klare Konditionen, persönliche Betreuung, Start innerhalb von 48 Stunden.',
-    bullets: ['Kein Krypto-Wissen nötig', 'Neue Accounts, deine Reichweite ist optional', 'Deutscher Ansprechpartner'],
-    fomoExtra: '',
-    jobImg: ['stock-creator-tripod.jpg', 'Symbolbild: junger Mann filmt sich mit dem Smartphone auf Stativ'],
-    firstCard: ['Neuer Account, nur für fomo', 'Kein Risiko für deine bestehende Marke.'],
-    why: [['✅', 'Freie Zeiteinteilung.', 'Du produzierst, wann und wo es für dich passt. Smartphone und CapCut genügen.'], ['✅', 'Langfristige Beteiligung.', 'Deine Empfehlungsbasis bleibt dir, und du bist lebenslang an ihren Gebühren beteiligt.'], ['✅', 'Entwicklung nach Leistung.', 'Die erfolgreichsten Creator posten 3 bis 4 Mal am Tag und werden in den Gold-Server mit Vollzeit-Retainer aufgenommen.']],
-    whyImg: ['stock-creator-live.jpg', 'Symbolbild: Creator filmt sich live mit dem Smartphone'],
-    formats: ['Echte fomo-Formate aus der Content-Bibliothek.', 'Stills aus Beispielvideos, die du nach dem Onboarding als Skript bekommst. Du übernimmst das Format und setzt es in deinem eigenen Stil um.'],
-    cta: 'Jetzt als fomo Creator starten',
+type Copy = {
+  kicker: string; claim: string; sub: string; before: string[]; after: string[];
+  benefits: [string, string, string][]; photos: [string, string];
+  step1: string; earnIntro: string; earnExtra?: string; faqSwap: [string, string][]; faqExtra: [string, string][];
+  ctaTitle: string; videos: string[];
+};
+
+const COPY: Record<Variant, Copy> = {
+  w: {
+    kicker: 'Für Creatorinnen, die mehr wollen als den nächsten Einzelauftrag',
+    claim: 'Schluss mit Einmal-Jobs. Dein Content zahlt jeden Monat.',
+    sub: `Als UGC Creatorin kennst du das: pitchen, warten, ein Video, eine Rechnung, und dann wieder von vorn. Mit der fomo Partnerschaft bekommst du ein festes Fixum von ${F} im Monat und eine lebenslange Provision von 25 % bis 50 % auf alle, die über dich zur App kommen. Ein Video am Tag, gedreht wo du willst: zu Hause, in Lissabon oder auf Bali.`,
+    before: ['Einzelaufträge ohne Planbarkeit', 'Jede Woche neu pitchen', 'Bezahlt wird einmal, dann ist Schluss'],
+    after: ['Festes Fixum jeden Monat, vorab vereinbart', 'Ein klarer Rhythmus: ein Video pro Tag', 'Provision, die weiterläuft, solange deine Geworbenen traden'],
+    benefits: [
+      ['✨', 'Dein eigenes Einkommen', `Das Fixum steht fest, bevor du loslegst: ${F} im Monat. Du weißt, womit du planen kannst, und bist von niemandem abhängig.`],
+      ['🌍', 'Arbeiten von überall', 'Smartphone und CapCut genügen. Ob Berlin, Bali oder Dubai: Du drehst, wann und wo es für dich passt. Digital Nomad, Auswandern oder einfach das Sofa, deine Entscheidung.'],
+      ['🌱', 'Etwas, das bleibt', `Deine Provision startet bei 25 % und steigt mit der Zeit bis 50 %. Und selbst wenn du irgendwann aufhörst, behältst du lebenslang ${FOMO.commissionKeep} % auf alle, die du schon geworben hast.`],
+    ],
+    photos: ['Junge Frau filmt sich mit Smartphone auf Stativ, echte Wohnung, natürliches Licht, kein Studio', 'Frau mit Laptop oder Smartphone an einem Ort mit Reisegefühl (Strand, Café im Süden), authentisch, nicht gestellt'],
+    step1: 'Du prüfst deine Angaben und bestätigst. Dauert zwei Minuten.',
+    earnIntro: 'Planbar statt hoffen: So setzt sich dein Verdienst zusammen.',
+    faqSwap: [['Kann ich das von unterwegs machen?', 'Ja. Smartphone und Internet genügen. Wo du drehst, entscheidest du.']],
+    faqExtra: [],
+    ctaTitle: 'Bereit für ein Einkommen, das nicht nach einem Video endet?',
+    videos: ['17b5c5fb_erste-stunde-trading', 'f0668244_zufaellige-side-hustles', '28856891_mama-traden', 'c82a16c0_hook-demo-2'],
   },
-  creatorin: {
-    eyebrow: 'Creator-Partnerprogramm · Für Creatorinnen',
-    title: ['Eine Partnerschaft für Creatorinnen,', 'die flexibel und langfristig planen.'],
-    lead: 'Planbares Zusatzeinkommen, freie Zeiteinteilung und ein Arbeitsort, den du selbst wählst. Start innerhalb von 48 Stunden.',
-    bullets: ['Kein Krypto-Wissen nötig, du lernst alles im Onboarding', 'Ortsunabhängig und flexibel planbar', 'Persönliche Betreuung auf Deutsch'],
-    fomoExtra: ' Deshalb braucht es Creatorinnen, die das Thema verständlich erklären.',
-    jobImg: ['stock-woman-filming.jpg', 'Symbolbild: junge Frau filmt sich zu Hause mit Kamera auf Stativ'],
-    firstCard: ['Eigener Account, nur für fomo', 'Dein privates Profil bleibt deins.'],
-    why: [['✨', 'Planbares Zusatzeinkommen.', 'Der Retainer wird vorab fest vereinbart, die Provision kommt laufend dazu.'], ['🌍', 'Ortsunabhängig arbeiten.', 'Ob zu Hause oder unterwegs: Du produzierst mit dem Smartphone, wo es für dich passt.'], ['🌱', 'Langfristige Beteiligung.', 'Deine Empfehlungsbasis bleibt dir, und du bist lebenslang an ihren Gebühren beteiligt.'], ['⏰', 'Freie Zeiteinteilung.', 'Für den Einstieg genügt ein Video pro Tag. Die erfolgreichsten Creator posten 3 bis 4 Mal täglich.']],
-    whyImg: ['stock-woman-bali.jpg', 'Symbolbild: Frau arbeitet am Laptop an einer Strandbar am Meer'],
-    formats: ['Erprobte Formate, umgesetzt in deinem Stil.', 'Stills aus echten Beispielvideos der fomo Content-Bibliothek. Nach dem Onboarding bekommst du die Skripte dazu und setzt jedes Format in deinem eigenen Stil um.'],
-    cta: 'Jetzt als fomo Creatorin starten',
+  m: {
+    kicker: 'Für Creator, die aus Reichweite echtes Geld machen wollen',
+    claim: 'Schluss mit Einmal-Jobs. Bau dir ein Einkommen, das weiterläuft.',
+    sub: `Ein Auftrag, ein Video, eine Zahlung, und dann wieder Akquise. Hier bekommst du ein festes Fixum von ${F} im Monat plus 25 % bis 50 % lebenslange Provision auf alle, die über dich zu fomo kommen. Ein Video am Tag, dreimal gepostet. Der Rest arbeitet für dich.`,
+    before: ['Bezahlt pro Video, dann ist Schluss', 'Jeden Monat bei null anfangen', 'Deine Reichweite verdient für andere'],
+    after: ['Fester Betrag jeden Monat', 'Provision, die mit der Zeit von 25 % auf 50 % steigt', 'Deine Geworbenen bleiben dir, lebenslang'],
+    benefits: [
+      ['💵', 'Fester Betrag jeden Monat', `${F} Fixum, vereinbart bevor du startest. Nach der Testphase wird neu verhandelt, bei den meisten geht es nach oben.`],
+      ['📈', 'Provision, die mitwächst', 'Start bei 25 %, nach 12 Monaten 50 % der Gebühren deiner Geworbenen. Nicht für ein paar Wochen, sondern lebenslang.'],
+      ['🏆', 'Aufstieg nach Leistung', 'Ab 500 oder 1.000 Empfehlungen geht es auf den Gold Server: Vollzeit Retainer und Coaching. Die Top Creator posten 3 bis 4 Mal am Tag.'],
+    ],
+    photos: ['Junger Mann dreht ein Video mit Smartphone, Alltagssetting (Auto, Wohnung, Straße)', 'Creator am Schreibtisch mit Smartphone und Dashboard auf dem Bildschirm'],
+    step1: 'Angaben checken, bestätigen, fertig. Zwei Minuten.',
+    earnIntro: 'Klare Zahlen: So setzt sich dein Verdienst zusammen.',
+    earnExtra: 'Zum Vergleich: Viele Affiliate Programme zahlen Provision nur für begrenzte Zeit. Bei fomo läuft sie weiter, solange deine Geworbenen traden.',
+    faqSwap: [['Geht das neben meinem Job?', 'Ja. Ein Video pro Tag, dasselbe Video auf drei Plattformen. Viele drehen mehrere Videos am Stück vor.']],
+    faqExtra: [['Muss ich auf Englisch posten?', 'Deine Posting Sprache stimmen wir im Onboarding ab. Empfehlungen aus den USA sind mehr wert, im Guide steht, wie du mit englischen Untertiteln eine US Zielgruppe aufbaust.']],
+    ctaTitle: 'Bereit, dass deine Videos weiterzahlen?',
+    videos: ['42adbe1b_was-ist-fomo-1', '3bba8f7d_day-in-the-life-1', 'd898ed40_ferrari', 'b2e12c49_sechs-monate'],
+  },
+  n: {
+    kicker: 'Für Creator, die mehr wollen als den nächsten Einzelauftrag',
+    claim: 'Schluss mit Einmal-Jobs. Dein Content zahlt jeden Monat.',
+    sub: `Festes Fixum von ${F} im Monat, dazu 25 % bis 50 % lebenslange Provision auf alle, die über dich zu fomo kommen. Ein Video am Tag, auf drei Plattformen, in deinem Stil.`,
+    before: ['Einzelaufträge ohne Planbarkeit', 'Jede Woche neu pitchen', 'Bezahlt wird einmal, dann ist Schluss'],
+    after: ['Festes Fixum jeden Monat, vorab vereinbart', 'Ein klarer Rhythmus: ein Video pro Tag', 'Provision, die weiterläuft, solange deine Geworbenen traden'],
+    benefits: [
+      ['💵', 'Planbar', 'Fixum vorab fest vereinbart, alle 30 Tage ausgezahlt.'],
+      ['📱', 'Flexibel', 'Smartphone genügt, du entscheidest wann und wo.'],
+      ['🌱', 'Langfristig', `Provision lebenslang, ${FOMO.commissionKeep} % bleiben auch, wenn du aufhörst.`],
+    ],
+    photos: ['Zwei Creator (Frau und Mann) drehen gemeinsam, locker', ''],
+    step1: 'Du prüfst deine Angaben und bestätigst. Dauert zwei Minuten.',
+    earnIntro: 'Planbar statt hoffen: So setzt sich dein Verdienst zusammen.',
+    faqSwap: [['Kann ich das von unterwegs machen?', 'Ja. Smartphone und Internet genügen. Wo du drehst, entscheidest du.']],
+    faqExtra: [],
+    ctaTitle: 'Bereit für ein Einkommen, das nicht nach einem Video endet?',
+    videos: ['42adbe1b_was-ist-fomo-1', '5c98f637_walkthrough-camcorder', 'f0668244_zufaellige-side-hustles', '8cfe52c9_chatgpt'],
   },
 };
-const stills = [['3bba8f7d', 'Ein Tag in meinem Leben'], ['28856891', 'Mama das Traden beibringen'], ['17b5c5fb', 'Meine erste Trading-Stunde'], ['b2e12c49', 'Sechs-Monats-Transformation'], ['d898ed40', 'Tag X: Aus X einen Ferrari machen'], ['42adbe1b', 'Ist fomo legit?']];
-const ladder = [[25, 'Start'], [30, '2 Mon.'], [35, '4 Mon.'], [40, '6 Mon.'], [45, '8 Mon.'], [50, '12 Mon.']] as const;
-const steps = [['Einladung bestätigen', 'Du bist über UGC VZ eingeladen. Bestätige deine vorhandenen Angaben, keine neue Bewerbung nötig.'], ['Gespräch und Retainer', 'Wir stimmen deinen Start-Retainer ab. Meist 200 $ bis 1.000 $ für die ersten 30 Tage.'], ['Onboarding', 'Ticket auf Discord, fomo laden, neue Accounts auf TikTok, Instagram und Facebook.'], ['Testphase', '15 Posts an 15 Tagen, maximal 21 Tage. Das zahlt dir schon die Hälfte deines Retainers.'], ['Gold-Server', 'Ab 500 oder 1.000 Empfehlungen oder mit sichtbarem Einsatz: Vollzeit-Retainer und Coaching von Will und Charlie.'], ['Provision wächst', 'Lebenslang ab 25 % der Gebühren deiner Geworbenen, mit der Zeit bis 50 %.']];
-const faq = [
-  ['Brauche ich Krypto-Wissen?', 'Nein. Du brauchst Gespür für Hooks und virale Videos. Was fomo kann und wie du darüber sprichst, lernst du im Guide, in der Content-Bibliothek mit fertigen Skripten und in den Calls.'],
-  ['Brauche ich viele Follower?', 'Nein. Du startest normalerweise mit neuen Accounts, die nur für fomo da sind. Deine bisherigen viralen Videos zeigen, dass du weißt, wie Reichweite entsteht. Deine bestehende Reichweite zu nutzen, ist freiwillig.'],
-  ['Was kostet mich das?', 'Keine Gebühren, kein Abo. Die einzige Ausgabe, die wir offen nennen: Für TikTok kaufen die meisten einen Account mit 1.000 Followern für 60 $ über den fomo-Partner, weil TikTok den Link in der Bio erst ab 1.000 Followern freischaltet. Hast du schon einen ungenutzten TikTok mit über 1.000 Followern, nimmst du den.'],
-  ['Wie viel Aufwand ist das?', 'Ein Video pro Tag, gepostet auf TikTok, Instagram und Facebook. Facebook läuft automatisch über Instagram. Wer mehr will, postet 3 bis 4 Mal am Tag, so machen es die Top-Creator.'],
-  ['Wie und wann werde ich bezahlt?', 'Der Retainer kommt alle 30 Tage, die Testphase zahlt die Hälfte davon. Zahlungen gehen an deine fomo-Wallet. Deine Provision siehst du jederzeit live im Creator Dashboard in der App.'],
-  ['Muss ich auf Englisch posten?', 'Deine Posting-Sprache stimmen wir im Onboarding ab. Wichtig zu wissen: Empfehlungen aus den USA sind mehr wert. Im Guide steht, wie du mit englischen Untertiteln, Titeln oder Hashtags eine US-Zielgruppe aufbaust.'],
-  ['Was passiert, wenn die Testphase nicht klappt?', 'Du bist nicht raus. Du bleibst auf dem Affiliate-Server, kannst ohne Posting-Pflicht mit deinem Link weiterverdienen, nach 500 Empfehlungen eine neue Chance bekommen oder eine weitere Testphase anfragen.'],
-  ['Was, wenn ich irgendwann aufhöre?', 'Du verdienst lebenslang weiter an allen, die du geworben hast. Dein Satz fällt dann auf 25 % zurück, aber er bleibt.'],
+
+const TITLES: Record<string, string> = {
+  '17b5c5fb_erste-stunde-trading': 'Meine erste Trading Stunde', 'f0668244_zufaellige-side-hustles': 'Tag 3: Zufällige Side Hustles',
+  '28856891_mama-traden': 'Mama das Traden beibringen', 'c82a16c0_hook-demo-2': 'Hook Beispiel', '42adbe1b_was-ist-fomo-1': 'Ist fomo legit?',
+  '3bba8f7d_day-in-the-life-1': 'Ein Tag in meinem Leben', 'd898ed40_ferrari': 'Tag X: Aus X einen Ferrari machen',
+  'b2e12c49_sechs-monate': 'Sechs Monats Transformation', '5c98f637_walkthrough-camcorder': 'Walkthrough durch die App', '8cfe52c9_chatgpt': 'ChatGPT Format',
+};
+
+const faqBase = (contact: string): [string, string][] => [
+  ['Brauche ich Krypto Wissen?', 'Nein. Du brauchst ein Gespür für Hooks und gute Videos. Was fomo kann und wie du darüber sprichst, lernst du im Onboarding, mit fertigen Skripten aus der Content Bibliothek.'],
+  ['Brauche ich viele Follower?', 'Nein. Du startest mit neuen Accounts nur für fomo. Dein privates Profil bleibt deins.'],
+  ['Wie viel Zeit kostet das?', 'Ein Video pro Tag. Du postest es auf TikTok, Instagram und Facebook, es darf dreimal dasselbe Video sein. Ein Tag zählt, wenn alle drei Kanäle bespielt sind. X kannst du zusätzlich nutzen.'],
+  ['SWAP', ''],
+  ['Wie und wann werde ich bezahlt?', 'Das Fixum kommt alle 30 Tage in Krypto an deine fomo Wallet, die Testphase zahlt die Hälfte davon. Deine Provision siehst du live im Creator Dashboard. Wie bei jedem Nebenverdienst kümmerst du dich selbst um die Versteuerung.'],
+  ['Was kostet mich das?', 'Keine Gebühren, kein Abo. Die einzige mögliche Ausgabe nennen wir offen: Viele kaufen für TikTok einen Account mit 1.000 Followern für 60 $, weil TikTok den Link in der Bio erst ab 1.000 Followern freischaltet. Das ist optional.'],
+  ['Was, wenn die Testphase nicht klappt?', 'Du bist nicht raus. Du kannst ohne Posting Pflicht mit deinem Link weiterverdienen oder eine neue Testphase anfragen.'],
+  ['Was, wenn ich aufhöre?', `Deine Provision auf alle bisherigen Geworbenen läuft weiter, dann mit ${FOMO.commissionKeep} %.`],
+  ['Was hat UGC VZ damit zu tun?', 'UGC VZ hat dich für diese Kooperation ausgewählt und begleitet dich bis zum Start bei fomo. Dein UGC VZ Profil bleibt aktiv, auch für andere Kampagnen.'],
+  ['Was passiert mit meinen Daten?', `Erst wenn du zustimmst, geben wir Name, E-Mail, Social Profile und deine Vermittlungs ID an fomo weiter. Mehr dazu in der Datenschutzerklärung. Fragen an ${contact}.`],
 ];
 
-function Photo({ img }: { img: string[] }) {
-  return <figure className="fb-photo"><img loading="lazy" src={M + img[0]} alt={img[1]} /><span>Symbolbild</span><figcaption>Foto: Unsplash (Unsplash-Lizenz)</figcaption></figure>;
+export function Placeholder({ text, square = false, inline = false }: { text: string; square?: boolean; inline?: boolean }) {
+  return <div className={`fb-placeholder ${square ? 'square' : ''} ${inline ? 'inline' : ''}`} role="img" aria-label={`Platzhalter: ${text}`}><span>Platzhalter</span><p>{text}</p></div>;
 }
 
-export default function FomoBriefing({ variant, contactName, contactEmail }: { variant: FomoVariant; contactName: string; contactEmail: string }) {
-  const v = V[variant];
-  const order = variant === 'creatorin' ? [...stills.slice(0, 2), stills[5], ...stills.slice(2, 5)] : stills;
+export const RISK_LINE = 'Krypto ist riskant: Kurse schwanken stark, Verluste sind möglich. Deine Provision hängt davon ab, wie viel deine Geworbenen traden, und kann schwanken. Beispielergebnisse sind keine Garantie.';
+
+export default function FomoBriefing({ variant, contactName, contactEmail, memberId, cta }: { variant: Variant; contactName: string; contactEmail: string; memberId?: string; cta?: React.ReactNode }) {
+  const v = COPY[variant];
+  const contact = FOMO.contactMail || contactEmail;
+  const faq = faqBase(contact).flatMap(([q, a]) => q === 'SWAP' ? v.faqSwap : [[q, a] as [string, string]]).concat(v.faqExtra);
+  const steps = [['Ja sagen', v.step1], ['Kurzes Gespräch', `Wir stimmen dein Fixum ab, meist ${F} für die ersten 30 Tage.`], ['Onboarding auf Discord', `Du nennst deine Vermittlungs ID, richtest neue Accounts auf TikTok, Instagram und Facebook ein und bist in ${FOMO.startTime} startklar.`], ['Testphase', `${FOMO.testPosts}. Dafür gibt es schon 50 % deines Fixums, also ${FOMO.fixumTest}.`], ['Dein Rhythmus', `Ein Video pro Tag, ${FOMO.postsMonth} im Monat. Fixum alle 30 Tage, Provision live im Creator Dashboard.`]];
+  const max = FOMO.commissionSteps[FOMO.commissionSteps.length - 1][1];
   return <div className="fomo-brief">
-    <section className="fb-hero">
-      <div>
-        <p className="fb-eyebrow"><img src={M + 'fomo-icon-96.png'} alt="" width={22} height={22} />{v.eyebrow}</p>
-        <h2 className="fb-h1">{v.title[0]}<br /><span>{v.title[1]}</span></h2>
-        <p className="fb-lead">Du hast bewiesen, dass deine Videos funktionieren. fomo bietet dir dafür einen fest vereinbarten Retainer und eine <b>lebenslange Provision</b> auf alle, die über dich zur App kommen. {v.lead}</p>
-        <div className="fb-actions"><a className="fb-btn" href="#start">Einladung bestätigen</a><a className="fb-btn ghost" href="#fb-geld">So verdienst du</a></div>
-        <ul className="fb-ticks">{v.bullets.map(b => <li key={b}>{b}</li>)}</ul>
-      </div>
-      <div className="fb-phone">
-        <video autoPlay muted loop playsInline controls preload="metadata" poster={M + '42adbe1b_was-ist-fomo-1.jpg'}><source src={M + '42adbe1b_was-ist-fomo-1.mp4'} type="video/mp4" /></video>
-        <span className="fb-tag">Beispiel aus der Content-Bibliothek</span>
-        <span className="fb-float a">Earn 50 % of your friends&apos; fees</span><span className="fb-float b">💸 +$733.01</span><span className="fb-float c">👑 Gold-Server</span>
+    <section className="fb-proof" aria-label="Zahlen">
+      {FOMO.proof.map(([icon, n, t]) => <div key={t}><span aria-hidden="true">{icon}</span><b>{n}</b><small>{t}</small></div>)}
+      <p className="fb-fine">Quellen: fomo, Index Ventures, Fortune, X. Stand Oktober 2026.</p>
+    </section>
+
+    <section className="fb-sec">
+      <p className="fb-k">{v.kicker}</p><h2>{v.claim}</h2><p className="fb-lead">{v.sub}</p>
+      <div className="fb-compare">
+        <div><h3>Bisher</h3><ul>{v.before.map(t => <li key={t}><span aria-hidden="true">✕</span>{t}</li>)}</ul></div>
+        <div className="good"><h3>Mit fomo</h3><ul>{v.after.map(t => <li key={t}><span aria-hidden="true">✓</span>{t}</li>)}</ul></div>
       </div>
     </section>
 
-    <section className="fb-stats" aria-label="Zahlen">
-      {[['75 Mio. $', 'Series B, angeführt von Index Ventures (Juni 2026)'], ['600.000+', 'Nutzer laut fomo (Juni 2026)'], ['400.000+', 'Nutzer kamen allein über die Creator-Kampagne'], ['>400.000 $', 'hat der Top-Creator im Programm verdient']].map(([n, t]) => <div key={t}><b>{n}</b><span>{t}</span></div>)}
+    <section className="fb-sec fb-split">
+      <div className="fb-cards">{v.benefits.map(([e, h, p]) => <div key={h}><span aria-hidden="true">{e}</span><h3>{h}</h3><p>{p}</p></div>)}</div>
+      <Placeholder text={v.photos[0]} />
     </section>
 
-    <section className="fb-sec"><p className="fb-k">Was ist fomo?</p><h2>Social Trading, verständlich für alle.</h2>
-      <p className="fb-p">fomo ist die erste Social-Trading-App der Welt. Nutzer entdecken Tokens, sehen, was Freunde und Top-Trader kaufen, und traden mit wenigen Taps. Gemacht für ganz normale Leute, nicht für Krypto-Profis.{v.fomoExtra}</p>
-      <div className="fb-chips">{['🧠 Tradern folgen', '🔍 Alerts, wenn Top-Trader kaufen', '🏆 Leaderboard', '💸 Mit Apple Pay kaufen', '💰 Niedrige Gebühren', '📱 Für Einsteiger gebaut'].map(c => <span key={c}>{c}</span>)}</div>
+    <section className="fb-sec"><p className="fb-k">Beispiele</p><h2>So sehen fomo Videos aus.</h2>
+      <div className="fb-videos">{v.videos.map(id => <DemoVideo key={id} id={id} title={TITLES[id]} src={`${M}${id}.mp4`} poster={`${M}${id}.jpg`} memberId={memberId} variant={variant} />)}</div>
     </section>
 
-    <section className="fb-sec"><p className="fb-k">Dein Job</p><h2>Ein Video pro Tag, auf drei Plattformen, in deinem Stil.</h2>
-      <div className="fb-split"><Photo img={v.jobImg} />
-        <div className="fb-cards">{[['🆕', v.firstCard[0], `Du startest mit frischen Accounts auf TikTok, Instagram und Facebook. ${v.firstCard[1]}`], ['🔥', 'Deine Erfahrung zählt', 'Du hast bereits Videos mit hoher Reichweite produziert. Dein Gespür für Hooks, Tempo und Dramaturgie ist der Kern dieser Zusammenarbeit.'], ['🔁', 'Einmal drehen, dreimal posten', 'Instagram teilt automatisch auf Facebook. Ein Video ergibt drei Posts.'], ['🎯', 'Bestehende Kanäle optional', 'Deine bestehenden Kanäle zusätzlich zu nutzen, ist freiwillig. Pflicht ist nur der fomo-Account.']].map(([e, h, p]) => <div key={h}><span>{e}</span><h3>{h}</h3><p>{p}</p></div>)}</div>
-      </div>
+    <section className="fb-sec"><p className="fb-k">So läuft es</p><h2>In fünf Schritten von der Einladung zum laufenden Einkommen.</h2>
+      <ol className="fb-steps">{steps.map(([h, p], i) => <li key={h}><b>{i + 1}</b><div><h3>{h}</h3><p>{p}</p></div></li>)}</ol>
     </section>
 
-    <section className="fb-sec" id="fb-geld"><p className="fb-k">Verdienst</p><h2>Zwei Vergütungsbausteine, einer davon langfristig.</h2>
+    <section className="fb-sec" id="fb-verdienst"><p className="fb-k">Verdienst</p><h2>{v.earnIntro}</h2>
       <div className="fb-money">
-        <div><small>1 · Retainer</small><b>200 $ bis 1.000 $</b><p>Typischer Start-Retainer für deine ersten 30 Tage, manchmal mehr. Fest vereinbart, bevor du loslegst. Nach der Testphase wird neu verhandelt, bei den meisten geht es nach oben.</p></div>
-        <div className="gold"><small>2 · Lebenslange Provision</small><b>25 % bis 50 %</b><p>Du bekommst einen Anteil an den Trading-Gebühren jeder Person, die über deinen Link kommt. Nicht für ein paar Wochen, sondern lebenslang.</p></div>
+        <div><small>Fixum</small><b>{FOMO.fixumRange}</b><p>Fest vereinbart, bevor du startest. Nach der Testphase wird neu verhandelt, bei den meisten geht es nach oben. Ausgezahlt alle 30 Tage an deine fomo Wallet.</p></div>
+        <div><small>Testphase</small><b>{FOMO.fixumTest}</b><p>Die Hälfte deines Fixums, sobald du 15 Posts geschafft hast. Du hast 21 Tage Zeit, also 6 Tage Puffer.</p></div>
       </div>
-      <figure className="fb-ladder"><div>{ladder.map(([p, t]) => <div key={t} style={{ '--h': `${p * 1.8}%` } as React.CSSProperties}><span>{p} %</span><i /><small>{t}</small></div>)}</div>
-        <figcaption>So steigt dein Satz typischerweise, laut Erklärung des fomo-Teams. Entscheidend sind, wie lange du dabei bist und wie gut du performst. Hörst du auf, behältst du 25 % auf alle, die du schon geworben hast.</figcaption></figure>
-      <p className="fb-note">Zum Vergleich: Viele Affiliate-Programme zahlen Provision nur für begrenzte Zeit. Bei fomo läuft sie weiter, solange deine Geworbenen traden.</p>
+      <figure className="fb-ladder"><figcaption><small>Lebenslange Provision</small><b>25 % bis 50 %</b>Du bekommst einen Anteil an den Trading Gebühren jeder Person, die über deinen Link kommt.</figcaption>
+        <div>{FOMO.commissionSteps.map(([mo, p]) => <div key={mo}><span>{p} %</span><i style={{ height: `${(p / max) * 100}%` }} /><small>{mo === 0 ? 'Start' : `${mo} Mon.`}</small></div>)}</div>
+      </figure>
+      <div className="fb-example"><h3>Rechenbeispiel aus echten Dashboards</h3>
+        <p>In zwei echten Creator Dashboards brachte jede geworbene Person im Schnitt rund 7,50 $ bis 11 $ Gebühren.</p>
+        <ul>{earningsExamples().map(e => <li key={e.people}>{e.people.toLocaleString('de-DE')} Geworbene × {e.rate} % ≈ <b>{e.label.replace('rund ', '')}</b> Provision</li>)}</ul>
+        <p>Dazu kommt jeden Monat dein Fixum.</p>
+        <p className="fb-fine"><em>Rechenbeispiel aus echten Dashboards, keine Garantie. Wie viel du verdienst, hängt von deinen Videos und deinen Geworbenen ab.</em></p>
+      </div>
+      {v.earnExtra && <p className="fb-note">{v.earnExtra}</p>}
+      <p className="fb-honest">Das Fixum ist sicher vereinbart. Die Provision schwankt, weil sie davon abhängt, wie viel deine Geworbenen traden.</p>
     </section>
 
-    <section className="fb-sec"><p className="fb-k">Ergebnisse</p><h2>Zahlen aus dem Creator Dashboard.</h2>
-      <p className="fb-p">Screenshots aus dem fomo Creator Dashboard, die im offiziellen Briefing geteilt wurden. <b>Das sind Top-Ergebnisse, nicht der Durchschnitt.</b></p>
+    <section className="fb-sec"><h2 className="fb-h3">Echte Zahlen aus dem fomo Creator Dashboard.</h2>
       <div className="fb-shots">
-        <figure><img loading="lazy" src={M + 'e922d7a9_damon_one.webp'} alt="Creator Dashboard: 100.063,17 $ verdient, 22.800 geworbene Nutzer" /><figcaption><b>100.063 $</b> Gesamtprovision · 22.800 Geworbene · 40 % Satz</figcaption></figure>
-        <figure><img loading="lazy" src={M + 'c0dc1e95_IMG_4284.webp'} alt="Creator Dashboard: 67.375,32 $ verdient, 17.893 geworbene Nutzer" /><figcaption><b>67.375 $</b> Gesamtprovision · 17.893 Geworbene · 50 % Satz</figcaption></figure>
+        <figure><img loading="lazy" src={`${M}e922d7a9_damon_one.webp`} alt="Creator Dashboard: 100.063,17 $ verdient, 22.800 geworbene Nutzer" /><figcaption><b>100.063 $</b> Gesamtprovision · 22.800 Geworbene · 40 % Satz</figcaption></figure>
+        <figure><img loading="lazy" src={`${M}c0dc1e95_IMG_4284.webp`} alt="Creator Dashboard: 67.375,32 $ verdient, 17.893 geworbene Nutzer" /><figcaption><b>67.375 $</b> Gesamtprovision · 17.893 Geworbene · 50 % Satz</figcaption></figure>
+        <div className="fb-wins"><b>+618,49 $</b><b>+1.000,83 $</b><b>1.009 Empfehlungen</b><small>Wins aus dem Creator Discord</small></div>
       </div>
-      <div className="fb-wins">{[['+618,49 $', 'Discord-Win'], ['+1.000,83 $', 'Discord-Win'], ['1.009', 'Empfehlungen, Discord-Win']].map(([n, t]) => <div key={n}><b>{n}</b><span>{t}</span></div>)}</div>
-      <p className="fb-note">Discord-Wins aus dem Einführungsvideo des fomo-Teams für neue Creator.</p>
-      <h3 className="fb-h3">Videos mit besonders hoher Reichweite</h3>
-      <div className="fb-wins">{[['529.700', '@aaron.profits', 'Chart mit Ein-Dollar-Story'], ['507.500', '@savemejruss', '8 Sekunden Empfehlung'], ['411.900', '@glowupwithwill', 'Side-Hustle-Tagebuch']].map(([n, h, t]) => <a key={h} href="https://www.ugcroster.com/blog/fomo-app-marketing-strategy-real-creator-math" target="_blank" rel="noopener noreferrer"><b>{n}</b><span>Views · {h}</span><small>{t}</small></a>)}</div>
-      <p className="fb-note">Quelle: Analyse von ugcroster.com. Formate wie diese findest du nach dem Onboarding als Skripte in der Content-Bibliothek.</p>
+      <p className="fb-honest">Das sind Top Ergebnisse, nicht der Durchschnitt. Sie zeigen, was möglich ist, nicht was garantiert ist.</p>
     </section>
 
-    <section className="fb-sec"><div className="fb-split rev"><div><p className="fb-k">Warum das anders ist</p><h2>Flexibel im Alltag, langfristig beteiligt.</h2>
-      <ul className="fb-why">{v.why.map(([e, b, t]) => <li key={b}><span>{e}</span><p><b>{b}</b> {t}</p></li>)}</ul></div><Photo img={v.whyImg} /></div>
+    {v.photos[1] && <section className="fb-sec fb-photo-row"><Placeholder text={v.photos[1]} /></section>}
+
+    <section className="fb-sec"><p className="fb-k">Was du mitbringst</p><h2>Passt das zu dir?</h2>
+      <ul className="fb-checks">{['Erfolg mit Short Form: Du hattest schon Videos mit hoher Reichweite.', 'Gesicht vor der Kamera: Du zeigst dich, das schafft Vertrauen.', 'CapCut oder TikTok Editor: nativ, sauber, nicht überproduziert.', `${FOMO.postsMonth} Posts im Monat: ein Video pro Tag auf TikTok, Instagram und Facebook. Dasselbe Video ist erlaubt.`, '18 Jahre oder älter.'].map(t => <li key={t}>{t}</li>)}</ul>
     </section>
 
-    <section className="fb-sec"><p className="fb-k">Formate</p><h2>{v.formats[0]}</h2><p className="fb-p">{v.formats[1]}</p>
-      <div className="fb-stills">{order.map(([id, t]) => <figure key={id}><img loading="lazy" src={`${M}still-${id}.jpg`} alt={`Still aus dem Beispielvideo: ${t}`} /><figcaption>{t}</figcaption></figure>)}</div>
+    <section className="fb-sec"><p className="fb-k">Vertrauen</p><h2>Wer hinter dem Programm steht</h2>
+      <div className="fb-cards four">{[['🏢', 'fomo, New York', 'Gegründet 2025. Rund 94 Mio. $ Funding, darunter eine Series B über 75 Mio. $ unter Führung von Index Ventures, mit Union Square Ventures und Benchmark.'], ['🤝', 'UGC VZ', 'Das kostenlose Verzeichnis für UGC Creator und Marken. Wir haben dich ausgewählt und begleiten dich bis zum Start.'], ['🛡️', 'Transparente Auszahlung', 'Fixum alle 30 Tage an deine fomo Wallet, Provision live im Creator Dashboard.'], ['🧾', 'Keine versteckten Kosten', 'Keine Gebühren, kein Abo.']].map(([e, h, p]) => <div key={h}><span aria-hidden="true">{e}</span><h3>{h}</h3><p>{p}</p></div>)}</div>
+      <Placeholder text="Logozeile: Erfahrung aus Projekten mit Marken wie Casio, Rewe, Vattenfall, Mercedes. Genaue Formulierung intern freigeben, kein Bezug dieser Marken zu fomo." />
+      <div className="fb-contact"><Placeholder square text="Echtes Foto von Flo" /><div><h3>{contactName.split(' ')[0]}, dein Ansprechpartner bei UGC VZ</h3><p>Antwort persönlich per Mail: <a href={`mailto:${contact}`}>{contact}</a></p></div></div>
     </section>
 
-    <section className="fb-sec"><p className="fb-k">Dein Weg</p><h2>Von der Einladung zur langfristigen Partnerschaft.</h2>
-      <ol className="fb-steps">{steps.map(([h, p], i) => <li key={h}><small>Schritt {i + 1}</small><h3>{h}</h3><p>{p}</p></li>)}</ol>
-    </section>
-
-    <section className="fb-sec"><p className="fb-k">Die Testphase</p><h2>15 Posts in höchstens 21 Tagen.</h2>
-      <div className="fb-test"><div className="fb-days" aria-label="21 Tage, davon 15 Posting-Tage und 6 Tage Puffer">{Array.from({ length: 21 }, (_, i) => <span key={i} className={i < 15 ? 'on' : ''}>{i + 1}</span>)}</div>
-        <ul>{[['15', 'Posting-Tage, jeweils ein Video auf TikTok, Instagram und Facebook'], ['21', 'Tage Zeit, die Uhr startet mit deinem ersten Post'], ['6', 'Tage Puffer, falls mal was dazwischenkommt'], ['50 %', 'deines Retainers, sobald du durch bist']].map(([b, t]) => <li key={t}><b>{b}</b> {t}</li>)}</ul></div>
-      <p className="fb-note">Poste einmal am Tag, dann bist du nach 15 Tagen durch. Du startest auf dem blauen Affiliate-Server, wo Bia dich begleitet. Knackst du 500 oder 1.000 Empfehlungen oder zeigst sichtbaren Einsatz, geht es auf den Gold-Server mit Vollzeit-Retainer.</p>
-    </section>
-
-    <section className="fb-sec"><p className="fb-k">Was du mitbringst</p><h2>Wen wir suchen.</h2>
-      <ul className="fb-why">{[['Erfolg mit Short-Form:', 'Du hattest schon Videos, die viral gingen.'], ['Gesicht vor der Kamera:', 'Du zeigst dich, das schafft Vertrauen.'], ['CapCut oder TikTok-Editor:', 'nativ, sauber, nicht überproduziert.'], ['30 Posts im Monat:', 'ein Video pro Tag auf TikTok, Instagram und Facebook. Crossposting ist ausdrücklich erlaubt.'], ['18 Jahre oder älter.', '']].map(([b, t]) => <li key={b}><span>✓</span><p><b>{b}</b> {t}</p></li>)}</ul>
-    </section>
-
-    <section className="fb-sec"><p className="fb-k">Vertrauen</p><h2>Wer hinter dem Programm steht.</h2>
-      <div className="fb-cards four">{[['🏢', 'fomo, New York', 'Gegründet 2025. Rund 94 Mio. $ Funding, darunter eine Series B über 75 Mio. $ unter Führung von Index Ventures, mit Union Square Ventures und Benchmark.'], ['🤝', `${contactName.split(' ')[0]}, dein Ansprechpartner`, 'UGC VZ begleitet dich auf Deutsch, von der Einladung bis zur Übergabe an das fomo-Team.'], ['🛡️', 'Transparente Auszahlung', 'Retainer alle 30 Tage an deine fomo-Wallet. Deine Provision siehst du live im Creator Dashboard.'], ['🧾', 'Keine versteckten Kosten', 'Keine Gebühren, kein Abo. Die einzige Ausgabe nennen wir offen: der optionale TikTok-Account für 60 $.']].map(([e, h, p]) => <div key={h}><span>{e}</span><h3>{h}</h3><p>{p}</p></div>)}</div>
-      <p className="fb-note">Quellen Funding: <a href="https://fomo.family/blog/fomo-series-b" target="_blank" rel="noopener noreferrer">fomo Blog</a>, <a href="https://www.theblock.co/news/deals/2026-06-22-crypto-trading-app-fomo-raises-75-million-at-550-million-valuation-in-index-ventures-led-series-b-report-405563" target="_blank" rel="noopener noreferrer">The Block</a>, <a href="https://www.globenewswire.com/news-release/2026/06/22/3315279/0/en/fomo-Raises-75-Million-Series-B-Led-by-Index-Ventures-To-Scale-Global-Consumer-Trading-App.html" target="_blank" rel="noopener noreferrer">GlobeNewswire</a>.</p>
-    </section>
-
-    <section className="fb-sec fb-rules"><h2>Klare Regeln, faire Konditionen.</h2>
-      <ul>{[['Nur ab 18.', ''], ['Werbung kennzeichnen:', 'Jeder bezahlte Post wird klar als Werbung oder Anzeige markiert.'], ['Keine Gewinnversprechen:', 'Du versprichst deinen Zuschauern nie Trading-Gewinne. Keine gefälschten PnLs, keine gefälschten Tweets, kein „Insider“.'], ['Krypto ist riskant:', 'Kurse schwanken stark, Verluste sind möglich. Das gehört ehrlich dazu.'], ['Kein Token-Pushing:', 'Du nimmst kein Geld von Projekten, um bestimmte Tokens zu bewerben.']].map(([b, t]) => <li key={b}><b>{b}</b> {t}</li>)}</ul>
+    <section className="fb-sec fb-rules"><h2>Klare Regeln, faire Konditionen</h2>
+      <ul>{[['🔞', 'Nur ab 18.'], ['🏷️', 'Werbung kennzeichnen: Jeder bezahlte Post wird klar als Werbung oder Anzeige markiert.'], ['🚫', 'Keine Gewinnversprechen: Du versprichst deinen Zuschauern nie Trading Gewinne. Keine gefälschten Ergebnisse.'], ['💸', 'Kein Token Pushing: Du nimmst kein Geld von Projekten, um bestimmte Tokens zu bewerben.']].map(([e, t]) => <li key={t}><span aria-hidden="true">{e}</span>{t}</li>)}</ul>
     </section>
 
     <section className="fb-sec"><p className="fb-k">FAQ</p><h2>Deine Fragen, kurz beantwortet.</h2>
       <div className="fb-faq">{faq.map(([q, a]) => <details key={q}><summary>{q}</summary><p>{a}</p></details>)}</div>
     </section>
 
-    <section className="fb-sec fb-final"><p className="fb-k">So geht&apos;s weiter</p><h2>Starten in drei Schritten.</h2>
-      <ol>{['Einladung oben bestätigen, deine UGC-VZ-Angaben werden übernommen.', 'Kurzes Gespräch, wir stimmen deinen Retainer ab.', 'Onboarding auf Discord, und in 48 Stunden bist du startklar.'].map((t, i) => <li key={t}><b>{i + 1}</b>{t}</li>)}</ol>
-      <a className="fb-btn" href="#start">Zur Einladung</a>
-      <p className="fb-note">Fragen? <a href={`mailto:${contactEmail}`}>{contactName}</a> antwortet dir persönlich. Plätze vergeben wir laufend, je nach Fit.</p>
-      <p className="fb-note">Alle Zahlen stammen aus dem offiziellen fomo Creator-Guide, aus fomo-Pressemitteilungen oder aus den genannten Quellen. Beispielergebnisse sind keine Garantie für deine Einnahmen.</p>
+    <section className="fb-sec fb-decision" id="fb-entscheidung">
+      <h2>{v.ctaTitle}</h2>
+      <p>Sag Ja, und wir melden uns {FOMO.responseTime ? `innerhalb von ${FOMO.responseTime}` : 'zeitnah'} persönlich bei dir.</p>
+      <p className="fb-risk">{RISK_LINE}</p>
+      {cta}
+      <p className="fb-fine">Kostenlos und unverbindlich. Die endgültigen Konditionen bestätigt das fomo Team im Gespräch.</p>
     </section>
-
-    <a className="fb-sticky" href="#start"><img src={M + 'fomo-icon-96.png'} alt="" width={28} height={28} /><span><b>{v.cta}</b><small>Persönliche Einladung · 14 Tage gültig</small></span></a>
   </div>;
 }

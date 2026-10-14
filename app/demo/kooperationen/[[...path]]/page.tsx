@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation';
 import { authorizeCollabDemo } from '@/app/lib/collab-demo-auth';
 import { campaigns, candidates, slides } from '../data';
 import DemoWorkspace from '../DemoWorkspace';
-import { fomoVariant } from '../../../components/FomoBriefing';
+import { resolveVariant } from '../../../lib/collaborations/fomo-config';
 import '../demo.css';
 
 export const dynamic = 'force-dynamic';
@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   twitter: { title: 'UGC VZ · Private Vorschau', description: 'Geschützter Entwurf.', images: [] },
 };
 
-export default async function CollaborationDemo({ params, searchParams }: { params: { path?: string[] }; searchParams: { fuer?: string } }) {
+export default async function CollaborationDemo({ params, searchParams }: { params: { path?: string[] }; searchParams: { v?: string } }) {
   // Defense in depth: authenticate the page itself, even if middleware is bypassed.
   if (!await authorizeCollabDemo(headers().get('authorization'))) notFound();
   const path = params.path || [];
@@ -29,5 +29,5 @@ export default async function CollaborationDemo({ params, searchParams }: { para
         : campaign && path.length === 2 && ['start', 'bewerben'].includes(path[1]) ? 'apply'
           : campaign && path.length === 2 && path[1] === 'guide' ? 'guide' : null;
   if (!view) notFound();
-  return <DemoWorkspace key={path.join('/') || 'overview'} view={view} campaigns={view === 'overview' ? campaigns : campaigns.filter(c => !c.fictional)} campaign={campaign} candidates={view === 'tracking' ? candidates.filter(c => campaigns.some(campaign => campaign.slug === c.campaign && !campaign.fictional)) : []} slides={view === 'presentation' ? slides : []} variant={fomoVariant(searchParams.fuer)} />;
+  return <DemoWorkspace key={path.join('/') || 'overview'} view={view} campaigns={view === 'overview' ? campaigns : campaigns.filter(c => !c.fictional)} campaign={campaign} candidates={view === 'tracking' ? candidates.filter(c => campaigns.some(campaign => campaign.slug === c.campaign && !campaign.fictional)) : []} slides={view === 'presentation' ? slides : []} variant={resolveVariant(searchParams.v, 'any').variant} />;
 }

@@ -97,7 +97,7 @@ export const slides: Slide[] = [
     { title: 'Jetzt: fomo-Pilot', text: 'Alternative zum einzelnen Content-Auftrag: tägliche Videos gegen vereinbartes Honorar plus potenziell fortlaufende Beteiligung. Einnahmen hängen von Leistung und Programmbedingungen ab.' },
     { title: 'Später: UGC-Aufträge', text: 'Content-Pakete gegen Fixhonorar sind eine Erweiterungsoption. Aktuell gibt es dafür kein Angebot.' },
     { title: 'Später: weitere Partnerschaften', text: 'Die Technik ist wiederverwendbar. Neue Marken werden erst als Angebote gezeigt, wenn eine echte Kampagne vorliegt.' },
-  ], note: 'Positionierung nach famefact-Vertriebstrainer: verständliche Kategorie, konkrete Aufgabe, sichtbare Grenzen. Bestehendes kostenloses Verzeichnis bleibt ein eigenes Angebot.' },
+  ], note: 'Positionierung nach unserem Vertriebstrainer: verständliche Kategorie, konkrete Aufgabe, sichtbare Grenzen. Bestehendes kostenloses Verzeichnis bleibt ein eigenes Angebot.' },
   { label: '04 / Creator-Erlebnis', title: 'Du bist eingeladen. Weiter zum Start.', intro: 'Auswahl durch UGC VZ → persönliche Einladung → Angaben & Verfügbarkeit bestätigen → Übergabe → Aufnahme und Konditionen durch fomo.', cards: [
     { title: 'Persönlich eingeladen', text: 'Ein persönlicher Link gilt 14 Tage ab Versand. Profil und Arbeitsprobe sind bekannt; vorhandene Angaben werden übernommen.' },
     { title: 'Bewusst entscheiden', text: 'Umfang, Vergütung und Voraussetzungen stehen vor der Bestätigung. Die Annahme der Einladung ersetzt nicht die Aufnahme durch fomo.' },
@@ -107,7 +107,7 @@ export const slides: Slide[] = [
     { title: 'Zusagen messen', text: 'Zustellung, Klick und angenommene Einladung getrennt erfassen. Öffnungen sind ein ungenauer technischer Indikator.' },
     { title: 'Übergabe belegen', text: 'UGC VZ / Flo plus Vermittlungs-ID ins Ticket; Bestätigung durch fomo erfassen. Der Trading-Referral-Link des Creators ist eine andere Zuordnung.' },
     { title: 'Nutzen prüfen', text: 'Im Pilot: Zahl angenommener Einladungen, bestätigte Aufnahmen und manueller Aufwand. Zielwerte erst gemeinsam festlegen.' },
-  ], note: 'Adaption des famefact-Playbooks „Revenue Architecture“: eindeutige Übergabe und überprüfbares Ergebnis. Keine erfundenen Erfolgsquoten.' },
+  ], note: 'Adaption des Playbooks „Revenue Architecture“: eindeutige Übergabe und überprüfbares Ergebnis. Keine erfundenen Erfolgsquoten.' },
   { label: '06 / Pilot & Verantwortliche', title: 'Mit zehn passenden Creatorn anfangen.', intro: 'Vorschlag: drei Gruppen mit je zehn Profilen. Nach jeder Gruppe Antworten, Zusagen und offene Fragen prüfen; erst danach die nächste einladen.', cards: [
     { title: 'Flo · vorgeschlagen', text: 'Konditionen mit fomo klären, erste Auswahl prüfen, Rückfragen beantworten und Übergaben abstimmen.' },
     { title: 'Gorden / Technik · vorgeschlagen', text: 'Kampagnenseite, Datenmodell, Freigaben und Tracking für den vereinbarten Pilot vorbereiten.' },

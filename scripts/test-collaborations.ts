@@ -14,10 +14,10 @@ async function main() {
     CREATE TABLE creator_profiles(id uuid PRIMARY KEY,public_id text,display_name text,status text,topics text,gender text);
     CREATE TABLE creator_private_contacts(creator_id uuid PRIMARY KEY,email text,project_notifications_enabled boolean,notification_paused_at timestamptz);
     CREATE TABLE creator_social_accounts(creator_id uuid,url text,is_primary boolean,created_at timestamptz DEFAULT now());
-    INSERT INTO creator_profiles VALUES ('00000000-0000-0000-0000-000000000001','TEST-ONE','Alex Test','active','Tech'),('00000000-0000-0000-0000-000000000002','TEST-TWO','Sam Test','active','Tech');
+    INSERT INTO creator_profiles VALUES ('00000000-0000-0000-0000-000000000001','TEST-ONE','Alex Test','active','Tech','Weiblich'),('00000000-0000-0000-0000-000000000002','TEST-TWO','Sam Test','active','Tech',null);
     INSERT INTO creator_private_contacts VALUES ('00000000-0000-0000-0000-000000000001','alex@example.com',true,null),('00000000-0000-0000-0000-000000000002','sam@example.com',false,null);
     INSERT INTO creator_social_accounts(creator_id,url,is_primary) VALUES ('00000000-0000-0000-0000-000000000001','https://example.com/alex',true);`);
-  const migration=await readFile('db/migrations/013_collaborations.sql','utf8');await db.exec(migration);await db.exec(migration);
+  const migration=await readFile('db/migrations/013_collaborations.sql','utf8');await db.exec(migration);await db.exec(migration);const m14=await readFile('db/migrations/014_collab_referral.sql','utf8');await db.exec(m14);await db.exec(m14);
   const store=new CollabStore(async(text,values)=>(await db.query(text,values)).rows as any);
   const content:CampaignContent={brand:'Test Brand',title:'Ein Testangebot für Creator',summary:'Eine ausführliche Beschreibung für die Testkampagne.',benefit:'Regelmäßige Zusammenarbeit für ausgewählte Creator.',task:'Ein Video pro Tag auf den vereinbarten Plattformen veröffentlichen.',requirements:'Erfahrung mit Videos.',reward:'Vereinbartes Honorar',terms:'Bestätigte Testbedingungen mit eindeutigem Aufwand und Vergütung, keine echten Zusagen.',guideUrl:'https://example.com/guide',contactName:'Flo',contactEmail:'flo@example.com'};
   const input={slug:'test-brand',version:0,state:'draft' as const,content,approvalNote:''};
@@ -62,6 +62,11 @@ async function main() {
   assert.ok(await store.handover(fresh.id,fresh.version,true,'Bia Test','Testbestätigung in Ticket 123'));
   fresh=(await store.member(member.id,null,opened.session))!;assert.equal(fresh.status,'confirmed');
   assert.equal((await store.adminRows('test-brand')).length,1);
+  assert.equal(fresh.gender,'Weiblich','server sees profile gender for the variant');
+  assert.ok(Number(fresh.referral_no)>=1,'referral number assigned at invitation');
+  await store.event(member.id,'page_view','creator',{variant:'w',variant_source:'profile'});
+  const adminRow=(await store.adminRows('test-brand'))[0];
+  assert.ok(!('gender' in adminRow),'admin payload never carries gender');assert.equal(adminRow.variant,'w');
   assert.ok((await store.history(member.id)).some(e=>e.kind==='invitation_accepted'));
   await store.revoke(invite);assert.equal(await store.member(member.id,null,opened.session),null,'revocation cancels scoped session');
   assert.ok(await store.member(member.id,member.creator_id,null),'normal account keeps cooperation');

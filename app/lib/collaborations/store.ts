@@ -4,7 +4,7 @@ import { CONSENT_VERSION, missingDetails, type Campaign, type Member, type Detai
 import { newToken, sha256, encryptToken } from './security';
 
 export type Query = <T = Record<string, any>>(text:string, values?: any[]) => Promise<T[]>;
-const memberSelect = `SELECT m.*,p.display_name AS name,c.email,
+const memberSelect = `SELECT m.*,p.display_name AS name,p.gender,c.email,
  (SELECT url FROM creator_social_accounts WHERE creator_id=p.id ORDER BY is_primary DESC,created_at LIMIT 1) AS social_url,
  coalesce(k.published_content,k.content) AS content,k.state AS campaign_state,k.version AS campaign_version
  FROM collab_memberships m JOIN creator_profiles p ON p.id=m.creator_id
@@ -97,11 +97,11 @@ export class CollabStore {
     SELECT * FROM updated`,[member.id,JSON.stringify(details),next,version,accept,CONSENT_VERSION,campaignVersion]);
     return saved||null;
   }
-  async decline(member:Member,version:number) {
+  async decline(member:Member,version:number,details:unknown={}) {
     return (await this.query(`WITH updated AS (UPDATE collab_memberships SET status='declined',version=version+1,updated_at=now()
       WHERE id=$1 AND version=$2 AND status IN ('invited','accepted','ready') RETURNING id),
-      logged AS (INSERT INTO collab_events(membership_id,kind,actor) SELECT id,'declined','creator' FROM updated)
-      SELECT * FROM updated`,[member.id,version]))[0]||null;
+      logged AS (INSERT INTO collab_events(membership_id,kind,actor,details) SELECT id,'declined','creator',$3::jsonb FROM updated)
+      SELECT * FROM updated`,[member.id,version,JSON.stringify(details)]))[0]||null;
   }
   async event(memberId:string,kind:string,actor:string,details:unknown={}) {
     await this.query('INSERT INTO collab_events(membership_id,kind,actor,details) VALUES($1,$2,$3,$4::jsonb)',[memberId,kind,actor,JSON.stringify(details)]);
@@ -112,7 +112,10 @@ export class CollabStore {
         // Explicit projection: encrypted credentials never enter the UI payload.
         const invites=await this.query(`SELECT i.membership_id,i.id AS invite_id,i.delivery,i.batch_id,i.expires_at,i.provider_event,i.used_at,i.sent_at,i.personal_note,i.revoked_at
           FROM collab_invitations i JOIN collab_memberships m ON m.id=i.membership_id WHERE m.campaign_slug=$1 ORDER BY i.created_at DESC`,[slug]);
-        return members.map(m=>({...m,...invites.find(i=>i.membership_id===m.id)}));
+        const views=await this.query(`SELECT DISTINCT ON (e.membership_id) e.membership_id,e.details->>'variant' AS variant,e.details->>'variant_source' AS variant_source
+          FROM collab_events e JOIN collab_memberships m ON m.id=e.membership_id WHERE m.campaign_slug=$1 AND e.kind='page_view' ORDER BY e.membership_id,e.occurred_at DESC`,[slug]);
+        // Gender stays server-side; the admin UI only sees the rendered variant.
+        return members.map(({gender:_g,...m})=>({...m,...invites.find(i=>i.membership_id===m.id),...views.find(v=>v.membership_id===m.id)}));
       });
   }
   async history(id:string) { return this.query('SELECT kind,actor,details,occurred_at FROM collab_events WHERE membership_id=$1 ORDER BY occurred_at DESC LIMIT 100',[id]); }
@@ -130,7 +133,7 @@ export class CollabStore {
       logged AS (INSERT INTO collab_events(membership_id,kind,actor) SELECT membership_id,'invitation_revoked','admin' FROM changed) SELECT * FROM changed`,[inviteId]);
   }
   async batch(id:string) {
-    return this.query(`SELECT i.*,m.campaign_slug,m.status,p.display_name,p.public_id,p.gender,k.content,k.state,k.version AS campaign_version
+    return this.query(`SELECT i.*,m.campaign_slug,m.status,p.display_name,p.public_id,k.content,k.state,k.version AS campaign_version
       FROM collab_invitations i JOIN collab_memberships m ON m.id=i.membership_id
       JOIN creator_profiles p ON p.id=m.creator_id JOIN collab_campaigns k ON k.slug=m.campaign_slug
       WHERE i.batch_id=$1 AND i.revoked_at IS NULL ORDER BY i.created_at`,[id]);

@@ -1,12 +1,14 @@
 import type { CampaignContent } from './model';
+import { FOMO } from './fomo-config';
+// Creator-sichtbare Kampagnentexte. Zahlen aus FOMO; vor der Freigabe mit fomo bestätigen.
 export const fomoDraft:CampaignContent={
   brand:'fomo',title:'Dein Content. Die Chance auf laufende Einnahmen.',
-  summary:'UGC VZ lädt dich zur Creator-Partnerschaft mit fomo ein, einer Social-Trading-App. Regelmäßige Videos verbinden ein vereinbartes Honorar mit einer Beteiligung an den Trading-Gebühren geworbener Nutzer.',
-  benefit:'Das Modell ist als Alternative zu einzelnen UGC-Aufträgen gedacht: Honorar für regelmäßige Arbeit und eine Beteiligung, die über ein einzelnes Video hinaus Einnahmen bringen kann. Die Fortsetzung nach der Testphase und die Bedingungen der Beteiligung müssen vereinbart werden. Eine garantierte Dauerzahlung gibt es nicht.',
-  task:'Ein kurzes Video pro Tag produzieren und auf TikTok, Instagram und Facebook veröffentlichen. Neue Projektaccounts aufbauen und deinen persönlichen Empfehlungslink verwenden. Content-Vorlagen findest du im Kundenguide.',
-  requirements:'Mindestens 18 Jahre alt, Erfahrung mit Kurzvideos, vor der Kamera präsent und regelmäßig verfügbar. Bereits vorhandenes Profil und Arbeitsproben müssen nicht erneut eingereicht werden. fomo ist eine Social-Trading-App: zulässige Aussagen und Werbekennzeichnung sind Teil des Briefings.',
-  reward:'Fixhonorar + variable Beteiligung',
-  terms:'ENTWURF – vor Freigabe durch bestätigte Bedingungen ersetzen.\n\nDas bereitgestellte Briefing nennt 200–1.000 USD als Startspanne für die ersten 30 Tage und eine Beteiligung von 25–50 % an provisionsfähigen Trading-Gebühren geworbener Nutzer. Höhe, Staffel, Laufzeit und Fortbestand nach Ausstieg sind zu bestätigen.\n\nTestphase laut Briefing: 15 Posting-Tage innerhalb von 21 Tagen, dafür 50 % des vereinbarten Retainers. Abnahme, Abbruch, weitere Zusammenarbeit und Auszahlung sind mit fomo zu klären.\n\nAuszahlung, eventuelle Accountkosten und Alternative ohne Accountkauf verbindlich bestätigen. Keine garantierten Trading-Gewinne oder Provisionseinnahmen.',
+  summary:'UGC VZ lädt dich zur Creator Partnerschaft mit fomo ein, einer Social Trading App. Ein Video pro Tag, dafür ein festes Fixum und eine lebenslange Provision auf alle, die über dich zur App kommen.',
+  benefit:'Schluss mit Einmal-Jobs: ein festes Fixum jeden Monat und eine Provision, die weiterläuft, solange deine Geworbenen traden.',
+  task:`Ein Video pro Tag auf TikTok, Instagram und Facebook, dasselbe Video ist erlaubt. ${FOMO.postsMonth} Videos im Monat, zum Start eine Testphase mit ${FOMO.testPosts}.`,
+  requirements:'Mindestens 18 Jahre, Erfahrung mit Kurzvideos, Gesicht vor der Kamera. Dein UGC VZ Profil und deine Arbeitsproben musst du nicht erneut einreichen.',
+  reward:'Fixum + Provision',
+  terms:`Fixum: ${FOMO.fixumRange}, fest vereinbart vor dem Start, ausgezahlt alle 30 Tage an deine fomo Wallet.\n\nTestphase: ${FOMO.testPosts}, dafür 50 % deines Fixums (${FOMO.fixumTest}).\n\nProvision: 25 % der Trading Gebühren deiner Geworbenen, mit der Zeit bis 50 %. Wenn du aufhörst, behältst du lebenslang ${FOMO.commissionKeep} % auf alle bisherigen Geworbenen.\n\nKosten: keine Gebühren, kein Abo. Optional ein TikTok Account mit 1.000 Followern für 60 $.\n\nDie endgültigen Konditionen bestätigt das fomo Team im Gespräch. Einnahmen sind nicht garantiert.`,
   guideUrl:'https://stealth-harmonica-74d.notion.site/fomo-Kommandozentrale-3f8bac0068ef8104a1c9e542d1303e23',
   contactName:'Florian Runge',contactEmail:'florian.runge@ugc-vz.de',
 };

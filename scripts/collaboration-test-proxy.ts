@@ -8,12 +8,12 @@ import {signSession} from '../app/lib/creator-session';
 async function main(){
   process.env.COLLAB_TOKEN_SECRET='b'.repeat(64);process.env.CREATOR_SESSION_SECRET='isolated-collaboration-test-session-secret';
   const db=new PGlite();
-  for(const file of ['001_creator_platform','002_creator_registration','006_creator_profile_edits','013_collaborations']){
+  for(const file of ['001_creator_platform','002_creator_registration','006_creator_profile_edits','013_collaborations','014_collab_referral']){
     const source=(await readFile(`db/migrations/${file}.sql`,'utf8')).replace('CREATE EXTENSION IF NOT EXISTS pgcrypto;','');await db.exec(source);
   }
-  await db.exec(`INSERT INTO creator_profiles(id,public_id,status,display_name,legal_name,topics) VALUES
-    ('00000000-0000-0000-0000-000000000001','TEST-ONE','active','Alex Beispiel','Alex Beispiel','Tech'),
-    ('00000000-0000-0000-0000-000000000002','TEST-TWO','active','Sam Beispiel','Sam Beispiel','Tech');
+  await db.exec(`INSERT INTO creator_profiles(id,public_id,status,display_name,legal_name,topics,gender) VALUES
+    ('00000000-0000-0000-0000-000000000001','TEST-ONE','active','Alex Beispiel','Alex Beispiel','Tech','Weiblich'),
+    ('00000000-0000-0000-0000-000000000002','TEST-TWO','active','Sam Beispiel','Sam Beispiel','Tech',null);
     INSERT INTO creator_private_contacts(creator_id,email,project_notifications_enabled) VALUES
     ('00000000-0000-0000-0000-000000000001','alex@example.com',true),('00000000-0000-0000-0000-000000000002','sam@example.com',true);
     INSERT INTO creator_social_accounts(creator_id,url,is_primary) VALUES('00000000-0000-0000-0000-000000000001','https://example.com/alex',true);`);
