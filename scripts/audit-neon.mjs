@@ -55,7 +55,10 @@ const viewColumns = await sql.query(`
 `);
 const columnNames = viewColumns.map((row) => String(row.column_name));
 const forbidden = ['email', 'phone', 'contact', 'consent', 'token', 'address', 'birth_date'];
-const leakedColumns = columnNames.filter((column) => forbidden.some((word) => column.includes(word)));
+// Bewusst freigegeben: abgeleitete Booleans ohne private Werte (Migration 010).
+const allowed = ['contact_reachable'];
+const leakedColumns = columnNames.filter((column) => !allowed.includes(column)
+  && forbidden.some((word) => column.includes(word)));
 
 console.log(JSON.stringify(
   { ...counts, public_view_columns: columnNames.length, leaked_columns: leakedColumns },
