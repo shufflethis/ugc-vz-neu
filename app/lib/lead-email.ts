@@ -8,6 +8,7 @@ import {
   platformLabel,
   socialPlatformNames,
 } from './email-shell';
+import { CREATOR_KONTO_URL } from './creator-welcome-email';
 
 export type LeadKind = 'creator_match' | 'no_results' | 'general_contact';
 
@@ -494,9 +495,8 @@ export function renderCreatorOutreachEmail({
   const replySubject = encodeURIComponent(`UGC-Anfrage ${leadId} – Verfügbarkeit`);
   const replyBody = encodeURIComponent(`Hallo ${clientInfo.name || ''},\n\nvielen Dank für deine Anfrage über UGC VZ.\n\nVerfügbarkeit: \nPreis / Leistungsumfang: \nRückfragen: \n\nViele Grüße\n${creator.name}`);
   const replyHref = `mailto:${clientInfo.email}?subject=${replySubject}&body=${replyBody}`;
-  const updateSubject = encodeURIComponent(`UGC-VZ-Profil aktualisieren – ${creator.id}`);
-  const updateBody = encodeURIComponent(`Hallo UGC VZ,\n\nbitte aktualisiert mein Creator-Profil.\n\nProfil-ID: ${creator.id}\nAktuelle Social-Links: \nAktuelle Preisvorstellung: \nAktuelle Reichweite: \nWeitere Änderungen: \n`);
-  const updateHref = `mailto:${internalEmail}?subject=${updateSubject}&body=${updateBody}`;
+  // Self-Service statt Mail-Ticket: Creator aendern Preis/Reichweite/Links selbst unter /konto.
+  const updateHref = `${CREATOR_KONTO_URL}?utm_source=creator-selection-email&utm_medium=email&utm_campaign=profile-update`;
   const pauseSubject = encodeURIComponent(`Creator-Benachrichtigungen pausieren – ${creator.id}`);
   const pauseHref = `mailto:${internalEmail}?subject=${pauseSubject}`;
   const referralHref = 'https://ugc-vz.de/creator?utm_source=creator-selection-email&utm_medium=email&utm_campaign=creator-referral';
