@@ -98,6 +98,11 @@ const handler = createMcpHandler(
   {
     serverInfo: { name: 'ugc-vz', version: AGENT_LAYER_VERSION },
     instructions: SERVER_INSTRUCTIONS,
+    // subscriptions/listen sofort ablehnen: sonst haelt jeder verbundene Client
+    // einen SSE-Stream bis maxDuration (60 s) offen, die Fluid-Instanz laeuft
+    // dauerhaft (Kosten). Tool-Liste aendert sich zur Laufzeit nicht; Events
+    // laufen separat ueber Webhooks (app/lib/mcp-events.ts).
+    maxSubscriptions: 0,
   },
 );
 
