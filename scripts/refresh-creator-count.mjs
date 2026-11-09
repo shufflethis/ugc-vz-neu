@@ -59,6 +59,10 @@ if (totalCount !== poolSize) {
   process.exit(2);
 }
 
+// Vor dem Lesen auf origin/main ziehen: sonst rechnet der Cron mit einem
+// veralteten Label und sein Push wird als non-fast-forward abgelehnt.
+if (!dryRun) git('pull', '--rebase', '--autostash', 'origin', 'main');
+
 const source = readFileSync(countFile, 'utf8');
 const match = source.match(/export const CREATOR_COUNT_LABEL = '(\d+)\+';/);
 if (!match) {
@@ -98,5 +102,11 @@ git(
   '-m',
   'Automatisch fortgeschrieben von scripts/refresh-creator-count.mjs.',
 );
-git('push', 'origin', 'HEAD:main');
+try {
+  git('push', 'origin', 'HEAD:main');
+} catch {
+  // Jemand hat zwischen Pull und Push gepusht: einmal nachziehen, erneut pushen.
+  git('pull', '--rebase', '--autostash', 'origin', 'main');
+  git('push', 'origin', 'HEAD:main');
+}
 log(`Committet und gepusht - Vercel baut ${target}+ aus.`);
