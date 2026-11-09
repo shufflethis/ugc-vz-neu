@@ -37,7 +37,7 @@ export default function SiteHeader() {
               {NAV.map((item) => (
                 <Link key={item.href} href={item.href} className="flex min-h-[48px] items-center rounded-2xl px-4 font-medium hover:bg-surface">{item.label}</Link>
               ))}
-              <Link href="/creator#creator-form" className="mt-1 flex min-h-[48px] items-center justify-center rounded-2xl bg-surface px-4 font-semibold">Als Creator anmelden</Link>
+              <Link href="/creator#creator-form" className="mt-1 flex min-h-[48px] items-center justify-center rounded-2xl border border-geo-violet/25 bg-geo-violet/5 px-4 font-semibold text-geo-violet">Als Creator anmelden</Link>
             </nav>
           </details>
         </div>

@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import type { ReactNode } from 'react';
 import SearchBox from './components/SearchBox';
 import TrustElements from './components/TrustElements';
 import HomePageSchema from './components/HomePageSchema';
@@ -73,10 +74,11 @@ const features = [
   },
 ];
 
-const faqs = [
+const faqs: [string, ReactNode][] = [
   ['Ist UGC VZ wirklich kostenlos?', 'Ja. Creator suchen, Profile prüfen, Kontaktdaten anfordern und ein Creator-Profil anlegen ist kostenlos. Content-Produktion und optionale Agenturleistungen werden separat vereinbart.'],
   ['Was passiert nach meiner Kontaktanfrage?', 'Du erhältst deine Auswahl und die verfügbaren Kontaktinformationen per E-Mail. Anschließend kontaktierst du die Creator selbst. Die Anfrage bucht keinen Auftrag.'],
   ['Welche Creator passen zu meinem Produkt?', 'Nenne Produkt, Zielgruppe und gewünschtes Format in deiner Suche. Vergleiche danach Profilangaben, Preisvorstellungen und vorhandene Arbeitsproben. Verfügbarkeit und Details klärst du direkt.'],
+  ['Wie komme ich als Creator ins Verzeichnis?', <>Ganz ohne Bewerbung: Du <Link href="/creator#creator-form" className="font-medium text-geo-violet underline underline-offset-4 hover:no-underline">legst dein Profil selbst an</Link>, bestätigst deine E-Mail und bist online. Keine Gebühren, keine Provision, keine Exklusivität.</>],
 ];
 
 export default async function Home() {
@@ -104,6 +106,15 @@ export default async function Home() {
             <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center lg:justify-start">
               <Link href="#search" className="inline-flex min-h-[48px] items-center gap-2 rounded-full bg-geo-violet px-6 font-semibold text-white shadow-[0_14px_30px_rgba(139,63,202,0.35)] transition-transform hover:-translate-y-0.5">Creator finden <Arrow /></Link>
               <Link href="#so-funktionierts" className="inline-flex min-h-[48px] items-center gap-2 rounded-full border border-hairline bg-white px-6 font-semibold transition-colors hover:border-ink">So funktioniert&apos;s</Link>
+            </div>
+            {/* Zweite Zielgruppe: bewusst eine Stufe leiser als die Brand-CTAs.
+                Creator schrieben "Bewerbungen" per Mail, weil sie keinen Einstieg fanden. */}
+            <div className="mt-6">
+              <Link href="/creator#creator-form" className="group inline-flex min-h-[44px] items-center gap-3 rounded-full border border-hairline bg-white/70 py-1.5 pl-1.5 pr-4 text-left text-sm backdrop-blur transition-colors hover:border-geo-violet hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-geo-violet">
+                <span className="shrink-0 rounded-full px-2.5 py-1 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-white" style={{ background: GRADIENT }}>Creator?</span>
+                <span className="text-ink-soft"><span className="font-semibold text-ink">Profil kostenlos anlegen</span><span className="hidden sm:inline"> – ohne Bewerbung</span></span>
+                <span className="shrink-0 text-ink-soft transition-transform group-hover:translate-x-0.5 group-hover:text-geo-violet"><Arrow /></span>
+              </Link>
             </div>
           </div>
           <HeroVisual />
