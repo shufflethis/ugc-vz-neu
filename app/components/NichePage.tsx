@@ -73,7 +73,7 @@ export default async function NichePage({ niche }: { niche: Niche }) {
   const related = niche.related.map(nicheBySlug).filter((n): n is Niche => Boolean(n));
 
   return (
-    <main className="min-h-screen text-ink px-4 sm:px-8 md:px-16 lg:px-24 pt-10 pb-16 sm:pt-14">
+    <div className="min-h-screen text-ink px-4 sm:px-8 md:px-16 lg:px-24 pt-10 pb-16 sm:pt-14">
       <BreadcrumbSchema items={[
         { name: 'UGC VZ', url: 'https://ugc-vz.de' },
         { name: 'Für Brands', url: 'https://ugc-vz.de/brands' },
@@ -214,6 +214,6 @@ export default async function NichePage({ niche }: { niche: Niche }) {
           </ul>
         </section>
       </div>
-    </main>
+    </div>
   );
 }

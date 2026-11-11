@@ -131,7 +131,7 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
         </div>
       </nav>
 
-      <main className="px-4 sm:px-8 md:px-16 lg:px-24 pb-24">
+      <div className="px-4 sm:px-8 md:px-16 lg:px-24 pb-24">
         <article className="max-w-4xl mx-auto">
           <header className="mb-12">
             <div className="flex flex-wrap gap-2 mb-6">
@@ -161,7 +161,7 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
           </header>
           <div className="prose prose-lg max-w-none" dangerouslySetInnerHTML={{ __html: post.contentHtml }} />
         </article>
-      </main>
+      </div>
 
       {relatedPosts.length > 0 && (
         <section className="px-4 sm:px-8 md:px-16 lg:px-24 pb-16 bg-white">

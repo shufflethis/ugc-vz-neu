@@ -100,7 +100,7 @@ const icons = [
 
 export default function BrandKitPage() {
   return (
-    <main className="bg-white text-ink">
+    <div className="bg-white text-ink">
       {/* ---------- Cover ---------- */}
       <section className="relative overflow-hidden bg-void px-5 pb-16 pt-14 text-white sm:px-8 sm:pb-24 sm:pt-20">
         <div className="pointer-events-none absolute -right-40 -top-40 h-[520px] w-[520px] rounded-full opacity-40 blur-3xl" style={{ background: GRADIENT }} aria-hidden="true" />
@@ -587,6 +587,6 @@ export default function BrandKitPage() {
           </div>
         </section>
       </div>
-    </main>
+    </div>
   );
 }

@@ -44,7 +44,7 @@ export default function WissenListingPage({ page }: { page: number }) {
       ]} />
 
 
-      <main className="px-4 sm:px-8 md:px-16 lg:px-24 pb-24 pt-10 sm:pt-14">
+      <div className="px-4 sm:px-8 md:px-16 lg:px-24 pb-24 pt-10 sm:pt-14">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6">
@@ -87,7 +87,7 @@ export default function WissenListingPage({ page }: { page: number }) {
             </Link>
           </section>
         </div>
-      </main>
+      </div>
     </div>
   );
 }

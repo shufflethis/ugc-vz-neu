@@ -1,14 +1,27 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import SearchBox from './components/SearchBox';
 import TrustElements from './components/TrustElements';
 import HomePageSchema from './components/HomePageSchema';
+import JsonLdScript from './wissen/[slug]/JsonLdScript';
 import HeroVisual from './components/home/HeroVisual';
 import NotchCard from './components/home/NotchCard';
 import FilmPlayer from './components/motion/FilmPlayer';
 import { CREATOR_COUNT_LABEL } from './lib/creator-count';
 import { getRecentBrandRequestLabel } from './lib/brand-request-count';
 import { NICHE_INDEX, nichePath } from './lib/niche-index';
+
+export const revalidate = 3600;
+
+export const metadata: Metadata = {
+  alternates: {
+    canonical: 'https://ugc-vz.de',
+    languages: {
+      'de-DE': 'https://ugc-vz.de',
+    },
+  },
+};
 
 const GRADIENT = 'linear-gradient(152deg, #0396F8 0%, #1F6FF4 25%, #3F58F2 50%, #653AED 75%, #9131EF 100%)';
 
@@ -83,9 +96,49 @@ const faqs: [string, ReactNode][] = [
 
 export default async function Home() {
   const brandRequests = await getRecentBrandRequestLabel();
+  const homeFaqSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    '@id': 'https://ugc-vz.de/#faq',
+    mainEntity: [
+      {
+        '@type': 'Question',
+        name: 'Ist UGC VZ wirklich kostenlos?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Ja. Creator suchen, Profile prüfen, Kontaktdaten anfordern und ein Creator-Profil anlegen ist kostenlos. Content-Produktion und optionale Agenturleistungen werden separat vereinbart.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: 'Was passiert nach meiner Kontaktanfrage?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Du erhältst deine Auswahl und die verfügbaren Kontaktinformationen per E-Mail. Anschließend kontaktierst du die Creator selbst. Die Anfrage bucht keinen Auftrag.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: 'Welche Creator passen zu meinem Produkt?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Nenne Produkt, Zielgruppe und gewünschtes Format in deiner Suche. Vergleiche danach Profilangaben, Preisvorstellungen und vorhandene Arbeitsproben. Verfügbarkeit und Details klärst du direkt.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: 'Wie komme ich als Creator ins Verzeichnis?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Ganz ohne Bewerbung: Du legst dein Profil unter https://ugc-vz.de/creator selbst an, bestätigst deine E-Mail und bist online. Keine Gebühren, keine Provision, keine Exklusivität.',
+        },
+      },
+    ],
+  };
   return (
     <div className="home-page min-h-screen bg-white text-ink">
       <HomePageSchema />
+      <JsonLdScript data={homeFaqSchema} />
 
       {/* ---------- Hero ---------- */}
       <section className="relative overflow-hidden bg-surface px-5 pb-24 pt-10 sm:px-8 sm:pb-32 sm:pt-16" aria-labelledby="home-title">

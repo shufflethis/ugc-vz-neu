@@ -30,14 +30,14 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "UGC VZ - UGC Creator finden und kostenlos anmelden",
-    description: "Kostenlose UGC Plattform fuer Brands und Creator in Deutschland: Creator suchen, Kampagne beschreiben oder als Creator mit Portfolio anmelden.",
+    description: "Kostenlose UGC Plattform für Brands und Creator in Deutschland: Creator suchen, Kampagne beschreiben oder als Creator mit Portfolio anmelden.",
     url: "https://ugc-vz.de",
     siteName: "UGC VZ",
     locale: "de_DE",
     type: "website",
     images: [
       {
-        url: "https://ugc-vz.de/ugc-vz-logo.webp",
+        url: "https://ugc-vz.de/og-image.png",
         width: 1200,
         height: 630,
         alt: "UGC VZ - Creator Vermittlung",
@@ -47,15 +47,9 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "UGC VZ - UGC Creator finden und kostenlos anmelden",
-    description: "Kostenlose UGC Plattform fuer Brands und Creator in Deutschland.",
-    images: ["https://ugc-vz.de/ugc-vz-logo.webp"],
+    description: "Kostenlose UGC Plattform für Brands und Creator in Deutschland.",
+    images: ["https://ugc-vz.de/og-image.png"],
     creator: "@Ugc_Vz",
-  },
-  alternates: {
-    canonical: "https://ugc-vz.de",
-    languages: {
-      "de-DE": "https://ugc-vz.de",
-    },
   },
   robots: {
     index: true,
@@ -80,7 +74,6 @@ export default function RootLayout({
       <head>
         {/* Favicon and App Icons */}
         <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
-        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
         <link rel="shortcut icon" href="/favicon.ico" />
         <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
         <meta name="apple-mobile-web-app-title" content="UGC-VZ" />

@@ -236,7 +236,7 @@ export default function Footer() {
         isOpen={isContactPopupOpen}
         onClose={() => setIsContactPopupOpen(false)}
         title="Kontakt aufnehmen"
-        subtitle="Haben Sie Fragen oder benötigen Sie Unterstützung? Schreiben Sie uns!"
+        subtitle="Hast du Fragen oder brauchst du Unterstützung? Schreib uns!"
       />
     </footer>
   );

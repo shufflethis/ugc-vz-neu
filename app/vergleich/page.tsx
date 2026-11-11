@@ -46,7 +46,7 @@ export default function VergleichPage() {
       <BreadcrumbSchema items={breadcrumbs} />
       <JsonLdScript data={itemListSchema} />
 
-      <main className="py-12 px-4 sm:px-8 md:px-16 lg:px-24">
+      <div className="py-12 px-4 sm:px-8 md:px-16 lg:px-24">
         <section className="max-w-5xl mx-auto mb-12">
           <h1 className="text-4xl sm:text-5xl font-bold mb-6 text-ink">
             UGC-Plattformen <span className="gradient-text">im Vergleich</span>
@@ -114,7 +114,7 @@ export default function VergleichPage() {
         </section>
 
         <MethodikNote className="max-w-5xl mx-auto" />
-      </main>
+      </div>
     </div>
   );
 }

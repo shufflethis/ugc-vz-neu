@@ -4,7 +4,7 @@ export default function CookiesPage() {
   return (
     <div className="min-h-screen text-ink">
 
-      <main className="container mx-auto px-4 py-12 sm:px-8 md:px-16 lg:px-24">
+      <div className="container mx-auto px-4 py-12 sm:px-8 md:px-16 lg:px-24">
         <div className="mx-auto max-w-4xl">
           <div className="mb-12 text-center">
             <h1 className="mb-6 text-4xl font-bold sm:text-5xl"><span className="gradient-text">Cookies & Reichweitenmessung</span></h1>
@@ -38,7 +38,7 @@ export default function CookiesPage() {
             </section>
           </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 }

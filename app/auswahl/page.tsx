@@ -22,7 +22,7 @@ export default async function SelectionPage({ searchParams }: { searchParams?: {
   const creators = (await Promise.all(ids.map((id) => getCreator(id).catch(() => null)))).filter(Boolean) as Awaited<ReturnType<typeof getCreator>>[];
 
   return (
-    <main className="px-4 sm:px-8 md:px-16 lg:px-24 pb-24 bg-white text-ink">
+    <div className="px-4 sm:px-8 md:px-16 lg:px-24 pb-24 bg-white text-ink">
       <div className="max-w-3xl mx-auto py-14">
         <p className="text-sm font-bold uppercase tracking-[0.15em] text-geo-violet">Creator-Auswahl</p>
         <h1 className="mt-3 text-4xl font-bold">{creators.length ? `${creators.length} ausgewählte UGC Creator` : 'Keine Creator gefunden'}</h1>
@@ -50,6 +50,6 @@ export default async function SelectionPage({ searchParams }: { searchParams?: {
           ))}
         </div>
       </div>
-    </main>
+    </div>
   );
 }

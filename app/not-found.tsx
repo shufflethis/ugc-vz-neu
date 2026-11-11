@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 
 export default function NotFound() {
   return (
-    <main className="min-h-screen bg-white text-ink px-6 py-24">
+    <div className="min-h-screen bg-white text-ink px-6 py-24">
       <div className="max-w-2xl mx-auto">
         <p className="text-sm font-bold uppercase tracking-[0.15em] text-geo-violet">Fehler 404</p>
         <h1 className="mt-3 text-4xl font-bold">Diese Seite gibt es nicht (mehr)</h1>
@@ -34,6 +34,6 @@ export default function NotFound() {
           <a className="underline" href="/developers">/developers</a>
         </div>
       </div>
-    </main>
+    </div>
   );
 }

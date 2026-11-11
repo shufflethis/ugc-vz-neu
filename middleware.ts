@@ -10,14 +10,14 @@ const goneSlugs = new Set(goneSlugsJson as string[]);
 const publishedSlugs = new Set(publishedSlugsJson as string[]);
 
 function applySecurityHeaders(response: NextResponse, request: NextRequest) {
-  const analyticsSource = 'https://analytics.polymarkt.de';
+  const analyticsSources = 'https://analytics.polymarkt.de https://agenttracking.co';
   const csp = [
     "default-src 'self'",
-    `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === 'development' ? " 'unsafe-eval'" : ''} ${analyticsSource}`,
+    `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === 'development' ? " 'unsafe-eval'" : ''} ${analyticsSources}`,
     "style-src 'self' 'unsafe-inline'",
-    "img-src 'self' data: blob: https: https://p16-sign-va.tiktokcdn.com https://p16-sign.tiktokcdn-us.com https://scontent.cdninstagram.com https://*.fbcdn.net https://yt3.ggpht.com https://yt3.googleusercontent.com https://www.gravatar.com https://i.ytimg.com",
+    "img-src 'self' data: blob: https:",
     "font-src 'self'",
-    `connect-src 'self' ${analyticsSource}`,
+    `connect-src 'self' ${analyticsSources}`,
     "media-src 'self'",
     "frame-src 'self' https://www.youtube-nocookie.com https://www.youtube.com",
     "object-src 'none'",

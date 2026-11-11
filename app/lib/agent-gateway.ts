@@ -1,5 +1,6 @@
 import crypto from 'node:crypto';
 import { getDatabase, isDatabaseConfigured } from '@/app/lib/database';
+import { getInternalSearchToken } from '@/app/lib/internal-search-token';
 import { deriveVerificationLevel, VERIFICATION_LEVELS } from './agent-verification';
 
 const CREATOR_PUBLIC_ID_RE = /^UGC-[A-F0-9]{10}$/;
@@ -74,6 +75,7 @@ export async function searchCreators(params: SearchCreatorsParams, ctx: SearchCr
       'Content-Type': 'application/json',
       'X-Request-ID': ctx.requestId,
       'X-Search-Source': 'agent',
+      'X-Internal-Search-Token': getInternalSearchToken(),
     },
     // city/topics filtert /api/search selbst, VOR seiner 24er-Kappung.
     body: JSON.stringify({ query: params.query, city: params.city, topics: params.topics }),

@@ -14,7 +14,7 @@ export default function DatenschutzPage() {
     <div className="min-h-screen text-ink">
       {/* Header */}
 
-      <main className="container mx-auto px-4 sm:px-8 md:px-16 lg:px-24 py-12">
+      <div className="container mx-auto px-4 sm:px-8 md:px-16 lg:px-24 py-12">
         <div className="max-w-4xl mx-auto">
           {/* Page Title */}
           <div className="text-center mb-12">
@@ -393,7 +393,7 @@ export default function DatenschutzPage() {
             </Link>
           </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 }

@@ -219,17 +219,23 @@ export default function SearchBox({ initialQuery = '', showFeatured = false }: S
     );
   }, [creators, showNoResults, isLoading, reasoning]);
 
-  // Vorbefuellung ueber das Fragment (#q=...). Ein Fragment erzeugt fuer Crawler
-  // keine eigene URL, waehrend ein ?query=-Parameter eine Variante erzeugt, die
-  // auf /brands kanonisiert wird. Serverseitiges initialQuery hat Vorrang.
+  // Vorbefuellung ueber ?query=... (z.B. Schema SearchAction) oder das Fragment (#q=...).
+  // Ein Fragment erzeugt fuer Crawler keine eigene URL, waehrend /brands trotzdem statisch
+  // aus dem CDN kommt. Serverseitiges initialQuery hat Vorrang.
   useEffect(() => {
     if (initialQuery) return;
-    const hash = window.location.hash;
-    if (!hash.startsWith('#q=')) return;
     try {
-      setSearchQuery(decodeURIComponent(hash.slice(3).replace(/\+/g, ' ')));
+      const queryParam = new URLSearchParams(window.location.search).get('query');
+      if (queryParam && queryParam.trim()) {
+        setSearchQuery(queryParam.trim());
+        return;
+      }
+      const hash = window.location.hash;
+      if (hash.startsWith('#q=')) {
+        setSearchQuery(decodeURIComponent(hash.slice(3).replace(/\+/g, ' ')));
+      }
     } catch {
-      // Ungueltige Prozent-Sequenz im Fragment: Vorbefuellung ueberspringen.
+      // Ungueltige Prozent-Sequenz: Vorbefuellung ueberspringen.
     }
   }, [initialQuery]);
 
@@ -262,8 +268,17 @@ export default function SearchBox({ initialQuery = '', showFeatured = false }: S
       trackUGCEvents.searchStart(searchQuery.trim());
       performSearch(searchQuery.trim());
     } else {
-      toast.warning("Bitte geben Sie einen Suchbegriff ein");
+      toast.warning("Bitte gib einen Suchbegriff ein");
     }
+  };
+
+  const detectPrimaryPlatform = (creator: SearchCreator): string => {
+    const combined = `${creator.reach || ''} ${(creator.networks || []).join(' ')}`.toLowerCase();
+    if (/instagram|\binsta\b/.test(combined)) return 'instagram';
+    if (/tiktok|\btt\b/.test(combined)) return 'tiktok';
+    if (/youtube|youtu\.be|\byt\b/.test(combined)) return 'youtube';
+    if (/facebook|fb\.com|\bfb\b/.test(combined)) return 'facebook';
+    return 'unknown';
   };
 
   // Function to handle creator selection - use the hook function
@@ -272,13 +287,7 @@ export default function SearchBox({ initialQuery = '', showFeatured = false }: S
     // Track creator selection
     const creator = creators.find(c => c.id === creatorId);
     if (creator) {
-      // Extract platform from reach text
-      const reachText = creator.reach.toLowerCase();
-      let platform = 'unknown';
-      if (reachText.includes('instagram')) platform = 'instagram';
-      else if (reachText.includes('tiktok')) platform = 'tiktok';
-      else if (reachText.includes('youtube')) platform = 'youtube';
-      else if (reachText.includes('facebook')) platform = 'facebook';
+      const platform = detectPrimaryPlatform(creator);
 
       if (selectedCreators.includes(creatorId)) trackUGCEvents.creatorDeselected(creatorId, platform);
       else if (selectedCreators.length < MAX_CREATORS_PER_REQUEST) trackUGCEvents.creatorSelected(creatorId, platform);
@@ -326,14 +335,7 @@ export default function SearchBox({ initialQuery = '', showFeatured = false }: S
       selectedCreators.forEach(creatorId => {
         const creator = creators.find(c => c.id === creatorId);
         if (creator) {
-          const reachText = creator.reach.toLowerCase();
-          let platform = 'unknown';
-          if (reachText.includes('instagram')) platform = 'instagram';
-          else if (reachText.includes('tiktok')) platform = 'tiktok';
-          else if (reachText.includes('youtube')) platform = 'youtube';
-          else if (reachText.includes('facebook')) platform = 'facebook';
-
-          trackUGCEvents.creatorContact(creatorId, platform);
+          trackUGCEvents.creatorContact(creatorId, detectPrimaryPlatform(creator));
         }
       });
 
@@ -418,7 +420,7 @@ export default function SearchBox({ initialQuery = '', showFeatured = false }: S
               minWidth: '52px',
               height: '52px'
             }}
-            title={isIOSDeviceState ? 'Spracherkennung ist auf iOS-Geräten nicht verfügbar' : !browserSupportsSpeechRecognition ? 'Spracherkennung wird von Ihrem Browser nicht unterstützt' : isListening ? 'Sprachaufnahme beenden' : 'Sprachsuche starten'}
+            title={isIOSDeviceState ? 'Spracherkennung ist auf iOS-Geräten nicht verfügbar' : !browserSupportsSpeechRecognition ? 'Spracherkennung wird von deinem Browser nicht unterstützt' : isListening ? 'Sprachaufnahme beenden' : 'Sprachsuche starten'}
           >
             {isListening ? (
               <svg className="w-5 h-5 text-red-700" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -438,7 +440,7 @@ export default function SearchBox({ initialQuery = '', showFeatured = false }: S
             {isIOSDeviceState
               ? 'Spracherkennung ist auf iOS-Geräten nicht verfügbar'
               : !browserSupportsSpeechRecognition
-                ? 'Spracherkennung wird von Ihrem Browser nicht unterstützt'
+                ? 'Spracherkennung wird von deinem Browser nicht unterstützt'
                 : isListening
                   ? 'Sprachaufnahme beenden'
                   : 'Sprachsuche starten'
@@ -465,7 +467,7 @@ export default function SearchBox({ initialQuery = '', showFeatured = false }: S
       {/* Visual indicator when listening - CRITICAL: Only show if NOT on iOS */}
       {isListening && !isIOSDeviceState && (
         <div className="text-white text-center mt-2 bg-red-900/30 p-2 rounded-lg border border-red-500/50 animate-pulse">
-          <span className="font-medium text-red-400">Spracherkennung aktiv</span> - Sprechen Sie jetzt...
+          <span className="font-medium text-red-400">Spracherkennung aktiv</span> – Sprich jetzt …
         </div>
       )}
 
@@ -534,46 +536,33 @@ export default function SearchBox({ initialQuery = '', showFeatured = false }: S
                     <p className="text-xs text-ink-soft">{creator.contactReachable ? '✉ Per E-Mail erreichbar' : 'Kontakt über Social Media'}</p>
                   </div>
                   <div className={styles.networks}>
-                    {/* Check which networks are mentioned in the reach text */}
+                    {/* Check networks from both social links (creator.networks) and reach text */}
                     {(() => {
-                      const reachText = creator.reach.toLowerCase();
+                      const combined = `${creator.reach || ''} ${(creator.networks || []).join(' ')}`.toLowerCase();
                       const networks = [];
 
-                      // Check for Instagram in reach
-                      if (reachText.includes('instagram') || reachText.includes('insta')) {
+                      if (/instagram|\binsta\b/.test(combined)) {
                         networks.push({ name: 'Instagram', icon: faInstagram });
                       }
-
-                      // Check for TikTok in reach
-                      if (reachText.includes('tiktok') || reachText.includes('tt')) {
+                      if (/tiktok|\btt\b/.test(combined)) {
                         networks.push({ name: 'TikTok', icon: faTiktok });
                       }
-
-                      // Check for YouTube in reach
-                      if (reachText.includes('youtube') || reachText.includes('yt')) {
+                      if (/youtube|youtu\.be|\byt\b/.test(combined)) {
                         networks.push({ name: 'YouTube', icon: faYoutube });
                       }
-
-                      // Check for Facebook in reach
-                      if (reachText.includes('facebook') || reachText.includes('fb')) {
+                      if (/facebook|fb\.com|\bfb\b/.test(combined)) {
                         networks.push({ name: 'Facebook', icon: faFacebook });
                       }
-
-                      // Check for LinkedIn in reach
-                      if (reachText.includes('linkedin')) {
+                      if (/linkedin/.test(combined)) {
                         networks.push({ name: 'LinkedIn', icon: faLinkedin });
                       }
-
-                      // Check for Twitter in reach
-                      if (reachText.includes('twitter') || reachText.includes('x.com')) {
+                      if (/twitter|x\.com/.test(combined)) {
                         networks.push({ name: 'Twitter', icon: faTwitter });
                       }
-
-                      if (reachText.includes('twitch')) {
+                      if (/twitch/.test(combined)) {
                         networks.push({ name: 'Twitch', icon: faTwitch });
                       }
-
-                      if (reachText.includes('snapchat')) {
+                      if (/snapchat/.test(combined)) {
                         networks.push({ name: 'Snapchat', icon: faSnapchat });
                       }
 

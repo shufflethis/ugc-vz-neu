@@ -25,7 +25,7 @@ const h2 = 'text-2xl font-bold mb-4';
 
 export default function DevelopersPage() {
   return (
-    <main className="px-4 sm:px-8 md:px-16 lg:px-24 pb-24 text-ink">
+    <div className="px-4 sm:px-8 md:px-16 lg:px-24 pb-24 text-ink">
       <div className="max-w-4xl mx-auto py-14">
         <p className="text-sm font-bold uppercase tracking-[0.15em] text-geo-violet">Developer-Portal</p>
         <h1 className="mt-3 text-4xl font-bold">UGC VZ für Developer &amp; KI-Agenten</h1>
@@ -84,7 +84,7 @@ claude mcp add --transport http ugc-vz https://ugc-vz.de/api/mcp
               <a className="font-semibold text-geo-violet underline" href="https://github.com/ugcvz/ugc-vz-mcp" rel="noopener noreferrer" target="_blank">github.com/ugcvz/ugc-vz-mcp</a>.
             </p>
             <p className="mt-3 text-sm leading-6 text-ink-soft">
-              Fuer stdio-only-Clients (z. B. Claude Desktop) gibt es die Bridge auch als npm-Paket:{' '}
+              Für stdio-only-Clients (z. B. Claude Desktop) gibt es die Bridge auch als npm-Paket:{' '}
               <a className="font-semibold text-geo-violet underline" href="https://www.npmjs.com/package/ugc-vz-mcp" rel="noopener noreferrer" target="_blank">ugc-vz-mcp</a>{' '}
               &mdash; <code>npx -y ugc-vz-mcp</code>.
             </p>
@@ -147,6 +147,6 @@ claude mcp add --transport http ugc-vz https://ugc-vz.de/api/mcp
           <Link className="font-semibold text-geo-violet underline" href="/contact">Kontakt</Link>
         </p>
       </div>
-    </main>
+    </div>
   );
 }

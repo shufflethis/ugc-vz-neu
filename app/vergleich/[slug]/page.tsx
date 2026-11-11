@@ -62,7 +62,7 @@ export default function VergleichDetailPage({ params }: { params: { slug: string
       <BreadcrumbSchema items={breadcrumbs} />
       <JsonLdScript data={faqSchema} />
 
-      <main className="py-12 px-4 sm:px-8 md:px-16 lg:px-24">
+      <div className="py-12 px-4 sm:px-8 md:px-16 lg:px-24">
         <section className="max-w-3xl mx-auto mb-12">
           <h1 className="text-4xl sm:text-5xl font-bold mb-6 text-ink">
             {c.name} Alternative: <span className="gradient-text">UGC Creator direkt finden</span>
@@ -201,7 +201,7 @@ export default function VergleichDetailPage({ params }: { params: { slug: string
         </section>
 
         <MethodikNote className="max-w-3xl mx-auto mt-12" />
-      </main>
+      </div>
     </div>
   );
 }

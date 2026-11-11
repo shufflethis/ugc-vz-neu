@@ -53,7 +53,7 @@ export default function UGCPlattformDeutschlandPage() {
   };
 
   return (
-    <main className="min-h-screen bg-white text-ink px-4 sm:px-8 md:px-16 lg:px-24 py-16">
+    <div className="min-h-screen bg-white text-ink px-4 sm:px-8 md:px-16 lg:px-24 py-16">
       <BreadcrumbSchema
         items={[
           { name: 'Home', url: 'https://ugc-vz.de' },
@@ -332,6 +332,6 @@ export default function UGCPlattformDeutschlandPage() {
           </section>
         </article>
       </div>
-    </main>
+    </div>
   );
 }

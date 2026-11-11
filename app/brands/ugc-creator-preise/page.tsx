@@ -7,7 +7,7 @@ import BreadcrumbSchema from '../../components/BreadcrumbSchema';
 export const metadata: Metadata = pageMetadata({
   path: '/brands/ugc-creator-preise',
   title: 'UGC Creator Preise in Deutschland',
-  description: 'Was kostet ein UGC Video? Preisspannen von 150 bis 2.500 Euro nach Format, die Faktoren dahinter und kostenlose Creator-Suche fuer Brands.',
+  description: 'Was kostet ein UGC Video? Preisspannen von 150 bis 2.500 Euro nach Format, die Faktoren dahinter und kostenlose Creator-Suche für Brands.',
 });
 
 // Verbindliche Preisreferenz der Seite. Quelle ist der Detailartikel
@@ -32,7 +32,7 @@ const FAKTOREN = [
 
 export default function UGCCreatorPreisePage() {
   return (
-    <main className="min-h-screen bg-white text-ink px-4 sm:px-8 md:px-16 lg:px-24 py-16">
+    <div className="min-h-screen bg-white text-ink px-4 sm:px-8 md:px-16 lg:px-24 py-16">
       <BreadcrumbSchema items={[
         { name: 'Home', url: 'https://ugc-vz.de' },
         { name: 'Brands', url: 'https://ugc-vz.de/brands' },
@@ -40,7 +40,7 @@ export default function UGCCreatorPreisePage() {
       ]} />
 
       <div className="max-w-5xl mx-auto">
-        <Link href="/brands" className="text-sm text-ink-soft hover:text-ink">UGC VZ fuer Brands</Link>
+        <Link href="/brands" className="text-sm text-ink-soft hover:text-ink">UGC VZ für Brands</Link>
 
         <section className="py-14">
           <h1 className="text-4xl sm:text-5xl font-bold mb-6 text-ink">UGC Creator Preise realistisch einschätzen</h1>
@@ -53,7 +53,7 @@ export default function UGCCreatorPreisePage() {
             exklusive Rechte über 24 Monate verteuern eine Produktion um 80 bis 150 Prozent.
           </p>
           <div className="max-w-3xl">
-            <SearchBox initialQuery="UGC Creator bis 500 Euro fuer Produktvideo" />
+            <SearchBox initialQuery="UGC Creator bis 500 Euro für Produktvideo" />
           </div>
         </section>
 
@@ -141,6 +141,6 @@ export default function UGCCreatorPreisePage() {
           </Link>
         </section>
       </div>
-    </main>
+    </div>
   );
 }

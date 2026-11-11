@@ -120,7 +120,7 @@ function LoginView({ invalid, error, noSession }: { invalid: boolean; error: boo
   };
 
   return (
-    <main className="px-4 sm:px-8 md:px-16 lg:px-24 pb-24 pt-10 sm:pt-14">
+    <div className="px-4 sm:px-8 md:px-16 lg:px-24 pb-24 pt-10 sm:pt-14">
       <section className="max-w-lg mx-auto py-16">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold">Creator-Konto</h1>
@@ -173,7 +173,7 @@ function LoginView({ invalid, error, noSession }: { invalid: boolean; error: boo
           </form>
         )}
       </section>
-    </main>
+    </div>
   );
 }
 
@@ -250,7 +250,7 @@ function EditView({ profile }: { profile: CreatorProfileView }) {
   };
 
   return (
-    <main className="px-4 sm:px-8 md:px-16 lg:px-24 pb-24 pt-10 sm:pt-14">
+    <div className="px-4 sm:px-8 md:px-16 lg:px-24 pb-24 pt-10 sm:pt-14">
       <div className="max-w-4xl mx-auto py-10">
         <ProjectRequests profile={profile} />
         <Link href="/konto/kooperationen" className="mb-8 block rounded-2xl border border-geo-violet/30 bg-geo-violet/5 p-6 hover:bg-geo-violet/10">
@@ -361,6 +361,6 @@ function EditView({ profile }: { profile: CreatorProfileView }) {
           </div>
         </form>
       </div>
-    </main>
+    </div>
   );
 }

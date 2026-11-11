@@ -70,10 +70,10 @@ const splitLinks = (value: string) => value
   .filter(Boolean);
 
 export default function CreatorRegistrationForm({
-  verified = false,
-  newlyVerified = false,
-  invalid = false,
-  failed = false,
+  verified: verifiedProp = false,
+  newlyVerified: newlyVerifiedProp = false,
+  invalid: invalidProp = false,
+  failed: failedProp = false,
 }: {
   verified?: boolean;
   newlyVerified?: boolean;
@@ -86,8 +86,29 @@ export default function CreatorRegistrationForm({
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [message, setMessage] = useState('');
+  const [urlFlags, setUrlFlags] = useState({ verified: false, newlyVerified: false, invalid: false, failed: false });
   const startedRef = useRef(false);
   const confirmedRef = useRef(false);
+
+  const verified = verifiedProp || urlFlags.verified;
+  const newlyVerified = newlyVerifiedProp || urlFlags.newlyVerified;
+  const invalid = invalidProp || urlFlags.invalid;
+  const failed = failedProp || urlFlags.failed;
+
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const isVerified = params.get('verified') === '1';
+      const isConfirmed = isVerified && params.get('confirmed') === '1';
+      const isInvalid = params.get('invalid') === '1';
+      const isFailed = params.get('error') === '1';
+      if (isVerified || isInvalid || isFailed) {
+        setUrlFlags({ verified: isVerified, newlyVerified: isConfirmed, invalid: isInvalid, failed: isFailed });
+      }
+    } catch {
+      // Ignore malformed URLs.
+    }
+  }, []);
 
   useEffect(() => {
     if (!newlyVerified || confirmedRef.current) return;

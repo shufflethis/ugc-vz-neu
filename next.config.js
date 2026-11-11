@@ -238,7 +238,7 @@ const nextConfig = {
         // eigenes Vary (rsc, ...) bleibt unberuehrt, beide werden per
         // HTTP-Semantik kombiniert. Pfadliste muss zu
         // isMarkdownNegotiatedPath() in src/middleware.ts passen.
-        source: '/(developers|brands|creator|vergleich|about|contact|privacy|wissen)',
+        source: '/:slug(developers|brands|creator|vergleich|about|contact|privacy|wissen)',
         headers: [{ key: 'Vary', value: 'Accept' }],
       },
       {
@@ -277,7 +277,7 @@ const nextConfig = {
       },
       {
         // Favicon und andere Root-Assets
-        source: '/(favicon.ico|robots.txt|sitemap.xml|manifest.json)',
+        source: '/:asset(favicon.ico|robots.txt|sitemap.xml|manifest.json)',
         headers: [
           {
             key: 'X-Frame-Options',

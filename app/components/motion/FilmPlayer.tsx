@@ -34,10 +34,14 @@ export default function FilmPlayer() {
     if (!playing || !visible) return;
     let raf = 0;
     let last = performance.now();
+    const MIN_FRAME_MS = 1000 / 30;
     const tick = (now: number) => {
-      const dt = Math.min(0.1, (now - last) / 1000);
-      last = now;
-      setT((prev) => (prev + dt > LOOP_END ? 0 : prev + dt));
+      const elapsed = now - last;
+      if (elapsed >= MIN_FRAME_MS) {
+        const dt = Math.min(0.1, elapsed / 1000);
+        last = now;
+        setT((prev) => (prev + dt > LOOP_END ? 0 : prev + dt));
+      }
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);

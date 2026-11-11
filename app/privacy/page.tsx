@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 
 export default function PrivacyPage() {
   return (
-    <main className="px-4 sm:px-8 md:px-16 lg:px-24 pb-24 bg-white text-ink">
+    <div className="px-4 sm:px-8 md:px-16 lg:px-24 pb-24 bg-white text-ink">
       <div className="max-w-2xl mx-auto py-14">
         <p className="text-sm font-bold uppercase tracking-[0.15em] text-geo-violet">Privacy</p>
         <h1 className="mt-3 text-4xl font-bold">Privacy at UGC VZ</h1>
@@ -53,6 +53,6 @@ export default function PrivacyPage() {
           </p>
         </div>
       </div>
-    </main>
+    </div>
   );
 }

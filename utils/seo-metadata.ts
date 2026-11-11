@@ -8,7 +8,7 @@ const SITE_NAME = 'UGC VZ';
 // dabei verloren. Dieser Helper baut den Block vollstaendig auf, damit Unterseiten
 // eine korrekte og:url bekommen, ohne ihr Vorschaubild zu verlieren.
 const OG_IMAGE = {
-  url: `${SITE_URL}/ugc-vz-logo.webp`,
+  url: `${SITE_URL}/og-image.png`,
   width: 1200,
   height: 630,
   alt: 'UGC VZ - Creator Vermittlung',

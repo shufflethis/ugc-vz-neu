@@ -156,7 +156,7 @@ export default function FAQPage() {
       </nav>
 
       {/* Main Content */}
-      <main className="px-4 sm:px-8 md:px-16 lg:px-24 pb-24 pt-10 sm:pt-14">
+      <div className="px-4 sm:px-8 md:px-16 lg:px-24 pb-24 pt-10 sm:pt-14">
         <div className="max-w-4xl mx-auto">
           {/* Hero Section */}
           <div className="text-center mb-16">
@@ -240,7 +240,7 @@ export default function FAQPage() {
             </div>
           </section>
         </div>
-      </main>
+      </div>
     </div>
   );
 }
