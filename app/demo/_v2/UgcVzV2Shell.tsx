@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
   BookOpen,
-  Calendar,
   Check,
   ExternalLink,
   Lock,
@@ -19,7 +18,7 @@ import {
   type LocaleCode,
 } from './data';
 import HomeSection from './HomeSection';
-import BountiesSection from './BountiesSection';
+import CreatorKontoSection from './CreatorKontoSection';
 import BrandsClubSection from './BrandsClubSection';
 import CreatorTaxAppSection from './CreatorTaxAppSection';
 import {
@@ -33,12 +32,10 @@ const GRADIENT =
 
 const STORAGE_PREFIX = 'ugcvz-v2-demo:';
 
-const NAV_ITEMS: { id: DemoSection; href: string; label: string; badge?: string }[] = [
-  { id: 'home', href: '/demo', label: 'Startseite' },
-  { id: 'bounties', href: '/demo/bounties', label: 'UGC Bounties', badge: 'TKP' },
-  { id: 'brands', href: '/demo/brands', label: 'Affiliate-System (Brands)', badge: 'More-Modell' },
-  { id: 'creator', href: '/demo/creator', label: 'Creator & Steuern' },
-  { id: 'agenturen', href: '/demo/agenturen', label: 'Agenturen' },
+const NAV_ITEMS: { id: DemoSection; href: string; label: string }[] = [
+  { id: 'brands', href: '/demo/brands', label: 'Für Brands' },
+  { id: 'creator', href: '/demo/creator', label: 'Für Creator' },
+  { id: 'konto', href: '/demo/konto', label: 'Creator-Login' },
 ];
 
 interface Props {
@@ -47,16 +44,21 @@ interface Props {
 }
 
 export default function UgcVzV2Shell({ initialSection, creatorCountLabel }: Props) {
-  const [section, setSection] = useState<DemoSection>(initialSection);
+  const normalizedInitial: DemoSection =
+    initialSection === 'bounties' ? 'konto' : initialSection;
+
+  const [section, setSection] = useState<DemoSection>(normalizedInitial);
   const [vergleichSlug, setVergleichSlug] = useState<string>('all');
   const [locale, setLocale] = useState<LocaleCode>('de');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   const [shortlist, setShortlist] = useState<string[]>(['UGC-MN01', 'UGC-ST01']);
+  const [pickedIds, setPickedIds] = useState<string[]>(['ugcvz-launch']);
   const [submittedClips, setSubmittedClips] = useState<
     { campaignId: string; url: string; payout: number; status: 'verified' | 'flagged' }[]
   >([]);
 
-  // Strategy Session Modal (Hypefy-style)
+  // Strategie-Call Modal (gezielt fuer Moeglichkeit 3: Eigenes Creator-Affiliate-Netzwerk)
   const [strategyModalOpen, setStrategyModalOpen] = useState(false);
   const [strategyTopic, setStrategyTopic] = useState('');
   const [strategySubmitted, setStrategySubmitted] = useState(false);
@@ -64,7 +66,7 @@ export default function UgcVzV2Shell({ initialSection, creatorCountLabel }: Prop
   const [brandEmail, setBrandEmail] = useState('');
 
   useEffect(() => {
-    setSection(initialSection);
+    setSection(initialSection === 'bounties' ? 'konto' : initialSection);
   }, [initialSection]);
 
   useEffect(() => {
@@ -73,6 +75,8 @@ export default function UgcVzV2Shell({ initialSection, creatorCountLabel }: Prop
       if (savedLocale && LOCALES[savedLocale]) setLocale(savedLocale);
       const savedShortlist = sessionStorage.getItem(STORAGE_PREFIX + 'shortlist');
       if (savedShortlist) setShortlist(JSON.parse(savedShortlist));
+      const savedPicked = sessionStorage.getItem(STORAGE_PREFIX + 'picked');
+      if (savedPicked) setPickedIds(JSON.parse(savedPicked));
       const savedClips = sessionStorage.getItem(STORAGE_PREFIX + 'clips');
       if (savedClips) setSubmittedClips(JSON.parse(savedClips));
     } catch {
@@ -101,6 +105,18 @@ export default function UgcVzV2Shell({ initialSection, creatorCountLabel }: Prop
     });
   };
 
+  const handleTogglePick = (id: string) => {
+    setPickedIds((prev) => {
+      const next = prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id];
+      try {
+        sessionStorage.setItem(STORAGE_PREFIX + 'picked', JSON.stringify(next));
+      } catch {
+        /* ignore */
+      }
+      return next;
+    });
+  };
+
   const handleSubmitClip = (entry: {
     campaignId: string;
     url: string;
@@ -119,9 +135,10 @@ export default function UgcVzV2Shell({ initialSection, creatorCountLabel }: Prop
   };
 
   const navigateSection = (target: DemoSection) => {
-    setSection(target);
+    const resolved = target === 'bounties' ? 'konto' : target;
+    setSection(resolved);
     setMobileMenuOpen(false);
-    const path = target === 'home' ? '/demo' : `/demo/${target}`;
+    const path = resolved === 'home' ? '/demo' : `/demo/${resolved}`;
     try {
       window.history.pushState(null, '', path);
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -135,7 +152,9 @@ export default function UgcVzV2Shell({ initialSection, creatorCountLabel }: Prop
     navigateSection('vergleich');
   };
 
-  const openStrategyModal = (defaultTopic = 'Allgemeine Kampagnen- & Club-Beratung') => {
+  const openStrategyModal = (
+    defaultTopic = 'Eigenes UGC-Creator- & Affiliate-Netzwerk auf Provisionsbasis aufbauen',
+  ) => {
     setStrategyTopic(defaultTopic);
     setStrategySubmitted(false);
     setStrategyModalOpen(true);
@@ -151,96 +170,90 @@ export default function UgcVzV2Shell({ initialSection, creatorCountLabel }: Prop
     }
     setLocale('de');
     setShortlist(['UGC-MN01', 'UGC-ST01']);
+    setPickedIds(['ugcvz-launch']);
     setSubmittedClips([]);
   };
 
   return (
     <div className="min-h-screen bg-white text-ink">
-      {/* TOP PRIVATE PREVIEW BAR */}
-      <div className="border-b border-white/10 bg-void px-4 py-2 text-xs text-white">
+      {/* DEZENTE INTERNE VORSCHAU-LEISTE GANZ OBEN */}
+      <div className="border-b border-white/10 bg-void px-4 py-1.5 text-[11px] text-white">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-0.5 font-semibold text-geo-green">
-              <Lock size={12} /> Geschützte Demo · UGC VZ 2.0
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2.5 py-0.5 font-semibold text-geo-green">
+              <Lock size={11} /> Demo-Vorschau
             </span>
-            <span className="hidden text-white/60 md:inline">
-              Live-Seite (ugc-vz.de) bleibt unberührt · Kein echter Mail-/Zahlungsversand
+            <span className="hidden text-white/55 sm:inline">
+              Live-Seite bleibt unberührt
             </span>
           </div>
 
-          {/* Multilingual / International Domain Preview Switcher */}
           <div className="flex flex-wrap items-center gap-2">
-            <div className="flex items-center gap-1 rounded-full border border-white/15 bg-white/[0.05] p-0.5">
-              {(Object.keys(LOCALES) as LocaleCode[]).map((code) => {
-                const l = LOCALES[code];
-                const active = locale === code;
-                return (
-                  <button
-                    key={code}
-                    type="button"
-                    onClick={() => handleLocaleChange(code)}
-                    title={`Domain-Vorschau: ${l.domain}`}
-                    className={`rounded-full px-2 py-0.5 text-[11px] font-bold transition-colors ${
-                      active ? 'bg-white text-void' : 'text-white/70 hover:text-white'
-                    }`}
-                  >
-                    {l.flag} {l.label}
-                  </button>
-                );
-              })}
+            <div className="flex items-center gap-0.5 rounded-full border border-white/15 bg-white/[0.05] p-0.5">
+              {(['de', 'en'] as LocaleCode[]).map((code) => (
+                <button
+                  key={code}
+                  type="button"
+                  onClick={() => handleLocaleChange(code)}
+                  className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                    locale === code ? 'bg-white text-void' : 'text-white/65 hover:text-white'
+                  }`}
+                >
+                  {code.toUpperCase()}
+                </button>
+              ))}
             </div>
 
             <button
               type="button"
               onClick={() => navigateSection('strategie')}
-              className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold transition-colors ${
-                section === 'strategie'
-                  ? 'bg-geo-violet text-white'
-                  : 'bg-white/10 text-white hover:bg-white/20'
-              }`}
+              className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2.5 py-0.5 text-white/80 hover:text-white"
             >
-              <BookOpen size={12} /> Call-Synthese
+              <BookOpen size={11} /> Notizen
             </button>
 
             <a
               href="/demo/kooperationen"
-              className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-medium text-white/80 hover:bg-white/20 hover:text-white"
+              className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2.5 py-0.5 text-white/75 hover:text-white"
             >
-              fomo-Pilot <ExternalLink size={11} />
+              fomo <ExternalLink size={10} />
             </a>
 
             <button
               type="button"
               onClick={resetDemo}
-              className="inline-flex items-center gap-1 text-[11px] text-white/60 hover:text-white"
-              title="Simulierte Demo-Eingaben zurücksetzen"
+              className="inline-flex items-center gap-1 text-white/55 hover:text-white"
+              title="Demo zurücksetzen"
             >
-              <RefreshCw size={11} /> Reset
+              <RefreshCw size={10} /> Reset
             </button>
           </div>
         </div>
       </div>
 
-      {/* NEW UGC VZ 2.0 HEADER */}
-      <header className="sticky top-0 z-40 border-b border-hairline bg-white/95 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-3.5 sm:px-8">
+      {/* RUHIGER HEADER WIE AUF DER LIVE-SEITE (SiteHeader.tsx) */}
+      <header className="sticky top-0 z-40 border-b border-hairline/80 bg-white/85 px-5 backdrop-blur-xl sm:px-8">
+        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 sm:h-[72px]">
           <Link
             href="/demo"
             onClick={(e) => {
               e.preventDefault();
               navigateSection('home');
             }}
-            className="flex items-center gap-2.5"
+            aria-label="UGC VZ – Startseite"
+            className="shrink-0"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/brand/ugc-vz-logo.svg" alt="UGC VZ" width={72} height={44} />
-            <span className="hidden rounded-md bg-surface px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider text-geo-violet sm:inline-block">
-              v2 Preview · {LOCALES[locale].domain}
-            </span>
+            <img
+              src="/brand/ugc-vz-logo.svg"
+              alt="UGC VZ"
+              width={78}
+              height={48}
+              className="h-9 w-auto sm:h-10"
+            />
           </Link>
 
-          {/* Desktop Nav */}
-          <nav className="hidden items-center gap-1 lg:flex" aria-label="UGC VZ 2.0 Navigation">
+          <nav aria-label="Hauptnavigation" className="hidden items-center gap-7 md:flex">
             {NAV_ITEMS.map((item) => {
               const active = section === item.id;
               return (
@@ -251,54 +264,51 @@ export default function UgcVzV2Shell({ initialSection, creatorCountLabel }: Prop
                     e.preventDefault();
                     navigateSection(item.id);
                   }}
-                  className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-semibold transition-colors ${
-                    active
-                      ? 'bg-void text-white'
-                      : 'text-ink-soft hover:bg-surface hover:text-ink'
+                  className={`text-sm font-medium transition-colors ${
+                    active ? 'font-bold text-ink' : 'text-ink-soft hover:text-ink'
                   }`}
                 >
                   {item.label}
-                  {item.badge && (
-                    <span
-                      className={`rounded px-1.5 py-0.5 font-mono text-[9px] font-bold ${
-                        active ? 'bg-geo-green text-void' : 'bg-geo-violet/15 text-geo-violet'
-                      }`}
-                    >
-                      {item.badge}
-                    </span>
-                  )}
                 </Link>
               );
             })}
           </nav>
 
-          {/* Header CTA */}
-          <div className="hidden items-center gap-2 sm:flex">
+          <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={() => openStrategyModal('15-Min Strategy Session (Header CTA)')}
-              className="inline-flex min-h-[40px] items-center gap-1.5 rounded-full bg-geo-violet px-4 text-xs font-bold text-white shadow-sm hover:bg-[#7531ae]"
+              onClick={() => navigateSection('creator')}
+              className="hidden min-h-[40px] items-center rounded-full border border-hairline px-4 text-sm font-semibold text-ink transition-colors hover:border-ink lg:inline-flex"
             >
-              <Calendar size={14} />
-              Strategy Session
+              Als Creator anmelden
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (section !== 'home') navigateSection('home');
+                setTimeout(() => {
+                  document.getElementById('search')?.scrollIntoView({ behavior: 'smooth' });
+                }, 50);
+              }}
+              className="inline-flex min-h-[40px] items-center rounded-full bg-geo-violet px-4 text-sm font-semibold text-white shadow-[0_8px_20px_rgba(139,63,202,0.3)] transition-transform hover:-translate-y-0.5"
+            >
+              Creator finden
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen((v) => !v)}
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-hairline md:hidden"
+              aria-label="Menü öffnen"
+            >
+              {mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
             </button>
           </div>
-
-          {/* Mobile Hamburger */}
-          <button
-            type="button"
-            onClick={() => setMobileMenuOpen((v) => !v)}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-hairline lg:hidden"
-            aria-label="Menü öffnen"
-          >
-            {mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
-          </button>
         </div>
 
-        {/* Mobile Nav Drawer */}
         {mobileMenuOpen && (
-          <div className="border-t border-hairline bg-white px-5 py-4 lg:hidden">
-            <div className="flex flex-col gap-1.5">
+          <nav className="border-t border-hairline bg-white py-3 md:hidden">
+            <div className="flex flex-col gap-1">
               {NAV_ITEMS.map((item) => (
                 <Link
                   key={item.id}
@@ -307,34 +317,24 @@ export default function UgcVzV2Shell({ initialSection, creatorCountLabel }: Prop
                     e.preventDefault();
                     navigateSection(item.id);
                   }}
-                  className={`flex items-center justify-between rounded-xl px-3.5 py-2.5 text-sm font-semibold ${
-                    section === item.id ? 'bg-void text-white' : 'bg-surface text-ink'
-                  }`}
+                  className="flex min-h-[44px] items-center rounded-xl px-3 text-sm font-medium hover:bg-surface"
                 >
-                  <span>{item.label}</span>
-                  {item.badge && (
-                    <span className="rounded bg-geo-violet px-2 py-0.5 text-[10px] font-bold text-white">
-                      {item.badge}
-                    </span>
-                  )}
+                  {item.label}
                 </Link>
               ))}
               <button
                 type="button"
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  openStrategyModal('Mobile Strategy Session');
-                }}
-                className="mt-2 min-h-[44px] w-full rounded-xl bg-geo-violet text-sm font-bold text-white"
+                onClick={() => navigateSection('creator')}
+                className="mt-1 flex min-h-[44px] items-center justify-center rounded-xl border border-geo-violet/25 bg-geo-violet/5 text-sm font-semibold text-geo-violet"
               >
-                15-Min Strategy Session buchen
+                Als Creator anmelden
               </button>
             </div>
-          </div>
+          </nav>
         )}
       </header>
 
-      {/* ACTIVE VIEW */}
+      {/* AKTIVE SEITE */}
       <main>
         {section === 'home' && (
           <HomeSection
@@ -346,11 +346,12 @@ export default function UgcVzV2Shell({ initialSection, creatorCountLabel }: Prop
             onOpenStrategyModal={openStrategyModal}
           />
         )}
-        {section === 'bounties' && (
-          <BountiesSection
+        {section === 'konto' && (
+          <CreatorKontoSection
+            pickedIds={pickedIds}
+            onTogglePick={handleTogglePick}
             submittedClips={submittedClips}
             onSubmitClip={handleSubmitClip}
-            onOpenStrategyModal={openStrategyModal}
           />
         )}
         {section === 'brands' && (
@@ -375,90 +376,92 @@ export default function UgcVzV2Shell({ initialSection, creatorCountLabel }: Prop
         )}
       </main>
 
-      {/* NEW UGC VZ 2.0 FOOTER (5-Spalten inkl. klassischer GEO-Vergleichs-Links wie im Live-Footer) */}
+      {/* RUHIGER 5-SPALTEN FOOTER INKL. GEO-VERGLEICHSSEITEN */}
       <footer className="border-t border-white/10 bg-void px-5 py-16 text-white sm:px-8">
         <div className="mx-auto grid max-w-6xl gap-8 sm:grid-cols-2 lg:grid-cols-5">
           <div>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/brand/ugc-vz-logo-white.svg" alt="UGC VZ" width={84} height={50} />
-            <p className="mt-3 text-xs leading-5 text-white/65">
-              Offenes KI-Creator-Verzeichnis ({creatorCountLabel} echte Profile), Pay-per-View Bounties & schlüsselfertige Affiliate-Programme für Brands.
+            <p className="mt-3 text-xs leading-5 text-white/60">
+              Die Plattform, um echte UGC Creator kostenlos zu finden, TKP-Kampagnen zu schalten oder eigene Provisions-Netzwerke aufzubauen.
             </p>
-            <p className="mt-3 font-mono text-[10px] text-geo-green">
-              track by track GmbH · Berlin
-            </p>
+            <p className="mt-3 text-xs text-white/40">track by track GmbH · Berlin</p>
           </div>
 
           <div>
-            <p className="font-mono text-[11px] font-bold uppercase tracking-wider text-white">
-              Für Brands & Agenturen
+            <p className="font-mono text-xs font-medium uppercase tracking-[0.18em] text-white">
+              Für Brands
             </p>
-            <ul className="mt-4 space-y-2.5 text-xs text-white/65">
+            <ul className="mt-4 space-y-2.5 text-sm text-white/60">
               <li>
                 <button type="button" onClick={() => navigateSection('home')} className="hover:text-white">
-                  Kostenlose Creator-Suche (0 €)
+                  1 · Creator finden (0 €)
                 </button>
               </li>
               <li>
-                <button type="button" onClick={() => navigateSection('brands')} className="font-semibold text-geo-green hover:underline">
-                  Eigenes Affiliate-System (More-Modell)
+                <button type="button" onClick={() => navigateSection('brands')} className="hover:text-white">
+                  2 · TKP-Kampagne starten
                 </button>
               </li>
               <li>
-                <button type="button" onClick={() => navigateSection('bounties')} className="hover:text-white">
-                  UGC Bounties (Pay-per-1.000-Views)
+                <button
+                  type="button"
+                  onClick={() => openStrategyModal()}
+                  className="text-left text-geo-green hover:underline"
+                >
+                  3 · Provisions-Netzwerk (Call)
                 </button>
               </li>
               <li>
                 <button type="button" onClick={() => navigateSection('agenturen')} className="hover:text-white">
-                  Für Agenturen & Managements
+                  Für Agenturen
                 </button>
               </li>
             </ul>
           </div>
 
           <div>
-            <p className="font-mono text-[11px] font-bold uppercase tracking-wider text-white">
+            <p className="font-mono text-xs font-medium uppercase tracking-[0.18em] text-white">
               Für Creator
             </p>
-            <ul className="mt-4 space-y-2.5 text-xs text-white/65">
+            <ul className="mt-4 space-y-2.5 text-sm text-white/60">
               <li>
-                <button type="button" onClick={() => navigateSection('bounties')} className="hover:text-white">
-                  Mit Views Geld verdienen (+10 € Bonus)
+                <button type="button" onClick={() => navigateSection('creator')} className="hover:text-white">
+                  Als Creator anmelden
                 </button>
               </li>
               <li>
-                <button type="button" onClick={() => navigateSection('creator')} className="hover:text-white">
-                  Steuer- & Gutschrifts-Autopilot
+                <button type="button" onClick={() => navigateSection('konto')} className="hover:text-white">
+                  Creator-Login (Kampagnen picken)
                 </button>
               </li>
               <li>
-                <button type="button" onClick={() => navigateSection('creator')} className="hover:text-white">
-                  Web-App & Push-Benachrichtigungen
+                <button type="button" onClick={() => navigateSection('konto')} className="hover:text-white">
+                  Auszahlung &amp; Steuer-Hilfe
                 </button>
               </li>
             </ul>
           </div>
 
-          {/* Spalte 4: Vergleiche (GEO-Seiten genau wie im Live-Footer, erweitert um Contentmarkt, Creonda & Hypefy!) */}
+          {/* Spalte 4: Vergleiche (GEO-Seiten wie im Live-Footer) */}
           <div>
-            <p className="font-mono text-[11px] font-bold uppercase tracking-wider text-white">
-              Vergleiche (GEO)
+            <p className="font-mono text-xs font-medium uppercase tracking-[0.18em] text-white">
+              Vergleiche
             </p>
-            <ul className="mt-4 space-y-2.5 text-xs text-white/65">
+            <ul className="mt-4 space-y-2.5 text-sm text-white/60">
               <li>
                 <button type="button" onClick={() => openVergleichFromFooter('all')} className="hover:text-white">
-                  Alle Plattformen im Vergleich
-                </button>
-              </li>
-              <li>
-                <button type="button" onClick={() => openVergleichFromFooter('contentmarkt-alternative')} className="hover:text-white">
-                  Contentmarkt Alternative
+                  Alle Plattformen
                 </button>
               </li>
               <li>
                 <button type="button" onClick={() => openVergleichFromFooter('speekly-alternative')} className="hover:text-white">
                   Speekly Alternative
+                </button>
+              </li>
+              <li>
+                <button type="button" onClick={() => openVergleichFromFooter('contentmarkt-alternative')} className="hover:text-white">
+                  Contentmarkt Alternative
                 </button>
               </li>
               <li>
@@ -481,26 +484,21 @@ export default function UgcVzV2Shell({ initialSection, creatorCountLabel }: Prop
                   Boksi Alternative
                 </button>
               </li>
-              <li>
-                <button type="button" onClick={() => openVergleichFromFooter('hypefy-alternative')} className="hover:text-white">
-                  Hypefy AI Alternative
-                </button>
-              </li>
             </ul>
           </div>
 
           <div>
-            <p className="font-mono text-[11px] font-bold uppercase tracking-wider text-white">
-              KI-Agenten & Vorschau
+            <p className="font-mono text-xs font-medium uppercase tracking-[0.18em] text-white">
+              API &amp; KI-Agenten
             </p>
-            <p className="mt-4 text-xs leading-5 text-white/65">
-              MCP · A2A 1.0 · WebMCP · ChatGPT Plugin aktiv. Passwortgeschützte Demo unter <code className="text-white">/demo</code> (`noindex, noarchive`).
+            <p className="mt-4 text-xs leading-5 text-white/60">
+              MCP · A2A 1.0 · WebMCP · ChatGPT Plugin aktiv.
             </p>
           </div>
         </div>
       </footer>
 
-      {/* HYPEFY-STYLE STRATEGY SESSION & PILOT DISCOUNT MODAL */}
+      {/* STRATEGIE-CALL MODAL (NUR FUER MOEGLICHKEIT 3: EIGENES CREATOR-/AFFILIATE-NETZWERK) */}
       {strategyModalOpen && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 p-4 backdrop-blur-sm"
@@ -521,30 +519,30 @@ export default function UgcVzV2Shell({ initialSection, creatorCountLabel }: Prop
               className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-wider text-white"
               style={{ background: GRADIENT }}
             >
-              <Sparkles size={12} /> Book Strategy Session · Referenz-Pilot
+              <Sparkles size={12} /> Möglichkeit 3 · Strategie-Call
             </span>
 
             <h2 className="mt-3 text-2xl font-bold text-ink">
-              15-Minuten Strategie-Call & Neukunden-Vorteil sichern
+              Eigenes Creator- &amp; Affiliate-Netzwerk aufbauen
             </h2>
             <p className="mt-1.5 text-xs leading-5 text-ink-soft">
-              Für ausgewählte Pilot-Marken & Love-Brands starten wir mit <strong>0 % Plattformgebühr bzw. +20 % Reichweiten-Bonus</strong> im Austausch für eine gemeinsame Case Study.
+              Wir besprechen in 15 Minuten, wie wir euer eigenes Partnerprogramm auf Provisionsbasis (Codes, Produkt-Seeding &amp; Stufen-System) technisch aufsetzen und aus unseren {creatorCountLabel} Creatorn befüllen.
             </p>
 
             {strategySubmitted ? (
               <div className="mt-6 rounded-2xl border border-[#dce9d1] bg-[#edf5e5] p-5 text-sm text-[#2b421a]">
                 <p className="flex items-center gap-2 font-bold">
-                  <Check size={18} /> Anfrage lokal in der Demo simuliert!
+                  <Check size={18} /> Strategie-Call in der Demo vorgemerkt!
                 </p>
                 <p className="mt-1 text-xs leading-5">
-                  Im Live-Betrieb landet dieser Lead sofort in Slack + E-Mail (inkl. Vorauswahl deiner {shortlist.length} gemerkten Creator und gewähltem Thema „{strategyTopic}“) plus direktem Kalender-Slot.
+                  Im Live-Betrieb landet die Anfrage direkt bei euch in Slack &amp; per Mail inkl. Terminauswahl.
                 </p>
                 <button
                   type="button"
                   onClick={() => setStrategyModalOpen(false)}
                   className="mt-4 rounded-full bg-void px-5 py-2 text-xs font-bold text-white"
                 >
-                  Zurück zur Vorschau
+                  Schließen
                 </button>
               </div>
             ) : (
@@ -556,7 +554,7 @@ export default function UgcVzV2Shell({ initialSection, creatorCountLabel }: Prop
                 className="mt-5 space-y-3.5"
               >
                 <div>
-                  <label className="block text-xs font-bold text-ink">Gewünschtes Setup</label>
+                  <label className="block text-xs font-bold text-ink">Thema / Produkt</label>
                   <input
                     type="text"
                     value={strategyTopic}
@@ -566,11 +564,11 @@ export default function UgcVzV2Shell({ initialSection, creatorCountLabel }: Prop
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div>
-                    <label className="block text-xs font-bold text-ink">Marke / Agentur</label>
+                    <label className="block text-xs font-bold text-ink">Unternehmen / Marke</label>
                     <input
                       type="text"
                       required
-                      placeholder="z. B. Nebelkind / DailyFuel"
+                      placeholder="Deine Marke"
                       value={brandName}
                       onChange={(e) => setBrandName(e.target.value)}
                       className="mt-1 min-h-[42px] w-full rounded-xl border border-hairline bg-surface px-3.5 text-xs text-ink"
@@ -581,7 +579,7 @@ export default function UgcVzV2Shell({ initialSection, creatorCountLabel }: Prop
                     <input
                       type="email"
                       required
-                      placeholder="marketing@deinemarke.de"
+                      placeholder="name@unternehmen.de"
                       value={brandEmail}
                       onChange={(e) => setBrandEmail(e.target.value)}
                       className="mt-1 min-h-[42px] w-full rounded-xl border border-hairline bg-surface px-3.5 text-xs text-ink"
@@ -592,7 +590,7 @@ export default function UgcVzV2Shell({ initialSection, creatorCountLabel }: Prop
                   type="submit"
                   className="min-h-[46px] w-full rounded-full bg-geo-violet text-sm font-bold text-white hover:bg-[#7531ae]"
                 >
-                  Unverbindlichen Slot & Pilot-Konditionen anfragen
+                  Unverbindlichen Strategie-Call anfragen
                 </button>
               </form>
             )}

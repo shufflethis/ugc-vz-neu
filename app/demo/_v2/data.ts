@@ -1,5 +1,6 @@
 export type DemoSection =
   | 'home'
+  | 'konto'
   | 'bounties'
   | 'brands'
   | 'creator'
