@@ -36,10 +36,9 @@ const STORAGE_PREFIX = 'ugcvz-v2-demo:';
 const NAV_ITEMS: { id: DemoSection; href: string; label: string; badge?: string }[] = [
   { id: 'home', href: '/demo', label: 'Startseite' },
   { id: 'bounties', href: '/demo/bounties', label: 'UGC Bounties', badge: 'TKP' },
-  { id: 'brands', href: '/demo/brands', label: 'Für Brands & Club' },
-  { id: 'creator', href: '/demo/creator', label: 'Creator & Steuer-USP' },
+  { id: 'brands', href: '/demo/brands', label: 'Affiliate-System (Brands)', badge: 'More-Modell' },
+  { id: 'creator', href: '/demo/creator', label: 'Creator & Steuern' },
   { id: 'agenturen', href: '/demo/agenturen', label: 'Agenturen' },
-  { id: 'vergleich', href: '/demo/vergleich', label: 'Vergleich (GEO)' },
 ];
 
 interface Props {
@@ -49,6 +48,7 @@ interface Props {
 
 export default function UgcVzV2Shell({ initialSection, creatorCountLabel }: Props) {
   const [section, setSection] = useState<DemoSection>(initialSection);
+  const [vergleichSlug, setVergleichSlug] = useState<string>('all');
   const [locale, setLocale] = useState<LocaleCode>('de');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [shortlist, setShortlist] = useState<string[]>(['UGC-MN01', 'UGC-ST01']);
@@ -128,6 +128,11 @@ export default function UgcVzV2Shell({ initialSection, creatorCountLabel }: Prop
     } catch {
       /* ignore */
     }
+  };
+
+  const openVergleichFromFooter = (slug: string) => {
+    setVergleichSlug(slug);
+    navigateSection('vergleich');
   };
 
   const openStrategyModal = (defaultTopic = 'Allgemeine Kampagnen- & Club-Beratung') => {
@@ -360,6 +365,8 @@ export default function UgcVzV2Shell({ initialSection, creatorCountLabel }: Prop
         {section === 'vergleich' && (
           <VergleichView
             creatorCountLabel={creatorCountLabel}
+            selectedSlug={vergleichSlug}
+            onSelectSlug={setVergleichSlug}
             onOpenStrategyModal={openStrategyModal}
           />
         )}
@@ -368,38 +375,38 @@ export default function UgcVzV2Shell({ initialSection, creatorCountLabel }: Prop
         )}
       </main>
 
-      {/* NEW UGC VZ 2.0 FOOTER */}
-      <footer className="border-t border-white/10 bg-void px-5 py-14 text-white sm:px-8">
-        <div className="mx-auto grid max-w-6xl gap-8 md:grid-cols-4">
+      {/* NEW UGC VZ 2.0 FOOTER (5-Spalten inkl. klassischer GEO-Vergleichs-Links wie im Live-Footer) */}
+      <footer className="border-t border-white/10 bg-void px-5 py-16 text-white sm:px-8">
+        <div className="mx-auto grid max-w-6xl gap-8 sm:grid-cols-2 lg:grid-cols-5">
           <div>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/brand/ugc-vz-logo-white.svg" alt="UGC VZ" width={84} height={50} />
             <p className="mt-3 text-xs leading-5 text-white/65">
-              Offenes KI-Creator-Verzeichnis ({creatorCountLabel} echte Profile), Pay-per-View Bounties & schlüsselfertige Brand Creator-Clubs.
+              Offenes KI-Creator-Verzeichnis ({creatorCountLabel} echte Profile), Pay-per-View Bounties & schlüsselfertige Affiliate-Programme für Brands.
             </p>
             <p className="mt-3 font-mono text-[10px] text-geo-green">
-              MCP · A2A 1.0 · WebMCP · Multi-Domain Ready
+              track by track GmbH · Berlin
             </p>
           </div>
 
           <div>
-            <p className="font-mono text-[11px] font-bold uppercase tracking-wider text-white/50">
-              Plattform (Demo)
+            <p className="font-mono text-[11px] font-bold uppercase tracking-wider text-white">
+              Für Brands & Agenturen
             </p>
-            <ul className="mt-3 space-y-2 text-xs text-white/75">
+            <ul className="mt-4 space-y-2.5 text-xs text-white/65">
               <li>
                 <button type="button" onClick={() => navigateSection('home')} className="hover:text-white">
-                  KI-Suche & Skript-Studio
+                  Kostenlose Creator-Suche (0 €)
+                </button>
+              </li>
+              <li>
+                <button type="button" onClick={() => navigateSection('brands')} className="font-semibold text-geo-green hover:underline">
+                  Eigenes Affiliate-System (More-Modell)
                 </button>
               </li>
               <li>
                 <button type="button" onClick={() => navigateSection('bounties')} className="hover:text-white">
-                  UGC Bounties (Pay-per-1k-Views)
-                </button>
-              </li>
-              <li>
-                <button type="button" onClick={() => navigateSection('brands')} className="hover:text-white">
-                  5-Level Brand Creator-Club
+                  UGC Bounties (Pay-per-1.000-Views)
                 </button>
               </li>
               <li>
@@ -411,34 +418,83 @@ export default function UgcVzV2Shell({ initialSection, creatorCountLabel }: Prop
           </div>
 
           <div>
-            <p className="font-mono text-[11px] font-bold uppercase tracking-wider text-white/50">
-              GEO & Alternativen
+            <p className="font-mono text-[11px] font-bold uppercase tracking-wider text-white">
+              Für Creator
             </p>
-            <ul className="mt-3 space-y-2 text-xs text-white/75">
+            <ul className="mt-4 space-y-2.5 text-xs text-white/65">
               <li>
-                <button type="button" onClick={() => navigateSection('vergleich')} className="hover:text-white">
-                  Contentmarkt Alternative im Vergleich
-                </button>
-              </li>
-              <li>
-                <button type="button" onClick={() => navigateSection('vergleich')} className="hover:text-white">
-                  UGC VZ vs. Speekly & Creonda
+                <button type="button" onClick={() => navigateSection('bounties')} className="hover:text-white">
+                  Mit Views Geld verdienen (+10 € Bonus)
                 </button>
               </li>
               <li>
                 <button type="button" onClick={() => navigateSection('creator')} className="hover:text-white">
-                  UGC versteuern in Deutschland (Autopilot)
+                  Steuer- & Gutschrifts-Autopilot
+                </button>
+              </li>
+              <li>
+                <button type="button" onClick={() => navigateSection('creator')} className="hover:text-white">
+                  Web-App & Push-Benachrichtigungen
+                </button>
+              </li>
+            </ul>
+          </div>
+
+          {/* Spalte 4: Vergleiche (GEO-Seiten genau wie im Live-Footer, erweitert um Contentmarkt, Creonda & Hypefy!) */}
+          <div>
+            <p className="font-mono text-[11px] font-bold uppercase tracking-wider text-white">
+              Vergleiche (GEO)
+            </p>
+            <ul className="mt-4 space-y-2.5 text-xs text-white/65">
+              <li>
+                <button type="button" onClick={() => openVergleichFromFooter('all')} className="hover:text-white">
+                  Alle Plattformen im Vergleich
+                </button>
+              </li>
+              <li>
+                <button type="button" onClick={() => openVergleichFromFooter('contentmarkt-alternative')} className="hover:text-white">
+                  Contentmarkt Alternative
+                </button>
+              </li>
+              <li>
+                <button type="button" onClick={() => openVergleichFromFooter('speekly-alternative')} className="hover:text-white">
+                  Speekly Alternative
+                </button>
+              </li>
+              <li>
+                <button type="button" onClick={() => openVergleichFromFooter('creonda-alternative')} className="hover:text-white">
+                  Creonda Alternative
+                </button>
+              </li>
+              <li>
+                <button type="button" onClick={() => openVergleichFromFooter('influee-alternative')} className="hover:text-white">
+                  Influee Alternative
+                </button>
+              </li>
+              <li>
+                <button type="button" onClick={() => openVergleichFromFooter('stylink-ugc-alternative')} className="hover:text-white">
+                  stylink UGC Alternative
+                </button>
+              </li>
+              <li>
+                <button type="button" onClick={() => openVergleichFromFooter('boksi-alternative')} className="hover:text-white">
+                  Boksi Alternative
+                </button>
+              </li>
+              <li>
+                <button type="button" onClick={() => openVergleichFromFooter('hypefy-alternative')} className="hover:text-white">
+                  Hypefy AI Alternative
                 </button>
               </li>
             </ul>
           </div>
 
           <div>
-            <p className="font-mono text-[11px] font-bold uppercase tracking-wider text-white/50">
-              Interner Demo-Hinweis
+            <p className="font-mono text-[11px] font-bold uppercase tracking-wider text-white">
+              KI-Agenten & Vorschau
             </p>
-            <p className="mt-3 text-xs leading-5 text-white/65">
-              Passwortgeschützte Entwicklungsvorschau unter <code className="text-white">/demo</code> (`noindex, noarchive`). Die öffentliche Live-Seite unter <code className="text-white">ugc-vz.de</code> ist vollständig unverändert.
+            <p className="mt-4 text-xs leading-5 text-white/65">
+              MCP · A2A 1.0 · WebMCP · ChatGPT Plugin aktiv. Passwortgeschützte Demo unter <code className="text-white">/demo</code> (`noindex, noarchive`).
             </p>
           </div>
         </div>

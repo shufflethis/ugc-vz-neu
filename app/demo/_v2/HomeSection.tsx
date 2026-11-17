@@ -614,16 +614,16 @@ export default function HomeSection({
 
             <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-6">
               <Layers className="text-[#0396F8]" size={26} />
-              <h3 className="mt-4 text-lg font-bold">Eigenes More-Style Brand-Portal</h3>
+              <h3 className="mt-4 text-lg font-bold">Affiliate-System für Brands (More-Modell)</h3>
               <p className="mt-2 text-sm leading-6 text-white/70">
-                Statt einmaliger Einzelvideos bauen wir Marken ein eigenes 5-Level Creator- & Affiliate-Ökosystem (Produkt-Seeding + Rabattcodes + Aufstiegs-Level) – direkt befüllt aus {creatorCountLabel} Creatorn.
+                Statt teurer Einzelvideos bauen wir Marken ein schlüsselfertiges Creator-Affiliate-Portal (eigene Codes, Provision, Produkt-Guthaben & Level 1–5) – zum Start direkt befüllt aus unseren {creatorCountLabel} Creatorn.
               </p>
               <button
                 type="button"
                 onClick={() => onNavigate('brands')}
                 className="mt-4 inline-flex items-center gap-1.5 text-xs font-bold text-[#62B4FF] hover:underline"
               >
-                5-Level Club-Baukasten öffnen <ArrowRight size={14} />
+                Live-Vorschau des Affiliate-Portals öffnen <ArrowRight size={14} />
               </button>
             </div>
 

@@ -234,14 +234,138 @@ export function AgenturenView({
   );
 }
 
+const GEO_ALTERNATIVES: {
+  slug: string;
+  name: string;
+  headline: string;
+  pricing: string;
+  modelSummary: string;
+  whenCompetitorFits: string;
+  whenUgcvzFits: string;
+  faqs: [string, string][];
+}[] = [
+  {
+    slug: 'contentmarkt-alternative',
+    name: 'Contentmarkt',
+    headline: 'Contentmarkt Alternative: Views kaufen, Creator direkt finden & eigenes Affiliate-Portal bauen',
+    pricing: 'Kampagnenbudget pro 1.000 Views (TKP abzüglich Plattformanteil), kein offenes Creator-Verzeichnis ohne Kampagne',
+    modelSummary:
+      'Contentmarkt (Axel-Springer-Venture) vergütet Creator und Clipper nach erzielten Views auf TikTok & Instagram und bietet eigene Agenturkonten.',
+    whenCompetitorFits:
+      'Wenn du ausschließlich reine View-basierte Clipping- oder Creator-Kampagnen über einen geschlossenen Kampagnen-Marktplatz abwickeln möchtest.',
+    whenUgcvzFits:
+      'Wenn du zusätzlich 730+ DACH-Creator kostenlos ohne Login durchsuchen willst, direkte Kontaktdaten brauchst oder dir ein eigenes dauerhaftes Creator-Affiliate-Programm (More-Nutrition-Modell) aufbauen lassen möchtest.',
+    faqs: [
+      ['Was ist die beste kostenlose Contentmarkt Alternative?', 'Bei UGC VZ durchsuchst du über 730 deutschsprachige UGC-Creator kostenlos ohne Login und zahlst 0 % Vermittlungsprovision bei Direktkontakt. Ergänzend stehen Pay-per-1.000-Views Bounties und eigene Affiliate-Portale für Marken bereit.'],
+      ['Bietet UGC VZ wie Contentmarkt auch Agenturkonten und View-Vergütung?', 'Ja: Neben dem offenen Verzeichnis umfasst das 2.0-Modell feste TKP-Bounty-Budgets, ein Anti-Bot Fraud-Shield sowie Multi-Creator-Dashboards für Agenturen und Managements.'],
+    ],
+  },
+  {
+    slug: 'speekly-alternative',
+    name: 'Speekly',
+    headline: 'Speekly Alternative: UGC Creator direkt kontaktieren ohne Plattform-Aufschlag',
+    pricing: '99 € / 119 € / 139 € pro Video (15/30/60 Sek.) zzgl. MwSt.; Kommunikation nur im Plattform-Chat',
+    modelSummary:
+      'Speekly ist ein vermittelter Marktplatz mit festen Paketpreisen pro Einzelvideo und Abwicklung über die Plattform.',
+    whenCompetitorFits:
+      'Wenn du einzelne abgedrehte Ad-Videos zum starren Festpreis einkaufen und Vertrag sowie Zahlung komplett abgeben willst.',
+    whenUgcvzFits:
+      'Wenn du Creator direkt kennenlernen, ohne Zwischenmarge verhandeln oder statt teurer Einzelvideos ein skalierbares Affiliate-/Creator-Programm auf Provisionsbasis starten willst.',
+    faqs: [
+      ['Was kostet Speekly im Vergleich zu UGC VZ?', 'Speekly berechnet feste Paketpreise ab 99 € bis 139 € pro geschnittenem Video. Die Creator-Suche und Kontaktanfrage bei UGC VZ ist komplett kostenlos (0 € Grundgebühr, 0 % Provision).'],
+      ['Kann ich bei Speekly Creator direkt anschreiben?', 'Nein, die Abstimmung läuft geschlossen über Speekly. Bei UGC VZ erhältst du die direkten Kontaktdaten per E-Mail.'],
+    ],
+  },
+  {
+    slug: 'creonda-alternative',
+    name: 'Creonda',
+    headline: 'Creonda Alternative: 0 % Provision bei Direktkontakt + Bounties & Brand-Affiliate-System',
+    pricing: '0 € Grundgebühr, pauschal 20 % Plattformkommission auf Buchungen über Treuhandkonto',
+    modelSummary:
+      'Creonda (ehemals MOO Content) kombiniert offene Creator-Suche und KI-Briefings mit 20 % Vermittlungsgebühr bei Buchung.',
+    whenCompetitorFits:
+      'Wenn du Einzelvideos über ein Treuhandkonto abwickeln möchtest und dafür 20 % Aufschlag einplanst.',
+    whenUgcvzFits:
+      'Wenn du bei Direktbuchungen 0 % Gebühr zahlen willst oder Performance-Formate wie TKP-View-Bounties und ein eigenes Affiliate-Creator-Portal suchst.',
+    faqs: [
+      ['Wie unterscheiden sich Creonda und UGC VZ bei den Gebühren?', 'Creonda erhebt 20 % Kommission auf vermittelte Aufträge. Bei UGC VZ ist der Direktkontakt zu 730+ Creatorn komplett provisionsfrei (0 %).'],
+    ],
+  },
+  {
+    slug: 'influee-alternative',
+    name: 'Influee',
+    headline: 'Influee Alternative ohne Monatsabo ($229–$999/Monat sparen)',
+    pricing: 'Pflicht-Abo $229 / $529 / $999 pro Monat + 10 % Marketplace-Fee + Creator-Honorar',
+    modelSummary:
+      'Influee ist eine internationale Abo-Plattform mit großem globalem Creator-Pool, rechnet sich aber erst bei hohem Dauer-Volumen.',
+    whenCompetitorFits:
+      'Bei sehr hohem monatlichem Video-Bedarf in über 20 Ländern, wenn sich die hohen Abo-Fixkosten verteilen.',
+    whenUgcvzFits:
+      'Wenn du ohne monatlichen Abo-Zwang sofort deutschsprachige Creator finden oder rein erfolgsbasiert über Affiliate-Codes & Views arbeiten möchtest.',
+    faqs: [
+      ['Gibt es eine Influee Alternative ohne Abo-Zwang?', 'Ja: UGC VZ verlangt weder Monatsabo noch Mindestumsatz – Suche und Kontaktanfrage im DACH-Verzeichnis sind dauerhaft kostenlos.'],
+    ],
+  },
+  {
+    slug: 'stylink-ugc-alternative',
+    name: 'stylink UGC',
+    headline: 'stylink UGC Alternative: Direkter Creator-Zugang & eigenes Marken-Affiliate-System',
+    pricing: 'Paket- und Kampagnenpreise über Plattformabwicklung',
+    modelSummary:
+      'stylink ist aus Affiliate-Links bekannt und vermittelt im UGC-Bereich Creator-Videos im geschlossenen Kampagnenablauf.',
+    whenCompetitorFits: 'Für standardisierte Einzel-Deliverables ohne direkten Kontaktaufbau zum Creator.',
+    whenUgcvzFits:
+      'Wenn deine Marke direkte Beziehungen zu Creatorn aufbauen oder ein eigenes White-Label Affiliate- & Seeding-Portal (Level 1–5) auf der eigenen Domain betreiben will.',
+    faqs: [
+      ['Warum ein eigenes Affiliate-Portal statt Drittplattform?', 'Creator bauen eine echte Bindung zu deiner Marke auf, nutzen eigene Codes im Alltag und tauschen Provisionen direkt in deine Produkte – ohne Streuverlust.'],
+    ],
+  },
+  {
+    slug: 'boksi-alternative',
+    name: 'Boksi',
+    headline: 'Boksi Alternative für den DACH-Raum ohne Jahresbindung',
+    pricing: 'Plattform-Lizenz / Kampagnengebühren (Fokus Nordics & Enterprise)',
+    modelSummary: 'Boksi richtet sich mit festen Plattformpaketen vor allem an größere E-Commerce-Teams in Nordeuropa.',
+    whenCompetitorFits: 'Für Teams mit Schwerpunkt Skandinavien/Nordics und festem Lizenzbudget.',
+    whenUgcvzFits: 'Für sofortigen DACH-Zugang (730+ geprüfte Profile) ohne Lizenzkosten sowie TKP-Bounties in Euro.',
+    faqs: [
+      ['Ist UGC VZ auf den deutschsprachigen Raum spezialisiert?', 'Ja, über 730 aktive Profile stammen aus Deutschland, Österreich und der Schweiz – perspektivisch ergänzt um EN/ES/FR.'],
+    ],
+  },
+  {
+    slug: 'hypefy-alternative',
+    name: 'Hypefy AI',
+    headline: 'Hypefy AI Alternative: Offene KI-Suche, MCP-Agenten & Performance-Clubs in DACH',
+    pricing: 'Geschlossene KI-Kampagnenplattform / Enterprise-Pricing auf Anfrage',
+    modelSummary: 'Hypefy automatisiert Influencer-Kampagnen per KI von der Suche bis zum Reporting für größere Marken.',
+    whenCompetitorFits: 'Für international gesteuerte Influencer-Kampagnen in einer geschlossenen Suite.',
+    whenUgcvzFits:
+      'Wenn du sofort ohne Sales-Schranke starten willst, offene KI-Schnittstellen (MCP, A2A, ChatGPT) nutzt oder ein echtes Micro-Creator-Affiliate-System suchst.',
+    faqs: [
+      ['Hat UGC VZ auch KI-Briefings und eine persönliche Beratung?', 'Ja: Die KI-Suche und der Skript-Generator sind frei zugänglich; für größere Bounties und eigene Affiliate-Portale buchst du direkt eine 15-Minuten Strategy Session.'],
+    ],
+  },
+];
+
 export function VergleichView({
   creatorCountLabel,
+  selectedSlug = 'all',
+  onSelectSlug,
   onOpenStrategyModal,
 }: {
   creatorCountLabel: string;
+  selectedSlug?: string;
+  onSelectSlug?: (slug: string) => void;
   onOpenStrategyModal: (defaultTopic?: string) => void;
 }) {
   const [budget, setBudget] = useState(5000);
+  const [internalSlug, setInternalSlug] = useState(selectedSlug);
+  const activeSlug = selectedSlug !== 'all' ? selectedSlug : internalSlug;
+  const setSlug = (s: string) => {
+    setInternalSlug(s);
+    onSelectSlug?.(s);
+  };
+  const activeAlt = GEO_ALTERNATIVES.find((a) => a.slug === activeSlug) || null;
 
   const ugcvzDirectToCreators = budget; // 0% on direct directory
   const ugcvzManagedToCreators = Math.round(budget * 0.801); // 19.9% Robin Hood cap (0% for pilot cases!)
@@ -261,9 +385,75 @@ export function VergleichView({
           </span>
         </h1>
         <p className="mx-auto mt-4 max-w-2xl text-sm leading-6 text-ink-soft sm:text-base">
-          Viele UGC-Plattformen werben mit vermeintlich günstigen Paketpreisen und behalten im Hintergrund fast die Hälfte der Gage ein. UGC VZ kombiniert ein 100 % kostenloses Verzeichnis ({creatorCountLabel} Profile) mit fairen View-Bounties und eigenen Brand-Clubs.
+          Diese Vergleichsseiten sitzen – genau wie auf der Live-Seite – für Suchmaschinen & KI-Systeme (ChatGPT, Perplexity, Google) sauber verlinkt im <strong>Footer</strong>. Wähle eine einzelne Alternative oder die Gesamtübersicht:
         </p>
+
+        {/* GEO SUBPAGE SWITCHER (Footer Pages) */}
+        <div className="mt-6 flex flex-wrap justify-center gap-2">
+          <button
+            type="button"
+            onClick={() => setSlug('all')}
+            className={`rounded-full px-3.5 py-1.5 text-xs font-bold transition-colors ${
+              !activeAlt
+                ? 'bg-void text-white'
+                : 'border border-hairline bg-surface text-ink hover:border-geo-violet'
+            }`}
+          >
+            Alle Plattformen
+          </button>
+          {GEO_ALTERNATIVES.map((alt) => (
+            <button
+              key={alt.slug}
+              type="button"
+              onClick={() => setSlug(alt.slug)}
+              className={`rounded-full px-3.5 py-1.5 text-xs font-bold transition-colors ${
+                activeAlt?.slug === alt.slug
+                  ? 'bg-geo-violet text-white'
+                  : 'border border-hairline bg-surface text-ink hover:border-geo-violet'
+              }`}
+            >
+              {alt.name} Alternative
+            </button>
+          ))}
+        </div>
       </section>
+
+      {/* SINGLE GEO ALTERNATIVE DETAIL TEXT (like /vergleich/speekly-alternative & /vergleich/contentmarkt-alternative) */}
+      {activeAlt && (
+        <section className="mx-auto max-w-4xl space-y-6 rounded-3xl border-2 border-geo-violet/25 bg-[#FBF8FE] p-6 sm:p-10">
+          <div>
+            <p className="font-mono text-[11px] font-bold uppercase tracking-wider text-geo-violet">
+              Footer GEO-Landingpage · /vergleich/{activeAlt.slug}
+            </p>
+            <h2 className="mt-2 text-2xl font-bold text-ink sm:text-3xl">{activeAlt.headline}</h2>
+            <p className="mt-3 text-sm leading-6 text-ink-soft">{activeAlt.modelSummary}</p>
+            <p className="mt-2 rounded-xl bg-white px-3.5 py-2 text-xs text-ink">
+              <strong>Preismodell {activeAlt.name}:</strong> {activeAlt.pricing}
+            </p>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="rounded-2xl border border-hairline bg-white p-5">
+              <h3 className="text-sm font-bold text-ink">Wann {activeAlt.name} passt</h3>
+              <p className="mt-2 text-xs leading-5 text-ink-soft">{activeAlt.whenCompetitorFits}</p>
+            </div>
+            <div className="rounded-2xl border border-[#dce9d1] bg-[#edf5e5] p-5">
+              <h3 className="text-sm font-bold text-[#2b421a]">Wann UGC VZ 2.0 besser passt</h3>
+              <p className="mt-2 text-xs leading-5 text-[#2b421a]">{activeAlt.whenUgcvzFits}</p>
+            </div>
+          </div>
+
+          <div className="space-y-3 border-t border-hairline pt-4">
+            <h3 className="text-sm font-bold text-ink">Strukturierte GEO-FAQs (für Google & ChatGPT-Zitate)</h3>
+            {activeAlt.faqs.map(([q, a]) => (
+              <div key={q} className="rounded-2xl border border-hairline bg-white p-4">
+                <p className="text-xs font-bold text-ink">{q}</p>
+                <p className="mt-1 text-xs leading-5 text-ink-soft">{a}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* TRANSPARENCY FEE CALCULATOR */}
       <section className="mx-auto max-w-6xl rounded-3xl border border-hairline bg-white p-6 shadow-sm sm:p-8">

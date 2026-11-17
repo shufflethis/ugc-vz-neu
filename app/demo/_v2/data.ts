@@ -47,8 +47,8 @@ export const LOCALES: Record<LocaleCode, LocaleConfig> = {
     pillar1Desc: '730+ echte Profile mit Arbeitsproben ohne Login durchsuchen. KI-Briefings inklusive, Kontakt direkt.',
     pillar2Title: 'UGC Bounties (Pay-per-1k-Views)',
     pillar2Desc: 'Gesamtbudget & TKP festlegen (z. B. 3,50 € / 1.000 Views). Creator produzieren oder clippen auf TikTok, Reels & Shorts.',
-    pillar3Title: 'Brand Creator-Club (More-System)',
-    pillar3Desc: 'Schlüsselfertiges 5-Level Affiliate- & Seeding-Portal auf deiner Domain – direkt befüllt aus unserem Creator-Pool.',
+    pillar3Title: 'Affiliate-System für Brands (More-Modell)',
+    pillar3Desc: 'Wir bauen deiner Marke ein eigenes Creator-Affiliate-Portal (Codes, Provision, Produkt-Tausch & Level 1–5) – ohne Fixgagen.',
   },
   en: {
     code: 'en',
