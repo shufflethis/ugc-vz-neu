@@ -1,8 +1,12 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import HeroVisual from '@/app/components/home/HeroVisual';
 import NotchCard from '@/app/components/home/NotchCard';
+import FilmPlayer from '@/app/components/motion/FilmPlayer';
+import TrustElements from '@/app/components/TrustElements';
+import { NICHE_INDEX, nichePath } from '@/app/lib/niche-index';
 import { AI_PRESETS, type DemoSection, type LocaleCode } from './data';
 
 const GRADIENT =
@@ -25,6 +29,118 @@ function Arrow() {
     </svg>
   );
 }
+
+// Geschwungener Uebergang hell -> dunkel (bzw. umgekehrt) exakt wie auf der aktuellen Startseite (app/page.tsx)
+function NotchEdge({ flip = false }: { flip?: boolean }) {
+  return (
+    <svg
+      viewBox="0 0 1440 64"
+      preserveAspectRatio="none"
+      className={`block h-10 w-full sm:h-16 ${flip ? 'rotate-180' : ''}`}
+      aria-hidden="true"
+    >
+      <path
+        d="M0 0 H420 C470 0 490 64 560 64 H880 C950 64 970 0 1020 0 H1440 V64 H0 Z"
+        fill="#060606"
+      />
+    </svg>
+  );
+}
+
+const features = [
+  {
+    title: 'Die Suche versteht dein Briefing',
+    text: 'Beschreib Produkt, Zielgruppe und Format in deinen Worten. Die KI-Suche findet passende Profile.',
+    ui: (
+      <div className="rounded-2xl border border-hairline bg-surface p-4 text-sm">
+        <p className="leading-6 text-ink">
+          <mark className="rounded bg-[#F4EDFB] px-1 text-geo-violet">Skincare-Serum</mark>,{' '}
+          <mark className="rounded bg-[#E6F0FE] px-1 text-[#1F6FF4]">Reel für Instagram</mark>,{' '}
+          <mark className="rounded bg-[#edf5e5] px-1 text-[#385523]">Frau 25–35</mark>
+        </p>
+        <div className="mt-3 flex justify-end">
+          <span className="rounded-xl bg-geo-violet px-4 py-2 text-xs font-bold text-white">
+            Creator suchen
+          </span>
+        </div>
+      </div>
+    ),
+  },
+  {
+    title: 'Echte Profile mit Arbeitsproben',
+    text: 'Reale UGC Creator mit Portfolio- und Social-Nachweisen – keine KI-Avatare.',
+    ui: (
+      <div className="flex items-center gap-3 rounded-2xl border border-hairline bg-white p-4">
+        <div
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
+          style={{ background: GRADIENT }}
+        >
+          LE
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-bold">Lea · München</p>
+          <p className="truncate text-xs text-ink-soft">Testimonials, Reels, Fotos</p>
+        </div>
+        <div className="flex gap-1">
+          {[0.5, 0.75, 1].map((o) => (
+            <span
+              key={o}
+              className="h-10 w-6 rounded-md"
+              style={{ background: GRADIENT, opacity: o }}
+            />
+          ))}
+        </div>
+      </div>
+    ),
+  },
+  {
+    title: 'Du wählst bewusst aus',
+    text: 'Vergleiche Themen, Preisvorstellungen und Arbeitsproben. Kein Algorithmus entscheidet für dich.',
+    ui: (
+      <div className="space-y-2">
+        {[
+          ['Mia · Berlin', true],
+          ['Jonas · Köln', false],
+          ['Lea · München', true],
+        ].map(([name, on]) => (
+          <div
+            key={name as string}
+            className={`flex items-center justify-between rounded-xl border px-3 py-2 text-sm ${
+              on ? 'border-geo-violet bg-[#FBF8FE]' : 'border-hairline bg-white'
+            }`}
+          >
+            <span className="truncate font-semibold">{name}</span>
+            <span
+              className={`shrink-0 rounded-lg px-2 py-1 text-[11px] font-bold ${
+                on ? 'bg-[#edf5e5] text-[#385523]' : 'bg-geo-violet text-white'
+              }`}
+            >
+              {on ? '✓ In deiner Auswahl' : '+ Zur Auswahl'}
+            </span>
+          </div>
+        ))}
+      </div>
+    ),
+  },
+  {
+    title: 'Kontakte per Mail – ohne Provision',
+    text: 'Du erhältst die verfügbaren Kontaktdaten kostenlos per E-Mail. Honorar und Rechte klärt ihr direkt.',
+    ui: (
+      <div className="rounded-2xl border border-hairline bg-white p-4">
+        <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-geo-violet">
+          Dein kostenloses Matching
+        </p>
+        <p className="mt-1 text-base font-bold tracking-tight">Deine Creator-Auswahl ist da</p>
+        <div className="mt-3 flex items-center gap-2 rounded-xl bg-surface px-3 py-2 text-xs">
+          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#edf5e5] font-bold text-[#385523]">
+            ✓
+          </span>
+          2 Kontakte · 0 € Provision
+        </div>
+      </div>
+    ),
+  },
+];
 
 interface Props {
   locale: LocaleCode;
@@ -67,22 +183,26 @@ export default function HomeSection({
 
   const faqs: [string, string][] = [
     [
-      'Ist die Creator-Suche auf UGC VZ wirklich kostenlos?',
-      'Ja. Marken durchsuchen alle Profile ohne Anmeldung, prüfen Arbeitsproben und erhalten die Kontaktdaten kostenlos per E-Mail (0 % Provision).',
+      'Ist UGC VZ wirklich kostenlos?',
+      'Ja. Creator suchen, Profile prüfen, Kontaktdaten anfordern und ein Creator-Profil anlegen ist kostenlos. Optionale TKP-Kampagnen oder der Aufbau eines eigenen Affiliate-Netzwerks werden separat vereinbart.',
     ],
     [
-      'Wann nutze ich TKP-Kampagnen oder ein eigenes Affiliate-Programm?',
-      'Wenn du nicht einzeln verhandeln willst: Bei einer TKP-Kampagne legst du ein festes Budget pro 1.000 Views fest. Willst du wie große D2C-Marken hunderte Micro-Creator dauerhaft auf Provisionsbasis aktivieren, bauen wir dir im Strategie-Call dein eigenes Affiliate-Netzwerk auf.',
+      'Was passiert nach meiner Kontaktanfrage?',
+      'Du erhältst deine Auswahl und die verfügbaren Kontaktinformationen per E-Mail. Anschließend kontaktierst du die Creator selbst. Die Anfrage bucht keinen Auftrag.',
     ],
     [
-      'Wie verdiene ich als Creator auf UGC VZ Geld?',
-      'Zweifach: Mit deinem kostenlosen Profil wirst du von Marken direkt angefragt – und in deinem Creator-Login kannst du dir jederzeit selbst aktive TKP-Kampagnen & Provisions-Partnerschaften picken.',
+      'Wann nutze ich TKP-Kampagnen oder ein eigenes Provisions-Programm?',
+      'Bei einer TKP-Kampagne legst du ein festes Budget pro 1.000 Views fest, das Creator in ihrem Login-Bereich picken. Willst du wie große D2C-Marken hunderte Micro-Creator dauerhaft auf Provisionsbasis aktivieren, besprechen wir das Setup im Strategie-Call.',
+    ],
+    [
+      'Wie komme ich als Creator ins Verzeichnis und an bezahlte Kampagnen?',
+      'Ganz ohne Bewerbung: Du legst dein Profil kostenlos an, wirst von Marken direkt gefunden und kannst dir in deinem neuen Creator-Login jederzeit selbst aktive TKP-Kampagnen & Provisions-Partnerschaften picken.',
     ],
   ];
 
   return (
-    <div className="home-page min-h-screen bg-white text-ink">
-      {/* ---------- 1. RUHIGER HERO (1:1 Klarheit der Live-Startseite) ---------- */}
+    <div className="home-page min-h-screen bg-white text-ink pb-20">
+      {/* ---------- 1. HERO (1:1 wie aktuelle Startseite) ---------- */}
       <section
         className="relative overflow-hidden bg-surface px-5 pb-24 pt-10 sm:px-8 sm:pb-32 sm:pt-16"
         aria-labelledby="demo-home-title"
@@ -101,7 +221,7 @@ export default function HomeSection({
 
             <h1
               id="demo-home-title"
-              className="text-[2.6rem] font-bold leading-[1.02] tracking-[-0.055em] sm:text-6xl lg:text-[4.1rem]"
+              className="text-[2.6rem] font-bold leading-[1.02] tracking-[-0.055em] sm:text-6xl lg:text-[4.1rem] xl:text-[4.4rem]"
             >
               {isEn ? 'Your Product.' : 'Dein Produkt.'}
               <br />
@@ -115,8 +235,8 @@ export default function HomeSection({
 
             <p className="mx-auto mt-5 max-w-xl text-base leading-7 text-ink-soft sm:text-lg lg:mx-0">
               {isEn
-                ? 'Find real UGC creators for free, launch pay-per-1,000-views campaigns, or build your own commission-based creator network.'
-                : 'Finde echte UGC Creator kostenlos im Verzeichnis – oder starte skalierbare TKP-Kampagnen und eigene Creator-Programme auf Provisionsbasis.'}
+                ? 'Find real UGC creators, review samples, and request contacts for free — plus optional CPM campaigns and commission networks.'
+                : 'Finde echte UGC Creator, prüfe Arbeitsproben und frage deine Favoriten kostenlos an – ohne Provision, ohne Agentur dazwischen.'}
             </p>
 
             <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center lg:justify-start">
@@ -127,19 +247,19 @@ export default function HomeSection({
                 Creator finden <Arrow />
               </a>
               <a
-                href="#drei-wege"
+                href="#so-funktionierts"
                 className="inline-flex min-h-[48px] items-center gap-2 rounded-full border border-hairline bg-white px-6 font-semibold transition-colors hover:border-ink"
               >
-                Für Unternehmen (3 Wege)
+                So funktioniert&apos;s
               </a>
             </div>
 
-            {/* Ruhiger zweiter Einstieg fuer Creator: Anmelden -> Kampagnen picken & Geld verdienen */}
+            {/* Zweite Zielgruppe: Creator anmelden + Hinweis auf Kampagnen-Login */}
             <div className="mt-6">
               <button
                 type="button"
                 onClick={() => onNavigate('creator')}
-                className="group inline-flex min-h-[44px] items-center gap-3 rounded-full border border-hairline bg-white/80 py-1.5 pl-1.5 pr-4 text-left text-sm backdrop-blur transition-colors hover:border-geo-violet hover:bg-white"
+                className="group inline-flex min-h-[44px] items-center gap-3 rounded-full border border-hairline bg-white/70 py-1.5 pl-1.5 pr-4 text-left text-sm backdrop-blur transition-colors hover:border-geo-violet hover:bg-white"
               >
                 <span
                   className="shrink-0 rounded-full px-2.5 py-1 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-white"
@@ -148,8 +268,8 @@ export default function HomeSection({
                   Creator?
                 </span>
                 <span className="text-ink-soft">
-                  <span className="font-semibold text-ink">Kostenlos anmelden</span>
-                  <span className="hidden sm:inline"> – &amp; im Login direkt Kampagnen picken</span>
+                  <span className="font-semibold text-ink">Profil kostenlos anlegen</span>
+                  <span className="hidden sm:inline"> – &amp; im Konto direkt Kampagnen picken</span>
                 </span>
                 <span className="shrink-0 text-ink-soft transition-transform group-hover:translate-x-0.5 group-hover:text-geo-violet">
                   <Arrow />
@@ -162,11 +282,11 @@ export default function HomeSection({
         </div>
       </section>
 
-      {/* ---------- 2. DIE RUHIGE SUCHE (Ueberlappt den Hero wie auf Live) ---------- */}
+      {/* ---------- 2. SUCHE (Ueberlappt den Hero wie auf der Live-Startseite) ---------- */}
       <section className="relative z-10 -mt-16 px-5 sm:-mt-20 sm:px-8">
         <div
           id="search"
-          className="home-search-panel mx-auto max-w-6xl scroll-mt-24 rounded-3xl border border-hairline bg-white p-5 shadow-[0_30px_90px_rgba(35,22,47,0.10)] sm:p-8"
+          className="home-search-panel mx-auto max-w-6xl scroll-mt-24 rounded-3xl border border-hairline bg-white p-4 shadow-[0_30px_90px_rgba(35,22,47,0.10)] sm:p-8"
         >
           <div className="mb-4 flex flex-col gap-2 sm:mb-5 sm:flex-row sm:items-center sm:justify-between">
             <h2 className="text-lg font-semibold tracking-tight sm:text-xl">
@@ -204,7 +324,6 @@ export default function HomeSection({
             </button>
           </form>
 
-          {/* Ruhige Beispiel-Kategorien */}
           <div className="mt-3 flex flex-wrap gap-2">
             {['Beauty & Routinen', 'Streetwear & Fashion', 'Apps & Tech', 'Food & Drinks'].map(
               (label, idx) => (
@@ -227,7 +346,6 @@ export default function HomeSection({
             )}
           </div>
 
-          {/* 3 ruhige Creator-Karten */}
           <div className="mt-6 grid gap-3 md:grid-cols-3">
             {activeCreators.map((c) => {
               const selected = shortlist.includes(c.id);
@@ -290,15 +408,83 @@ export default function HomeSection({
             </div>
           )}
         </div>
-        <p className="mx-auto mt-4 max-w-6xl text-center text-xs leading-5 text-ink-soft">
+        <p className="mx-auto mt-5 max-w-6xl text-center text-xs leading-5 text-ink-soft">
           Suche und Kontaktanfrage sind kostenlos. Produktion und Nutzungsrechte vereinbart ihr direkt.
         </p>
       </section>
 
-      {/* ---------- 3. DIE 3 KLAREN MOEGLICHKEITEN FUER UNTERNEHMEN ---------- */}
+      {/* ---------- 3. PARTNER-LOGOS (wie auf der aktuellen Startseite) ---------- */}
+      <div className="mt-10">
+        <TrustElements compact />
+      </div>
+
+      {/* ---------- 4. VIER SCHRITTE (wie auf der aktuellen Startseite) ---------- */}
+      <section className="px-5 py-20 sm:px-8 sm:py-28" aria-labelledby="home-features-title">
+        <div className="mx-auto max-w-6xl">
+          <h2
+            id="home-features-title"
+            className="mx-auto max-w-3xl text-center text-3xl font-bold leading-tight tracking-[-0.045em] sm:text-5xl"
+          >
+            Echte Creator finden.
+            <br className="hidden sm:block" />{' '}
+            <span className="text-ink-soft">In vier klaren Schritten.</span>
+          </h2>
+          <div className="mt-12 grid grid-cols-1 gap-5 sm:mt-16 md:grid-cols-2">
+            {features.map((f) => (
+              <NotchCard
+                key={f.title}
+                title={<h3 className="text-lg font-semibold tracking-tight sm:text-xl">{f.title}</h3>}
+              >
+                <p className="text-sm leading-6 text-ink-soft">{f.text}</p>
+                <div className="mt-6">{f.ui}</div>
+              </NotchCard>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ---------- 5. MOTION-GRAFIK AUF DUNKLER BUEHNE (1:1 wieder drin!) ---------- */}
+      <section id="so-funktionierts" className="scroll-mt-4" aria-labelledby="home-how-title">
+        <NotchEdge />
+        <div className="relative overflow-hidden bg-void px-5 pb-20 pt-12 text-white sm:px-8 sm:pb-28 sm:pt-16">
+          <div
+            className="pointer-events-none absolute left-1/2 top-1/3 h-[900px] w-[900px] -translate-x-1/2 rounded-full border border-white/5"
+            aria-hidden="true"
+          />
+          <div
+            className="pointer-events-none absolute left-1/2 top-1/3 h-[620px] w-[620px] -translate-x-1/2 rounded-full border border-white/5"
+            aria-hidden="true"
+          />
+          <div
+            className="pointer-events-none absolute left-1/2 top-[20%] h-96 w-[60%] -translate-x-1/2 rounded-full opacity-30 blur-3xl"
+            style={{ background: GRADIENT }}
+            aria-hidden="true"
+          />
+          <div className="relative mx-auto max-w-5xl">
+            <p className="text-center font-mono text-xs uppercase tracking-[0.2em] text-white/50">
+              So funktioniert UGC VZ
+            </p>
+            <h2
+              id="home-how-title"
+              className="mx-auto mt-4 max-w-3xl text-center text-3xl font-bold leading-tight tracking-[-0.045em] sm:text-5xl"
+            >
+              Vom Briefing zur Zusammenarbeit.
+            </h2>
+            <p className="mx-auto mt-4 max-w-xl text-center leading-7 text-white/60">
+              Du prüfst die Profile. Du wählst aus. Den Rest vereinbart ihr direkt – für Brands und Creator kostenlos.
+            </p>
+            <div className="mt-10 sm:mt-12">
+              <FilmPlayer />
+            </div>
+          </div>
+        </div>
+        <NotchEdge flip />
+      </section>
+
+      {/* ---------- 6. NEU: DIE 3 MOEGLICHKEITEN FUER UNTERNEHMEN ---------- */}
       <section
         id="drei-wege"
-        className="scroll-mt-20 px-5 py-20 sm:px-8 sm:py-28"
+        className="scroll-mt-20 px-5 pt-20 sm:px-8 sm:pt-28"
         aria-labelledby="three-ways-title"
       >
         <div className="mx-auto max-w-6xl">
@@ -309,13 +495,12 @@ export default function HomeSection({
             id="three-ways-title"
             className="mx-auto mt-3 max-w-3xl text-center text-3xl font-bold leading-tight tracking-[-0.045em] sm:text-5xl"
           >
-            Drei Wege zur Zusammenarbeit.
+            Drei Möglichkeiten für Unternehmen.
             <br className="hidden sm:block" />{' '}
-            <span className="text-ink-soft">So einfach oder skalierbar, wie du willst.</span>
+            <span className="text-ink-soft">Vom Einzel-Kontakt bis zum Provisions-Netzwerk.</span>
           </h2>
 
           <div className="mt-12 grid grid-cols-1 gap-6 lg:grid-cols-3">
-            {/* WEG 1: CREATOR DIREKT FINDEN */}
             <NotchCard
               title={
                 <div>
@@ -331,7 +516,7 @@ export default function HomeSection({
               <div className="flex h-full flex-col justify-between">
                 <div>
                   <p className="text-sm leading-6 text-ink-soft">
-                    Durchsuche {creatorCountLabel} echte Creator ohne Login, prüfe Arbeitsproben und fordere Kontaktdaten gratis per E-Mail an. Honorar und Rechte klärt ihr direkt.
+                    Durchsuche {creatorCountLabel} echte Creator ohne Login, prüfe Arbeitsproben und fordere Kontaktdaten gratis per E-Mail an.
                   </p>
                   <div className="mt-5 rounded-2xl bg-surface p-3.5 text-xs text-ink">
                     <strong>0 € Grundgebühr · 0 % Provision</strong>
@@ -347,7 +532,6 @@ export default function HomeSection({
               </div>
             </NotchCard>
 
-            {/* WEG 2: TKP-KAMPAGNE */}
             <NotchCard
               title={
                 <div>
@@ -363,7 +547,7 @@ export default function HomeSection({
               <div className="flex h-full flex-col justify-between">
                 <div>
                   <p className="text-sm leading-6 text-ink-soft">
-                    Hinterlege ein festes Kampagnenbudget (z. B. 2.000 € bei 3,50 € pro 1.000 Views). Unsere Creator picken dein Briefing in ihrem Login-Bereich – du zahlst nur für verifizierte Views.
+                    Hinterlege ein festes Kampagnenbudget (z. B. 2.000 € bei 3,50 € pro 1.000 Views). Unsere Creator picken deine Kampagne in ihrem Login-Bereich.
                   </p>
                   <div className="mt-5 rounded-2xl bg-surface p-3.5 text-xs text-ink">
                     <strong>Volle Budgetkontrolle in Euro (€)</strong>
@@ -377,18 +561,17 @@ export default function HomeSection({
                   onClick={() => onNavigate('brands')}
                   className="mt-6 inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full bg-void px-5 text-xs font-bold text-white transition-colors hover:bg-geo-violet"
                 >
-                  TKP-Kampagne ansehen <Arrow />
+                  TKP-Kampagne starten <Arrow />
                 </button>
               </div>
             </NotchCard>
 
-            {/* WEG 3: AFFILIATE-NETZWERK AUF PROVISIONSBASIS -> STRATEGIE-CALL */}
             <NotchCard
               dark
               title={
                 <div>
                   <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-geo-green">
-                    03 · Komplett-System
+                    03 · Komplett-Konzept
                   </span>
                   <h3 className="text-lg font-bold tracking-tight text-white">
                     Creator-Affiliate-Netzwerk
@@ -399,12 +582,12 @@ export default function HomeSection({
               <div className="flex h-full flex-col justify-between text-white">
                 <div>
                   <p className="text-sm leading-6 text-white/75">
-                    Wir bauen deiner Marke ein komplettes UGC- &amp; Partnerprogramm auf Provisionsbasis auf (eigene Codes, Produkt-Seeding, Stufen-System wie bei großen Supplement-Brands) – und laden unsere {creatorCountLabel} Creator ein.
+                    Wir bauen deiner Marke ein eigenes UGC- &amp; Partnerprogramm auf reiner Provisionsbasis auf (eigene Codes, Produkt-Seeding, Level 1–5) – und laden unsere {creatorCountLabel} Creator ein.
                   </p>
                   <div className="mt-5 rounded-2xl border border-white/10 bg-white/[0.05] p-3.5 text-xs">
-                    <strong className="text-geo-green">0 € Fixgagen – reine Provisionsbasis</strong>
+                    <strong className="text-geo-green">0 € Fixgagen – auf Provisionsbasis</strong>
                     <p className="mt-0.5 text-white/65">
-                      Individuelles Konzept &amp; Setup im persönlichen Gespräch.
+                      Persönliche Abstimmung im kurzen Strategie-Call.
                     </p>
                   </div>
                 </div>
@@ -425,7 +608,7 @@ export default function HomeSection({
                     onClick={() => onNavigate('brands')}
                     className="block w-full text-center text-[11px] font-medium text-white/65 underline underline-offset-4 hover:text-white"
                   >
-                    Details zum Provisions-Modell ansehen
+                    Details ansehen
                   </button>
                 </div>
               </div>
@@ -434,7 +617,37 @@ export default function HomeSection({
         </div>
       </section>
 
-      {/* ---------- 4. FUER CREATOR: ANMELDEN -> IM KONTO KAMPAGNEN PICKEN & GELD VERDIENEN ---------- */}
+      {/* ---------- 7. BRANCHEN (wie auf der aktuellen Startseite) ---------- */}
+      <section className="px-5 py-20 sm:px-8 sm:py-28" aria-labelledby="home-niches-title">
+        <div className="mx-auto max-w-6xl">
+          <h2
+            id="home-niches-title"
+            className="mx-auto max-w-3xl text-center text-3xl font-bold leading-tight tracking-[-0.045em] sm:text-5xl"
+          >
+            UGC Creator für jede Branche
+          </h2>
+          <p className="mx-auto mt-4 max-w-xl text-center leading-7 text-ink-soft">
+            Von Beauty-Reels bis App-Demo: Starte mit einer Branche und sieh direkt passende Profile.
+          </p>
+          <ul className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {NICHE_INDEX.map((niche) => (
+              <li key={niche.slug}>
+                <Link
+                  href={nichePath(niche)}
+                  className="group flex min-h-[56px] items-center justify-between rounded-2xl border border-hairline bg-surface px-5 transition-colors hover:border-geo-violet hover:bg-white"
+                >
+                  <span className="font-semibold">{niche.chip}</span>
+                  <span className="text-ink-soft transition-transform group-hover:translate-x-1 group-hover:text-geo-violet">
+                    <Arrow />
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      {/* ---------- 8. FUER CREATOR (wie aktuelle Startseite + Kampagnen-Login!) ---------- */}
       <section className="px-5 pb-20 sm:px-8 sm:pb-28" aria-labelledby="demo-creator-banner">
         <div
           className="relative mx-auto grid max-w-6xl gap-10 overflow-hidden rounded-[36px] p-7 text-white sm:p-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:p-16"
@@ -450,18 +663,18 @@ export default function HomeSection({
           />
           <div className="relative">
             <p className="mb-3 font-mono text-xs uppercase tracking-[0.2em] text-white/75">
-              Für Creator
+              Für die Menschen hinter dem Content
             </p>
             <h2
               id="demo-creator-banner"
               className="text-3xl font-bold leading-tight tracking-[-0.045em] sm:text-5xl"
             >
-              Profil anlegen.
+              Du machst den Content.
               <br />
-              Direkt Kampagnen picken.
+              Mach dich auffindbar &amp; verdiene mit.
             </h2>
             <p className="mt-5 max-w-lg leading-7 text-white/90">
-              Trag dich kostenlos ins Verzeichnis ein, um von Brands gefunden zu werden – und nutze deinen neuen Creator-Login, um dir jederzeit selbst bezahlte TKP-Kampagnen &amp; Provisions-Deals auszusuchen.
+              Als UGC Creator kostenlos anmelden, von Brands gefunden werden – und in deinem Creator-Login jederzeit aktive TKP-Kampagnen &amp; Provisions-Partnerschaften picken.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <button
@@ -469,14 +682,14 @@ export default function HomeSection({
                 onClick={() => onNavigate('creator')}
                 className="inline-flex min-h-[48px] items-center gap-3 rounded-full bg-white px-6 text-sm font-semibold text-ink transition-transform hover:-translate-y-0.5"
               >
-                Als Creator kostenlos anmelden <Arrow />
+                Kostenloses Creator-Profil erstellen <Arrow />
               </button>
               <button
                 type="button"
                 onClick={() => onNavigate('konto')}
                 className="inline-flex min-h-[48px] items-center gap-2 rounded-full border border-white/35 bg-white/10 px-6 text-sm font-semibold text-white backdrop-blur transition-colors hover:bg-white/20"
               >
-                Creator-Login (Kampagnen ansehen)
+                Zum Creator-Login (Kampagnen picken)
               </button>
             </div>
           </div>
@@ -484,16 +697,16 @@ export default function HomeSection({
           <ul className="relative space-y-3">
             {[
               [
-                '1 · Kostenlos im Verzeichnis gelistet',
-                'Marken finden dein Portfolio und fragen dich ohne Provision direkt an.',
+                'Deine Arbeitsproben im Mittelpunkt',
+                'Zeige Marken, welche Themen und Formate zu dir passen – 0 % Provision.',
               ],
               [
-                '2 · Im Login aktive Kampagnen picken',
-                'Wähle selbst TKP-Kampagnen (Geld pro 1.000 Views) oder Produkt- & Provisions-Partnerschaften aus.',
+                'Neu: Aktiv Kampagnen im Login picken',
+                'Wähle selbst bezahlte TKP-Kampagnen (pro 1.000 Views) oder Provisions-Deals mit eigenem Code.',
               ],
               [
-                '3 · Auszahlung in Euro + Beleg-Service',
-                'SEPA-Überweisung aufs Bankkonto, automatische Gutschrift und optionale Steuer-Hilfe.',
+                'Auszahlung in Euro + Gutschriften',
+                'SEPA-Überweisung aufs Bankkonto inkl. automatischem Gutschriftsbeleg.',
               ],
             ].map(([title, description]) => (
               <li key={title} className="flex gap-3 rounded-2xl bg-white/10 p-4 backdrop-blur-sm">
@@ -513,7 +726,7 @@ export default function HomeSection({
         </div>
       </section>
 
-      {/* ---------- 5. KURZE RUHIGE FAQ ---------- */}
+      {/* ---------- 9. FAQ & ABSCHLUSS-CTA (wie auf der aktuellen Startseite) ---------- */}
       <section className="px-5 pb-20 sm:px-8 sm:pb-24" aria-labelledby="demo-faq-title">
         <div className="mx-auto max-w-3xl">
           <h2
@@ -541,6 +754,28 @@ export default function HomeSection({
                 <p className="pb-5 text-sm leading-7 text-ink-soft">{answer}</p>
               </details>
             ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="px-5 sm:px-8" aria-label="Kostenlos starten">
+        <div className="relative mx-auto max-w-6xl">
+          <div className="relative z-10 mx-auto -mb-8 w-fit rounded-full bg-white p-2">
+            <a
+              href="#search"
+              className="inline-flex min-h-[56px] items-center gap-3 rounded-full px-8 text-base font-semibold text-white shadow-[0_18px_40px_rgba(91,70,240,0.4)] sm:text-lg"
+              style={{ background: GRADIENT }}
+            >
+              Kostenlos Creator finden <Arrow />
+            </a>
+          </div>
+          <div className="rounded-[36px] bg-void px-6 pb-12 pt-16 text-center text-white sm:pb-14">
+            <p className="text-2xl font-bold tracking-[-0.04em] sm:text-3xl">
+              {creatorCountLabel} echte Creator. 0 € Provision.
+            </p>
+            <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-white/60">
+              Suche, Auswahl und Kontaktdaten sind kostenlos – ergänzt um TKP-Kampagnen &amp; eigene Provisions-Netzwerke.
+            </p>
           </div>
         </div>
       </section>
