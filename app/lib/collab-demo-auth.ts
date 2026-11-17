@@ -16,3 +16,14 @@ export async function authorizeCollabDemo(authorization: string | null, password
   for (let i = 0; i < a.length; i++) difference |= a[i] ^ b[i];
   return difference === 0;
 }
+
+/** Authorizes /demo (new site preview) via DEMO_SITE_PASSWORD or existing COLLAB_DEMO_PASSWORD. */
+export async function authorizeSiteDemo(
+  authorization: string | null,
+  sitePassword = process.env.DEMO_SITE_PASSWORD,
+  collabPassword = process.env.COLLAB_DEMO_PASSWORD,
+): Promise<boolean> {
+  if (sitePassword && await authorizeCollabDemo(authorization, sitePassword)) return true;
+  if (collabPassword && await authorizeCollabDemo(authorization, collabPassword)) return true;
+  return false;
+}

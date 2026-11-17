@@ -2,8 +2,8 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import goneSlugsJson from '@/content/gone-slugs.json';
 import publishedSlugsJson from '@/content/published-slugs.json';
-import { authorizeCollabDemo } from '@/app/lib/collab-demo-auth';
-import { isCollabDemoPath } from '@/app/lib/collab-demo-path';
+import { authorizeCollabDemo, authorizeSiteDemo } from '@/app/lib/collab-demo-auth';
+import { isCollabDemoPath, isProtectedDemoPath } from '@/app/lib/collab-demo-path';
 import { isCollaborationPath } from '@/app/lib/collaborations/model';
 
 const goneSlugs = new Set(goneSlugsJson as string[]);
@@ -60,11 +60,13 @@ export async function middleware(request: NextRequest) {
   }
   // Authenticate before content negotiation, including RSC/prefetch requests.
   // Never publish the demo through the Markdown mirror.
-  if (request.nextUrl.pathname.startsWith('/md/demo/')) {
+  if (request.nextUrl.pathname === '/md/demo' || request.nextUrl.pathname.startsWith('/md/demo/')) {
     return new NextResponse('Not found', { status: 404, headers: { 'Cache-Control': 'private, no-store', 'X-Robots-Tag': 'noindex, nofollow' } });
   }
-  if (isCollabDemoPath(request.nextUrl.pathname)) {
-    const allowed = await authorizeCollabDemo(request.headers.get('authorization'));
+  if (isProtectedDemoPath(request.nextUrl.pathname)) {
+    const allowed = isCollabDemoPath(request.nextUrl.pathname)
+      ? await authorizeCollabDemo(request.headers.get('authorization'))
+      : await authorizeSiteDemo(request.headers.get('authorization'));
     const response = allowed ? NextResponse.next() : new NextResponse('Geschützte Vorschau. Bitte mit dem Demo-Zugang anmelden.', {
       status: 401,
       headers: { 'WWW-Authenticate': 'Basic realm="UGC VZ Vorschau", charset="UTF-8"', 'Content-Type': 'text/plain; charset=utf-8' },
