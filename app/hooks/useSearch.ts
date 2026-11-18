@@ -17,6 +17,7 @@ export type SearchAnalysis = {
 
 export const useSearch = () => {
   const [creators, setCreators] = useState<SearchCreator[]>([]);
+  const [showingAlternatives, setShowingAlternatives] = useState(false);
   const [searchError, setSearchError] = useState('');
   const [reasoning, setReasoning] = useState('');
   const [analysis, setAnalysis] = useState<SearchAnalysis | null>(null);
@@ -40,6 +41,7 @@ export const useSearch = () => {
 
     // Reset previous search state
     setCreators([]);
+    setShowingAlternatives(false);
     setSelectedCreators([]);
     setReasoning('');
     setAnalysis(null);
@@ -76,6 +78,9 @@ export const useSearch = () => {
         const creatorCount = data.creators?.length || 0;
         if (creatorCount > 0) {
           setCreators(data.creators);
+        } else if (data.alternatives?.length) {
+          setShowingAlternatives(true);
+          setCreators(data.alternatives);
         } else {
           setShowNoResults(true);
         }
@@ -110,6 +115,7 @@ export const useSearch = () => {
     setRemovedFilters([]);
     setAnalysis(null);
     setCreators([]);
+    setShowingAlternatives(false);
     setReasoning('');
     setIsLoading(false);
     setSearchSubmitted(false);
@@ -132,6 +138,7 @@ export const useSearch = () => {
     submittedQuery,
     selectedCreators,
     showNoResults,
+    showingAlternatives,
     searchError,
     performSearch,
     removedFilters,

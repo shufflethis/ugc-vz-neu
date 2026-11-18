@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import CastingChips from '@/app/components/CastingChips';
 import CastingEvidenceList from '@/app/components/CastingEvidenceList';
 import CreatorAvatar from '@/app/components/CreatorAvatar';
-import { castingFilters, directorySearchWords, matchCasting, type CastingFilter, type CastingProfile } from '@/app/lib/casting';
+import { castingFilters, directorySearchWords, matchCasting, relatedCasting, type CastingFilter, type CastingProfile } from '@/app/lib/casting';
 import { safePortfolioUrl } from '@/app/lib/creator-public';
 import WorkTags from './WorkTags';
 
@@ -45,14 +45,19 @@ export default function Directory({ profiles }: { profiles: DirectoryProfile[] }
 
   const filters = castingFilters(query).filter(filter => !removed.includes(filter));
   const words = directorySearchWords(query);
-  const matches = profiles.flatMap(profile => {
+  const eligible = profiles.flatMap(profile => {
     if ((status && profile.status !== status) || !profile.city.toLowerCase().includes(city.trim().toLowerCase())) return [];
     if (onlySelected && !selected.includes(profile.id)) return [];
     const text = [profile.name, profile.id, profile.city, profile.topicsText, profile.formatsText].join(' ').toLowerCase();
     if (!words.every(word => text.includes(word))) return [];
     const evidence = matchCasting(profile, filters);
-    return evidence ? [{ profile, evidence }] : [];
+    if (evidence) return [{ profile, evidence, priority: 0 }];
+    const related = relatedCasting(profile, filters);
+    return related ? [{ profile, evidence: related.evidence, priority: related.priority }] : [];
   });
+  const exact = eligible.filter(item => !item.priority);
+  const showingAlternatives = !exact.length && eligible.length > 0;
+  const matches = showingAlternatives ? eligible.sort((a, b) => b.priority - a.priority) : exact;
   const pages = Math.max(1, Math.ceil(matches.length / pageSize));
   const currentPage = Math.min(page, pages);
   const shown = matches.slice((currentPage - 1) * pageSize, currentPage * pageSize);
@@ -73,9 +78,10 @@ export default function Directory({ profiles }: { profiles: DirectoryProfile[] }
     </div>
     <CastingChips filters={filters} remove={filter => { setRemoved([...removed, filter]); setPage(1); }} />
     <div className="my-5 flex flex-wrap items-center justify-between gap-3">
-      <p role="status">{matches.length} von {profiles.length} Profilen</p>
+      <p role="status">{showingAlternatives ? `0 belegte Treffer · ${matches.length} ähnliche Profile` : `${matches.length} von ${profiles.length} Profilen`}</p>
       <label><input type="checkbox" checked={onlySelected} onChange={event => { setOnlySelected(event.target.checked); setPage(1); }} /> Nur gemerkte Creator ({selectionCount})</label>
     </div>
+    {showingAlternatives && <h2 className="mb-4">Ähnliche Profile fürs Casting</h2>}
     {!matches.length && <p className="rounded-xl bg-surface p-4">Kein Profil erfüllt die gewählten Kriterien.</p>}
     <div className="grid items-start gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {shown.map(({ profile, evidence }) => <article className="min-w-0 space-y-3 rounded-2xl border border-hairline bg-white p-5 text-sm" key={profile.id}>

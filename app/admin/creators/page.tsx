@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation';
 import CollaborationShell from '@/app/components/CollaborationShell';
 import { adminAuthorized } from '@/app/lib/collaborations/http';
 import { getDatabase } from '@/app/lib/database';
-import { portfolioForCasting } from '@/app/lib/casting-portfolio';
+import { portfolioForCasting, reviewedCapHash, reviewedCapImage } from '@/app/lib/casting-portfolio';
 import { normalizeGenderValue } from '@/app/lib/normalize-gender';
 import { safePortfolioUrl } from '@/app/lib/creator-public';
 import { isUsableCustomImageUrl } from '@/app/lib/social-avatar';
@@ -25,13 +25,14 @@ export default async function Page() {
         concat_ws(' · ', nullif(p.topics,''), nullif(p.industries,''), nullif(p.special_traits,'')) AS topics,
         p.preferred_content, p.profile_image_url,
         EXISTS (SELECT 1 FROM creator_social_avatars a WHERE a.creator_id = p.id AND a.image IS NOT NULL) AS avatar,
-        ${portfolioForCasting} AS works
+        ${portfolioForCasting} AS works, ${reviewedCapHash} AS cap_hash
       FROM creator_profiles p
       ORDER BY lower(p.display_name), p.public_id
     `);
     profiles = rows.map(row => {
       const customImage = safePortfolioUrl(row.profile_image_url);
       return {
+        capAvatar: row.status === 'active' ? reviewedCapImage(row.public_id, row.cap_hash) : undefined,
         id: row.public_id, name: row.display_name, city: row.city || '', status: row.status,
         gender: row.gender || '', normalizedGender: normalizeGenderValue(row.gender),
         topicsText: row.topics, formatsText: row.preferred_content || '', works: row.works,

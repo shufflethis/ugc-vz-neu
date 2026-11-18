@@ -8,8 +8,10 @@ import { getDatabase, isDatabaseConfigured } from '@/app/lib/database';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-export async function GET(_request: Request, { params }: { params: { publicId: string } }) {
+export async function GET(request: Request, { params }: { params: { publicId: string } }) {
   const publicId = String(params.publicId || '');
+  const hash = new URL(request.url).searchParams.get('cap');
+  if (hash !== null && !/^[0-9a-f]{64}$/.test(hash)) return new NextResponse(null, { status: 404 });
   if (!/^UGC-[A-Z0-9]{6,20}$/.test(publicId) || !isDatabaseConfigured()) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
@@ -21,8 +23,9 @@ export async function GET(_request: Request, { params }: { params: { publicId: s
        FROM creator_social_avatars a
        JOIN creator_profiles p ON p.id = a.creator_id
        WHERE p.public_id = $1 AND p.status = 'active' AND a.image IS NOT NULL
+         ${hash ? "AND a.cap_image_sha256=decode($2,'hex') AND a.cap_image_sha256=sha256(a.image)" : ''}
        LIMIT 1`,
-      [publicId],
+      hash ? [publicId, hash] : [publicId],
     );
 
     if (!row?.image) {

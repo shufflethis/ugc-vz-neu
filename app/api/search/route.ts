@@ -1,6 +1,6 @@
 import { normalizeGenderValue } from '@/app/lib/normalize-gender';
-import { castingFilters, directorySearchWords, matchCasting, type CastingEvidence, type CastingWork } from '@/app/lib/casting';
-import { portfolioForCasting } from '@/app/lib/casting-portfolio';
+import { castingFilters, directorySearchWords, matchCasting, relatedCasting, type CastingEvidence, type CastingWork } from '@/app/lib/casting';
+import { portfolioForCasting, reviewedCapHash, reviewedCapImage } from '@/app/lib/casting-portfolio';
 import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
@@ -25,6 +25,7 @@ type ProcessedCreator = {
   gender: string | undefined;
   score: number;
   evidence?: CastingEvidence[];
+  relatedPriority: number;
 };
 
 type CachedCreatorEntry = {
@@ -54,6 +55,7 @@ type CachedCreatorEntry = {
   formatsText: string;
   portfolioText: string;
   works: CastingWork[];
+  capAvatar?: string;
   equipmentText: string;
   searchableText: string;
   contactReachable: boolean;
@@ -170,7 +172,8 @@ const fetchNeonCreatorRecords = async (withWorkSamples = false): Promise<CachedC
       industries, topics, preferred_content, equipment, rate_text, reach_text,
       total_reach, profile_image_url, social_links, portfolio_links, networks,
       has_social_avatar, contact_reachable,
-      ${withWorkSamples ? portfolioForCasting : "'[]'::jsonb"} AS works
+      ${withWorkSamples ? portfolioForCasting : "'[]'::jsonb"} AS works,
+      ${withWorkSamples ? reviewedCapHash : 'NULL'} AS cap_hash
     FROM creator_search_public p
     ORDER BY profile_quality_score DESC, total_reach DESC, display_name ASC
   `);
@@ -265,6 +268,7 @@ const fetchNeonCreatorRecords = async (withWorkSamples = false): Promise<CachedC
       formatsText,
       portfolioText,
       works: row.works,
+      capAvatar: reviewedCapImage(id, row.cap_hash),
       equipmentText,
       searchableText,
       contactReachable: Boolean(row.contact_reachable),
@@ -484,7 +488,7 @@ export async function POST(req: Request) {
       !Array.isArray(reqBody.removedFilters) || !reqBody.removedFilters.includes(filter));
     const gender = filters.find(filter => filter === 'male' || filter === 'female');
     initialAnalysis.gender = gender || 'any';
-    const withWorkSamples = filters.includes('skateboard') || filters.includes('cap');
+    const withWorkSamples = filters.some(f => f !== 'male' && f !== 'female');
     const reasoning = generateReasoning(initialAnalysis);
 
     const now = Date.now();
@@ -517,7 +521,9 @@ export async function POST(req: Request) {
 
     for (const profile of searchRecords) {
       try {
-        const evidence = matchCasting(profile, filters);
+        const exact = matchCasting(profile, filters);
+        const related = exact ? null : relatedCasting(profile, filters);
+        const evidence = exact || related?.evidence;
         if (!evidence) {
           if (gender && profile.normalizedGender !== gender) droppedGenderFilter++;
           else droppedEvidenceFilter++;
@@ -543,6 +549,7 @@ export async function POST(req: Request) {
           preferredContent: profile.formatsText,
           gender: profile.gender,
           ...(evidence.length ? { evidence } : {}),
+          relatedPriority: related?.priority || 0,
           score,
         });
       } catch (error) {
@@ -552,6 +559,7 @@ export async function POST(req: Request) {
     }
 
     validCreators.sort((a, b) => {
+      if (a.relatedPriority !== b.relatedPriority) return b.relatedPriority - a.relatedPriority;
       if (a.score !== b.score) return b.score - a.score;
       if (a.hasCustomImage !== b.hasCustomImage) return a.hasCustomImage ? -1 : 1;
       return b.totalReach - a.totalReach;
@@ -564,14 +572,16 @@ export async function POST(req: Request) {
     const topicFilter: string[] = Array.isArray(reqBody.topics)
       ? reqBody.topics.filter((t: unknown) => typeof t === 'string' && t.trim()).map((t: string) => t.trim().toLowerCase())
       : [];
-    const matchedCreators = validCreators.filter((creator) => {
+    const eligible = validCreators.filter((creator) => {
       if (cityFilter && !String(creator.city || '').toLowerCase().includes(cityFilter)) return false;
       if (topicFilter.length && !topicFilter.some((t) => String(creator.topics || '').toLowerCase().includes(t))) return false;
       return true;
     });
 
-    const displayCreators = matchedCreators.slice(0, 24);
-    const finalCreators = displayCreators.map(({ hasCustomImage, totalReach, score, ...rest }) => rest);
+    const matchedCreators = eligible.filter(creator => !creator.relatedPriority);
+    const alternatives = eligible.filter(creator => creator.relatedPriority);
+    const publicCard = ({ hasCustomImage, totalReach, score, relatedPriority, ...rest }: ProcessedCreator) => rest;
+    const finalCreators = matchedCreators.slice(0, 24).map(publicCard);
     const processingTime = Date.now() - startedAt;
 
     console.log(`[${requestId}] Search done in ${processingTime}ms: matched=${matchedCreators.length}/${searchRecords.length} returned=${finalCreators.length}`);
@@ -583,6 +593,7 @@ export async function POST(req: Request) {
       success: true,
       creators: finalCreators,
       totalCount: matchedCreators.length,
+      alternatives: alternatives.slice(0, 6).map(publicCard),
       pool: {
         size: searchRecords.length,
         scored: validCreators.length,

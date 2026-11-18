@@ -10,7 +10,7 @@ import CreatorSelectionPopup from './CreatorSelectionPopup';
 import CreatorProfileDialog from './CreatorProfileDialog';
 import { humanizeCreatorText, type SearchCreator } from '../lib/creator-public';
 import { NICHE_INDEX } from '../lib/niche-index';
-import { castingLabels } from '../lib/casting';
+import { castingLabel } from '../lib/casting';
 import CastingChips from './CastingChips';
 import CastingEvidenceList from './CastingEvidenceList';
 import CreatorAvatar from './CreatorAvatar';
@@ -74,6 +74,7 @@ export default function SearchBox({ initialQuery = '', showFeatured = false, dem
     submittedQuery,
     selectedCreators,
     showNoResults,
+    showingAlternatives,
     searchError,
     performSearch,
     removedFilters,
@@ -82,9 +83,10 @@ export default function SearchBox({ initialQuery = '', showFeatured = false, dem
     clearSelection
   } = useSearch();
 
-  const castingBrief = removedFilters.length
-    ? submittedQuery + ' (Aufgehobene Filter: ' + removedFilters.map(filter => castingLabels[filter]).join(', ') + ')'
+  const searchBrief = removedFilters.length
+    ? submittedQuery + ' (Aufgehobene Filter: ' + removedFilters.map(filter => castingLabel(filter)).join(', ') + ')'
     : submittedQuery;
+  const castingBrief = showingAlternatives ? searchBrief + ' (Auswahl aus thematisch ähnlichen Profilen)' : searchBrief;
   const creators = searchSubmitted ? searchCreators : featuredCreators;
 
   useEffect(() => {
@@ -214,7 +216,8 @@ export default function SearchBox({ initialQuery = '', showFeatured = false, dem
       new CustomEvent(AGENT_UI_EVENTS.searchResult, {
         detail: {
           requestId,
-          no_results: showNoResults,
+          no_results: showNoResults || showingAlternatives,
+          alternatives_only: showingAlternatives,
           reasoning: reasoning || undefined,
           creators: creators.map(({ id, name, reach, priceRange, networks }) => ({
             id,
@@ -226,7 +229,7 @@ export default function SearchBox({ initialQuery = '', showFeatured = false, dem
         },
       }),
     );
-  }, [creators, showNoResults, isLoading, reasoning]);
+  }, [creators, showNoResults, isLoading, reasoning, showingAlternatives]);
 
   // Vorbefuellung ueber ?query=... (z.B. Schema SearchAction) oder das Fragment (#q=...).
   // Ein Fragment erzeugt fuer Crawler keine eigene URL, waehrend /brands trotzdem statisch
@@ -533,11 +536,11 @@ export default function SearchBox({ initialQuery = '', showFeatured = false, dem
         {creators.length > 0 && (
           <> {/* Use fragment to group elements */}
             <div className="mt-7 flex flex-col justify-between gap-2 border-t border-hairline pt-6 sm:flex-row sm:items-center">
-              <h2 className={styles.resultsHeader}>{searchSubmitted ? 'Deine Creator-Vorschläge' : 'Ein Einblick ins Verzeichnis'}</h2>
+              <h2 className={styles.resultsHeader}>{showingAlternatives ? 'Ähnliche Profile fürs Casting' : searchSubmitted ? 'Deine Creator-Vorschläge' : 'Ein Einblick ins Verzeichnis'}</h2>
               <span className="text-xs text-ink-soft">{searchSubmitted ? `${creators.length} Profile · Stell deine Auswahl zusammen` : 'Öffentliche Profile mit Arbeitsproben'}</span>
             </div>
             <p className="mb-5 mt-2 text-left text-xs leading-5 text-ink-soft sm:text-sm">
-              {searchSubmitted ? 'Prüfe Profile und Arbeitsproben. Die Sortierung basiert auf deiner Suche und den Profilangaben; die Auswahl triffst du.' : 'Lerne erste Creator kennen. Für Vorschläge zu deinem Produkt nutze die Suche oben.'}
+              {showingAlternatives ? 'Für alle gewählten Kriterien gibt es noch keinen belegten Treffer. Diese Creator nennen verwandte Themen im Profil.' : searchSubmitted ? 'Prüfe Profile und Arbeitsproben. Die Sortierung basiert auf deiner Suche und den Profilangaben; die Auswahl triffst du.' : 'Lerne erste Creator kennen. Für Vorschläge zu deinem Produkt nutze die Suche oben.'}
             </p>
             <div className={`${styles.creatorsGrid} ${!searchSubmitted ? styles.featuredGrid : ''}`} tabIndex={!searchSubmitted ? 0 : undefined} role={!searchSubmitted ? 'region' : undefined} aria-label={!searchSubmitted ? 'Creator-Vorschau' : undefined}>
               {creators.map(creator => (

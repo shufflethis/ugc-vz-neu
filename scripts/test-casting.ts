@@ -5,6 +5,7 @@ import { NextRequest } from 'next/server';
 import { POST as editProfile } from '../app/api/creator/profile/route';
 import { signSession, CREATOR_SESSION_COOKIE } from '../app/lib/creator-session';
 import { POST } from '../app/api/search/route';
+import { GET as getAvatar } from '../app/api/avatar/[publicId]/route';
 import { getDatabase } from '../app/lib/database';
 import { castingFilters, directorySearchWords } from '../app/lib/casting';
 import { isTeamAdminPath } from '../app/lib/collaborations/model';
@@ -20,7 +21,7 @@ async function main() {
     value: async (sql: string, params: unknown[] = []) => (await db.query(sql, params)).rows,
   });
   try {
-    for (const migration of ['001_creator_platform', '006_creator_profile_edits', '007_social_avatars', '010_contact_reachable', '012_search_log', '015_casting_portfolio']) {
+    for (const migration of ['001_creator_platform', '006_creator_profile_edits', '007_social_avatars', '010_contact_reachable', '012_search_log', '015_casting_portfolio', '016_avatar_casting_review']) {
       const sql = await readFile('db/migrations/' + migration + '.sql', 'utf8');
       await db.exec(sql.replace('CREATE EXTENSION IF NOT EXISTS pgcrypto;', ''));
     }
@@ -82,6 +83,30 @@ async function main() {
     assert.equal((await search('Cap-Träger')).totalCount, 1, 'An unrelated profile edit retains the tag');
     await changePortfolio(['https://example.org/new']);
     assert.equal((await search('Cap-Träger')).totalCount, 0, 'Removing the sample removes its evidence');
+    await db.exec(`
+      INSERT INTO creator_profiles(id,public_id,display_name,gender,topics,status)
+      VALUES (gen_random_uuid(),'UGC-ABC1234567','Michael','Männlich','Fashion, Streetwear','active'),
+             (gen_random_uuid(),'UGC-ABC1234568','Katja','Weiblich','Fitness, Inline Skating, Tennis','active');
+      INSERT INTO creator_social_avatars(creator_id,image,content_type,cap_image_sha256)
+      SELECT id,'abc'::bytea,'image/jpeg',sha256('abc'::bytea) FROM creator_profiles WHERE display_name='Michael';
+    `);
+    const caps = await search('männlicher Cap-Träger Fashion');
+    assert.deepEqual(caps.creators.map((c: { name: string }) => c.name), ['Michael']);
+    const avatarUrl = caps.creators[0].evidence.find((e: { image?: string }) => e.image)?.image;
+    assert.match(avatarUrl, /^\/api\/avatar\/UGC-ABC1234567\?cap=[a-f0-9]{64}$/);
+    const avatarRequest = new Request('https://example.test' + avatarUrl);
+    assert.equal((await getAvatar(avatarRequest, {params:{publicId:'UGC-ABC1234567'}})).status, 200);
+    await db.exec("UPDATE creator_social_avatars SET image='changed'::bytea");
+    assert.equal((await getAvatar(avatarRequest, {params:{publicId:'UGC-ABC1234567'}})).status, 404);
+    const afterChange = await search('männlicher Cap-Träger');
+    assert.equal(afterChange.totalCount, 0);
+    assert.equal(afterChange.alternatives[0].name, 'Michael');
+    const skateboard = await search('männlicher Skater');
+    assert.ok(skateboard.alternatives.some((c: { name: string }) => c.name === 'Michael'));
+    assert.ok(skateboard.alternatives.every((c: { name: string }) => c.name !== 'Katja'));
+    assert.deepEqual((await search('Hobby Inline Skating')).creators.map((c: { name: string }) => c.name), ['Katja']);
+    assert.deepEqual((await search('Hobby Tennis')).creators.map((c: { name: string }) => c.name), ['Katja']);
+    assert.deepEqual((await search('male fashion')).creators.map((c: { name: string }) => c.name), ['Michael']);
     assert.equal(isTeamAdminPath('/admin/creators'), true);
     assert.equal(isTeamAdminPath('/admin/creators-extra'), false);
     console.log('OK: Casting-Filter, Sichtbarkeit, Belege, Profilbestand und aktuelle Portfolio-Merkmale');
