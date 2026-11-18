@@ -18,7 +18,7 @@ async function main() {
   assert.equal(await authorizeCollabDemo(auth('ugc-vz', 'short'), 'short'), false);
   for (const path of ['/demo/kooperationen', '/demo/kooperationen/', '/demo/kooperationen/fomo/bewerben', '/demo/kooperationen/tracking', '/demo/kooperationen/praesentation']) assert.equal(isCollabDemoPath(path), true);
   for (const path of ['/', '/creator', '/demo/kooperationen-public']) assert.equal(isCollabDemoPath(path), false);
-  for (const path of ['/demo', '/demo/', '/demo/bounties', '/demo/brands', '/demo/creator', '/demo/agenturen', '/demo/vergleich', '/demo/strategie', '/demo/kooperationen']) assert.equal(isProtectedDemoPath(path), true);
+  for (const path of ['/demo', '/demo/', '/demo/konto', '/demo/bounties', '/demo/brands', '/demo/brands/creator-affiliate-programm', '/demo/creator', '/demo/creator/mit-views-geld-verdienen', '/demo/agenturen', '/demo/vergleich', '/demo/strategie', '/demo/kooperationen']) assert.equal(isProtectedDemoPath(path), true);
   for (const path of ['/', '/creator', '/demopage']) assert.equal(isProtectedDemoPath(path), false);
   assert.equal(isSiteDemoPath('/demo'), true);
   assert.equal(isSiteDemoPath('/demo/bounties'), true);

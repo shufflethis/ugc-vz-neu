@@ -3,7 +3,9 @@ export type DemoSection =
   | 'konto'
   | 'bounties'
   | 'brands'
+  | 'brand-affiliate-guide'
   | 'creator'
+  | 'creator-tkp-guide'
   | 'agenturen'
   | 'vergleich'
   | 'strategie';
@@ -40,7 +42,7 @@ export const LOCALES: Record<LocaleCode, LocaleConfig> = {
     heroTitleTop: 'Creator finden. Views kaufen.',
     heroTitleAccent: 'Eigene Clubs bauen.',
     heroSub:
-      'Andere Plattformen verstecken 50 % Aufschlag. Bei UGC VZ durchsuchst du 730+ echte Creator kostenlos, startest Pay-per-View Bounties wie Meta Ads oder erhältst dein eigenes More-Style Creator-Programm.',
+      'Andere Plattformen verstecken 50 % Aufschlag. Bei UGC VZ durchsuchst du 730+ echte Creator kostenlos, startest Pay-per-View Kampagnen oder baust dein eigenes Creator-Affiliate-Netzwerk auf.',
     ctaPrimary: 'KI-Suche & Skript-Generator testen',
     ctaStrategy: '15-Min Strategy Session buchen',
     creatorPill: 'Creator? Ab 2–5 € / 1.000 Views verdienen (+10 € Starter-Bonus) & Steuern per Autopilot regeln',
@@ -48,8 +50,8 @@ export const LOCALES: Record<LocaleCode, LocaleConfig> = {
     pillar1Desc: '730+ echte Profile mit Arbeitsproben ohne Login durchsuchen. KI-Briefings inklusive, Kontakt direkt.',
     pillar2Title: 'UGC Bounties (Pay-per-1k-Views)',
     pillar2Desc: 'Gesamtbudget & TKP festlegen (z. B. 3,50 € / 1.000 Views). Creator produzieren oder clippen auf TikTok, Reels & Shorts.',
-    pillar3Title: 'Affiliate-System für Brands (More-Modell)',
-    pillar3Desc: 'Wir bauen deiner Marke ein eigenes Creator-Affiliate-Portal (Codes, Provision, Produkt-Tausch & Level 1–5) – ohne Fixgagen.',
+    pillar3Title: 'Creator-Affiliate-Programm für Brands',
+    pillar3Desc: 'Wir bauen deiner Marke ein eigenes Markenbotschafter- & Affiliate-Portal (Codes, Provision, Produkt-Tausch & Level 1–5) – ohne Fixgagen.',
   },
   en: {
     code: 'en',
@@ -69,7 +71,7 @@ export const LOCALES: Record<LocaleCode, LocaleConfig> = {
     pillar2Title: 'UGC View Bounties (CPM)',
     pillar2Desc: 'Fund a campaign pool (e.g. $5,000 at $3.50 CPM). Creators post on TikTok, Reels & Shorts; AI verifies every view.',
     pillar3Title: 'Managed Creator Club (5-Tier)',
-    pillar3Desc: 'Turnkey More-Nutrition-style seeding & affiliate portal for micro-creators starting at 500 followers.',
+    pillar3Desc: 'Turnkey creator seeding & 5-tier affiliate ambassador portal for micro-creators starting at 500 followers.',
   },
   es: {
     code: 'es',
@@ -140,7 +142,7 @@ export interface AiPreset {
 export const AI_PRESETS: AiPreset[] = [
   {
     id: 'protein-coffee',
-    chip: 'Iced Protein Coffee (More-Modell)',
+    chip: 'Iced Protein Coffee (Creator-Seeding)',
     prompt: 'Protein-Eiskaffee für tägliche Morgenroutine, authentische Micro-Creator ab 800 Followern auf TikTok & Reels mit eigenem Rabattcode.',
     recommendedMode: 'club',
     recommendedModeLabel: 'Empfohlen: Eigenes 5-Level Creator-Club-Programm + Seeding',
@@ -442,7 +444,7 @@ export const CLUB_LEVELS: ClubLevel[] = [
   {
     level: 5,
     name: 'Level 5 · Elite Circle',
-    subtitle: 'Das volle More-Nutrition-Playbook für Top-Faces',
+    subtitle: 'Maximale Bindung für umsatzstarke Top-Markenbotschafter',
     entryRule: 'Top-Umsatzträger & langfristige Markenbotschafter',
     monthlyEarning: '6.000 €+ / Monat + Boni & Events',
     creatorPerks: [
@@ -517,8 +519,8 @@ export const COMPARISON_ROWS: ComparisonRow[] = [
     hypefy: '✕ Kampagnen-Workflow ohne TKP-Pool',
   },
   {
-    feature: 'Eigenes Brand-Affiliate-Portal (More-Nutrition-Modell)',
-    ugcvz: '✓ Schlüsselfertig (Level 1–5 + Seeding)',
+    feature: 'Eigenes Brand-Affiliate- & Markenbotschafter-Portal',
+    ugcvz: '✓ Schlüsselfertig (Level 1–5 + Produkt-Seeding)',
     contentmarkt: '✕ Nein',
     creonda: '✕ Nein',
     speekly: '✕ Nein',

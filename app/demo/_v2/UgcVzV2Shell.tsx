@@ -20,7 +20,9 @@ import {
 import HomeSection from './HomeSection';
 import CreatorKontoSection from './CreatorKontoSection';
 import BrandsClubSection from './BrandsClubSection';
+import BrandAffiliateLandingSection from './BrandAffiliateLandingSection';
 import CreatorTaxAppSection from './CreatorTaxAppSection';
+import CreatorTkpLandingSection from './CreatorTkpLandingSection';
 import {
   AgenturenView,
   StrategieView,
@@ -138,7 +140,19 @@ export default function UgcVzV2Shell({ initialSection, creatorCountLabel }: Prop
     const resolved = target === 'bounties' ? 'konto' : target;
     setSection(resolved);
     setMobileMenuOpen(false);
-    const path = resolved === 'home' ? '/demo' : `/demo/${resolved}`;
+    const pathMap: Record<DemoSection, string> = {
+      home: '/demo',
+      konto: '/demo/konto',
+      bounties: '/demo/konto',
+      brands: '/demo/brands',
+      'brand-affiliate-guide': '/demo/brands/creator-affiliate-programm',
+      creator: '/demo/creator',
+      'creator-tkp-guide': '/demo/creator/mit-views-geld-verdienen',
+      agenturen: '/demo/agenturen',
+      vergleich: '/demo/vergleich',
+      strategie: '/demo/strategie',
+    };
+    const path = pathMap[resolved];
     try {
       window.history.pushState(null, '', path);
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -352,6 +366,7 @@ export default function UgcVzV2Shell({ initialSection, creatorCountLabel }: Prop
             onTogglePick={handleTogglePick}
             submittedClips={submittedClips}
             onSubmitClip={handleSubmitClip}
+            onNavigate={navigateSection}
           />
         )}
         {section === 'brands' && (
@@ -361,7 +376,20 @@ export default function UgcVzV2Shell({ initialSection, creatorCountLabel }: Prop
             onOpenStrategyModal={openStrategyModal}
           />
         )}
+        {section === 'brand-affiliate-guide' && (
+          <BrandAffiliateLandingSection
+            creatorCountLabel={creatorCountLabel}
+            onNavigate={navigateSection}
+            onOpenStrategyModal={openStrategyModal}
+          />
+        )}
         {section === 'creator' && <CreatorTaxAppSection onNavigate={navigateSection} />}
+        {section === 'creator-tkp-guide' && (
+          <CreatorTkpLandingSection
+            creatorCountLabel={creatorCountLabel}
+            onNavigate={navigateSection}
+          />
+        )}
         {section === 'agenturen' && <AgenturenView onOpenStrategyModal={openStrategyModal} />}
         {section === 'vergleich' && (
           <VergleichView
@@ -406,10 +434,10 @@ export default function UgcVzV2Shell({ initialSection, creatorCountLabel }: Prop
               <li>
                 <button
                   type="button"
-                  onClick={() => openStrategyModal()}
+                  onClick={() => navigateSection('brand-affiliate-guide')}
                   className="text-left text-geo-green hover:underline"
                 >
-                  3 · Provisions-Netzwerk (Call)
+                  3 · Creator-Affiliate-Programm
                 </button>
               </li>
               <li>
@@ -436,8 +464,8 @@ export default function UgcVzV2Shell({ initialSection, creatorCountLabel }: Prop
                 </button>
               </li>
               <li>
-                <button type="button" onClick={() => navigateSection('konto')} className="hover:text-white">
-                  Auszahlung &amp; Steuer-Hilfe
+                <button type="button" onClick={() => navigateSection('creator-tkp-guide')} className="text-left hover:text-white">
+                  Mit Views Geld verdienen (TKP &amp; Stripe)
                 </button>
               </li>
             </ul>

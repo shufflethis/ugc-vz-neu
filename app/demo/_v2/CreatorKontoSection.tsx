@@ -61,6 +61,7 @@ interface Props {
   onTogglePick: (id: string) => void;
   submittedClips: { campaignId: string; url: string; payout: number; status: 'verified' | 'flagged' }[];
   onSubmitClip: (entry: { campaignId: string; url: string; payout: number; status: 'verified' | 'flagged' }) => void;
+  onNavigate?: (section: 'creator-tkp-guide') => void;
 }
 
 export default function CreatorKontoSection({
@@ -68,11 +69,14 @@ export default function CreatorKontoSection({
   onTogglePick,
   submittedClips,
   onSubmitClip,
+  onNavigate,
 }: Props) {
   const [authView, setAuthView] = useState<'logged-in' | 'login-screen'>('logged-in');
   const [activeTab, setActiveTab] = useState<'pick' | 'active' | 'payout' | 'profile'>('pick');
   const [filterKind, setFilterKind] = useState<'all' | 'tkp' | 'affiliate'>('all');
   const [loginEmail, setLoginEmail] = useState('mia@beispiel-creator.de');
+  const [vatMode, setVatMode] = useState<'kleinunternehmer' | 'ust19'>('kleinunternehmer');
+  const [stripeConnected, setStripeConnected] = useState<boolean>(true);
 
   // Submission state inside "Meine gepickten Kampagnen"
   const [selectedCampaignForLink, setSelectedCampaignForLink] = useState<string>(BOUNTY_CAMPAIGNS[0].id);
@@ -541,23 +545,82 @@ export default function CreatorKontoSection({
         </section>
       )}
 
-      {/* TAB 3: EURO-AUSZAHLUNG & STEUER-HILFE (ACCOUNTABLE DEAL) */}
+      {/* TAB 3: EURO-AUSZAHLUNG VIA STRIPE CONNECT & STEUER-GUTSCHRIFTEN */}
       {activeTab === 'payout' && (
         <section className="mx-auto grid max-w-6xl gap-6 lg:grid-cols-2">
-          <div className="rounded-3xl border border-hairline bg-white p-6">
-            <h2 className="text-lg font-bold text-ink">SEPA-Auszahlung in Euro (€)</h2>
-            <p className="mt-1 text-xs text-ink-soft">
-              100 % Auszahlung aufs Girokonto über Stripe Connect / SEPA-Gutschrift – kein Krypto, keine Plattform-Abzüge für Creator.
-            </p>
-            <div className="mt-5 rounded-2xl bg-surface p-5">
-              <p className="text-xs text-ink-soft">Aktuell abrufbares Guthaben</p>
-              <p className="mt-1 text-3xl font-extrabold text-ink">
-                {(42.5 + verifiedEarnings).toFixed(2).replace('.', ',')} €
-              </p>
-              <p className="mt-2 text-xs text-[#385523]">
-                ✓ Automatischer Gutschriftsbeleg (Kleinunternehmer §19 oder zzgl. 19 % USt.) wird bei jeder Auszahlung erstellt.
-              </p>
+          <div className="space-y-4 rounded-3xl border border-hairline bg-white p-6">
+            <div className="flex items-center justify-between gap-2">
+              <h2 className="text-lg font-bold text-ink">Auszahlung via Stripe Connect (SEPA)</h2>
+              <span className="rounded-full bg-[#edf5e5] px-2.5 py-0.5 text-[11px] font-bold text-[#385523]">
+                {stripeConnected ? '● Stripe Express verbunden' : 'Nicht verbunden'}
+              </span>
             </div>
+            <p className="text-xs leading-5 text-ink-soft">
+              Deine Einnahmen werden reguliert über <strong>Stripe Connect Express</strong> verwaltet und ab 25,00 € Mindestguthaben ohne Abzug in Euro auf dein hinterlegtes Girokonto überwiesen.
+            </p>
+
+            <div className="rounded-2xl bg-surface p-5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-ink-soft">Aktuell abrufbares Guthaben</p>
+                  <p className="mt-1 text-3xl font-extrabold text-ink">
+                    {(42.5 + verifiedEarnings).toFixed(2).replace('.', ',')} €
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setStripeConnected((v) => !v)}
+                  className="rounded-full border border-hairline bg-white px-3.5 py-2 text-xs font-bold text-ink hover:border-geo-violet"
+                >
+                  {stripeConnected ? 'IBAN: DE89 •••• 3000' : 'Mit Stripe verbinden'}
+                </button>
+              </div>
+            </div>
+
+            {/* 1-HAEKCHEN STEUER-STATUS FUER AUTOMATISCHE GUTSCHRIFT */}
+            <div className="rounded-2xl border border-hairline p-4 text-xs">
+              <p className="font-bold text-ink">Steuer-Einstellung für deine automatischen PDF-Gutschriften:</p>
+              <div className="mt-2.5 grid gap-2 sm:grid-cols-2">
+                <button
+                  type="button"
+                  onClick={() => setVatMode('kleinunternehmer')}
+                  className={`rounded-xl border p-3 text-left ${
+                    vatMode === 'kleinunternehmer'
+                      ? 'border-geo-violet bg-[#FBF8FE] font-bold text-ink'
+                      : 'border-hairline text-ink-soft'
+                  }`}
+                >
+                  Kleinunternehmer (§ 19 UStG)
+                  <span className="mt-0.5 block font-normal text-[11px] text-ink-soft">
+                    Gutschrift ohne Umsatzsteuer
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setVatMode('ust19')}
+                  className={`rounded-xl border p-3 text-left ${
+                    vatMode === 'ust19'
+                      ? 'border-geo-violet bg-[#FBF8FE] font-bold text-ink'
+                      : 'border-hairline text-ink-soft'
+                  }`}
+                >
+                  Regelbesteuert (+19 % USt.)
+                  <span className="mt-0.5 block font-normal text-[11px] text-ink-soft">
+                    Gutschrift zzgl. 19 % Umsatzsteuer
+                  </span>
+                </button>
+              </div>
+            </div>
+
+            {onNavigate && (
+              <button
+                type="button"
+                onClick={() => onNavigate('creator-tkp-guide')}
+                className="text-xs font-bold text-geo-violet underline underline-offset-4 hover:no-underline"
+              >
+                Ausführliche Erklärung zu Stripe Connect &amp; Steuern lesen →
+              </button>
+            )}
           </div>
 
           <div className="rounded-3xl bg-void p-6 text-white">

@@ -123,6 +123,14 @@ export default function BrandsClubSection({
                 <span>Automatischer Schutz vor gekauften Klick-Paketen</span>
               </li>
             </ul>
+
+            <button
+              type="button"
+              onClick={() => onNavigate('creator-tkp-guide')}
+              className="mt-5 inline-flex items-center gap-1.5 text-xs font-bold text-geo-violet underline underline-offset-4 hover:no-underline"
+            >
+              Ausführlicher Leitfaden zu TKP-Kampagnen &amp; Stripe-Abrechnung →
+            </button>
           </div>
 
           {/* Ruhiger TKP-Rechner & Direktbuchungs-Simulation */}
@@ -202,14 +210,23 @@ export default function BrandsClubSection({
             className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1 font-mono text-[11px] font-bold uppercase tracking-wider text-white"
             style={{ background: GRADIENT }}
           >
-            <Layers size={13} /> Möglichkeit 3 · Komplettes Business-Konzept auf Provisionsbasis
+            <Layers size={13} /> Möglichkeit 3 · Creator-Affiliate- &amp; Markenbotschafter-Programm
           </span>
           <h2 className="mt-4 text-3xl font-bold leading-tight tracking-tight sm:text-4xl">
-            Wir bauen dein eigenes UGC-Creator- &amp; Affiliate-Netzwerk auf (More-Prinzip)
+            Wir bauen dein eigenes Creator-Affiliate- &amp; Markenbotschafter-Netzwerk auf Provisionsbasis auf
           </h2>
           <p className="mt-3 text-sm leading-6 text-white/75 sm:text-base">
-            Du willst keine einzelnen Videos einkaufen, sondern hunderte Micro-Creator ab 500 Followern, die jeden Tag organisch über deine Marke posten – <strong>komplett ohne Fixgagen, rein auf Provisions- und Produktbasis</strong>? Wir setzen dir das komplette Partner-Portal technisch auf und laden direkt passende Creator aus unserem {creatorCountLabel} Pool ein.
+            Du willst keine einzelnen Videos einkaufen, sondern hunderte Micro-Creator ab 500 Followern, die jeden Tag organisch über deine Marke posten – <strong>komplett ohne Fixgagen, rein über Creator Seeding, eigene Rabattcodes und Erfolgsprovision</strong>? Wir setzen dir das komplette Partner-Portal technisch auf und laden direkt passende Creator aus unserem {creatorCountLabel} Pool ein.
           </p>
+          <div className="mt-4">
+            <button
+              type="button"
+              onClick={() => onNavigate('brand-affiliate-guide')}
+              className="inline-flex items-center gap-2 rounded-full border border-geo-green/40 bg-geo-green/10 px-4 py-2 text-xs font-bold text-geo-green transition-colors hover:bg-geo-green hover:text-void"
+            >
+              Komplettes Konzept &amp; Leitfaden lesen (2.000+ Wörter inkl. Rechenbeispielen) <ArrowRight size={14} />
+            </button>
+          </div>
         </div>
 
         {/* Kompakte, glasklare Vorschau der Mechanik */}
@@ -326,6 +343,48 @@ export default function BrandsClubSection({
                 15 Minuten direkt mit uns: Wir prüfen euren Shop/SaaS-Case &amp; den Kaltstart über unsere {creatorCountLabel} Creator.
               </p>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ==================== ZAHLUNGSABWICKLUNG FUER BRANDS (STRIPE CONNECT) ==================== */}
+      <section className="mx-auto max-w-5xl rounded-3xl border border-hairline bg-surface p-6 sm:p-10">
+        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+          <div>
+            <p className="font-mono text-xs font-bold uppercase tracking-[0.16em] text-geo-violet">
+              Zahlung, Rechnungen &amp; Compliance
+            </p>
+            <h2 className="mt-1 text-2xl font-bold text-ink sm:text-3xl">
+              So läuft das Payment für Unternehmen sauber über Stripe Connect
+            </h2>
+          </div>
+          <button
+            type="button"
+            onClick={() => onNavigate('brand-affiliate-guide')}
+            className="text-xs font-bold text-geo-violet underline underline-offset-4 hover:no-underline"
+          >
+            Alle Steuer- &amp; Abrechnungsdetails im Leitfaden →
+          </button>
+        </div>
+
+        <div className="mt-6 grid gap-4 md:grid-cols-3">
+          <div className="rounded-2xl border border-hairline bg-white p-5">
+            <p className="text-xs font-bold text-geo-violet">1 · SEPA-Einzahlung (max. 5 € Gebühr)</p>
+            <p className="mt-1.5 text-xs leading-6 text-ink-soft">
+              Budgets zahlst du in Euro per <strong>Stripe SEPA-Banküberweisung</strong> (Gebühr auf wenige Euro gedeckelt!), Lastschrift oder Firmenkarte ein – inklusive <strong>einer einzigen B2B-Sammelrechnung mit 19 % USt.</strong> statt Dutzender Einzelrechnungen.
+            </p>
+          </div>
+          <div className="rounded-2xl border border-hairline bg-white p-5">
+            <p className="text-xs font-bold text-[#1F6FF4]">2 · PSD2- &amp; ZAG-sicher via Stripe</p>
+            <p className="mt-1.5 text-xs leading-6 text-ink-soft">
+              Über <em>Stripe Connect (Separate Charges &amp; Transfers)</em> liegt dein Kampagnenbudget reguliert bei Stripe und wird erst bei verifizierten Views oder bestätigten Verkäufen ausgeschüttet. Restbudgets werden erstattet oder vorgetragen.
+            </p>
+          </div>
+          <div className="rounded-2xl border border-hairline bg-white p-5">
+            <p className="text-xs font-bold text-[#385523]">3 · Null Aufwand mit Creator-Belegen</p>
+            <p className="mt-1.5 text-xs leading-6 text-ink-soft">
+              Stripe übernimmt KYC, IBAN-Prüfung und EU-Steuermeldungen (DAC7) der Creator. Unser System erstellt für jede Auszahlung automatisch die passende Gutschrift (§ 19 UStG oder +19 % USt.).
+            </p>
           </div>
         </div>
       </section>

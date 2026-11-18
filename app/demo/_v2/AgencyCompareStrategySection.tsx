@@ -254,7 +254,7 @@ const GEO_ALTERNATIVES: {
     whenCompetitorFits:
       'Wenn du ausschließlich reine View-basierte Clipping- oder Creator-Kampagnen über einen geschlossenen Kampagnen-Marktplatz abwickeln möchtest.',
     whenUgcvzFits:
-      'Wenn du zusätzlich 730+ DACH-Creator kostenlos ohne Login durchsuchen willst, direkte Kontaktdaten brauchst oder dir ein eigenes dauerhaftes Creator-Affiliate-Programm (More-Nutrition-Modell) aufbauen lassen möchtest.',
+      'Wenn du zusätzlich 730+ DACH-Creator kostenlos ohne Login durchsuchen willst, direkte Kontaktdaten brauchst oder dir ein eigenes dauerhaftes Creator-Affiliate- & Markenbotschafter-Programm aufbauen lassen möchtest.',
     faqs: [
       ['Was ist die beste kostenlose Contentmarkt Alternative?', 'Bei UGC VZ durchsuchst du über 730 deutschsprachige UGC-Creator kostenlos ohne Login und zahlst 0 % Vermittlungsprovision bei Direktkontakt. Ergänzend stehen Pay-per-1.000-Views Bounties und eigene Affiliate-Portale für Marken bereit.'],
       ['Bietet UGC VZ wie Contentmarkt auch Agenturkonten und View-Vergütung?', 'Ja: Neben dem offenen Verzeichnis umfasst das 2.0-Modell feste TKP-Bounty-Budgets, ein Anti-Bot Fraud-Shield sowie Multi-Creator-Dashboards für Agenturen und Managements.'],
@@ -597,7 +597,7 @@ export function StrategieView({
       <section className="mx-auto grid max-w-6xl gap-5 md:grid-cols-2">
         <div className="rounded-3xl border border-hairline bg-white p-6">
           <p className="font-mono text-xs font-bold uppercase text-geo-violet">
-            Hebel 1 · Höchster B2B-Glaube (More-Nutrition-Modell)
+            Hebel 1 · Höchster B2B-Hebel (Creator-Affiliate-Netzwerk)
           </p>
           <h2 className="mt-2 text-xl font-bold text-ink">
             Turnkey Brand Creator-Clubs verkaufen (Setup + Retainer)
@@ -690,7 +690,7 @@ export function StrategieView({
           {[
             ['contentmarkt.de & /agenturen', 'Bounty-Budgetbalken, Clipping + Produktion, Leaderboard & Agentur-Roster'],
             ['VenenoGT3/Aether & ugcbounty', 'Bounty-Logik in Euro (Stripe Connect / SEPA statt Krypto), KI-Content-Check, View-Tracker & Fraud-Shield'],
-            ['morenutrition.de (Level 1–5)', 'Turnkey Brand-Club-Portal (Seeding, Code, Produkt-Tausch bis Level-5-Events)'],
+            ['5-Level Ambassador-System', 'Schlüsselfertiges Brand-Affiliate-Portal (Seeding, Code, Produkt-Tausch bis Level-5-Events)'],
             ['accountable.de/partners', 'Deutscher Steuer- & Gutschrifts-Autopilot + Affiliate-Kickback im Creator-Hub'],
             ['hypefy.ai', 'KI-Matching + „15-Min Strategy Session buchen“ Sales-Einstieg überall präsent'],
             ['creonda.com/de/preise & ugclaunch.com', '0 € offene Suche ohne Brand-Login, KI-Skript-Generator & transparenter Euro-Gebührenrechner'],

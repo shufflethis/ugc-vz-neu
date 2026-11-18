@@ -152,6 +152,55 @@ export default function CreatorTaxAppSection({ onNavigate }: Props) {
                 </button>
               </p>
             </form>
+
+            {/* STRIPE AUSZAHLUNG & TKP ERKLÄRT FUER CREATOR + LINK ZUM 2.000-WÖRTER-GUIDE */}
+            <div className="mx-auto max-w-3xl rounded-3xl border border-hairline bg-surface p-6 sm:p-8">
+              <p className="font-mono text-xs font-bold uppercase tracking-[0.16em] text-geo-violet">
+                Neu für angemeldete Creator · TKP-Kampagnen &amp; Auszahlung in Euro
+              </p>
+              <h2 className="mt-2 text-2xl font-bold text-ink">
+                Wie du pro 1.000 Views Geld verdienst &amp; über Stripe ausgezahlt wirst
+              </h2>
+              <p className="mt-2 text-sm leading-6 text-ink-soft">
+                Anders als beim TikTok-eigenen Programm brauchst du bei unseren Marken-Kampagnen <strong>keine 10.000 Follower</strong> und keine 60-Sekunden-Videos. So einfach läuft die Auszahlung:
+              </p>
+              <div className="mt-5 grid gap-3 text-xs sm:grid-cols-3">
+                <div className="rounded-2xl bg-white p-4">
+                  <p className="font-bold text-ink">1 · Kampagne im Login picken</p>
+                  <p className="mt-1 leading-5 text-ink-soft">
+                    Wähle offene TKP-Kampagnen (z. B. 2–5 € pro 1.000 Views) oder Markenbotschafter-Deals mit eigenem Rabattcode.
+                  </p>
+                </div>
+                <div className="rounded-2xl bg-white p-4">
+                  <p className="font-bold text-ink">2 · Stripe Connect Express (2 Min.)</p>
+                  <p className="mt-1 leading-5 text-ink-soft">
+                    Hinterlege einmalig sicher deine IBAN bei Stripe. Ab 25 € Guthaben geht dein Geld zu 100 % in Euro per SEPA aufs Girokonto.
+                  </p>
+                </div>
+                <div className="rounded-2xl bg-white p-4">
+                  <p className="font-bold text-ink">3 · Automatische Gutschrift</p>
+                  <p className="mt-1 leading-5 text-ink-soft">
+                    1 Häkchen wählen (Kleinunternehmer § 19 UStG oder +19 % USt.) – du erhältst automatisch fertige PDF-Gutschriften statt Rechnungs-Chaos.
+                  </p>
+                </div>
+              </div>
+              <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-hairline pt-4">
+                <button
+                  type="button"
+                  onClick={() => onNavigate('creator-tkp-guide')}
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-geo-violet underline underline-offset-4 hover:no-underline"
+                >
+                  Kompletten Guide lesen: Mit Kurzvideos &amp; Views Geld verdienen + Stripe erklärt →
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onNavigate('konto')}
+                  className="rounded-full bg-void px-4 py-2 text-xs font-bold text-white hover:bg-geo-violet"
+                >
+                  Offene Kampagnen ansehen
+                </button>
+              </div>
+            </div>
           </section>
         ) : (
           /* SCHRITT 2: NACH DER ANMELDUNG -> "DU KANNST AUCH DIREKT GELD VERDIENEN!" + WEITER INS KONTO */
@@ -199,14 +248,14 @@ export default function CreatorTaxAppSection({ onNavigate }: Props) {
 
                 <div className="rounded-2xl border border-white/10 bg-white/[0.05] p-5">
                   <Receipt size={20} className="text-geo-violet-soft" />
-                  <h3 className="mt-3 text-sm font-bold">3 · SEPA, Push &amp; Steuer-Hilfe</h3>
+                  <h3 className="mt-3 text-sm font-bold">3 · Stripe SEPA &amp; Auto-Gutschrift</h3>
                   <p className="mt-1 text-xs leading-5 text-white/70">
-                    Auszahlung in Euro aufs Girokonto, automatische Gutschriften &amp; Push-Info bei neuen Kampagnen.
+                    IBAN einmal in 2 Min. über Stripe Connect Express hinterlegen – Auszahlung in Euro ab 25 € inkl. fertigem §-19-/USt.-Beleg.
                   </p>
                 </div>
               </div>
 
-              <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row">
+              <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:flex-wrap">
                 <button
                   type="button"
                   onClick={() => onNavigate('konto')}
@@ -214,9 +263,13 @@ export default function CreatorTaxAppSection({ onNavigate }: Props) {
                 >
                   Jetzt in meinen Creator-Bereich &amp; Kampagnen picken <ArrowRight size={16} />
                 </button>
-                <span className="inline-flex items-center gap-1.5 text-xs text-white/65">
-                  <Bell size={14} className="text-geo-green" /> Push-Benachrichtigungen im Konto aktivierbar
-                </span>
+                <button
+                  type="button"
+                  onClick={() => onNavigate('creator-tkp-guide')}
+                  className="text-xs font-semibold text-white/80 underline underline-offset-4 hover:text-white"
+                >
+                  Wie funktionieren TKP &amp; Stripe-Auszahlungen genau?
+                </button>
               </div>
             </div>
           </section>
