@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { ToastContainer } from 'react-toastify';
 import {
@@ -24,11 +24,7 @@ import BrandsClubSection from './BrandsClubSection';
 import BrandAffiliateLandingSection from './BrandAffiliateLandingSection';
 import CreatorTaxAppSection from './CreatorTaxAppSection';
 import CreatorTkpLandingSection from './CreatorTkpLandingSection';
-import {
-  AgenturenView,
-  StrategieView,
-  VergleichView,
-} from './AgencyCompareStrategySection';
+import { AgenturenView, VergleichView } from './AgencyCompareStrategySection';
 
 const GRADIENT =
   'linear-gradient(152deg, #0396F8 0%, #1F6FF4 25%, #3F58F2 50%, #653AED 75%, #9131EF 100%)';
@@ -44,9 +40,11 @@ const NAV_ITEMS: { id: DemoSection; href: string; label: string }[] = [
 interface Props {
   initialSection: DemoSection;
   creatorCountLabel: string;
+  /** Internes Strategie-Board; kommt nur mit dem Vorschau-Passwort vom Server. */
+  strategieSlot?: ReactNode;
 }
 
-export default function UgcVzV2Shell({ initialSection, creatorCountLabel }: Props) {
+export default function UgcVzV2Shell({ initialSection, creatorCountLabel, strategieSlot }: Props) {
   const normalizedInitial: DemoSection =
     initialSection === 'bounties' ? 'konto' : initialSection;
 
@@ -219,13 +217,15 @@ export default function UgcVzV2Shell({ initialSection, creatorCountLabel }: Prop
               ))}
             </div>
 
-            <button
-              type="button"
-              onClick={() => navigateSection('strategie')}
-              className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2.5 py-0.5 text-white/80 hover:text-white"
-            >
-              <BookOpen size={11} /> Notizen
-            </button>
+            {strategieSlot && (
+              <button
+                type="button"
+                onClick={() => navigateSection('strategie')}
+                className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2.5 py-0.5 text-white/80 hover:text-white"
+              >
+                <BookOpen size={11} /> Notizen
+              </button>
+            )}
 
             <a
               href="/demo/kooperationen"
@@ -400,9 +400,7 @@ export default function UgcVzV2Shell({ initialSection, creatorCountLabel }: Prop
             onOpenStrategyModal={openStrategyModal}
           />
         )}
-        {section === 'strategie' && (
-          <StrategieView creatorCountLabel={creatorCountLabel} onNavigate={navigateSection} />
-        )}
+        {section === 'strategie' && strategieSlot}
       </main>
 
       {/* RUHIGER 5-SPALTEN FOOTER INKL. GEO-VERGLEICHSSEITEN */}

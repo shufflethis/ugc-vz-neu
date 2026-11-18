@@ -81,27 +81,6 @@ export default function CreatorTkpLandingSection({
           </div>
         </header>
 
-        {/* KEYWORD-CLUSTER BOX */}
-        <aside className="rounded-3xl border border-geo-violet/25 bg-[#FBF8FE] p-6 sm:p-8">
-          <p className="font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-geo-violet">
-            SEO- &amp; Keyword-Fokus dieser Seite (Creator- &amp; Marken-Suchanfragen)
-          </p>
-          <div className="mt-3 grid gap-3 text-xs sm:grid-cols-2">
-            <div className="rounded-2xl border border-hairline bg-white p-4">
-              <p className="font-bold text-ink">Creator-Suchvolumen (Hoher organischer Zulauf)</p>
-              <p className="mt-1 text-ink-soft">
-                <em>„Mit TikTok Views Geld verdienen“</em>, <em>„Geld verdienen pro 1000 Aufrufe“</em>, <em>„Clipping Geld verdienen Deutschland“</em>, <em>„Mit Reels &amp; Kurzvideos Geld verdienen ohne 10.000 Follower“</em>, <em>„UGC Creator Jobs &amp; Auszahlung“</em>
-              </p>
-            </div>
-            <div className="rounded-2xl border border-hairline bg-white p-4">
-              <p className="font-bold text-ink">Marken- &amp; Agentur-Suchintention (B2B)</p>
-              <p className="mt-1 text-ink-soft">
-                <em>„TKP Kampagne TikTok schalten“</em>, <em>„organische Reichweite einkaufen Creator“</em>, <em>„Pay per View UGC Kampagne“</em>, <em>„Clipping Kampagne für Marken &amp; Events“</em>
-              </p>
-            </div>
-          </div>
-        </aside>
-
         {/* INHALTSVERZEICHNIS */}
         <nav
           aria-label="Inhaltsverzeichnis"
@@ -254,7 +233,7 @@ export default function CreatorTkpLandingSection({
         {/* KAPITEL 3 */}
         <section id="anti-bot-schutz" className="scroll-mt-24 space-y-4">
           <h2 className="text-2xl font-bold tracking-tight text-ink sm:text-3xl">
-            3. Fair-Play &amp; Anti-Bot-Prüfung: Warum gekaufte Klicks sofort rausfliegen
+            3. Fair-Play: Wie Views geprüft werden, bevor Geld fließt
           </h2>
           <p className="leading-8 text-ink-soft">
             Wo pro 1.000 Aufrufe echtes Geld gezahlt wird, taucht schnell die berechtigte Sorge von Marken und ehrlichen Creatorn auf: <em>„Was passiert, wenn jemand für 15 Euro künstliche Klick-Pakete kauft oder Videos per Bot aktualisiert, um den Kampagnen-Topf leerzuräumen?“</em> Genau deshalb durchläuft jeder eingereichte Video-Link auf UGC VZ eine mehrstufige Prüfung, bevor ein einziger Euro aus dem Kampagnenbudget reserviert wird:
@@ -263,19 +242,19 @@ export default function CreatorTkpLandingSection({
             <li className="flex items-start gap-2.5">
               <ShieldCheck size={18} className="mt-0.5 shrink-0 text-[#527b33]" />
               <span>
-                <strong className="text-ink">Kanal-Verifizierung:</strong> Es können ausschließlich eigene, verifizierte Social-Media-Profile eingereicht werden – fremde virale Videos lassen sich nicht unter falschem Namen beanspruchen.
+                <strong className="text-ink">Kanal-Verknüpfung:</strong> Eingereicht werden können nur Videos von Kanälen, die du in deinem Konto als deine eigenen bestätigt hast – fremde virale Videos lassen sich nicht beanspruchen.
               </span>
             </li>
             <li className="flex items-start gap-2.5">
               <ShieldCheck size={18} className="mt-0.5 shrink-0 text-[#527b33]" />
               <span>
-                <strong className="text-ink">Inhaltlicher Briefing- &amp; Kennzeichnungs-Check:</strong> KI-gestützte Vorprüfung plus Stichproben-Kontrolle stellen sicher, dass das Video wirklich das gebuchte Thema behandelt und sauber als Werbung / Anzeige gekennzeichnet ist.
+                <strong className="text-ink">Briefing- &amp; Kennzeichnungs-Check:</strong> Jede Einreichung wird gegen das Briefing geprüft (automatische Vorprüfung plus manuelle Stichproben): Behandelt das Video das gebuchte Thema, und ist es als Werbung / Anzeige gekennzeichnet?
               </span>
             </li>
             <li className="flex items-start gap-2.5">
               <ShieldAlert size={18} className="mt-0.5 shrink-0 text-geo-violet" />
               <span>
-                <strong className="text-ink">View-Velocity &amp; Engagement-Plausibilität:</strong> Gekaufte Klicks erzeugen unnatürliche Sprünge ohne passende Watchtime-, Like-, Speicher- und Kommentar-Relation im Zielmarkt (DACH). Solche Einreichungen werden automatisch auf 0,00 € gesetzt und gesperrt – das Markenbudget bleibt für echte Creator vollständig geschützt.
+                <strong className="text-ink">View-Verlauf &amp; Haltefrist:</strong> Views werden über das Abrechnungsfenster mehrfach gemessen. Auffällige Sprünge ohne passende Likes, Kommentare und Shares werden manuell geprüft und im Zweifel nicht vergütet; ausgezahlt wird erst nach Ablauf der Haltefrist. Eine lückenlose Erkennung kann kein System versprechen – deshalb gibt es zusätzlich den Deckel pro Video.
               </span>
             </li>
           </ul>
@@ -331,7 +310,7 @@ export default function CreatorTkpLandingSection({
                   <strong className="text-white">3. Guthaben sammeln ab dem ersten Tausender-Block:</strong> Jeder verifizierte View-Block wird deinem Euro-Konto gutgeschrieben. Ab einer fairen <strong>Mindestauszahlung von 25,00 €</strong> (damit keine Bank-/Transaktionsgebühren Kleinstbeträge schmälern) kannst du dein Guthaben jederzeit abrufen.
                 </li>
                 <li>
-                  <strong className="text-white">4. 100 % SEPA-Überweisung in Euro:</strong> Der angezeigte TKP-Betrag gehört ohne versteckten Creator-Abzug dir und landet innerhalb weniger Bankarbeitstage per SEPA auf deinem normalen Girokonto.
+                  <strong className="text-white">4. 100 % SEPA-Überweisung in Euro:</strong> Der angezeigte TKP-Betrag gehört ohne Creator-Abzug dir und landet innerhalb weniger Bankarbeitstage per SEPA auf deinem normalen Girokonto.
                 </li>
               </ol>
             </div>
@@ -343,7 +322,7 @@ export default function CreatorTkpLandingSection({
               </p>
               <ol className="mt-4 space-y-3.5 text-xs leading-6 text-white/85 sm:text-sm">
                 <li>
-                  <strong className="text-white">1. Kampagnenbudget per SEPA oder Karte aufladen:</strong> Unternehmen zahlen ihr gewünschtes Kampagnenbudget über <strong>Stripe Checkout / Stripe Invoicing</strong> ein. Unser Tipp für Budgets ab 1.000 €: Die Zahlung per <strong>Stripe SEPA-Banküberweisung</strong> (dort sind die Transaktionskosten auf wenige Euro gedeckelt).
+                  <strong className="text-white">1. Kampagnenbudget per SEPA oder Karte aufladen:</strong> Unternehmen zahlen ihr gewünschtes Kampagnenbudget über <strong>Stripe Checkout / Stripe Invoicing</strong> ein. Unser Tipp für Budgets ab 1.000 €: Die Zahlung per <strong>Stripe SEPA-Banküberweisung</strong> (dort sind die Transaktionskosten auf wenige Euro gedeckelt). Vom Kampagnenbudget gehen 19,9 % Plattform-Fee ab; aus dem Rest erhalten Creator den angezeigten Satz ohne Abzug.
                 </li>
                 <li>
                   <strong className="text-white">2. PSD2- &amp; ZAG-konforme Verwahrung:</strong> Das eingezahlte Kampagnenbudget liegt zweckgebunden in der regulierten <em>Stripe Platform Balance</em> („Separate Charges and Transfers“) und wird erst freigegeben, wenn echte, geprüfte Views nachgewiesen sind.

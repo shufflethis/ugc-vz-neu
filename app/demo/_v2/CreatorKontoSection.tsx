@@ -508,7 +508,7 @@ export default function CreatorKontoSection({
                   onChange={(e) => setBotTest(e.target.checked)}
                   className="mt-0.5 accent-geo-violet"
                 />
-                <span>Gekaufte Klicks simulieren (testet unseren Fraud-Schutz)</span>
+                <span>Gekaufte Klicks simulieren (zeigt eine abgelehnte Einreichung)</span>
               </label>
 
               <button
@@ -625,13 +625,13 @@ export default function CreatorKontoSection({
 
           <div className="rounded-3xl bg-void p-6 text-white">
             <div className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-[11px] font-bold text-geo-green">
-              <Receipt size={13} /> Optionaler Creator-Vorteil · Steuer-Autopilot
+              <Receipt size={13} /> Beleg-Export für deine Buchhaltung
             </div>
             <h3 className="mt-3 text-lg font-bold">
-              Nebeneinnahmen versteuern ohne teuren Steuerberater
+              Alle Gutschriften gesammelt exportieren
             </h3>
             <p className="mt-1 text-xs leading-5 text-white/70">
-              Über unsere geplante Partnerschaft (z. B. mit Accountable) übergibst du alle UGC-Gutschriften mit 1 Klick in deine Steuer-App – statt die Hälfte deiner Einnahmen an einen Berater abzugeben.
+              Alle UGC-Gutschriften lassen sich gesammelt als PDF/CSV exportieren und in gängige Buchhaltungs- oder Steuer-Apps importieren. Das ersetzt keine Steuerberatung.
             </p>
             <div className="mt-4">
               <div className="flex justify-between text-xs">

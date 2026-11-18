@@ -1,9 +1,10 @@
 import type { Metadata } from 'next';
 import { headers } from 'next/headers';
 import { notFound } from 'next/navigation';
-import { authorizeSiteDemo } from '@/app/lib/collab-demo-auth';
+import { authorizeCollabDemo, authorizeSiteDemo } from '@/app/lib/collab-demo-auth';
 import { CREATOR_COUNT_LABEL } from '@/app/lib/creator-count';
 import UgcVzV2Shell from './UgcVzV2Shell';
+import StrategieBoard from './StrategieBoard';
 import type { DemoSection } from './data';
 
 export const demoMetadata: Metadata = {
@@ -30,13 +31,22 @@ export const demoMetadata: Metadata = {
 };
 
 export async function renderDemoSection(section: DemoSection) {
-  if (!(await authorizeSiteDemo(headers().get('authorization')))) {
+  const authorization = headers().get('authorization');
+  if (!(await authorizeSiteDemo(authorization))) {
+    notFound();
+  }
+  // Das interne Board sieht nur, wer das eigene Vorschau-Passwort nutzt --
+  // der Kooperations-Zugang (COLLAB_DEMO_PASSWORD) reicht dafuer nicht.
+  // Leerer String statt undefined, sonst greift der Default-Parameter.
+  const internal = await authorizeCollabDemo(authorization, process.env.DEMO_SITE_PASSWORD || '');
+  if (section === 'strategie' && !internal) {
     notFound();
   }
   return (
     <UgcVzV2Shell
       initialSection={section}
       creatorCountLabel={CREATOR_COUNT_LABEL}
+      strategieSlot={internal ? <StrategieBoard creatorCountLabel={CREATOR_COUNT_LABEL} /> : undefined}
     />
   );
 }

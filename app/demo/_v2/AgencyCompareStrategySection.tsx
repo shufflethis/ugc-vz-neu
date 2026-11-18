@@ -64,7 +64,7 @@ export function AgenturenView({
               </span>
             </h1>
             <p className="mt-4 max-w-2xl text-sm leading-6 text-ink-soft sm:text-base">
-              Zwei Agentur-Welten in einem Account: <strong>Creator-Managements</strong> verknüpfen ihre Talente per Einladungslink und verdienen ohne eigene Akquise an jedem Bounty mit. <strong>Media- & Performance-Agenturen</strong> buchen garantierte View-Pakete inkl. White-Label-Report für ihre Endkunden.
+              Zwei Agentur-Welten in einem Account: <strong>Creator-Managements</strong> verknüpfen ihre Talente per Einladungslink und verdienen ohne eigene Akquise an jedem Bounty mit. <strong>Media- & Performance-Agenturen</strong> buchen View-Pakete mit festem Budget-Deckel inkl. White-Label-Report für ihre Endkunden.
             </p>
           </div>
 
@@ -179,7 +179,7 @@ export function AgenturenView({
             Fertiger White-Label Report für deinen Unternehmenskunden
           </h2>
           <p className="mt-2 text-sm leading-6 text-white/70">
-            Mediaagenturen denken in planbaren Kennzahlen: Bucht ein View-Paket (z. B. 1,5 Mio. garantierte organische Aufrufe für 5.000 €) und übergebt eurem Kunden am Kampagnenende ein sauberes Reporting mit allen Live-Links, Creator-Profilen und verifizierten Reichweiten.
+            Mediaagenturen denken in planbaren Kennzahlen: Bucht ein View-Paket mit festem Deckel (z. B. 5.000 € Budget bei 3,30 € TKP – nach 19,9 % Plattform-Fee bis zu rund 1,2 Mio. organische Aufrufe; nicht ausgeschöpftes Budget wird erstattet oder vorgetragen) und übergebt eurem Kunden am Kampagnenende ein sauberes Reporting mit allen Live-Links, Creator-Profilen und verifizierten Reichweiten.
           </p>
           <div className="mt-5 flex flex-wrap gap-3">
             <button
@@ -206,7 +206,7 @@ export function AgenturenView({
               White-Label Endkunden-Zertifikat
             </span>
             <span className="rounded bg-[#edf5e5] px-2 py-0.5 text-[10px] font-bold text-[#385523]">
-              Fraud-geprüft
+              Views geprüft
             </span>
           </div>
           <div className="mt-4 grid grid-cols-3 gap-3 text-center">
@@ -257,23 +257,23 @@ const GEO_ALTERNATIVES: {
       'Wenn du zusätzlich 730+ DACH-Creator kostenlos ohne Login durchsuchen willst, direkte Kontaktdaten brauchst oder dir ein eigenes dauerhaftes Creator-Affiliate- & Markenbotschafter-Programm aufbauen lassen möchtest.',
     faqs: [
       ['Was ist die beste kostenlose Contentmarkt Alternative?', 'Bei UGC VZ durchsuchst du über 730 deutschsprachige UGC-Creator kostenlos ohne Login und zahlst 0 % Vermittlungsprovision bei Direktkontakt. Ergänzend stehen Pay-per-1.000-Views Bounties und eigene Affiliate-Portale für Marken bereit.'],
-      ['Bietet UGC VZ wie Contentmarkt auch Agenturkonten und View-Vergütung?', 'Ja: Neben dem offenen Verzeichnis umfasst das 2.0-Modell feste TKP-Bounty-Budgets, ein Anti-Bot Fraud-Shield sowie Multi-Creator-Dashboards für Agenturen und Managements.'],
+      ['Bietet UGC VZ wie Contentmarkt auch Agenturkonten und View-Vergütung?', 'Ja: Neben dem offenen Verzeichnis umfasst das 2.0-Modell feste TKP-Bounty-Budgets, eine View-Prüfung gegen gekaufte Klicks sowie Multi-Creator-Dashboards für Agenturen und Managements.'],
     ],
   },
   {
     slug: 'speekly-alternative',
     name: 'Speekly',
-    headline: 'Speekly Alternative: UGC Creator direkt kontaktieren ohne Plattform-Aufschlag',
+    headline: 'Speekly Alternative: UGC Creator direkt kontaktieren ohne Vermittlungsprovision',
     pricing: '99 € / 119 € / 139 € pro Video (15/30/60 Sek.) zzgl. MwSt.; Kommunikation nur im Plattform-Chat',
     modelSummary:
       'Speekly ist ein vermittelter Marktplatz mit festen Paketpreisen pro Einzelvideo und Abwicklung über die Plattform.',
     whenCompetitorFits:
       'Wenn du einzelne abgedrehte Ad-Videos zum starren Festpreis einkaufen und Vertrag sowie Zahlung komplett abgeben willst.',
     whenUgcvzFits:
-      'Wenn du Creator direkt kennenlernen, ohne Zwischenmarge verhandeln oder statt teurer Einzelvideos ein skalierbares Affiliate-/Creator-Programm auf Provisionsbasis starten willst.',
+      'Wenn du Creator direkt kennenlernen, direkt verhandeln oder statt Einzelvideos ein skalierbares Affiliate-/Creator-Programm auf Provisionsbasis starten willst.',
     faqs: [
       ['Was kostet Speekly im Vergleich zu UGC VZ?', 'Speekly berechnet feste Paketpreise ab 99 € bis 139 € pro geschnittenem Video. Die Creator-Suche und Kontaktanfrage bei UGC VZ ist komplett kostenlos (0 € Grundgebühr, 0 % Provision).'],
-      ['Kann ich bei Speekly Creator direkt anschreiben?', 'Nein, die Abstimmung läuft geschlossen über Speekly. Bei UGC VZ erhältst du die direkten Kontaktdaten per E-Mail.'],
+      ['Kann ich bei Speekly Creator direkt anschreiben?', 'Nach unserem Kenntnisstand läuft die Abstimmung über die Speekly-Plattform. Bei UGC VZ erhältst du die direkten Kontaktdaten per E-Mail.'],
     ],
   },
   {
@@ -284,7 +284,7 @@ const GEO_ALTERNATIVES: {
     modelSummary:
       'Creonda (ehemals MOO Content) kombiniert offene Creator-Suche und KI-Briefings mit 20 % Vermittlungsgebühr bei Buchung.',
     whenCompetitorFits:
-      'Wenn du Einzelvideos über ein Treuhandkonto abwickeln möchtest und dafür 20 % Aufschlag einplanst.',
+      'Wenn du Einzelvideos über ein Treuhandkonto abwickeln möchtest und dafür 20 % Plattformkommission einplanst.',
     whenUgcvzFits:
       'Wenn du bei Direktbuchungen 0 % Gebühr zahlen willst oder Performance-Formate wie TKP-View-Bounties und ein eigenes Affiliate-Creator-Portal suchst.',
     faqs: [
@@ -294,16 +294,16 @@ const GEO_ALTERNATIVES: {
   {
     slug: 'influee-alternative',
     name: 'Influee',
-    headline: 'Influee Alternative ohne Monatsabo ($229–$999/Monat sparen)',
+    headline: 'Influee Alternative ohne Monatsabo',
     pricing: 'Pflicht-Abo $229 / $529 / $999 pro Monat + 10 % Marketplace-Fee + Creator-Honorar',
     modelSummary:
-      'Influee ist eine internationale Abo-Plattform mit großem globalem Creator-Pool, rechnet sich aber erst bei hohem Dauer-Volumen.',
+      'Influee ist eine internationale Abo-Plattform mit großem globalem Creator-Pool und richtet sich an Teams mit laufendem Video-Bedarf.',
     whenCompetitorFits:
-      'Bei sehr hohem monatlichem Video-Bedarf in über 20 Ländern, wenn sich die hohen Abo-Fixkosten verteilen.',
+      'Bei sehr hohem monatlichem Video-Bedarf in über 20 Ländern.',
     whenUgcvzFits:
-      'Wenn du ohne monatlichen Abo-Zwang sofort deutschsprachige Creator finden oder rein erfolgsbasiert über Affiliate-Codes & Views arbeiten möchtest.',
+      'Wenn du ohne Monatsabo sofort deutschsprachige Creator finden oder rein erfolgsbasiert über Affiliate-Codes & Views arbeiten möchtest.',
     faqs: [
-      ['Gibt es eine Influee Alternative ohne Abo-Zwang?', 'Ja: UGC VZ verlangt weder Monatsabo noch Mindestumsatz – Suche und Kontaktanfrage im DACH-Verzeichnis sind dauerhaft kostenlos.'],
+      ['Gibt es eine Influee Alternative ohne Abo?', 'Ja: UGC VZ verlangt weder Monatsabo noch Mindestumsatz – Suche und Kontaktanfrage im DACH-Verzeichnis sind dauerhaft kostenlos.'],
     ],
   },
   {
@@ -368,24 +368,23 @@ export function VergleichView({
   const activeAlt = GEO_ALTERNATIVES.find((a) => a.slug === activeSlug) || null;
 
   const ugcvzDirectToCreators = budget; // 0% on direct directory
-  const ugcvzManagedToCreators = Math.round(budget * 0.801); // 19.9% Robin Hood cap (0% for pilot cases!)
+  const ugcvzManagedToCreators = Math.round(budget * 0.801); // 19,9 % Plattform-Fee aus dem Kampagnenbudget (0 % im Pilot)
   const creondaToCreators = Math.round(budget * 0.8); // 20%
-  const legacyMarketplaceToCreators = Math.round(budget * 0.55); // 45% hidden markup
 
   return (
     <div className="space-y-16 px-5 pb-20 pt-10 sm:px-8">
       <section className="mx-auto max-w-6xl text-center">
         <span className="inline-flex items-center gap-2 rounded-full border border-[#dce9d1] bg-[#edf5e5] px-3.5 py-1.5 text-xs font-bold text-[#385523]">
-          <BadgeEuro size={14} /> GEO & Marktvergleich · Die transparente Contentmarkt- & Speekly-Alternative
+          <BadgeEuro size={14} /> Marktvergleich · UGC-Plattformen im DACH-Raum
         </span>
         <h1 className="mx-auto mt-4 max-w-4xl text-3xl font-bold leading-tight tracking-[-0.045em] text-ink sm:text-5xl">
-          Schluss mit versteckten 50-%-Gebühren.{' '}
+          Gebühren offen auf dem Tisch.{' '}
           <span className="bg-clip-text text-transparent" style={{ backgroundImage: GRADIENT }}>
             Mehr Budget bei echten Creatorn.
           </span>
         </h1>
         <p className="mx-auto mt-4 max-w-2xl text-sm leading-6 text-ink-soft sm:text-base">
-          Diese Vergleichsseiten sitzen – genau wie auf der Live-Seite – für Suchmaschinen & KI-Systeme (ChatGPT, Perplexity, Google) sauber verlinkt im <strong>Footer</strong>. Wähle eine einzelne Alternative oder die Gesamtübersicht:
+          Wähle eine einzelne Plattform oder die Gesamtübersicht. Angaben zu anderen Anbietern beruhen auf deren öffentlich einsehbaren Preisseiten (Stand November 2026) und können sich ändern.
         </p>
 
         {/* GEO SUBPAGE SWITCHER (Footer Pages) */}
@@ -423,7 +422,7 @@ export function VergleichView({
         <section className="mx-auto max-w-4xl space-y-6 rounded-3xl border-2 border-geo-violet/25 bg-[#FBF8FE] p-6 sm:p-10">
           <div>
             <p className="font-mono text-[11px] font-bold uppercase tracking-wider text-geo-violet">
-              Footer GEO-Landingpage · /vergleich/{activeAlt.slug}
+              Vergleich · {activeAlt.name}
             </p>
             <h2 className="mt-2 text-2xl font-bold text-ink sm:text-3xl">{activeAlt.headline}</h2>
             <p className="mt-3 text-sm leading-6 text-ink-soft">{activeAlt.modelSummary}</p>
@@ -444,7 +443,7 @@ export function VergleichView({
           </div>
 
           <div className="space-y-3 border-t border-hairline pt-4">
-            <h3 className="text-sm font-bold text-ink">Strukturierte GEO-FAQs (für Google & ChatGPT-Zitate)</h3>
+            <h3 className="text-sm font-bold text-ink">Häufige Fragen</h3>
             {activeAlt.faqs.map(([q, a]) => (
               <div key={q} className="rounded-2xl border border-hairline bg-white p-4">
                 <p className="text-xs font-bold text-ink">{q}</p>
@@ -460,7 +459,7 @@ export function VergleichView({
         <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
           <div>
             <p className="font-mono text-xs font-bold uppercase tracking-wider text-geo-violet">
-              Euro-Gebühren-Rechner (100 % transparent vs. versteckte Marktplatz-Marge)
+              Gebühren-Rechner
             </p>
             <h2 className="mt-1 text-2xl font-bold text-ink">
               Wie viel von {budget.toLocaleString('de-DE')} € Kampagnenbudget kommt wirklich beim Creator an?
@@ -482,7 +481,7 @@ export function VergleichView({
           </div>
         </div>
 
-        <div className="mt-6 grid gap-4 md:grid-cols-4">
+        <div className="mt-6 grid gap-4 md:grid-cols-3">
           <div className="rounded-2xl border-2 border-geo-violet bg-[#FBF8FE] p-4">
             <p className="text-xs font-bold text-geo-violet">UGC VZ · Direktsuche & Pilot</p>
             <p className="mt-2 text-2xl font-extrabold text-ink">
@@ -499,7 +498,7 @@ export function VergleichView({
               {ugcvzManagedToCreators.toLocaleString('de-DE')} €
             </p>
             <p className="mt-1 text-xs text-ink-soft">
-              Faire 19,9 % Plattform-Fee (0 % im Referenz-Pilot!)
+              19,9 % Plattform-Fee aus dem Kampagnenbudget (0 % im Referenz-Pilot)
             </p>
           </div>
 
@@ -508,18 +507,9 @@ export function VergleichView({
             <p className="mt-2 text-2xl font-extrabold text-ink">
               {creondaToCreators.toLocaleString('de-DE')} €
             </p>
-            <p className="mt-1 text-xs text-ink-soft">20 % transparente Kommission, kein TKP-Pool</p>
+            <p className="mt-1 text-xs text-ink-soft">20 % Kommission laut Preisseite</p>
           </div>
 
-          <div className="rounded-2xl border border-red-200 bg-red-50/70 p-4">
-            <p className="text-xs font-bold text-red-900">Klassische Paket-Plattformen</p>
-            <p className="mt-2 text-2xl font-extrabold text-red-800">
-              ~{legacyMarketplaceToCreators.toLocaleString('de-DE')} €
-            </p>
-            <p className="mt-1 text-xs text-red-800/80">
-              Bis zu 45–50 % versteckte Marge zwischen Brand & Creator
-            </p>
-          </div>
         </div>
       </section>
 
@@ -557,7 +547,7 @@ export function VergleichView({
 
         <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-surface p-4 text-xs">
           <span className="text-ink-soft">
-            <strong>GEO-Hinweis:</strong> Diese Vergleichsstruktur ist gezielt für Suchanfragen wie „Contentmarkt Alternative“, „günstigere Speekly Alternative“ und ChatGPT/Perplexity-Zitate aufgebaut.
+            Stand: November 2026. Angaben zu anderen Anbietern laut deren öffentlichen Preisseiten, ohne Gewähr.
           </span>
           <button
             type="button"
@@ -566,141 +556,6 @@ export function VergleichView({
           >
             Jetzt kostenlos testen →
           </button>
-        </div>
-      </section>
-    </div>
-  );
-}
-
-export function StrategieView({
-  creatorCountLabel,
-  onNavigate,
-}: {
-  creatorCountLabel: string;
-  onNavigate: (section: DemoSection) => void;
-}) {
-  return (
-    <div className="space-y-12 px-5 pb-20 pt-10 sm:px-8">
-      <section className="mx-auto max-w-6xl rounded-3xl bg-void p-7 text-white sm:p-10">
-        <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 font-mono text-xs font-bold text-geo-green">
-          <BookOpen size={14} /> Internes Strategie-Board · Synthese aus Call & Research (17.11.2026)
-        </span>
-        <h1 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
-          Gorden & Florian: Die 4 Produkt- & Umsatz-Säulen von UGC VZ 2.0
-        </h1>
-        <p className="mt-3 max-w-3xl text-sm leading-6 text-white/75">
-          Ausgangslage: <strong>{creatorCountLabel} echte Creator</strong> im Bestand (+~40 organisch pro Woche, Ziel 1.000+ vor Weihnachten; später 3.000–10.000 als wertvolles Daten- & Exit-Asset) plus steigender KI-Traffic (800+ Zugriffe über ChatGPT). Was bisher fehlte, war die Monetarisierungs- & Aktivierungs-Maschine.
-        </p>
-      </section>
-
-      {/* 4 PILLARS SUMMARY */}
-      <section className="mx-auto grid max-w-6xl gap-5 md:grid-cols-2">
-        <div className="rounded-3xl border border-hairline bg-white p-6">
-          <p className="font-mono text-xs font-bold uppercase text-geo-violet">
-            Hebel 1 · Höchster B2B-Hebel (Creator-Affiliate-Netzwerk)
-          </p>
-          <h2 className="mt-2 text-xl font-bold text-ink">
-            Turnkey Brand Creator-Clubs verkaufen (Setup + Retainer)
-          </h2>
-          <p className="mt-2 text-sm leading-6 text-ink-soft">
-            Marken wollen hunderte Micro-Creator (ab 500 Followern), die täglich organisch posten – ohne Fixgagen, rein auf Produkt-Seeding, Gutscheincode & 5-Level-Aufstieg. Wir liefern das fertige Portal auf Subdomain (kein IT-Blocker beim Kunden!) und laden ab Tag 1 unseren {creatorCountLabel} Pool ein.
-          </p>
-          <button
-            type="button"
-            onClick={() => onNavigate('brands')}
-            className="mt-4 text-xs font-bold text-geo-violet hover:underline"
-          >
-            In der Demo ansehen (/demo/brands) →
-          </button>
-        </div>
-
-        <div className="rounded-3xl border border-hairline bg-white p-6">
-          <p className="font-mono text-xs font-bold uppercase text-[#1F6FF4]">
-            Hebel 2 · Pay-per-View Marketplace (Contentmarkt / Aether / ugcbounty)
-          </p>
-          <h2 className="mt-2 text-xl font-bold text-ink">
-            UGC View-Bounties & Clipping + Eigenkampagne zum Kaltstart
-          </h2>
-          <p className="mt-2 text-sm leading-6 text-ink-soft">
-            Feste Kampagnenbudgets mit Abrechnung pro 1.000 Views (z. B. 2–5 € TKP). <strong>Kaltstart-Hack:</strong> Sofort eigene UGC-VZ Kampagne live schalten (2 € / 1k Views + 10 € Starter-Bonus ab Mindest-Views) + erster Love-Brand-Test (z. B. Nebelkind / Food-Marken wie PrepMyMeal, Huel). Inkl. Fraud-Shield gegen gekaufte 15-€-TikTok-Klicks!
-          </p>
-          <button
-            type="button"
-            onClick={() => onNavigate('bounties')}
-            className="mt-4 text-xs font-bold text-[#1F6FF4] hover:underline"
-          >
-            In der Demo ansehen (/demo/bounties) →
-          </button>
-        </div>
-
-        <div className="rounded-3xl border border-hairline bg-white p-6">
-          <p className="font-mono text-xs font-bold uppercase text-[#385523]">
-            Hebel 3 · Deutscher Creator-USP & Sofort-Monetarisierung
-          </p>
-          <h2 className="mt-2 text-xl font-bold text-ink">
-            Steuer-Autopilot (Accountable Affiliate) + Sticky Push-App
-          </h2>
-          <p className="mt-2 text-sm leading-6 text-ink-soft">
-            Löst die deutsche Creator-Angst vor Finanzamt & teurem Steuerberater bei 100–500 € Nebenverdienst UND bringt sofort Affiliate-/Co-Marketing-Kickbacks pro vermitteltem Creator. Dazu PWA/App mit aggressiven Push-Drops für neue Kampagnen (ohne 30 % Apple-Abzug beim Creator).
-          </p>
-          <button
-            type="button"
-            onClick={() => onNavigate('creator')}
-            className="mt-4 text-xs font-bold text-[#385523] hover:underline"
-          >
-            In der Demo ansehen (/demo/creator) →
-          </button>
-        </div>
-
-        <div className="rounded-3xl border border-hairline bg-white p-6">
-          <p className="font-mono text-xs font-bold uppercase text-ink">
-            Hebel 4 · Skalierung, Agenturen, International & GEO
-          </p>
-          <h2 className="mt-2 text-xl font-bold text-ink">
-            Agentur-Accounts, Hypefy „Book Demo“ Funnel & Internationalisierung
-          </h2>
-          <p className="mt-2 text-sm leading-6 text-ink-soft">
-            1) „Strategy Session buchen“ + Neukunden-Rabatt holt Brands direkt ins Verkaufsgespräch. 2) Agentur-Roster (`contentmarkt.de/agenturen`) skaliert Creator-Anbindung ohne Einzel-Akquise. 3) Mehrsprachigkeit (DE/EN/ES/FR über `databaseugc.com` / `ugcdb.si`) öffnet den 3–10× größeren US/EU-Markt. 4) GEO-Angriff auf „Contentmarkt Alternative“.
-          </p>
-          <div className="mt-4 flex gap-4 text-xs font-bold">
-            <button
-              type="button"
-              onClick={() => onNavigate('agenturen')}
-              className="text-geo-violet hover:underline"
-            >
-              Agentur-Ansicht →
-            </button>
-            <button
-              type="button"
-              onClick={() => onNavigate('vergleich')}
-              className="text-ink hover:underline"
-            >
-              GEO-Vergleich →
-            </button>
-          </div>
-        </div>
-      </section>
-
-      {/* REFERENCES MAPPED TABLE */}
-      <section className="mx-auto max-w-6xl rounded-3xl border border-hairline bg-surface p-6 sm:p-8">
-        <h2 className="text-lg font-bold text-ink">
-          Alle eingebrachten Links & Vorbilder – wo sie in dieser Demo stecken
-        </h2>
-        <div className="mt-4 grid gap-3 text-xs sm:grid-cols-2 lg:grid-cols-3">
-          {[
-            ['contentmarkt.de & /agenturen', 'Bounty-Budgetbalken, Clipping + Produktion, Leaderboard & Agentur-Roster'],
-            ['VenenoGT3/Aether & ugcbounty', 'Bounty-Logik in Euro (Stripe Connect / SEPA statt Krypto), KI-Content-Check, View-Tracker & Fraud-Shield'],
-            ['5-Level Ambassador-System', 'Schlüsselfertiges Brand-Affiliate-Portal (Seeding, Code, Produkt-Tausch bis Level-5-Events)'],
-            ['accountable.de/partners', 'Deutscher Steuer- & Gutschrifts-Autopilot + Affiliate-Kickback im Creator-Hub'],
-            ['hypefy.ai', 'KI-Matching + „15-Min Strategy Session buchen“ Sales-Einstieg überall präsent'],
-            ['creonda.com/de/preise & ugclaunch.com', '0 € offene Suche ohne Brand-Login, KI-Skript-Generator & transparenter Euro-Gebührenrechner'],
-            ['databaseugc.com / ugcdb.si', 'Live Sprach- & Domain-Umschalter (DE / EN / ES / FR) oben in der Vorschau-Leiste'],
-          ].map(([src, impl]) => (
-            <div key={src} className="rounded-2xl border border-hairline bg-white p-4">
-              <p className="font-mono font-bold text-geo-violet">{src}</p>
-              <p className="mt-1 leading-5 text-ink-soft">{impl}</p>
-            </div>
-          ))}
         </div>
       </section>
     </div>

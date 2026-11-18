@@ -83,42 +83,6 @@ export default function BrandAffiliateLandingSection({
           </div>
         </header>
 
-        {/* KEYWORD-CLUSTER & SUCHINTENTION (SEO / GEO STRATEGIE-BOX) */}
-        <aside className="rounded-3xl border border-geo-violet/25 bg-[#FBF8FE] p-6 sm:p-8">
-          <p className="font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-geo-violet">
-            SEO- &amp; Keyword-Architektur dieser Seite (DACH Suchintention)
-          </p>
-          <p className="mt-2 text-xs leading-6 text-ink-soft sm:text-sm">
-            Entscheider in Marketing, E-Commerce und Geschäftsführung suchen selten nach Markennamen fremder Wettbewerber, sondern nach konkreten Lösungsbegriffen. Diese Landingpage bündelt die vier kaufkräftigsten B2B-Suchcluster im deutschsprachigen Raum:
-          </p>
-          <div className="mt-4 grid gap-3 text-xs sm:grid-cols-2">
-            <div className="rounded-2xl border border-hairline bg-white p-4">
-              <p className="font-bold text-ink">1 · Provisions- &amp; Affiliate-Fokus (Transaktional)</p>
-              <p className="mt-1 text-ink-soft">
-                <em>„Influencer auf Provisionsbasis“</em>, <em>„eigenes Affiliate Programm aufbauen“</em>, <em>„Partnerprogramm für Online-Shop erstellen“</em> (~1.000–2.400 Suchen/Monat im Cluster)
-              </p>
-            </div>
-            <div className="rounded-2xl border border-hairline bg-white p-4">
-              <p className="font-bold text-ink">2 · Markenbotschafter &amp; Community</p>
-              <p className="mt-1 text-ink-soft">
-                <em>„Markenbotschafter Programm aufbauen“</em> (~1.000–1.500/Monat), <em>„Brand Ambassador Programm Deutschland“</em> (~300–600/Monat), <em>„Creator Community aufbauen“</em>
-              </p>
-            </div>
-            <div className="rounded-2xl border border-hairline bg-white p-4">
-              <p className="font-bold text-ink">3 · Creator Seeding &amp; Micro-Influencer</p>
-              <p className="mt-1 text-ink-soft">
-                <em>„Creator Seeding Agentur“</em>, <em>„Micro Influencer Programm skalieren“</em>, <em>„Produkt Seeding E-Commerce“</em>
-              </p>
-            </div>
-            <div className="rounded-2xl border border-hairline bg-white p-4">
-              <p className="font-bold text-ink">4 · KI-Suche / GEO-Fragen (ChatGPT &amp; Perplexity)</p>
-              <p className="mt-1 text-ink-soft">
-                <em>„Wie baue ich ein Influencer-Programm ohne Fixgagen auf?“</em>, <em>„Wie rechne ich hunderte Creator steuer- und BaFin-konform über Stripe ab?“</em>
-              </p>
-            </div>
-          </div>
-        </aside>
-
         {/* INHALTSVERZEICHNIS */}
         <nav
           aria-label="Inhaltsverzeichnis"
@@ -281,7 +245,7 @@ export default function BrandAffiliateLandingSection({
                   <td className="py-3 pr-3 font-bold text-ink">Level 5 · Elite</td>
                   <td className="py-3 pr-3 text-ink-soft">Umsatzstärkste Langzeit-Gesichter</td>
                   <td className="py-3 pr-3 text-ink-soft">Eigene Landingpage im Shop, Jahres-Boni, Events, Reisen &amp; Co-Creation</td>
-                  <td className="py-3 font-semibold text-[#385523]">Starke Sogwirkung auf das gesamte Netzwerk</td>
+                  <td className="py-3 font-semibold text-[#385523]">Wenige feste Gesichter für Launches &amp; Ads</td>
                 </tr>
               </tbody>
             </table>
@@ -301,10 +265,10 @@ export default function BrandAffiliateLandingSection({
             <div className="rounded-3xl border border-hairline bg-white p-6">
               <h3 className="text-lg font-bold text-ink">Rechenbeispiel A · D2C / Online-Shop</h3>
               <p className="mt-2 text-xs leading-6 text-ink-soft sm:text-sm">
-                Angenommen, 100 aktive Micro-Creator posten pro Woche je 3 kurze Alltags-Sequenzen (Storys, TikToks, Reels). Das erzeugt <strong>1.200 authentische Marken-Videos pro Monat</strong>. Würdest du diese 1.200 Clips regulär zu je 150 € einkaufen, lägen deine Produktionskosten bei unbezahlbaren <strong>180.000 € pro Monat</strong>.
+                Angenommen, du nimmst 100 Micro-Creator auf. Realistisch bleibt nach drei Monaten etwa ein Drittel regelmäßig aktiv. Posten diese rund 35 Creator je zwei kurze Alltags-Sequenzen pro Woche, entstehen etwa <strong>280 authentische Marken-Videos pro Monat</strong>. Zum Vergleich: 280 eingekaufte Einzelvideos zu je 150 € würden 42.000 € kosten.
               </p>
               <p className="mt-3 text-xs leading-6 text-ink-soft sm:text-sm">
-                Im Provisions-Modell zahlst du <strong>0 € Vorab-Honorar</strong>. Erzielt jeder Creator über seinen Code durchschnittlich nur 8 Bestellungen à 50 € Warenkorb, entstehen <strong>40.000 € Monatsumsatz</strong>. Bei 12 % Provision (4.800 €) und 50 % Umtauschquote in eigene Shop-Produkte (bei 25 % Wareneinsatz) liegen deine realen Auszahlungs- und Warenkosten bei rund <strong>3.100 €</strong> – erst <em>nachdem</em> die 40.000 € Umsatz bereits auf deinem Konto eingegangen sind.
+                Im Provisions-Modell zahlst du <strong>kein Vorab-Honorar</strong> – kostenlos ist es trotzdem nicht. Vorsichtig gerechnet erzielt jeder aktive Creator 3 Bestellungen pro Monat à 50 € Warenkorb: 105 Bestellungen, 5.250 € Umsatz zum Listenpreis. Davon gehen ab: 10 % Rabattcode (525 €), 12 % Provision auf den rabattierten Umsatz (567 €; bei 50 % Produkt-Tausch mit +20 % Bonus und 25 % Wareneinsatz real rund 370 €) sowie einmalig die Starter-Boxen (100 Boxen à 15 € Wareneinsatz = 1.500 €). Im ersten Monat stehen damit <strong>rund 2.400 € Kosten etwa 4.700 € Umsatz nach Rabatt</strong> gegenüber, in den Folgemonaten rund 900 €. Hinzu kommen Setup und Betreuung des Programms, die wir im Strategie-Call offen beziffern. Das ist eine Beispielrechnung, keine Zusage: Entscheidend sind deine Marge und wie viele Creator wirklich aktiv bleiben.
               </p>
             </div>
 
@@ -390,7 +354,7 @@ export default function BrandAffiliateLandingSection({
             Gerade bei großen Micro-Creator-Programmen passieren ohne feste Leitplanken schnell Abmahnfehler nach dem deutschen Gesetz gegen den unlauteren Wettbewerb (UWG). Sobald ein Creator kostenlose Produkte zum Testen erhält (geldwerter Vorteil) oder einen Rabattcode mit Umsatzbeteiligung teilt, handelt es sich rechtlich um kommerzielle Kommunikation. In unserem Onboarding- und Briefing-Flow wird deshalb jeder teilnehmende Creator verbindlich auf die klare Kennzeichnung (zum Beispiel <em>„Anzeige“</em> oder <em>„Werbung“</em> zu Beginn der Beschreibung bzw. über das plattformeigene Label) verpflichtet.
           </p>
           <p className="leading-8 text-ink-soft">
-            Ebenso sauber regeln die Teilnahmebedingungen im Portal das Thema <strong>Zweitverwertung und Paid-Ads-Whitelisting</strong>: Wenn eines der tausend organischen Alltags-Videos auf TikTok oder Instagram plötzlich viral geht und eine außergewöhnliche Kaufquote erzielt, kann sich dein Performance-Marketing-Team mit 1 Klick den Freigabe-Code (Spark-Ads-Code / Partnership-Ad-Freigabe) direkt im Portal vom Creator anfordern und genau dieses authentische Video mit Werbebudget skalieren.
+            Ebenso sauber regeln die Teilnahmebedingungen im Portal das Thema <strong>Zweitverwertung und Paid-Ads-Whitelisting</strong>: Wenn eines der organischen Alltags-Videos auf TikTok oder Instagram plötzlich viral geht und eine außergewöhnliche Kaufquote erzielt, kann sich dein Performance-Marketing-Team mit 1 Klick den Freigabe-Code (Spark-Ads-Code / Partnership-Ad-Freigabe) direkt im Portal vom Creator anfordern und genau dieses authentische Video mit Werbebudget skalieren.
           </p>
         </section>
 

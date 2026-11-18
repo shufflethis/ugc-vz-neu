@@ -36,6 +36,8 @@ import { AGENT_UI_EVENTS } from './WebMcpProvider';
 interface SearchBoxProps {
   initialQuery?: string;
   showFeatured?: boolean;
+  /** Geschuetzte Vorschau (/demo): Anfragen werden nur simuliert, nichts wird versendet. */
+  demoMode?: boolean;
 }
 
 const understoodSummary = (analysis: SearchAnalysis | null): string => {
@@ -49,7 +51,7 @@ const understoodSummary = (analysis: SearchAnalysis | null): string => {
   ].filter(Boolean).join(' · ');
 };
 
-export default function SearchBox({ initialQuery = '', showFeatured = false }: SearchBoxProps) {
+export default function SearchBox({ initialQuery = '', showFeatured = false, demoMode = false }: SearchBoxProps) {
   const [searchQuery, setSearchQuery] = useState(initialQuery);
   const [featuredCreators, setFeaturedCreators] = useState<SearchCreator[]>([]);
   const [featuredLoading, setFeaturedLoading] = useState(showFeatured);
@@ -303,6 +305,12 @@ export default function SearchBox({ initialQuery = '', showFeatured = false }: S
     submissionId: string;
   }) => {
     if (selectedCreators.length === 0) return;
+
+    // Demo-Vorschau: keine echte Anfrage, kein Tracking, keine Mail an Creator.
+    if (demoMode) {
+      clearSelection();
+      return;
+    }
 
     try {
       const res = await fetch('/api/submit-request', {

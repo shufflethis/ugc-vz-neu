@@ -37,7 +37,10 @@ export default function BrandsClubSection({
   const [payoutMode, setPayoutMode] = useState<'products' | 'cash'>('products');
   const [copiedDemoCode, setCopiedDemoCode] = useState<boolean>(false);
 
-  const guaranteedViews = Math.round((tkpBudget / tkpRate) * 1000);
+  // 19,9 % Plattform-Fee gehen vom Kampagnenbudget ab; der Rest ist der Creator-Topf.
+  const platformFee = Math.round(tkpBudget * 0.199);
+  const creatorPot = tkpBudget - platformFee;
+  const maxViews = Math.round((creatorPot / tkpRate) * 1000);
   const currentLevel =
     CLUB_LEVELS.find((l) => l.level === selectedLevel) || CLUB_LEVELS[0];
 
@@ -120,7 +123,7 @@ export default function BrandsClubSection({
               </li>
               <li className="flex items-center gap-2">
                 <Check size={16} className="shrink-0 text-[#527b33]" />
-                <span>Automatischer Schutz vor gekauften Klick-Paketen</span>
+                <span>Prüfung auffälliger View-Verläufe vor jeder Auszahlung</span>
               </li>
             </ul>
 
@@ -179,9 +182,12 @@ export default function BrandsClubSection({
               </div>
 
               <div className="rounded-2xl bg-white p-4 text-center">
-                <p className="text-xs text-ink-soft">Erreichte organische Views für dein Budget</p>
+                <p className="text-xs text-ink-soft">Bis zu so viele organische Views bei ausgeschöpftem Budget</p>
                 <p className="mt-1 text-3xl font-extrabold text-ink">
-                  {guaranteedViews.toLocaleString('de-DE')} Views
+                  {maxViews.toLocaleString('de-DE')} Views
+                </p>
+                <p className="mt-2 text-[11px] leading-5 text-ink-soft">
+                  {creatorPot.toLocaleString('de-DE')} € Creator-Topf + {platformFee.toLocaleString('de-DE')} € Plattform-Fee (19,9 %). Keine Reichweiten-Garantie: Nicht ausgeschöpftes Budget wird erstattet oder vorgetragen.
                 </p>
               </div>
 
@@ -305,7 +311,7 @@ export default function BrandsClubSection({
                 >
                   <p className="font-bold text-geo-green">Produkt-Tausch (+20 %)</p>
                   <p className="mt-0.5 text-[11px]">
-                    Creator tauscht Provision in Ware → kostet dich nur Wareneinsatz!
+                    Creator tauscht Provision in Ware – dein Aufwand ist im Kern der Wareneinsatz.
                   </p>
                 </button>
                 <button

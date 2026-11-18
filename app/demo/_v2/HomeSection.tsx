@@ -170,7 +170,7 @@ export default function HomeSection({
     ],
     [
       'Wann nutze ich TKP-Kampagnen oder ein eigenes Provisions-Programm?',
-      'Bei einer TKP-Kampagne legst du ein festes Budget pro 1.000 Views fest, das Creator in ihrem Login-Bereich picken. Willst du wie große D2C-Marken hunderte Micro-Creator dauerhaft auf Provisionsbasis aktivieren, besprechen wir das Setup im Strategie-Call.',
+      'Bei einer TKP-Kampagne legst du ein festes Budget und einen Satz pro 1.000 Views fest; Creator picken die Kampagne in ihrem Login-Bereich. Auf das Kampagnenbudget fällt eine Plattform-Fee von 19,9 % an, Creator erhalten den angezeigten Satz ohne Abzug. Willst du wie große D2C-Marken hunderte Micro-Creator dauerhaft auf Provisionsbasis aktivieren, besprechen wir das Setup im Strategie-Call.',
     ],
     [
       'Wie komme ich als Creator ins Verzeichnis und an bezahlte Kampagnen?',
@@ -285,10 +285,11 @@ export default function HomeSection({
               Kostenlos · Ohne Brand-Login
             </p>
           </div>
-          <SearchBox showFeatured />
+          <SearchBox showFeatured demoMode />
         </div>
         <p className="mx-auto mt-5 max-w-6xl text-center text-xs leading-5 text-ink-soft">
-          Suche und Kontaktanfrage sind kostenlos. Produktion und Nutzungsrechte vereinbart ihr direkt.
+          Suche und Kontaktanfrage sind kostenlos. Produktion und Nutzungsrechte vereinbart ihr direkt.{' '}
+          <strong>In dieser Vorschau werden Kontaktanfragen nur simuliert und nicht versendet.</strong>
         </p>
       </section>
 
