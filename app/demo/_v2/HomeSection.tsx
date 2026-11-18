@@ -1,13 +1,13 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
+import SearchBox from '@/app/components/SearchBox';
 import HeroVisual from '@/app/components/home/HeroVisual';
 import NotchCard from '@/app/components/home/NotchCard';
 import FilmPlayer from '@/app/components/motion/FilmPlayer';
 import TrustElements from '@/app/components/TrustElements';
 import { NICHE_INDEX, nichePath } from '@/app/lib/niche-index';
-import { AI_PRESETS, type DemoSection, type LocaleCode } from './data';
+import type { DemoSection, LocaleCode } from './data';
 
 const GRADIENT =
   'linear-gradient(152deg, #0396F8 0%, #1F6FF4 25%, #3F58F2 50%, #653AED 75%, #9131EF 100%)';
@@ -145,8 +145,8 @@ const features = [
 interface Props {
   locale: LocaleCode;
   creatorCountLabel: string;
-  shortlist: string[];
-  onToggleShortlist: (id: string) => void;
+  shortlist?: string[];
+  onToggleShortlist?: (id: string) => void;
   onNavigate: (section: DemoSection) => void;
   onOpenStrategyModal: (defaultTopic?: string) => void;
 }
@@ -154,32 +154,10 @@ interface Props {
 export default function HomeSection({
   locale,
   creatorCountLabel,
-  shortlist,
-  onToggleShortlist,
   onNavigate,
   onOpenStrategyModal,
 }: Props) {
-  const [query, setQuery] = useState('');
-  const [activePresetIdx, setActivePresetIdx] = useState(0);
-  const [contactRequested, setContactRequested] = useState(false);
-
   const isEn = locale === 'en';
-  const activeCreators = AI_PRESETS[activePresetIdx].creators;
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    const q = query.toLowerCase();
-    if (q.includes('hoodie') || q.includes('fashion') || q.includes('street')) {
-      setActivePresetIdx(1);
-    } else if (q.includes('steuer') || q.includes('app') || q.includes('tech')) {
-      setActivePresetIdx(2);
-    } else if (q.includes('food') || q.includes('meal') || q.includes('essen')) {
-      setActivePresetIdx(3);
-    } else {
-      setActivePresetIdx(0);
-    }
-    setContactRequested(false);
-  };
 
   const faqs: [string, string][] = [
     [
@@ -282,11 +260,11 @@ export default function HomeSection({
         </div>
       </section>
 
-      {/* ---------- 2. SUCHE (Ueberlappt den Hero wie auf der Live-Startseite) ---------- */}
+      {/* ---------- 2. SUCHE (1:1 die echte SearchBox mit Bildern & Kategorien wie im Original!) ---------- */}
       <section className="relative z-10 -mt-16 px-5 sm:-mt-20 sm:px-8">
         <div
           id="search"
-          className="home-search-panel mx-auto max-w-6xl scroll-mt-24 rounded-3xl border border-hairline bg-white p-4 shadow-[0_30px_90px_rgba(35,22,47,0.10)] sm:p-8"
+          className="home-search-panel mx-auto max-w-6xl scroll-mt-6 rounded-3xl border border-hairline bg-white p-4 shadow-[0_30px_90px_rgba(35,22,47,0.10)] sm:p-8"
         >
           <div className="mb-4 flex flex-col gap-2 sm:mb-5 sm:flex-row sm:items-center sm:justify-between">
             <h2 className="text-lg font-semibold tracking-tight sm:text-xl">
@@ -307,106 +285,7 @@ export default function HomeSection({
               Kostenlos · Ohne Brand-Login
             </p>
           </div>
-
-          <form onSubmit={handleSearch} className="flex flex-col gap-3 sm:flex-row">
-            <input
-              type="text"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Beschreib kurz Produkt, Zielgruppe & Format – z. B. Skincare Reel, Streetwear Hoodie, Food-Test…"
-              className="min-h-[52px] flex-1 rounded-2xl border border-hairline bg-surface px-4 text-sm text-ink outline-none transition focus:border-geo-violet focus:bg-white"
-            />
-            <button
-              type="submit"
-              className="inline-flex min-h-[52px] shrink-0 items-center justify-center gap-2 rounded-2xl bg-geo-violet px-6 text-sm font-semibold text-white transition-colors hover:bg-[#7531ae]"
-            >
-              Creator suchen <Arrow />
-            </button>
-          </form>
-
-          <div className="mt-3 flex flex-wrap gap-2">
-            {['Beauty & Routinen', 'Streetwear & Fashion', 'Apps & Tech', 'Food & Drinks'].map(
-              (label, idx) => (
-                <button
-                  key={label}
-                  type="button"
-                  onClick={() => {
-                    setActivePresetIdx(idx);
-                    setContactRequested(false);
-                  }}
-                  className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-                    activePresetIdx === idx
-                      ? 'bg-void text-white'
-                      : 'bg-surface text-ink-soft hover:text-ink'
-                  }`}
-                >
-                  {label}
-                </button>
-              ),
-            )}
-          </div>
-
-          <div className="mt-6 grid gap-3 md:grid-cols-3">
-            {activeCreators.map((c) => {
-              const selected = shortlist.includes(c.id);
-              return (
-                <div
-                  key={c.id}
-                  className={`flex flex-col justify-between rounded-2xl border p-4 transition-colors ${
-                    selected ? 'border-geo-violet bg-[#FBF8FE]' : 'border-hairline bg-surface/60'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
-                      style={{ background: GRADIENT }}
-                    >
-                      {c.initials}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-bold text-ink">{c.name}</p>
-                      <p className="truncate text-xs text-ink-soft">{c.niche}</p>
-                    </div>
-                  </div>
-                  <div className="mt-4 flex items-center justify-between border-t border-hairline/80 pt-3 text-xs">
-                    <span className="text-ink-soft">{c.followers}</span>
-                    <button
-                      type="button"
-                      onClick={() => onToggleShortlist(c.id)}
-                      className={`rounded-lg px-2.5 py-1 font-bold transition-colors ${
-                        selected
-                          ? 'bg-[#edf5e5] text-[#385523]'
-                          : 'bg-white text-ink hover:text-geo-violet'
-                      }`}
-                    >
-                      {selected ? '✓ In Auswahl' : '+ Zur Auswahl'}
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {shortlist.length > 0 && (
-            <div className="mt-4 flex flex-col items-start justify-between gap-3 rounded-2xl border border-hairline bg-surface px-4 py-3 text-xs sm:flex-row sm:items-center">
-              <span className="text-ink">
-                <strong>{shortlist.length} Creator ausgewählt</strong> – Kontaktdaten kostenlos per E-Mail anfordern (0 € Provision).
-              </span>
-              {contactRequested ? (
-                <span className="font-bold text-[#385523]">
-                  ✓ In der Demo vorgemerkt (kein echter E-Mail-Versand)
-                </span>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => setContactRequested(true)}
-                  className="rounded-full bg-void px-4 py-2 font-semibold text-white hover:bg-geo-violet"
-                >
-                  Kontaktdaten kostenlos anfordern
-                </button>
-              )}
-            </div>
-          )}
+          <SearchBox showFeatured />
         </div>
         <p className="mx-auto mt-5 max-w-6xl text-center text-xs leading-5 text-ink-soft">
           Suche und Kontaktanfrage sind kostenlos. Produktion und Nutzungsrechte vereinbart ihr direkt.

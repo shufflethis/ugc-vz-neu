@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { ToastContainer } from 'react-toastify';
 import {
   BookOpen,
   Check,
@@ -525,6 +526,7 @@ export default function UgcVzV2Shell({ initialSection, creatorCountLabel }: Prop
           </div>
         </div>
       </footer>
+      <ToastContainer position="top-center" autoClose={3000} hideProgressBar={false} />
 
       {/* STRATEGIE-CALL MODAL (NUR FUER MOEGLICHKEIT 3: EIGENES CREATOR-/AFFILIATE-NETZWERK) */}
       {strategyModalOpen && (
