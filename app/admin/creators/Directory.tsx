@@ -20,7 +20,7 @@ const inputStyle = 'mt-1 block w-full rounded-lg border border-hairline bg-white
 const pageSize = 24;
 const selectionKey = 'famefact-creator-auswahl';
 
-export default function Directory({ profiles }: { profiles: DirectoryProfile[] }) {
+export default function Directory({ profiles, canEdit }: { profiles: DirectoryProfile[]; canEdit: boolean }) {
   const [query, setQuery] = useState('');
   const [city, setCity] = useState('');
   const [status, setStatus] = useState('');
@@ -94,8 +94,12 @@ export default function Directory({ profiles }: { profiles: DirectoryProfile[] }
         <label className="block"><input type="checkbox" checked={selected.includes(profile.id)}
           onChange={event => setSelected(ids => event.target.checked ? [...ids, profile.id] : ids.filter(id => id !== profile.id))} /> Fürs Casting merken</label>
         {profile.works.some(work => safePortfolioUrl(work.url)) &&
-          <details><summary className="cursor-pointer text-geo-violet">Arbeitsproben & Merkmale</summary>
-            {profile.works.map((work, index) => <WorkTags key={[work.id, work.skateboard, work.capImage].join('|')} work={work} number={index + 1} />)}
+          <details><summary className="cursor-pointer text-geo-violet">{canEdit ? 'Arbeitsproben & Merkmale' : 'Arbeitsproben'}</summary>
+            {profile.works.map((work, index) => {
+              if (canEdit) return <WorkTags key={[work.id, work.skateboard, work.capImage].join('|')} work={work} number={index + 1} />;
+              const url = safePortfolioUrl(work.url);
+              return url && <a key={work.id} className="mt-2 block text-geo-violet underline" href={url} target="_blank" rel="noopener noreferrer">Arbeitsprobe {index + 1} ansehen ↗</a>;
+            })}
           </details>}
       </article>)}
     </div>

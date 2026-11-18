@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { headers } from 'next/headers';
 import { notFound } from 'next/navigation';
 import CollaborationShell from '@/app/components/CollaborationShell';
-import { adminAuthorized } from '@/app/lib/collaborations/http';
+import { directoryRole } from '@/app/lib/collab-demo-auth';
 import { getDatabase } from '@/app/lib/database';
 import { portfolioForCasting, reviewedCapHash, reviewedCapImage } from '@/app/lib/casting-portfolio';
 import { normalizeGenderValue } from '@/app/lib/normalize-gender';
@@ -17,7 +17,9 @@ export const metadata: Metadata = {
 };
 
 export default async function Page() {
-  if (!await adminAuthorized(headers().get('authorization'))) notFound();
+  const role = await directoryRole(headers().get('authorization'));
+  if (!role) notFound();
+  const access = { admin: role === 'admin', directoryOnly: role === 'reader' };
   let profiles: DirectoryProfile[];
   try {
     const rows = await getDatabase().query(`
@@ -41,7 +43,7 @@ export default async function Page() {
       };
     });
   } catch {
-    return <CollaborationShell admin><h1>Alle Creator</h1><p role="alert" className="demo-lead">Die Creator-Bank konnte nicht geladen werden. Bitte erneut versuchen.</p><a className="demo-button secondary mt-4" href="/admin/creators">Neu laden</a></CollaborationShell>;
+    return <CollaborationShell {...access}><h1>Alle Creator</h1><p role="alert" className="demo-lead">Die Creator-Bank konnte nicht geladen werden. Bitte erneut versuchen.</p><a className="demo-button secondary mt-4" href="/admin/creators">Neu laden</a></CollaborationShell>;
   }
-  return <CollaborationShell admin><Directory profiles={profiles} /></CollaborationShell>;
+  return <CollaborationShell {...access}><Directory profiles={profiles} canEdit={access.admin} /></CollaborationShell>;
 }

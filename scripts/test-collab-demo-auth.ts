@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
-import { authorizeCollabDemo, authorizeSiteDemo } from '../app/lib/collab-demo-auth';
+import { createHash } from 'node:crypto';
+import { authorizeCollabDemo, authorizeSiteDemo, directoryRole } from '../app/lib/collab-demo-auth';
 import { isCollabDemoPath, isProtectedDemoPath, isSiteDemoPath } from '../app/lib/collab-demo-path';
 
 async function main() {
@@ -16,6 +17,16 @@ async function main() {
   }
   assert.equal(await authorizeCollabDemo(auth('ugc-vz', password), ''), false, 'Missing configuration must deny access');
   assert.equal(await authorizeCollabDemo(auth('ugc-vz', 'short'), 'short'), false);
+  const reader = auth('reader', sitePassword);
+  process.env.COLLAB_ADMIN_PASSWORD = password;
+  process.env.CREATOR_DIRECTORY_READER_HASH = createHash('sha256').update('reader:' + sitePassword).digest('hex');
+  assert.equal(await directoryRole(reader), 'reader');
+  assert.equal(await directoryRole(auth('ugc-vz', password)), 'admin');
+  assert.equal(await directoryRole(auth('other', sitePassword)), null);
+  assert.equal(await directoryRole(null), null);
+  assert.equal(await authorizeCollabDemo(reader, password), false);
+  delete process.env.CREATOR_DIRECTORY_READER_HASH;
+  assert.equal(await directoryRole(reader), null);
   for (const path of ['/demo/kooperationen', '/demo/kooperationen/', '/demo/kooperationen/fomo/bewerben', '/demo/kooperationen/tracking', '/demo/kooperationen/praesentation']) assert.equal(isCollabDemoPath(path), true);
   for (const path of ['/', '/creator', '/demo/kooperationen-public']) assert.equal(isCollabDemoPath(path), false);
   for (const path of ['/demo', '/demo/', '/demo/konto', '/demo/bounties', '/demo/brands', '/demo/brands/creator-affiliate-programm', '/demo/creator', '/demo/creator/mit-views-geld-verdienen', '/demo/agenturen', '/demo/vergleich', '/demo/strategie', '/demo/kooperationen']) assert.equal(isProtectedDemoPath(path), true);

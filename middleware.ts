@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import goneSlugsJson from '@/content/gone-slugs.json';
 import publishedSlugsJson from '@/content/published-slugs.json';
-import { authorizeCollabDemo, authorizeSiteDemo } from '@/app/lib/collab-demo-auth';
+import { authorizeCollabDemo, authorizeSiteDemo, directoryRole } from '@/app/lib/collab-demo-auth';
 import { isCollabDemoPath, isProtectedDemoPath } from '@/app/lib/collab-demo-path';
 import { isCollaborationPath, isTeamAdminPath } from '@/app/lib/collaborations/model';
 
@@ -49,7 +49,10 @@ export async function middleware(request: NextRequest) {
   }
   if (isCollaborationPath(collabPath)) {
     const admin = isTeamAdminPath(collabPath);
-    const allowed = !admin || await authorizeCollabDemo(request.headers.get('authorization'),process.env.COLLAB_ADMIN_PASSWORD || '');
+    const directoryRead = /^\/admin\/creators\/?$/.test(collabPath) && ['GET', 'HEAD'].includes(request.method);
+    const header = request.headers.get('authorization');
+    const allowed = !admin || (directoryRead ? Boolean(await directoryRole(header)) :
+      await authorizeCollabDemo(header, process.env.COLLAB_ADMIN_PASSWORD || ''));
     const response=allowed?NextResponse.next():new NextResponse('Interner Zugang erforderlich.',{status:401,headers:{'WWW-Authenticate':'Basic realm="UGC VZ Verwaltung", charset="UTF-8"'}});
     response.headers.set('Cache-Control','private, no-store, max-age=0');
     response.headers.set('CDN-Cache-Control','no-store');
