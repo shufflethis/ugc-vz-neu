@@ -210,6 +210,25 @@ export const AI_PRESETS: AiPreset[] = [
   },
 ];
 
+export type ClipAuditStatus =
+  | 'pending_hold'
+  | 'needs_analytics'
+  | 'verified_available'
+  | 'flagged';
+
+export interface SubmittedClip {
+  id: string;
+  campaignId: string;
+  url: string;
+  rawViews: number;
+  qualifiedViews: number;
+  dachSharePct: number;
+  payout: number;
+  status: ClipAuditStatus;
+  holdDaysLeft: number;
+  reason: string;
+}
+
 export interface BountyCampaign {
   id: string;
   brand: string;
@@ -249,14 +268,14 @@ export const BOUNTY_CAMPAIGNS: BountyCampaign[] = [
     maxPayoutPerVideo: 200,
     starterBonus: '+10 € Starter-Bonus aufs 1. Video*',
     starterBonusFootnote:
-      '*Starter-Bonus wird freigeschaltet, sobald dein erstes eingereichtes Video mindestens 2.500 geprüfte Views erreicht und 7 Tage online bleibt.',
+      '*Einmalig pro verifizierter Stripe-KYC-Identität ab 2.500 geprüften DACH-Views und nach Ablauf der 7-Tage-Haltefrist.',
     platforms: ['TikTok', 'IG Reels', 'YT Shorts'],
     activeCreators: 19,
     minFollowers: 'Keine Mindest-Follower',
     requirements: [
-      'Öffentliches Profil + korrekte Werbekennzeichnung („Anzeige“)',
-      'ugc-vz.de sichtbar im Screen-Recording oder klar im Voiceover genannt',
-      'Nur organische Reichweite – auffällige View-Verläufe werden geprüft und nicht vergütet',
+      'Verifizierter eigener Kanal (Bio-Code) + Einreichung max. 24 Std. nach Upload',
+      'ugc-vz.de sichtbar im Screen-Recording oder klar im Voiceover + „Anzeige“-Kennzeichnung',
+      'Nur organische DACH-Reichweite (ab 35 € Clip-Vergütung 5-Sek.-Analytics-Nachweis)',
     ],
     tracks: [
       {

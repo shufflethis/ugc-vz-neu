@@ -123,7 +123,7 @@ export default function BrandsClubSection({
               </li>
               <li className="flex items-center gap-2">
                 <Check size={16} className="shrink-0 text-[#527b33]" />
-                <span>Prüfung auffälliger View-Verläufe vor jeder Auszahlung</span>
+                <span>6-Stufen-Schutz: Bio-Code-Kanäle, DACH-Analytics-Check ab 35 € &amp; 7-Tage-Haltefrist</span>
               </li>
             </ul>
 

@@ -4,14 +4,9 @@ import {
   ArrowLeft,
   ArrowRight,
   BadgeEuro,
-  Check,
   Coins,
-  FileCheck2,
-  Receipt,
   ShieldAlert,
   ShieldCheck,
-  Sparkles,
-  Video,
 } from 'lucide-react';
 import type { DemoSection } from './data';
 
@@ -233,28 +228,46 @@ export default function CreatorTkpLandingSection({
         {/* KAPITEL 3 */}
         <section id="anti-bot-schutz" className="scroll-mt-24 space-y-4">
           <h2 className="text-2xl font-bold tracking-tight text-ink sm:text-3xl">
-            3. Fair-Play: Wie Views geprüft werden, bevor Geld fließt
+            3. Fair-Play: Das 6-Stufen-System gegen Fake-Views &amp; Klick-Farmen
           </h2>
           <p className="leading-8 text-ink-soft">
-            Wo pro 1.000 Aufrufe echtes Geld gezahlt wird, taucht schnell die berechtigte Sorge von Marken und ehrlichen Creatorn auf: <em>„Was passiert, wenn jemand für 15 Euro künstliche Klick-Pakete kauft oder Videos per Bot aktualisiert, um den Kampagnen-Topf leerzuräumen?“</em> Genau deshalb durchläuft jeder eingereichte Video-Link auf UGC VZ eine mehrstufige Prüfung, bevor ein einziger Euro aus dem Kampagnenbudget reserviert wird:
+            Wo pro 1.000 Aufrufe echtes Geld gezahlt wird, taucht sofort die berechtigte Frage von Marken und ehrlichen Creatorn auf: <em>„Was passiert, wenn jemand für ein paar Euro Bot-Klicks kauft, fremde Videos einreicht oder billige Auslands-Ads schaltet, um das Kampagnenbudget abzugreifen?“</em> Genau deshalb greifen Technik und Zahlungsfluss auf UGC VZ in sechs festen Schichten ineinander, bevor ein Euro ausgezahlt wird:
           </p>
-          <ul className="space-y-2.5 rounded-3xl border border-hairline bg-surface p-6 text-sm leading-6 text-ink-soft">
+          <ul className="space-y-3 rounded-3xl border border-hairline bg-surface p-6 text-sm leading-6 text-ink-soft">
             <li className="flex items-start gap-2.5">
               <ShieldCheck size={18} className="mt-0.5 shrink-0 text-[#527b33]" />
               <span>
-                <strong className="text-ink">Kanal-Verknüpfung:</strong> Eingereicht werden können nur Videos von Kanälen, die du in deinem Konto als deine eigenen bestätigt hast – fremde virale Videos lassen sich nicht beanspruchen.
+                <strong className="text-ink">1 · Bio-Code-Verknüpfung &amp; 24h-Frische-Regel:</strong> Eingereicht werden können ausschließlich Kanäle, die du vorab per einmaligem Code in deiner Profil-Bio (oder OAuth) bestätigt hast. Zudem muss das Video <strong>nach</strong> dem Picken der Kampagne veröffentlicht worden sein und innerhalb von 24 Stunden eingereicht werden – fremde oder alte Bestands-Videos sind technisch ausgeschlossen.
               </span>
             </li>
             <li className="flex items-start gap-2.5">
               <ShieldCheck size={18} className="mt-0.5 shrink-0 text-[#527b33]" />
               <span>
-                <strong className="text-ink">Briefing- &amp; Kennzeichnungs-Check:</strong> Jede Einreichung wird gegen das Briefing geprüft (automatische Vorprüfung plus manuelle Stichproben): Behandelt das Video das gebuchte Thema, und ist es als Werbung / Anzeige gekennzeichnet?
+                <strong className="text-ink">2 · Zeitreihen-Messung &amp; Engagement-Untergrenze:</strong> Statt einmal am Ende den Zähler abzulesen, misst unser System Aufrufe, Likes, Kommentare und Shares fortlaufend im Zeitverlauf. Rechteckige Klick-Sprünge ohne organische Interaktions-Quote (z. B. tausende Aufrufe bei nahezu null Likes und Shares) werden automatisch eingefroren.
+              </span>
+            </li>
+            <li className="flex items-start gap-2.5">
+              <ShieldCheck size={18} className="mt-0.5 shrink-0 text-[#527b33]" />
+              <span>
+                <strong className="text-ink">3 · DACH- &amp; Traffic-Nachweis ab 35 € pro Clip:</strong> Öffentliche Zähler verraten nicht, ob Aufrufe billig im Ausland eingekauft wurden. Ab 35 € Vergütung auf ein einzelnes Video (oder bei Auffälligkeiten) reichst du im Konto ein 5-Sekunden-Screenrecording deiner TikTok-/Reels-Analytics nach (Länder-Verteilung &amp; For-You-Anteil). Ab 70 % DACH-Zuschauern zählen 100 % der Views, zwischen 30 % und 69 % wird fair anteilig nach DACH-Quote abgerechnet, unter 30 % oder bei gekauftem Traffic wird abgelehnt.
+              </span>
+            </li>
+            <li className="flex items-start gap-2.5">
+              <ShieldCheck size={18} className="mt-0.5 shrink-0 text-[#527b33]" />
+              <span>
+                <strong className="text-ink">4 · Briefing-, Kennzeichnungs- &amp; Duplikat-Check:</strong> Jede Einreichung wird auf Sprache, echtes Vorkommen des gebuchten Produkts, korrekte Werbekennzeichnung („Anzeige“) und doppelte Reuploads geprüft.
               </span>
             </li>
             <li className="flex items-start gap-2.5">
               <ShieldAlert size={18} className="mt-0.5 shrink-0 text-geo-violet" />
               <span>
-                <strong className="text-ink">View-Verlauf &amp; Haltefrist:</strong> Views werden über das Abrechnungsfenster mehrfach gemessen. Auffällige Sprünge ohne passende Likes, Kommentare und Shares werden manuell geprüft und im Zweifel nicht vergütet; ausgezahlt wird erst nach Ablauf der Haltefrist. Eine lückenlose Erkennung kann kein System versprechen – deshalb gibt es zusätzlich den Deckel pro Video.
+                <strong className="text-ink">5 · Zwei-Topf-Guthaben &amp; 7-Tage-Haltefrist:</strong> Erreichte Beträge landen zunächst im Status <em>„Vorgemerkt“</em>. Erst nach einer 7-tägigen Haltefrist prüft das System automatisch, ob der Clip weiterhin öffentlich online ist und die Plattform keine Bot-Views nachträglich abgezogen hat – erst dann wandert der Betrag in <em>„Auszahlbar“</em>.
+              </span>
+            </li>
+            <li className="flex items-start gap-2.5">
+              <ShieldAlert size={18} className="mt-0.5 shrink-0 text-geo-violet" />
+              <span>
+                <strong className="text-ink">6 · Video-Deckel &amp; 1× Starter-Bonus pro Stripe-Identität:</strong> Eine lückenlose Erkennung kann kein System versprechen – deshalb begrenzt jede Kampagne die maximale Auszahlung pro Clip, und einmalige Starter-Boni sind fest an die verifizierte Stripe-KYC-Identität (Ausweis/IBAN) gekoppelt statt an bloße E-Mail-Adressen.
               </span>
             </li>
           </ul>
@@ -307,7 +320,7 @@ export default function CreatorTkpLandingSection({
                   <strong className="text-white">2. Höchster Datenschutz:</strong> Deine Ausweis-Prüfung (gesetzliches KYC) findet ausschließlich verschlüsselt bei Stripe statt – weder Marken noch wir sehen deine Ausweisdokumente.
                 </li>
                 <li>
-                  <strong className="text-white">3. Guthaben sammeln ab dem ersten Tausender-Block:</strong> Jeder verifizierte View-Block wird deinem Euro-Konto gutgeschrieben. Ab einer fairen <strong>Mindestauszahlung von 25,00 €</strong> (damit keine Bank-/Transaktionsgebühren Kleinstbeträge schmälern) kannst du dein Guthaben jederzeit abrufen.
+                  <strong className="text-white">3. Vorgemerkt → Auszahlbar ab 25,00 €:</strong> Geprüfte Views werden zunächst als <em>vorgemerkt</em> verbucht und nach der 7-Tage-Haltefrist (sobald bestätigt ist, dass der Clip weiter online ist) freigegeben. Ab <strong>25,00 € freigegebenem Guthaben</strong> kannst du deine Auszahlung jederzeit abrufen.
                 </li>
                 <li>
                   <strong className="text-white">4. 100 % SEPA-Überweisung in Euro:</strong> Der angezeigte TKP-Betrag gehört ohne Creator-Abzug dir und landet innerhalb weniger Bankarbeitstage per SEPA auf deinem normalen Girokonto.

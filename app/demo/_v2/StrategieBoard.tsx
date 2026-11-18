@@ -42,10 +42,10 @@ export default function StrategieBoard({ creatorCountLabel }: { creatorCountLabe
             UGC View-Bounties & Clipping + Eigenkampagne zum Kaltstart
           </h2>
           <p className="mt-2 text-sm leading-6 text-ink-soft">
-            Feste Kampagnenbudgets mit Abrechnung pro 1.000 Views (z. B. 2–5 € TKP). <strong>Kaltstart-Hack:</strong> Sofort eigene UGC-VZ Kampagne live schalten (2 € / 1k Views + 10 € Starter-Bonus ab Mindest-Views) + erster Love-Brand-Test (z. B. Nebelkind / Food-Marken wie PrepMyMeal, Huel). Offen: View-Prüfung gegen gekaufte Klicks (braucht verknüpfte Creator-Kanäle).
+            Feste Kampagnenbudgets mit Abrechnung pro 1.000 Views (z. B. 2–5 € TKP). <strong>Kaltstart-Hack:</strong> Sofort eigene UGC-VZ Kampagne live schalten (2 € / 1k Views + 10 € Starter-Bonus einmalig pro Stripe-KYC-Identität) + erster Love-Brand-Test. <strong>Fraud-Schutz (6 Stufen):</strong> Bio-Code-Kanäle, 24h-Frische-Regel, 4h-Zeitreihen, 5s-DACH-Analytics ab 35 € &amp; Zwei-Topf-Wallet mit 7-Tage-Haltefrist vor Stripe-SEPA-Transfer.
           </p>
-          <a href="/demo/bounties" className="mt-4 text-xs font-bold text-[#1F6FF4] hover:underline">
-            In der Demo ansehen (/demo/bounties) →
+          <a href="/demo/konto" className="mt-4 inline-block text-xs font-bold text-[#1F6FF4] hover:underline">
+            Im Creator-Login &amp; Fraud-Simulator ansehen (/demo/konto) →
           </a>
         </div>
 

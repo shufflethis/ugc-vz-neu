@@ -17,6 +17,7 @@ import {
   LOCALES,
   type DemoSection,
   type LocaleCode,
+  type SubmittedClip,
 } from './data';
 import HomeSection from './HomeSection';
 import CreatorKontoSection from './CreatorKontoSection';
@@ -55,9 +56,7 @@ export default function UgcVzV2Shell({ initialSection, creatorCountLabel, strate
 
   const [shortlist, setShortlist] = useState<string[]>(['UGC-MN01', 'UGC-ST01']);
   const [pickedIds, setPickedIds] = useState<string[]>(['ugcvz-launch']);
-  const [submittedClips, setSubmittedClips] = useState<
-    { campaignId: string; url: string; payout: number; status: 'verified' | 'flagged' }[]
-  >([]);
+  const [submittedClips, setSubmittedClips] = useState<SubmittedClip[]>([]);
 
   // Strategie-Call Modal (gezielt fuer Moeglichkeit 3: Eigenes Creator-Affiliate-Netzwerk)
   const [strategyModalOpen, setStrategyModalOpen] = useState(false);
@@ -78,7 +77,7 @@ export default function UgcVzV2Shell({ initialSection, creatorCountLabel, strate
       if (savedShortlist) setShortlist(JSON.parse(savedShortlist));
       const savedPicked = sessionStorage.getItem(STORAGE_PREFIX + 'picked');
       if (savedPicked) setPickedIds(JSON.parse(savedPicked));
-      const savedClips = sessionStorage.getItem(STORAGE_PREFIX + 'clips');
+      const savedClips = sessionStorage.getItem(STORAGE_PREFIX + 'clips-v2');
       if (savedClips) setSubmittedClips(JSON.parse(savedClips));
     } catch {
       /* sessionStorage optional */
@@ -118,19 +117,52 @@ export default function UgcVzV2Shell({ initialSection, creatorCountLabel, strate
     });
   };
 
-  const handleSubmitClip = (entry: {
-    campaignId: string;
-    url: string;
-    payout: number;
-    status: 'verified' | 'flagged';
-  }) => {
+  const persistClips = (next: SubmittedClip[]) => {
+    try {
+      sessionStorage.setItem(STORAGE_PREFIX + 'clips-v2', JSON.stringify(next));
+    } catch {
+      /* ignore */
+    }
+  };
+
+  const handleSubmitClip = (entry: SubmittedClip) => {
     setSubmittedClips((prev) => {
       const next = [entry, ...prev];
-      try {
-        sessionStorage.setItem(STORAGE_PREFIX + 'clips', JSON.stringify(next));
-      } catch {
-        /* ignore */
-      }
+      persistClips(next);
+      return next;
+    });
+  };
+
+  const handleUploadAnalyticsProof = (clipId: string) => {
+    setSubmittedClips((prev) => {
+      const next = prev.map((c) =>
+        c.id === clipId && c.status === 'needs_analytics'
+          ? {
+              ...c,
+              status: 'pending_hold' as const,
+              holdDaysLeft: 7,
+              reason: `5-Sek.-Analytics-Video geprüft (${c.dachSharePct} % DACH · For-You-Feed) · 7 Tage Haltefrist aktiv`,
+            }
+          : c,
+      );
+      persistClips(next);
+      return next;
+    });
+  };
+
+  const handleReleaseHoldClips = () => {
+    setSubmittedClips((prev) => {
+      const next = prev.map((c) =>
+        c.status === 'pending_hold'
+          ? {
+              ...c,
+              status: 'verified_available' as const,
+              holdDaysLeft: 0,
+              reason: 'Haltefrist abgelaufen · Video weiterhin online & organisch bestätigt → Auszahlbar via Stripe SEPA',
+            }
+          : c,
+      );
+      persistClips(next);
       return next;
     });
   };
@@ -367,6 +399,8 @@ export default function UgcVzV2Shell({ initialSection, creatorCountLabel, strate
             onTogglePick={handleTogglePick}
             submittedClips={submittedClips}
             onSubmitClip={handleSubmitClip}
+            onUploadAnalyticsProof={handleUploadAnalyticsProof}
+            onReleaseHoldClips={handleReleaseHoldClips}
             onNavigate={navigateSection}
           />
         )}
