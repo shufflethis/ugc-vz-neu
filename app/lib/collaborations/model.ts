@@ -16,4 +16,8 @@ export type MemberStatus = 'invited'|'accepted'|'ready'|'handed_over'|'confirmed
 export const STATUS: Record<MemberStatus,string> = { invited:'Eingeladen', accepted:'Angaben ergänzen', ready:'Bereit zur Übergabe', handed_over:'Übergabe erfolgt', confirmed:'Aufnahme bestätigt', declined:'Abgesagt' };
 export type Member = { referral_no?:string|number|null; gender?:string|null; id:string; creator_id:string; campaign_slug:string; status:MemberStatus; details:Partial<Details>; version:number; accepted_at:string|null; terms_version:number|null; terms_snapshot:CampaignContent|null; consent_version:string|null; confirmed_by:string|null; confirmation_evidence:string|null; confirmed_at:string|null; name:string; email:string; social_url:string|null; content:CampaignContent; campaign_state:Campaign['state']; campaign_version:number };
 export const missingDetails = (details: Partial<Details>): string[] => [!details.language && 'Posting-Sprache',!details.availability && 'Startdatum / Verfügbarkeit',!details.socialUrl && 'Social-Profil',!details.name && 'Name'].filter(Boolean) as string[];
-export function isCollaborationPath(path: string) { return /^\/(kooperationen|einladung)(\/|$)/.test(path) || /^\/konto\/kooperationen(\/|$)/.test(path) || /^\/admin\/kooperationen(\/|$)/.test(path) || /^\/api\/collaborations(\/|$)/.test(path); }
+export function isTeamAdminPath(path: string) {
+  return /^\/admin\/(kooperationen|creators)(\/|$)/.test(path) || path === '/api/collaborations/admin';
+}
+
+export function isCollaborationPath(path: string) { return /^\/(kooperationen|einladung)(\/|$)/.test(path) || /^\/konto\/kooperationen(\/|$)/.test(path) || isTeamAdminPath(path) || /^\/api\/collaborations(\/|$)/.test(path); }

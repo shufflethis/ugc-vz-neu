@@ -4,7 +4,7 @@ import goneSlugsJson from '@/content/gone-slugs.json';
 import publishedSlugsJson from '@/content/published-slugs.json';
 import { authorizeCollabDemo, authorizeSiteDemo } from '@/app/lib/collab-demo-auth';
 import { isCollabDemoPath, isProtectedDemoPath } from '@/app/lib/collab-demo-path';
-import { isCollaborationPath } from '@/app/lib/collaborations/model';
+import { isCollaborationPath, isTeamAdminPath } from '@/app/lib/collaborations/model';
 
 const goneSlugs = new Set(goneSlugsJson as string[]);
 const publishedSlugs = new Set(publishedSlugsJson as string[]);
@@ -48,7 +48,7 @@ export async function middleware(request: NextRequest) {
     return new NextResponse('Not found', {status:404,headers:{'Cache-Control':'private, no-store','X-Robots-Tag':'noindex, nofollow'}});
   }
   if (isCollaborationPath(collabPath)) {
-    const admin = /^\/admin\/kooperationen(\/|$)/.test(collabPath) || collabPath === '/api/collaborations/admin';
+    const admin = isTeamAdminPath(collabPath);
     const allowed = !admin || await authorizeCollabDemo(request.headers.get('authorization'),process.env.COLLAB_ADMIN_PASSWORD || '');
     const response=allowed?NextResponse.next():new NextResponse('Interner Zugang erforderlich.',{status:401,headers:{'WWW-Authenticate':'Basic realm="UGC VZ Verwaltung", charset="UTF-8"'}});
     response.headers.set('Cache-Control','private, no-store, max-age=0');

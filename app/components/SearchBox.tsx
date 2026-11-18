@@ -10,6 +10,9 @@ import CreatorSelectionPopup from './CreatorSelectionPopup';
 import CreatorProfileDialog from './CreatorProfileDialog';
 import { humanizeCreatorText, type SearchCreator } from '../lib/creator-public';
 import { NICHE_INDEX } from '../lib/niche-index';
+import { castingLabels } from '../lib/casting';
+import CastingChips from './CastingChips';
+import CastingEvidenceList from './CastingEvidenceList';
 import CreatorAvatar from './CreatorAvatar';
 import { trackUGCEvents } from '../lib/analytics';
 import { CREATOR_COUNT_LABEL } from '../lib/creator-count';
@@ -73,11 +76,15 @@ export default function SearchBox({ initialQuery = '', showFeatured = false, dem
     showNoResults,
     searchError,
     performSearch,
+    removedFilters,
     toggleCreatorSelection,
     resetSearch,
     clearSelection
   } = useSearch();
 
+  const castingBrief = removedFilters.length
+    ? submittedQuery + ' (Aufgehobene Filter: ' + removedFilters.map(filter => castingLabels[filter]).join(', ') + ')'
+    : submittedQuery;
   const creators = searchSubmitted ? searchCreators : featuredCreators;
 
   useEffect(() => {
@@ -320,7 +327,7 @@ export default function SearchBox({ initialQuery = '', showFeatured = false, dem
           creatorIds: selectedCreators,
           clientInfo: {
             ...clientInfo,
-            searchQuery: submittedQuery,
+            searchQuery: castingBrief,
             sourcePath: typeof window !== 'undefined' ? window.location.pathname : undefined,
             sourceUrl: typeof window !== 'undefined' ? window.location.href : undefined
           }
@@ -490,7 +497,7 @@ export default function SearchBox({ initialQuery = '', showFeatured = false, dem
         </div>
       )}
 
-      {searchError && <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-ink"><p role="alert">{searchError}</p><button type="button" onClick={() => performSearch(submittedQuery)} className="mt-3 rounded-lg border border-hairline bg-white px-4 py-2 focus-visible:ring-2 focus-visible:ring-geo-violet">Suche erneut versuchen</button></div>}
+      {searchError && <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-ink"><p role="alert">{searchError}</p><button type="button" onClick={() => performSearch(submittedQuery, removedFilters)} className="mt-3 rounded-lg border border-hairline bg-white px-4 py-2 focus-visible:ring-2 focus-visible:ring-geo-violet">Suche erneut versuchen</button></div>}
 
       {/* Chat container and Results display */}
       <div className="w-full">
@@ -503,6 +510,11 @@ export default function SearchBox({ initialQuery = '', showFeatured = false, dem
                 {submittedQuery}
               </div>
             </div>
+
+            <CastingChips filters={analysis?.castingFilters || []}
+              remove={filter => performSearch(submittedQuery, [...removedFilters, filter])} />
+            {showNoResults && !!analysis?.castingFilters?.length &&
+              <p role="status">Kein Profil erfüllt alle gewählten Kriterien. Du kannst oben einen Filter entfernen.</p>}
 
             {/* Verstaendnis der Anfrage: kompakte Zusammenfassung, Langfassung zuklappbar */}
             {reasoning && (
@@ -538,6 +550,7 @@ export default function SearchBox({ initialQuery = '', showFeatured = false, dem
                   <div className="min-w-0"><h3 className="break-words">{creator.name}</h3>{creator.city && <p className="line-clamp-1 break-words">{creator.city}</p>}</div>
                   </div>
                   <div className="min-w-0 space-y-2 text-left">
+                    <CastingEvidenceList evidence={creator.evidence} />
                     {creator.topics && <p className="line-clamp-2 break-words text-sm">{creator.topics}</p>}
                     {creator.preferredContent && <p className="line-clamp-2 break-words text-sm">{creator.preferredContent}</p>}
                     <p className="line-clamp-3 whitespace-pre-line break-words text-sm"><span className="font-semibold">Preisvorstellung: </span>{humanizeCreatorText(creator.priceRange) || 'Nicht angegeben'}</p>
@@ -604,7 +617,7 @@ export default function SearchBox({ initialQuery = '', showFeatured = false, dem
         )}
 
         {/* No results message */}
-        {showNoResults && <NoResults query={submittedQuery} />}
+        {showNoResults && <NoResults query={castingBrief} />}
         {showFeatured && !searchSubmitted && featuredLoading && <div className="mt-7 border-t border-hairline pt-6" role="status" aria-label="Creator-Vorschau wird geladen"><h2 className={styles.resultsHeader}>Ein Einblick ins Verzeichnis</h2><p className="mb-5 mt-2 text-xs leading-5 text-ink-soft sm:text-sm">Lerne erste Creator kennen. Für Vorschläge zu deinem Produkt nutze die Suche oben.</p><div className={`${styles.creatorsGrid} ${styles.featuredGrid}`}>{[1, 2, 3].map(index => <div key={index} className={`${styles.creatorCard} min-h-[380px] bg-surface motion-safe:animate-pulse`} />)}</div></div>}
       </div>
       {profileCreator && <CreatorProfileDialog key={profileCreator.id} creator={profileCreator} selected={selectedCreators.includes(profileCreator.id)} onClose={() => setProfileCreator(null)} onSelect={() => handleSelectCreator(profileCreator.id)} />}

@@ -12,6 +12,7 @@ export interface SearchCreator {
   city?: string;
   topics?: string;
   preferredContent?: string;
+  evidence?: import('./casting').CastingEvidence[];
 }
 
 export interface PublicCreatorProfile {

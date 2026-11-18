@@ -1,4 +1,6 @@
 import { normalizeGenderValue } from '@/app/lib/normalize-gender';
+import { castingFilters, directorySearchWords, matchCasting, type CastingEvidence, type CastingWork } from '@/app/lib/casting';
+import { portfolioForCasting } from '@/app/lib/casting-portfolio';
 import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
@@ -22,6 +24,7 @@ type ProcessedCreator = {
   preferredContent: string;
   gender: string | undefined;
   score: number;
+  evidence?: CastingEvidence[];
 };
 
 type CachedCreatorEntry = {
@@ -50,6 +53,7 @@ type CachedCreatorEntry = {
   topicsText: string;
   formatsText: string;
   portfolioText: string;
+  works: CastingWork[];
   equipmentText: string;
   searchableText: string;
   contactReachable: boolean;
@@ -158,17 +162,17 @@ const TOPIC_KEYWORDS: Record<string, string[]> = {
   automotive: ['auto', 'automotive', 'mobilität', 'car'],
 };
 
-const fetchNeonCreatorRecords = async (): Promise<CachedCreatorEntry[]> => {
+const fetchNeonCreatorRecords = async (withWorkSamples = false): Promise<CachedCreatorEntry[]> => {
   const sql = getDatabase();
   const rows = await sql.query(`
     SELECT
       public_id, display_name, birth_year, gender, city, special_traits,
       industries, topics, preferred_content, equipment, rate_text, reach_text,
       total_reach, profile_image_url, social_links, portfolio_links, networks,
-      has_social_avatar, contact_reachable
-    FROM creator_search_public
+      has_social_avatar, contact_reachable,
+      ${withWorkSamples ? portfolioForCasting : "'[]'::jsonb"} AS works
+    FROM creator_search_public p
     ORDER BY profile_quality_score DESC, total_reach DESC, display_name ASC
-    LIMIT 1000
   `);
   const currentYear = new Date().getFullYear();
 
@@ -189,7 +193,7 @@ const fetchNeonCreatorRecords = async (): Promise<CachedCreatorEntry[]> => {
     const topicsText = [row.topics, row.industries, row.special_traits]
       .map((v) => String(v || '').trim())
       .filter(Boolean)
-      .join(' ');
+      .join(' · ');
     const formatsText = String(row.preferred_content || '').trim();
     const portfolioText = String(row.portfolio_links || '').trim();
     const equipmentText = String(row.equipment || '').trim();
@@ -260,6 +264,7 @@ const fetchNeonCreatorRecords = async (): Promise<CachedCreatorEntry[]> => {
       topicsText,
       formatsText,
       portfolioText,
+      works: row.works,
       equipmentText,
       searchableText,
       contactReachable: Boolean(row.contact_reachable),
@@ -269,39 +274,9 @@ const fetchNeonCreatorRecords = async (): Promise<CachedCreatorEntry[]> => {
   });
 };
 
-const applyDeterministicQueryOverrides = (analysis: QueryAnalysis, query: string): QueryAnalysis => {
-  const queryLower = query.toLowerCase();
-  const malePattern = /\b(männer|maenner|männlich|maennlich|mann|male|herren|jungs)\b/i;
-  const femalePattern = /\b(frauen|weiblich|frau|female|damen|mädchen|maedchen)\b/i;
-
-  if (malePattern.test(queryLower)) {
-    return { ...analysis, gender: 'male' };
-  }
-
-  if (femalePattern.test(queryLower)) {
-    return { ...analysis, gender: 'female' };
-  }
-
-  return analysis;
-};
-
 function scoreCreator(profile: CachedCreatorEntry, analysis: QueryAnalysis): number {
-  let score = 0;
-
-  // 1. Gender match (highest priority)
-  if (analysis.gender === 'male' && profile.normalizedGender === 'male') {
-    score += 100;
-  } else if (analysis.gender === 'female' && profile.normalizedGender === 'female') {
-    score += 100;
-  } else if (analysis.gender === 'any') {
-    score += 50;
-  } else if (analysis.gender === 'male' && profile.normalizedGender !== 'male') {
-    return 0;
-  } else if (analysis.gender === 'female' && profile.normalizedGender !== 'female') {
-    return 0;
-  } else {
-    score += 30;
-  }
+  // matchCasting has already excluded profiles that fail a required gender.
+  let score = analysis.gender === 'any' ? 50 : 100;
 
   // 2. Platform match
   if (analysis.platforms.length > 0) {
@@ -491,8 +466,10 @@ export async function POST(req: Request) {
       }, { status: 503 });
     }
 
+    const requestedFilters = castingFilters(query);
+    const fullyUnderstood = requestedFilters.length > 0 && directorySearchWords(query).length === 0;
     let initialAnalysis: QueryAnalysis;
-    if (process.env.OPENROUTER_API_KEY) {
+    if (!fullyUnderstood && process.env.OPENROUTER_API_KEY) {
       try {
         initialAnalysis = await analyzeQueryWithOpenRouter(query, requestId);
       } catch (openRouterError) {
@@ -503,14 +480,25 @@ export async function POST(req: Request) {
       initialAnalysis = analyzeQueryWithAI(query);
     }
 
-    initialAnalysis = applyDeterministicQueryOverrides(initialAnalysis, query);
+    const filters = requestedFilters.filter(filter =>
+      !Array.isArray(reqBody.removedFilters) || !reqBody.removedFilters.includes(filter));
+    const gender = filters.find(filter => filter === 'male' || filter === 'female');
+    initialAnalysis.gender = gender || 'any';
+    const withWorkSamples = filters.includes('skateboard') || filters.includes('cap');
     const reasoning = generateReasoning(initialAnalysis);
 
     const now = Date.now();
+    let searchRecords: CachedCreatorEntry[];
     try {
-      if (!cachedNeonRecords || now - lastNeonFetch > CACHE_DURATION) {
-        cachedNeonRecords = await fetchNeonCreatorRecords();
-        lastNeonFetch = now;
+      // Evidence and publication status must be current after a team edit.
+      if (withWorkSamples) {
+        searchRecords = await fetchNeonCreatorRecords(true);
+      } else {
+        if (!cachedNeonRecords || now - lastNeonFetch > CACHE_DURATION) {
+          cachedNeonRecords = await fetchNeonCreatorRecords();
+          lastNeonFetch = now;
+        }
+        searchRecords = cachedNeonRecords;
       }
     } catch (databaseError) {
       console.error(`[${requestId}] Neon creator search failed`, databaseError);
@@ -521,13 +509,20 @@ export async function POST(req: Request) {
       }, { status: 503 });
     }
 
-    const searchRecords = cachedNeonRecords;
     const validCreators: ProcessedCreator[] = [];
+    let droppedGenderFilter = 0;
+    let droppedEvidenceFilter = 0;
     let droppedLowScore = 0;
     let droppedError = 0;
 
     for (const profile of searchRecords) {
       try {
+        const evidence = matchCasting(profile, filters);
+        if (!evidence) {
+          if (gender && profile.normalizedGender !== gender) droppedGenderFilter++;
+          else droppedEvidenceFilter++;
+          continue;
+        }
         const score = scoreCreator(profile, initialAnalysis);
         if (score < 5) {
           droppedLowScore += 1;
@@ -547,6 +542,7 @@ export async function POST(req: Request) {
           topics: profile.topicsText,
           preferredContent: profile.formatsText,
           gender: profile.gender,
+          ...(evidence.length ? { evidence } : {}),
           score,
         });
       } catch (error) {
@@ -561,10 +557,6 @@ export async function POST(req: Request) {
       return b.totalReach - a.totalReach;
     });
 
-    const genderFilteredCreators = initialAnalysis.gender === 'any'
-      ? validCreators
-      : validCreators.filter((creator) => normalizeGenderValue(creator.gender) === initialAnalysis.gender);
-
     // Harte Filter der Agenten-Schnittstellen (app/lib/agent-gateway.ts). Muessen
     // VOR der 24er-Kappung greifen: danach blieb von 12 Berliner Profilen nur
     // uebrig, wer zufaellig schon in den Top 24 stand.
@@ -572,7 +564,7 @@ export async function POST(req: Request) {
     const topicFilter: string[] = Array.isArray(reqBody.topics)
       ? reqBody.topics.filter((t: unknown) => typeof t === 'string' && t.trim()).map((t: string) => t.trim().toLowerCase())
       : [];
-    const matchedCreators = genderFilteredCreators.filter((creator) => {
+    const matchedCreators = validCreators.filter((creator) => {
       if (cityFilter && !String(creator.city || '').toLowerCase().includes(cityFilter)) return false;
       if (topicFilter.length && !topicFilter.some((t) => String(creator.topics || '').toLowerCase().includes(t))) return false;
       return true;
@@ -596,12 +588,14 @@ export async function POST(req: Request) {
         scored: validCreators.length,
         droppedLowScore,
         droppedError,
-        droppedGenderFilter: validCreators.length - genderFilteredCreators.length,
+        droppedGenderFilter,
+        droppedEvidenceFilter,
       },
       query,
       reasoning,
       analysis: {
         gender: initialAnalysis.gender,
+        castingFilters: filters,
         platforms: initialAnalysis.platforms,
         topics: initialAnalysis.topics,
         followerRange: {
@@ -691,12 +685,12 @@ Antworte NUR mit einem JSON-Objekt in diesem exakten Format (keine zusätzlichen
 
 Regeln:
 - Erkenne Synonyme: "Insta" = "instagram", "YT" = "youtube"
-- Interpretiere Kontext: "Beauty/Kosmetik" impliziert meist "female"
+- Geschlecht nur aus ausdrücklichen Angaben übernehmen
 - Extrahiere Reichweiten intelligent: "10k" = 10000, "1m" = 1000000
 - Extrahiere Alter: "ab 30" = {"min":30,"max":null}, "unter 25" = {"min":null,"max":25}
 - Extrahiere Orte: "Berlin", "Hamburg", "Deutschland", "NRW"
 - Extrahiere Budget/Preis: "bis 500 Euro" = {"min":null,"max":500}
-- WICHTIG: Explizite Geschlechts-Keywords haben IMMER Vorrang vor Topic-Defaults`,
+- Ohne ausdrückliche Angabe gilt gender "any"`,
             },
             {
               role: 'user',
@@ -769,18 +763,6 @@ function analyzeQueryWithAI(query: string): QueryAnalysis {
 
   const queryLower = query.toLowerCase();
   const queryWords = queryLower.split(/[\s,.;:!?()/"'-]+/).filter((w) => w.length >= 4);
-
-  const hasMaleKeywords = queryLower.includes('männer') || queryLower.includes('männlich') || queryLower.includes('mann');
-  const hasFemaleKeywords = queryLower.includes('frauen') || queryLower.includes('weiblich') || queryLower.includes('frau');
-  const hasBeautyKeywords = queryLower.includes('kosmetik') || queryLower.includes('beauty') || queryLower.includes('make-up');
-
-  if (hasMaleKeywords) {
-    analysis.gender = 'male';
-  } else if (hasFemaleKeywords) {
-    analysis.gender = 'female';
-  } else if (hasBeautyKeywords) {
-    analysis.gender = 'female';
-  }
 
   if (queryLower.includes('tiktok')) analysis.platforms.push('tiktok');
   if (queryLower.includes('instagram') || queryLower.includes('insta')) analysis.platforms.push('instagram');

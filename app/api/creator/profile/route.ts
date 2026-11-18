@@ -194,17 +194,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    await sql.query(`DELETE FROM creator_portfolio_items WHERE creator_id = $1 AND source = 'native'`, [creatorId]);
-    for (let index = 0; index < portfolioLinks.length; index += 1) {
-      await sql.query(
-        `INSERT INTO creator_portfolio_items (creator_id, kind, url, sort_order, source)
-         VALUES ($1, 'portfolio', $2, $3, 'native')
-         ON CONFLICT (creator_id, url) DO UPDATE SET
-           sort_order = EXCLUDED.sort_order,
-           source = 'native'`,
-        [creatorId, portfolioLinks[index], index],
-      );
-    }
+    // Preserve casting evidence on retained work samples, including on unrelated profile edits.
+    await sql.query(
+      `WITH wanted AS (
+         SELECT url, ordinality - 1 AS position
+         FROM unnest($2::text[]) WITH ORDINALITY AS links(url, ordinality)
+       ), removed AS (
+         DELETE FROM creator_portfolio_items
+         WHERE creator_id = $1 AND source = 'native' AND url NOT IN (SELECT url FROM wanted)
+       )
+       INSERT INTO creator_portfolio_items (creator_id, kind, url, sort_order, source)
+       SELECT $1, 'portfolio', url, position, 'native' FROM wanted
+       ON CONFLICT (creator_id, url) DO UPDATE SET sort_order = EXCLUDED.sort_order, source = 'native'`,
+      [creatorId, portfolioLinks],
+    );
 
     await sql.query(
       `UPDATE creator_private_contacts SET newsletter_enabled = $2, updated_at = now() WHERE creator_id = $1`,

@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+import type { CastingFilter } from '../lib/casting';
 import { toast } from 'react-toastify';
 import { MAX_CREATORS_PER_REQUEST } from '@/app/lib/lead-limits';
 import type { SearchCreator } from '../lib/creator-public';
@@ -8,6 +9,7 @@ import { trackUGCEvents } from '../lib/analytics';
 
 export type SearchAnalysis = {
   gender?: string;
+  castingFilters?: CastingFilter[];
   platforms?: string[];
   topics?: string[];
   ageRange?: { min: number | null; max: number | null };
@@ -24,10 +26,15 @@ export const useSearch = () => {
   const [selectedCreators, setSelectedCreators] = useState<string[]>([]);
   const [showNoResults, setShowNoResults] = useState(false);
 
-  const performSearch = async (query: string) => {
+  const latestRequest = useRef(0);
+  const [removedFilters, setRemovedFilters] = useState<CastingFilter[]>([]);
+
+  const performSearch = async (query: string, removed: CastingFilter[] = []) => {
     if (!query.trim()) return;
 
     const queryToUse = query.trim();
+    const sequence = ++latestRequest.current;
+    setRemovedFilters(removed);
     setSubmittedQuery(queryToUse);
     setSearchSubmitted(true);
 
@@ -52,6 +59,7 @@ export const useSearch = () => {
           },
           body: JSON.stringify({
             query: queryToUse,
+            removedFilters: removed,
             requestId: requestId,
             timestamp: new Date().toISOString(),
             isTest: false
@@ -59,16 +67,15 @@ export const useSearch = () => {
         });
 
       const data = await response.json();
+      if (sequence !== latestRequest.current) return;
       if (!response.ok) throw new Error(data.message || `API failed with status: ${response.status}`);
 
       if (data.success) {
+        if (data.analysis) setAnalysis(data.analysis);
+        if (data.reasoning) setReasoning(data.reasoning);
         const creatorCount = data.creators?.length || 0;
         if (creatorCount > 0) {
           setCreators(data.creators);
-          if (data.reasoning) {
-            setReasoning(data.reasoning);
-          }
-          if (data.analysis) setAnalysis(data.analysis);
         } else {
           setShowNoResults(true);
         }
@@ -76,10 +83,11 @@ export const useSearch = () => {
         throw new Error('search_failed');
       }
     } catch (error: any) {
+      if (sequence !== latestRequest.current) return;
       setSearchError('Die Suche ist gerade nicht verfügbar. Bitte versuche es erneut.');
       trackUGCEvents.searchError();
     } finally {
-      setIsLoading(false);
+      if (sequence === latestRequest.current) setIsLoading(false);
     }
 
   };
@@ -98,6 +106,9 @@ export const useSearch = () => {
   };
 
   const resetSearch = () => {
+    ++latestRequest.current;
+    setRemovedFilters([]);
+    setAnalysis(null);
     setCreators([]);
     setReasoning('');
     setIsLoading(false);
@@ -123,6 +134,7 @@ export const useSearch = () => {
     showNoResults,
     searchError,
     performSearch,
+    removedFilters,
     toggleCreatorSelection,
     resetSearch,
     clearSelection
