@@ -10,7 +10,7 @@ import { CREATOR_COUNT_LABEL } from '../lib/creator-count';
 export const metadata: Metadata = {
   title: 'UGC-Plattformen im Vergleich 2026',
   description:
-    'Speekly, Influee, stylink UGC, Boksi, Refluenced und Youdji im sachlichen Vergleich: Kosten, Provisionen, Creator-Pools und Direktkontakt. Alle Angaben mit Quelle und Prüfdatum.',
+    'Speekly, Noovid, Contentmarkt, Influee, stylink UGC, Boksi, Refluenced und Youdji im sachlichen Vergleich: Kosten, Provisionen, Creator-Pools und Direktkontakt.',
   alternates: { canonical: 'https://ugc-vz.de/vergleich' },
   openGraph: {
     title: 'UGC-Plattformen im Vergleich 2026',

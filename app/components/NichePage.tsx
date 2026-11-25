@@ -185,8 +185,8 @@ export default async function NichePage({ niche }: { niche: Niche }) {
           <h2 id="flow-heading" className="text-2xl sm:text-3xl font-bold mb-4">So läuft die Anfrage über UGC VZ</h2>
           <ol className="list-decimal space-y-2 pl-6 text-ink-soft leading-7">
             <li><strong className="text-ink">Creator auswählen:</strong> Oben das Briefing beschreiben oder einen Beispiel-Chip anklicken, Profile vergleichen und passende Creator markieren.</li>
-            <li><strong className="text-ink">Anfrage senden:</strong> Name, E-Mail und Projektbeschreibung eintragen, optional Vergütung, Budget, Frist und Nutzungsrechte. Dies ist eine echte Anfrage: Sie erhalten die Kontaktdaten per E-Mail, und wir schreiben die erreichbaren Creator in Ihrem Namen an.</li>
-            <li><strong className="text-ink">Direkt abstimmen:</strong> Creator antworten direkt an Sie. Preis, Umfang und Nutzungsrechte vereinbaren Sie ohne Provision für UGC VZ.</li>
+            <li><strong className="text-ink">Anfrage senden:</strong> Name, E-Mail und Projektbeschreibung eintragen, optional Vergütung, Budget, Frist und Nutzungsrechte. Du erhältst die verfügbaren Kontaktdaten direkt per E-Mail; bei regulären bezahlten Anfragen können erreichbare Creator zusätzlich über dein Interesse informiert werden.</li>
+            <li><strong className="text-ink">Direkt abstimmen:</strong> Verfügbarkeit, Preis, Umfang und Nutzungsrechte vereinbarst du direkt mit dem Creator – ohne Provision für UGC VZ.</li>
           </ol>
         </section>
 

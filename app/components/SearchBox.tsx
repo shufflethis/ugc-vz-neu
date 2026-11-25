@@ -231,6 +231,10 @@ export default function SearchBox({ initialQuery = '', showFeatured = false, dem
     );
   }, [creators, showNoResults, isLoading, reasoning, showingAlternatives]);
 
+  useEffect(() => {
+    if (initialQuery) setSearchQuery(initialQuery);
+  }, [initialQuery]);
+
   // Vorbefuellung ueber ?query=... (z.B. Schema SearchAction) oder das Fragment (#q=...).
   // Ein Fragment erzeugt fuer Crawler keine eigene URL, waehrend /brands trotzdem statisch
   // aus dem CDN kommt. Serverseitiges initialQuery hat Vorrang.
@@ -312,6 +316,10 @@ export default function SearchBox({ initialQuery = '', showFeatured = false, dem
     email: string;
     message: string;
     website: string;
+    compensation: string;
+    budget: string;
+    deadline: string;
+    usageRights: string;
     submissionId: string;
   }) => {
     if (selectedCreators.length === 0) return;
@@ -341,8 +349,9 @@ export default function SearchBox({ initialQuery = '', showFeatured = false, dem
       if (!res.ok || !data.success) {
         // `message` ist die deutsche Meldung vom Server (z.B. zu viele
         // Creator), `error` der englische Code -- das Popup zeigt userMessage.
-        const submitError = new Error(data.error || 'Failed to submit') as Error & { userMessage?: string };
+        const submitError = new Error(data.error || 'Failed to submit') as Error & { userMessage?: string; code?: string };
         if (typeof data.message === 'string' && data.message) submitError.userMessage = data.message;
+        if (typeof data.code === 'string' && data.code) submitError.code = data.code;
         throw submitError;
       }
 
@@ -366,6 +375,7 @@ export default function SearchBox({ initialQuery = '', showFeatured = false, dem
 
       // Reset nur die Auswahl nach erfolgreichem Senden
       clearSelection();
+      return { heldForReview: Boolean(data.heldForReview) };
     } catch (error) {
       console.error('Submit error:', error);
       throw error; // Re-throw to be handled by the popup

@@ -10,6 +10,8 @@ import {
 } from './email-shell';
 import { CREATOR_KONTO_URL } from './creator-welcome-email';
 
+const INTRO_CALL_URL = 'https://book.agentifizierung.de/gorden/intro-call?overlayCalendar=true';
+
 export type LeadKind = 'creator_match' | 'no_results' | 'general_contact';
 
 export type LeadClientInfo = {
@@ -254,7 +256,10 @@ export function renderBrandMatchEmail({
           <div style="font-size:12px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#6f2fa9;">Optionaler Full Service</div>
           <h2 style="margin:7px 0 9px;font-size:22px;line-height:29px;color:#21172a;">Du willst die Kontakte – aber nicht den ganzen Overhead?</h2>
           <p style="margin:0;font-size:14px;line-height:22px;color:#4a4052;">famefact kann Auswahl, Verhandlung, Briefing, Rechteklärung, Produktion und Feedbackschleifen übernehmen – auf Wunsch inklusive Paid-Social-Aussteuerung und Community Management unter den Ads.</p>
-          <p style="margin:18px 0 0;"><a href="${htmlEscape(managementHref)}" style="display:inline-block;padding:12px 18px;border-radius:9px;background:#8b3fca;color:#ffffff;text-decoration:none;font-size:14px;font-weight:800;">Kampagnen-Support anfragen</a></p>
+          <p style="margin:18px 0 0;">
+            <a href="${htmlEscape(INTRO_CALL_URL)}" style="display:inline-block;margin:0 8px 8px 0;padding:12px 18px;border-radius:9px;background:#8b3fca;color:#ffffff;text-decoration:none;font-size:14px;font-weight:800;">15-Min-Kurzgespräch buchen</a>
+            <a href="${htmlEscape(managementHref)}" style="display:inline-block;padding:11px 16px;border-radius:9px;border:1px solid #8b3fca;background:#ffffff;color:#6f2fa9;text-decoration:none;font-size:14px;font-weight:800;">Kampagnen-Support per Mail anfragen</a>
+          </p>
         </div>
       </td>
     </tr>
@@ -285,7 +290,8 @@ https://ugc-vz.de/brands/ugc-vertrag-vorlage
 \nAuswahl als Profilseite (zum Weiterleiten):\n${selectionUrl}\n${feedbackUrl ? `\nEin paar Tage später – hat sich ein Creator gemeldet? Kurze Rückmeldung (1 Klick):\n${feedbackUrl}\n` : ''}
 OPTIONALER KAMPAGNEN-SUPPORT
 famefact kann Auswahl, Verhandlung, Briefing, Rechteklärung, Produktion, Paid-Social-Aussteuerung und Community Management übernehmen.
-Antworte mit "Bitte abwickeln" oder schreibe an ${internalEmail}.
+15-Min-Kurzgespräch buchen: ${INTRO_CALL_URL}
+Oder antworte mit "Bitte abwickeln" bzw. schreibe an ${internalEmail}.
 
 GEO / KI-SICHTBARKEIT
 Kostenlose Analyse: https://famefact.com/geo-agentur/
@@ -361,7 +367,6 @@ export function renderContactAcknowledgementEmail({
 
 // Reines Affiliate-/Provisionsangebot (isUnpaidOffer): keine Kontaktdaten, wir
 // klaeren das Modell persoenlich mit der Brand.
-const INTRO_CALL_URL = 'https://book.agentifizierung.de/gorden/intro-call?overlayCalendar=true';
 
 export function renderUnpaidOfferHoldEmail({
   leadId,

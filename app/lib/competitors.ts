@@ -34,6 +34,8 @@ const V = '2026-08-14';
 const V_OWN = '2026-08-26';
 // Creator Pool und LikeGroup: Angaben von den Anbieterseiten am 08.10.2026 gelesen.
 const V_OCT = '2026-10-08';
+// Noovid und Contentmarkt: Angaben von den Anbieterseiten am 25.11.2026 gelesen.
+const V_NOV = '2026-11-25';
 
 const NOT_PUBLIC = 'nicht öffentlich';
 
@@ -246,6 +248,80 @@ export const competitors: Competitor[] = [
     ],
     bestFor: 'Größere Marken, die Creator-Content als Dienstleistung einkaufen und ein externes Team die Umsetzung übernehmen lassen wollen.',
     faqs: [],
+  },
+  {
+    slug: 'noovid',
+    name: 'Noovid',
+    url: 'https://noovid.com/de/ugc-creator/deutschland',
+    model: 'Marktplatz mit Festpreisen pro Video',
+    isOwn: false,
+    hasOwnPage: true,
+    pricing: { value: 'ab 75 € (15 Sek.) bis 149 € (60 Sek.) pro Video, ohne Monatsabo; kommerzielle Nutzungsrechte inklusive', source: 'https://noovid.com/de/ugc-creator/deutschland', verifiedAt: V_NOV, isPublic: true },
+    creatorCount: { value: NOT_PUBLIC, source: 'https://noovid.com/de/ugc-creator/deutschland', verifiedAt: V_NOV, isPublic: false },
+    directContact: { value: 'Nein, Briefing und Abwicklung über die Plattform', source: 'https://noovid.com/de/ugc-creator/deutschland', verifiedAt: V_NOV, isPublic: true },
+    commission: { value: 'im Videopreis enthalten (kein Monatsabo)', source: 'https://noovid.com/de/ugc-creator/deutschland', verifiedAt: V_NOV, isPublic: true },
+    markets: { value: 'Europa inkl. Deutschland (DE, EN u. a.)', source: 'https://noovid.com/de/ugc-creator/deutschland', verifiedAt: V_NOV, isPublic: true },
+    strengths: [
+      'Transparente Festpreise pro Video ab 75 € (15 Sek.) bis 149 € (60 Sek.) ohne Monatsabo',
+      'Kommerzielle Nutzungsrechte und Korrekturrunden direkt im Paket enthalten',
+      'Strukturierte Online-Abwicklung mit Lieferung meist innerhalb von bis zu 10 Tagen',
+    ],
+    bestFor: 'Brands, die ohne Monatsabo schnell standardisierte Kurzvideos zum festen Stückpreis inklusive Nutzungsrechten bestellen möchten.',
+    faqs: [
+      {
+        question: 'Was kostet Noovid in Deutschland?',
+        answer: 'Laut Anbieterseite starten Videos bei Noovid ab 75 € (15 Sekunden) und reichen je nach Videolänge bis 149 € (60 Sekunden), ohne monatliches Pflicht-Abo. Kommerzielle Nutzungsrechte für Ads und Social Media sind im Paket enthalten.',
+      },
+      {
+        question: 'Worin unterscheiden sich Noovid und UGC VZ?',
+        answer: 'Noovid ist ein Festpreis-Marktplatz: Du erstellst ein Online-Briefing, erhältst Bewerbungen und wickelst Lieferung, Revisionen und Rechte über die Plattform ab. UGC VZ ist ein kostenloses Verzeichnis im DACH-Raum: Du prüfst Profile selbst, bekommst die direkten Kontaktdaten und verhandelst Honorar, Hooks und langfristige Zusammenarbeit direkt mit dem Creator.',
+      },
+      {
+        question: 'Kann ich bei Noovid Creator direkt außerhalb der Plattform kontaktieren?',
+        answer: 'Briefing, Auswahl und Abwicklung laufen bei Noovid über die Plattform. Wenn du gezielt eigene Stamm-Creator aufbauen und direkt per E-Mail kommunizieren möchtest, ist das Verzeichnismodell von UGC VZ dafür ausgelegt.',
+      },
+      {
+        question: 'Wann ist UGC VZ die bessere Alternative zu Noovid?',
+        answer: 'Wenn du Creator im deutschsprachigen Raum nach detaillierten Profilangaben und Portfolios selbst aussuchen, direkte Beziehungen aufbauen und individuelle Pakete (z. B. mehrere Hooks, Rohmaterial oder monatliche Retainer) ohne Plattform dazwischen verhandeln möchtest.',
+      },
+    ],
+  },
+  {
+    slug: 'contentmarkt',
+    name: 'Contentmarkt',
+    url: 'https://contentmarkt.de',
+    model: 'Pay-per-View- & Creator-Marktplatz',
+    isOwn: false,
+    hasOwnPage: true,
+    pricing: { value: 'Kampagnenbudget mit erfolgsabhängiger Vergütung pro 1.000 geprüfte Views (ohne klassisches Monatsabo)', source: 'https://contentmarkt.de', verifiedAt: V_NOV, isPublic: true },
+    creatorCount: { value: NOT_PUBLIC, source: 'https://contentmarkt.de', verifiedAt: V_NOV, isPublic: false },
+    directContact: { value: 'Nein, Kampagnen- und Beitragsabwicklung über Plattform und App', source: 'https://contentmarkt.de', verifiedAt: V_NOV, isPublic: true },
+    commission: { value: NOT_PUBLIC, source: 'https://contentmarkt.de', verifiedAt: V_NOV, isPublic: false },
+    markets: { value: 'Deutschland / DACH (TikTok & Instagram)', source: 'https://contentmarkt.de', verifiedAt: V_NOV, isPublic: true },
+    strengths: [
+      'Abrechnung nach tatsächlich erzielten, geprüften Views (Pay-per-View) mit festem Kampagnenbudget als Obergrenze',
+      'Unterstützt Clipping-Kampagnen (Teilen von Markenmaterial) und eigene Creator-Beiträge auf TikTok und Instagram',
+      'Automatisierte Briefing- und View-Prüfung sowie eigene Zugänge für Management-Agenturen',
+    ],
+    bestFor: 'Marken, die organische Reichweite über viele Creator- und Clipping-Accounts auf TikTok und Instagram nach Views mit festem Budgetdeckel einkaufen wollen.',
+    faqs: [
+      {
+        question: 'Wie funktioniert das Preismodell von Contentmarkt?',
+        answer: 'Contentmarkt (ein Angebot der Axel Springer Deutschland GmbH) setzt primär auf erfolgsabhängige Vergütung nach geprüften Aufrufen (Pay-per-View / pro 1.000 Views) bis zu einem vorab definierten Maximalbudget. Welche Plattform-Marge zusätzlich anfällt, ist öffentlich nicht im Detail ausgewiesen.',
+      },
+      {
+        question: 'Was ist der Unterschied zwischen Contentmarkt und UGC VZ?',
+        answer: 'Contentmarkt zielt auf Reichweite über fremde TikTok- und Instagram-Profile (Clipping und Creator-Postings mit View-Vergütung). UGC VZ ist ein kostenloses Verzeichnis für klassische UGC-Produktion: Du findest deutschsprachige Creator, erhältst ihre direkten Kontaktdaten und kaufst Videos gezielt für deine eigenen Paid Ads, Produktseiten und Brand-Kanäle ein.',
+      },
+      {
+        question: 'Bekomme ich bei Contentmarkt direkte Creator-Kontakte für Paid Ads?',
+        answer: 'Kampagnen-Briefing, Einreichung, View-Prüfung und Auszahlung laufen bei Contentmarkt über Plattform und App. Wer stattdessen Rohmaterial, mehrere Ad-Hooks und individuelle Paid-Social-Nutzungsrechte direkt mit einem Creator verhandeln will, arbeitet über UGC VZ im Direktkontakt.',
+      },
+      {
+        question: 'Wann passt Contentmarkt besser und wann UGC VZ?',
+        answer: 'Contentmarkt passt, wenn du organische Distribution und Clipping nach Views auf TikTok und Instagram skalieren willst. UGC VZ passt, wenn du echte Gesichter für konversionsstarke Produktvideos und Performance-Ads suchst und 0 % Plattformgebühr zahlen möchtest.',
+      },
+    ],
   },
 ];
 

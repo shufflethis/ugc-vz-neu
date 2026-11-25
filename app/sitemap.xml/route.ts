@@ -27,6 +27,7 @@ const staticPages = [
   '/brands',
   '/brands/ugc-creator-finden',
   '/brands/ugc-creator-preise',
+  '/brands/ugc-kosten-rechner',
   '/brands/ugc-creator-deutschland',
   ...nichePages,
   '/brands/ugc-plattform-deutschland',

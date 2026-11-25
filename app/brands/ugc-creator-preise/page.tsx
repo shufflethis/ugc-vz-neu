@@ -3,11 +3,17 @@ import { pageMetadata } from '@/utils/seo-metadata';
 import Link from 'next/link';
 import SearchBox from '../../components/SearchBox';
 import BreadcrumbSchema from '../../components/BreadcrumbSchema';
+import UgcCostCalculator from '../../components/UgcCostCalculator';
+import { NICHES } from '@/app/lib/niches';
+import { loadNicheRows, matchesNiche, nicheStats } from '@/app/lib/niche-data';
+import type { NichePriceBenchmark } from '@/app/lib/ugc-calculator';
+
+export const revalidate = 3600;
 
 export const metadata: Metadata = pageMetadata({
   path: '/brands/ugc-creator-preise',
-  title: 'UGC Creator Preise in Deutschland',
-  description: 'Was kostet ein UGC Video? Preisspannen von 150 bis 2.500 Euro nach Format, die Faktoren dahinter und kostenlose Creator-Suche für Brands.',
+  title: 'UGC Creator Preise in Deutschland & Kostenrechner',
+  description: 'Was kostet ein UGC Video? Preisspannen von 150 bis 2.500 Euro nach Format, interaktiver UGC-Kostenrechner mit echten Creator-Daten und kostenlose Suche.',
 });
 
 // Verbindliche Preisreferenz der Seite. Quelle ist der Detailartikel
@@ -30,7 +36,31 @@ const FAKTOREN = [
   { faktor: 'Revisionsrunden', gering: '1–2 inklusive', hoch: '5 und mehr', impact: '+20–40 % je Runde' },
 ];
 
-export default function UGCCreatorPreisePage() {
+async function loadPriceBenchmarks(): Promise<NichePriceBenchmark[]> {
+  try {
+    const rows = await loadNicheRows();
+    if (!rows.length) return [];
+    return NICHES.map((niche) => {
+      const matched = rows.filter((row) => matchesNiche(row, niche.match));
+      const stats = nicheStats(matched);
+      if (!stats.price) return null;
+      return {
+        slug: niche.slug,
+        label: niche.chip,
+        count: stats.count,
+        p25: stats.price.p25,
+        median: stats.price.median,
+        p75: stats.price.p75,
+        n: stats.price.n,
+      };
+    }).filter((item): item is NichePriceBenchmark => Boolean(item));
+  } catch {
+    return [];
+  }
+}
+
+export default async function UGCCreatorPreisePage() {
+  const benchmarks = await loadPriceBenchmarks();
   return (
     <div className="min-h-screen bg-white text-ink px-4 sm:px-8 md:px-16 lg:px-24 py-16">
       <BreadcrumbSchema items={[
@@ -56,6 +86,10 @@ export default function UGCCreatorPreisePage() {
             <SearchBox initialQuery="UGC Creator bis 500 Euro für Produktvideo" />
           </div>
         </section>
+
+        <div className="pb-14">
+          <UgcCostCalculator benchmarks={benchmarks} />
+        </div>
 
         <section className="pb-14">
           <h2 className="text-2xl font-bold mb-4">Was kostet welches Format?</h2>

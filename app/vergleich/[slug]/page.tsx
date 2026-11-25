@@ -5,7 +5,7 @@ import BreadcrumbSchema from '../../components/BreadcrumbSchema';
 import JsonLdScript from '../../wissen/[slug]/JsonLdScript';
 import ComparisonTable from '../../components/ComparisonTable';
 import MethodikNote from '../../components/MethodikNote';
-import { SUFFIX, VERIFIED_AT_LABEL, getCompetitor, getOwn, getPageCompetitors } from '../../lib/competitors';
+import { SUFFIX, VERIFIED_AT_LABEL, formatVerifiedAt, getCompetitor, getOwn, getPageCompetitors } from '../../lib/competitors';
 import { getPageCopy } from '../../lib/vergleich-copy';
 
 export const dynamicParams = false;
@@ -98,8 +98,9 @@ export default function VergleichDetailPage({ params }: { params: { slug: string
             ))}
           </ul>
           <p className="text-sm text-ink-soft/80 mt-4">
-            Fairerweise: Der Creator-Pool von {c.name} ist deutlich größer als unser kuratiertes Verzeichnis, und wir
-            übernehmen weder Verträge noch Zahlungsabwicklung. Wer das braucht, ist bei {c.name} besser aufgehoben.
+            {c.creatorCount.isPublic
+              ? `Fairerweise: Der Creator-Pool von ${c.name} ist größer als unser kuratiertes Verzeichnis, und wir übernehmen weder Verträge noch Zahlungsabwicklung. Wer das braucht, ist bei ${c.name} besser aufgehoben.`
+              : `Fairerweise: Bei UGC VZ übernimmst du Briefing, Vertrag und Zahlungsabwicklung selbst. Wer diese Schritte komplett an eine Plattform abgeben möchte, ist bei ${c.name} besser aufgehoben.`}
           </p>
         </section>
 
@@ -120,7 +121,7 @@ export default function VergleichDetailPage({ params }: { params: { slug: string
             >
               {c.pricing.source}
             </a>
-            , geprüft am {VERIFIED_AT_LABEL}.
+            , geprüft am {formatVerifiedAt(c.pricing.verifiedAt)}.
           </p>
         </section>
 

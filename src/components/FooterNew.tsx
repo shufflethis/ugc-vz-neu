@@ -177,9 +177,13 @@ export default function Footer() {
 
           {/* Column 5: Vergleiche */}
           <div>
-            <h3 className="mb-5 font-mono text-xs font-medium uppercase tracking-[0.18em] text-white">Vergleiche</h3>
+            <h3 className="mb-5 font-mono text-xs font-medium uppercase tracking-[0.18em] text-white">Vergleiche &amp; Tools</h3>
             <ul className="space-y-3">
+              <li><Link href="/brands/ugc-kosten-rechner" className="text-white/60 hover:text-white transition-colors duration-200 text-sm">UGC Kosten Rechner</Link></li>
+              <li><Link href="/brands/ugc-vertrag-vorlage" className="text-white/60 hover:text-white transition-colors duration-200 text-sm">Vertrags-Generator</Link></li>
               <li><Link href="/vergleich" className="text-white/60 hover:text-white transition-colors duration-200 text-sm">Alle Plattformen</Link></li>
+              <li><Link href="/vergleich/noovid-alternative" className="text-white/60 hover:text-white transition-colors duration-200 text-sm">Noovid Alternative</Link></li>
+              <li><Link href="/vergleich/contentmarkt-alternative" className="text-white/60 hover:text-white transition-colors duration-200 text-sm">Contentmarkt Alternative</Link></li>
               <li><Link href="/vergleich/speekly-alternative" className="text-white/60 hover:text-white transition-colors duration-200 text-sm">Speekly Alternative</Link></li>
               <li><Link href="/vergleich/influee-alternative" className="text-white/60 hover:text-white transition-colors duration-200 text-sm">Influee Alternative</Link></li>
               <li><Link href="/vergleich/stylink-ugc-alternative" className="text-white/60 hover:text-white transition-colors duration-200 text-sm">stylink UGC Alternative</Link></li>

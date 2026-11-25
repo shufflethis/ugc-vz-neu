@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import BreadcrumbSchema from '../components/BreadcrumbSchema';
 import JsonLdScript from '../wissen/[slug]/JsonLdScript';
-import SearchBox from '../components/SearchBox';
+import BrandGuidedSearch from '../components/BrandGuidedSearch';
 import YouTubeEmbed from '../components/YouTubeEmbed';
 import { CREATOR_COUNT_LABEL } from '../lib/creator-count';
 
@@ -64,10 +64,10 @@ export default function BrandsPage() {
     mainEntity: [
       {
         '@type': 'Question',
-        name: 'Können Brands bei UGC VZ automatisch Creator kontaktieren?',
+        name: 'Was passiert nach meiner Creator-Anfrage bei UGC VZ?',
         acceptedAnswer: {
           '@type': 'Answer',
-          text: 'Brands beschreiben ihr Produkt, prüfen Creator-Profile und wählen Favoriten aus. Nach ihrer Kontaktanfrage erhalten sie die verfügbaren Kontaktdaten per E-Mail. Creator werden dadurch weder automatisch angeschrieben noch gebucht.',
+          text: 'Brands beschreiben ihr Produkt, prüfen Creator-Profile und wählen Favoriten aus. Nach der Kontaktanfrage erhältst du die verfügbaren Kontaktdaten per E-Mail; bei regulären bezahlten Anfragen können erreichbare Creator zusätzlich über dein Interesse informiert werden. Es wird kein Auftrag automatisch gebucht.',
         },
       },
       {
@@ -129,8 +129,8 @@ export default function BrandsPage() {
           <p className="text-xl text-ink-soft max-w-3xl mx-auto leading-relaxed mb-10">
             Beschreibe Produkt, Zielgruppe und gewünschtes Format. Vergleiche Profile, Arbeitsproben und Preisvorstellungen, wähle deine Favoriten und fordere Kontaktdaten kostenlos an. Verfügbarkeit, Honorar und Nutzungsrechte vereinbart ihr direkt.
           </p>
-          <div className="max-w-2xl mx-auto">
-            <SearchBox />
+          <div className="max-w-4xl mx-auto">
+            <BrandGuidedSearch />
           </div>
         </section>
 
@@ -264,7 +264,7 @@ export default function BrandsPage() {
           <div className="space-y-4">
             {[
               ['Bekomme ich die Kontaktinfos per E-Mail?', 'Ja. Nach der Anfrage senden wir dir eine E-Mail mit deiner Creator-Auswahl und den verfügbaren Kontakt- oder Social-Daten aus dem Profil.'],
-              ['Werden Creator automatisch angeschrieben?', 'Nein. Nach deiner Kontaktanfrage erhältst du die verfügbaren Kontaktinfos per E-Mail. Du kontaktierst deine Auswahl selbst und klärst Verfügbarkeit, Honorar und Nutzungsrechte direkt.'],
+              ['Wird direkt ein Auftrag gebucht?', 'Nein. Nach deiner Kontaktanfrage erhältst du die verfügbaren Kontaktinfos per E-Mail; bei regulären bezahlten Projektanfragen können erreichbare Creator zusätzlich über dein Interesse informiert werden. Verfügbarkeit, Honorar und Nutzungsrechte vereinbarst du direkt.'],
               ['Kann ich auch eine UGC Agentur anfragen?', 'Ja. Wenn du mehr brauchst als reine Creator-Auswahl, kannst du in der Projektbeschreibung optional Strategie, Briefing, Produktion oder Kampagnensteuerung erwähnen.'],
               ['Welche Branchen funktionieren?', 'Besonders gut funktionieren E-Commerce, Beauty, Food, Tech, Fashion, Apps, lokale Angebote und erklärungsbedürftige Produkte.'],
             ].map(([question, answer]) => (
@@ -285,7 +285,11 @@ export default function BrandsPage() {
             </Link>
             <Link href="/brands/ugc-creator-preise" className="surface-card rounded-2xl p-5 hover:border-geo-violet transition-colors">
               <h3 className="font-bold text-geo-violet mb-2">UGC Creator Preise</h3>
-              <p className="text-ink-soft text-sm">Budgetrahmen und Preislogik einschätzen.</p>
+              <p className="text-ink-soft text-sm">Budgetrahmen, Preislogik und interaktiver Rechner.</p>
+            </Link>
+            <Link href="/brands/ugc-kosten-rechner" className="surface-card rounded-2xl p-5 hover:border-geo-violet transition-colors">
+              <h3 className="font-bold text-geo-violet mb-2">UGC Kosten Rechner</h3>
+              <p className="text-ink-soft text-sm">Videos, Hooks und Nutzungsrechte in 60 Sek. kalkulieren.</p>
             </Link>
             <Link href="/brands/ugc-creator-deutschland" className="surface-card rounded-2xl p-5 hover:border-geo-violet transition-colors">
               <h3 className="font-bold text-geo-violet mb-2">UGC Creator Deutschland</h3>

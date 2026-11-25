@@ -8,9 +8,10 @@ import { usePathname } from 'next/navigation';
 // Mobile-Menü per <details> mit Auto-Close bei Navigation, Escape und Außen-Klick.
 const NAV = [
   { href: '/brands', label: 'Für Brands' },
+  { href: '/brands/ugc-creator-preise', label: 'Preise & Rechner' },
   { href: '/creator', label: 'Für Creator' },
   { href: '/wissen', label: 'Wissen' },
-  { href: '/konto', label: 'Login' },
+  { href: '/konto', label: 'Creator-Login' },
 ];
 
 export default function SiteHeader() {

@@ -15,16 +15,16 @@ export async function GET(request: NextRequest) {
   try {
     const sql = getDatabase();
     const rows = await sql.query(`
-      SELECT p.public_id, p.display_name, p.city, p.topics,
-             p.preferred_content, p.rate_text, p.reach_text,
-             ARRAY(SELECT DISTINCT s.platform FROM creator_social_accounts s
-                   WHERE s.creator_id = p.id ORDER BY s.platform) AS networks
-      FROM creator_profiles p
-      WHERE p.status = 'active'
-        AND EXISTS (SELECT 1 FROM creator_social_avatars a WHERE a.creator_id = p.id AND a.image IS NOT NULL)
-        AND EXISTS (SELECT 1 FROM creator_portfolio_items f WHERE f.creator_id = p.id AND f.url ~* '^https?://')
-      ORDER BY p.profile_quality_score DESC NULLS LAST,
-               (NULLIF(TRIM(p.rate_text), '') IS NOT NULL) DESC, p.public_id
+      SELECT public_id, display_name, city, topics,
+             preferred_content, rate_text, reach_text,
+             networks, contact_reachable
+      FROM creator_search_public
+      WHERE has_social_avatar = true
+        AND NULLIF(TRIM(portfolio_links), '') IS NOT NULL
+      ORDER BY contact_reachable DESC,
+               profile_quality_score DESC NULLS LAST,
+               (NULLIF(TRIM(rate_text), '') IS NOT NULL) DESC,
+               public_id
       LIMIT 3
     `);
     // Explicit allowlist: never serialize a database row directly.
@@ -38,6 +38,7 @@ export async function GET(request: NextRequest) {
       priceRange: String(row.rate_text || ''),
       reach: String(row.reach_text || ''),
       networks: Array.isArray(row.networks) ? row.networks.map(String) : [],
+      contactReachable: Boolean(row.contact_reachable),
     }));
     return NextResponse.json({ creators }, { headers: { ...headers, 'Cache-Control': 'no-store' } });
   } catch (error) {

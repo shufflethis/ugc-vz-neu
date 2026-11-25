@@ -39,6 +39,48 @@ const quickStarts: Record<string, ArticleQuickStart> = {
     checklist: ['Nenne eine konkrete Idee für die Marke.', 'Verlinke eine dazu passende Arbeitsprobe.', 'Schlage einen klaren nächsten Schritt vor.'],
     ...creatorAction,
   },
+  'ugc-video-preise-2026-was-kostet-user-generated-content-wirklich': {
+    answer: 'Ein einzelnes UGC-Video liegt in Deutschland meist zwischen 150 und 2.500 € – entscheidend sind Format, Zusatz-Hooks und Nutzungsrechte für Paid Ads.',
+    checklist: ['Kalkuliere Produktion und Paid-Ads-Rechte getrennt.', 'Plane ab 3 Videos mit Paketpreisen und mehreren Hooks.', 'Vergleiche Direktkontakt (0 % Provision) gegen Marktplatz-Gebühren.'],
+    target: 'brand',
+    href: '/brands/ugc-kosten-rechner',
+    label: 'Budget im UGC Kosten Rechner kalkulieren',
+  },
+  'ugc-vertrag-12-schutz-klauseln-fuer-brands-creator': {
+    answer: 'Ein sauberer UGC-Vertrag regelt Deliverables, Nutzungsrechte (§ 31 UrhG), Korrekturen, Lieferfrist und Vergütung schriftlich, bevor gedreht wird.',
+    checklist: ['Trenne organische Nutzung, Paid Ads und Whitelisting/Spark Ads.', 'Lege Laufzeit (z. B. 6–12 Monate) und Korrekturrunden fest.', 'Nutze eine strukturierte Vorlage statt loser DM-Absprachen.'],
+    target: 'brand',
+    href: '/brands/ugc-vertrag-vorlage',
+    label: 'UGC-Vertrag & Anfrage-Text kostenlos generieren',
+  },
+  'ugc-briefing-25-must-haves-vorlage-fuer-perfekten-content': {
+    answer: 'Ein klares 1-Seiten-Briefing mit Zielgruppe, Hook-Richtung, Produkt-Claims und Do’s & Don’ts spart 80 % der späteren Korrekturschleifen.',
+    checklist: ['Definiere Zielplattform, Länge und gewünschte Hooks.', 'Nenne klare No-Gos und rechtliche Grenzen (z. B. Heilversprechen).', 'Gib Budget und Nutzungsrechte direkt bei der Anfrage an.'],
+    target: 'brand',
+    href: '/brands/ugc-vertrag-vorlage',
+    label: 'Briefing- & Vertrags-Generator öffnen',
+  },
+  'ugc-brief-das-1-seiten-briefing-fuer-schnelle-produktionen': {
+    answer: 'Gute Creator brauchen kein 15-Seiten-PDF, sondern ein präzises 1-Seiten-Briefing mit Kernbotschaft, Format, Timing und Rechteumfang.',
+    checklist: ['Ein Ziel pro Video statt fünf verschiedene Botschaften.', '2–3 Hook-Ideen für Paid-Social-Tests vorgeben.', 'Briefing direkt mit passenden Creatorn aus dem DACH-Pool starten.'],
+    target: 'brand',
+    href: '/brands',
+    label: 'Schnell-Briefing starten & Creator finden',
+  },
+  'ugc-plattformen-vergleich-2024-auswahl-nach-budget-branche': {
+    answer: 'Marktplätze nehmen dir Abwicklung ab und kosten Abo oder Provision – ein kostenloses Verzeichnis wie UGC VZ gibt dir direkten Kontakt bei 0 % Gebühr.',
+    checklist: ['Vergleiche Gesamtkosten inkl. Abo, Fee und Nutzungsrechten.', 'Prüfe, ob du direkten Creator-Kontakt oder feste Abwicklung brauchst.', 'Teste die Creator-Suche kostenlos ohne Brand-Login.'],
+    target: 'brand',
+    href: '/vergleich',
+    label: 'Aktuellen Plattform-Vergleich 2026 ansehen',
+  },
+  'ugc-creator-finden-17-wege-ohne-agentur-fuer-erfolgreiches-marketing': {
+    answer: 'Statt kalter Instagram-DMs findest du über ein kuratiertes Verzeichnis in wenigen Minuten prüfbare Profile mit Portfolio und Preisvorstellung.',
+    checklist: ['Starte mit Branche, Format und Budgetrahmen.', 'Prüfe echte Arbeitsproben statt nur Followerzahlen.', 'Frage 3–5 Favoriten gleichzeitig kostenlos an.'],
+    target: 'brand',
+    href: '/brands',
+    label: 'Creator jetzt kostenlos im Verzeichnis finden',
+  },
 };
 
 export function getArticleQuickStart(slug: string): ArticleQuickStart | null {

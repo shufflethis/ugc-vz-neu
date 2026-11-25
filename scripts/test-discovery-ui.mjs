@@ -85,7 +85,7 @@ try {
     assert.ok(overflow.scroll <= overflow.width + 1, JSON.stringify(overflow));
     const openRequest = page.getByRole('button', { name: 'Kostenlos Anfrage senden', exact: true });
     await openRequest.click();
-    await page.getByLabel(/^Ihr Name/).fill('UniquePrivateName');
+    await page.getByLabel(/^(Ihr|Dein) Name/).fill('UniquePrivateName');
     await page.getByLabel(/E-Mail Adresse/).fill('user@example.test');
     const send = page.locator('button[type="submit"]').filter({ hasText: /Anfrage/ });
     await send.click();
@@ -155,7 +155,7 @@ try {
     await page.keyboard.press('Escape');
     assert.equal(await page.getByRole('button', { name: 'Alex aus Auswahl entfernen' }).getAttribute('aria-pressed'), 'true');
     await page.getByRole('button', { name: 'Kostenlos Anfrage senden', exact: true }).click();
-    await page.getByLabel(/^Ihr Name/).fill('UniquePrivateName');
+    await page.getByLabel(/^(Ihr|Dein) Name/).fill('UniquePrivateName');
     await page.getByLabel(/E-Mail Adresse/).fill('user@example.test');
     await page.locator('button[type="submit"]').filter({ hasText: /Anfrage/ }).click();
     await page.getByText('Geschafft!', { exact: false }).waitFor();

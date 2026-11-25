@@ -17,6 +17,8 @@ interface Creator {
   gender?: string;
 }
 
+const INTRO_CALL_URL = 'https://book.agentifizierung.de/gorden/intro-call?overlayCalendar=true';
+
 interface CreatorSelectionPopupProps {
   selectedCreators: string[];
   creators: Creator[];
@@ -32,7 +34,7 @@ interface CreatorSelectionPopupProps {
     deadline: string;
     usageRights: string;
     submissionId: string;
-  }) => Promise<void>;
+  }) => Promise<{ heldForReview?: boolean } | void>;
 }
 
 export default function CreatorSelectionPopup({
@@ -55,6 +57,7 @@ export default function CreatorSelectionPopup({
   const [submissionId, setSubmissionId] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [emailError, setEmailError] = useState('');
+  const [unlockNotice, setUnlockNotice] = useState('');
   const [isMinimized, setIsMinimized] = useState(true);
   const [showForm, setShowForm] = useState(false);
 
@@ -70,6 +73,7 @@ export default function CreatorSelectionPopup({
       setFormData({ name: '', email: '', message: '', website: '', compensation: '', budget: '', deadline: '', usageRights: '' });
       setSubmissionId('');
       setEmailError('');
+      setUnlockNotice('');
     }
   }, [isVisible, submissionId]);
 
@@ -87,6 +91,9 @@ export default function CreatorSelectionPopup({
     if (name === 'email' && emailError) {
       setEmailError('');
     }
+    if (unlockNotice) {
+      setUnlockNotice('');
+    }
   };
 
   const validateEmail = (email: string) => {
@@ -96,15 +103,16 @@ export default function CreatorSelectionPopup({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setUnlockNotice('');
     
     if (!formData.email || !validateEmail(formData.email)) {
-      setEmailError('Bitte geben Sie eine gültige E-Mail-Adresse ein');
+      setEmailError('Bitte gib eine gültige E-Mail-Adresse ein');
       trackUGCEvents.leadFormError('creator_selection', 'invalid_email');
       return;
     }
 
     if (!formData.name.trim()) {
-      toast.error('Bitte geben Sie Ihren Namen ein');
+      toast.error('Bitte gib deinen Namen ein');
       trackUGCEvents.leadFormError('creator_selection', 'missing_name');
       return;
     }
@@ -112,16 +120,27 @@ export default function CreatorSelectionPopup({
     setIsSubmitting(true);
     
     try {
-      await onSubmit({ ...formData, submissionId });
+      const result = await onSubmit({ ...formData, submissionId });
       
       setFormData({ name: '', email: '', message: '', website: '', compensation: '', budget: '', deadline: '', usageRights: '' });
-      toast.success('Geschafft! Die Creator-Kontakte sind per E-Mail auf dem Weg.');
+      if (result?.heldForReview) {
+        toast.info('Anfrage eingegangen! Für reine Produkt- oder Affiliate-Modelle melden wir uns kurz per E-Mail mit einem Terminvorschlag.');
+      } else {
+        toast.success('Geschafft! Die Creator-Kontakte sind per E-Mail auf dem Weg.');
+      }
       onClose();
     } catch (error) {
       trackUGCEvents.leadFormError('creator_selection', 'submit_failed');
+      const err = error as { userMessage?: string; code?: string } | null;
+      if (err?.code === 'unlock_required') {
+        setUnlockNotice(
+          err.userMessage
+            || 'Dein kostenloses 30-Tage-Kontingent ist aufgebraucht. Buche ein kurzes Gespräch oder schreib uns kurz – wir schalten dich kostenlos frei.',
+        );
+        return;
+      }
       // Deutsche Server-Meldung anzeigen (z.B. Creator-Limit), sonst generisch.
-      const userMessage = (error as { userMessage?: string } | null)?.userMessage;
-      toast.error(userMessage || 'Fehler beim Senden der Anfrage. Bitte versuchen Sie es erneut.');
+      toast.error(err?.userMessage || 'Fehler beim Senden der Anfrage. Bitte versuche es erneut.');
     } finally {
       setIsSubmitting(false);
     }
@@ -174,7 +193,7 @@ export default function CreatorSelectionPopup({
                       <p className="text-sm text-ink-soft mt-1">
                         Kostenlos anfragen, Kontaktinfos per E-Mail erhalten.
                       </p>
-                      {!isMinimized && <p className="mt-2 max-w-xl text-xs leading-5 text-ink-soft">Du erhältst deine Auswahl und die verfügbaren Kontaktinfos per E-Mail. Du kontaktierst die Creator selbst; es wird kein Auftrag gebucht. Honorare und Nutzungsrechte vereinbart ihr direkt.</p>}
+                      {!isMinimized && <p className="mt-2 max-w-xl text-xs leading-5 text-ink-soft">Du erhältst die verfügbaren Kontaktdaten deiner Auswahl kostenlos per E-Mail. Es wird kein Auftrag gebucht – Verfügbarkeit, Honorar und Nutzungsrechte vereinbart ihr direkt.</p>}
                     </div>
                   </div>
                 </div>
@@ -252,10 +271,10 @@ export default function CreatorSelectionPopup({
                       <div className="text-center space-y-4">
                         <div className="space-y-2">
                           <h4 className="text-xl font-bold text-ink">
-                            Bereit für Ihr UGC-Projekt?
+                            Bereit für dein UGC-Projekt?
                           </h4>
                           <p className="text-ink-soft text-sm max-w-md mx-auto">
-                            Mit dem Absenden erhalten Sie die Kontaktdaten per E-Mail, und wir schreiben die erreichbaren Creator in Ihrem Namen an – kostenlos.
+                            Nach dem Absenden senden wir dir die verfügbaren Kontaktdaten per E-Mail – kostenlos und ohne Provision. Verfügbarkeit, Honorar und Nutzungsrechte klärt ihr direkt.
                           </p>
                         </div>
                         
@@ -284,9 +303,32 @@ export default function CreatorSelectionPopup({
                         Fast geschafft! <PartyPopper className="inline-block w-5 h-5 ml-1 align-[-3px]" strokeWidth={1.5} aria-hidden="true" />
                       </h4>
                       <p className="text-ink-soft text-sm">
-                        Tragen Sie Ihre E-Mail ein. Dies ist eine echte Anfrage, es werden sofort E-Mails versendet.
+                        Trag deine E-Mail-Adresse ein – wir schicken dir die Kontakte sofort zu (echte Anfrage, keine Demo).
                       </p>
                     </div>
+
+                    {unlockNotice && (
+                      <div role="alert" className="rounded-2xl border-2 border-geo-violet/30 bg-[#FBF8FE] p-5 text-left">
+                        <p className="text-sm font-bold text-ink">Hohes Anfragevolumen? Wir schalten dein Team kostenlos frei.</p>
+                        <p className="mt-1.5 text-sm leading-6 text-ink-soft">{unlockNotice}</p>
+                        <div className="mt-4 flex flex-wrap gap-3">
+                          <a
+                            href={INTRO_CALL_URL}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex min-h-[42px] items-center rounded-xl bg-geo-violet px-4 py-2 text-sm font-semibold text-white hover:bg-[#7531ae]"
+                          >
+                            15-Min-Freischaltungs-Call buchen →
+                          </a>
+                          <a
+                            href="/contact"
+                            className="inline-flex min-h-[42px] items-center rounded-xl border border-hairline bg-white px-4 py-2 text-sm font-semibold text-ink hover:border-geo-violet"
+                          >
+                            Kurz per Formular schreiben
+                          </a>
+                        </div>
+                      </div>
+                    )}
 
                     <form onSubmit={handleSubmit} className="space-y-4">
                       <div
@@ -307,7 +349,7 @@ export default function CreatorSelectionPopup({
                       <div className="grid md:grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <label htmlFor="name" className="block text-sm font-semibold text-ink">
-                            Ihr Name *
+                            Dein Name *
                           </label>
                           <input
                             type="text"
@@ -335,7 +377,7 @@ export default function CreatorSelectionPopup({
                             className={`w-full px-4 py-3 bg-white border rounded-xl text-ink placeholder-ink-soft focus:outline-none focus:ring-2 focus:border-transparent transition-all text-sm ${
                               emailError ? 'border-red-300 focus:ring-red-500' : 'border-hairline focus:ring-geo-violet'
                             }`}
-                            placeholder="max@beispiel.de"
+                            placeholder="max@deinebrand.de"
                           />
                           {emailError && (
                             <p className="text-red-500 text-xs mt-1">{emailError}</p>
@@ -354,10 +396,10 @@ export default function CreatorSelectionPopup({
                           value={formData.message}
                           onChange={handleInputChange}
                           className="w-full px-4 py-3 bg-white border border-hairline rounded-xl text-ink placeholder-ink-soft focus:outline-none focus:ring-2 focus:ring-geo-violet focus:border-transparent transition-all resize-none text-sm"
-                          placeholder="Beschreiben Sie kurz Ihr UGC-Projekt, Budget oder besondere Anforderungen..."
+                          placeholder="Beschreib kurz Produkt, gewünschte Videos, Zielgruppe oder besondere Anforderungen …"
                         />
                         <p className="text-xs text-ink-soft">
-                          Tipp: Mit „Hallo [Name],“ sprechen wir jeden gewählten Creator persönlich an.
+                          Tipp: Mit „Hallo [Name],“ wird jeder Creator persönlich angesprochen, falls Projektbenachrichtigungen aktiv sind.
                         </p>
                       </div>
 
@@ -377,13 +419,13 @@ export default function CreatorSelectionPopup({
                           <label htmlFor="budget" className="block text-sm font-semibold text-ink">
                             Budget pro Video (optional)
                           </label>
-                          <input type="text" id="budget" name="budget" maxLength={80} value={formData.budget} onChange={handleInputChange} className="w-full px-4 py-3 bg-white border border-hairline rounded-xl text-ink placeholder-ink-soft focus:outline-none focus:ring-2 focus:ring-geo-violet focus:border-transparent transition-all text-sm" placeholder="z. B. 150 €" />
+                          <input type="text" id="budget" name="budget" maxLength={80} value={formData.budget} onChange={handleInputChange} className="w-full px-4 py-3 bg-white border border-hairline rounded-xl text-ink placeholder-ink-soft focus:outline-none focus:ring-2 focus:ring-geo-violet focus:border-transparent transition-all text-sm" placeholder="z. B. 250 €" />
                         </div>
                         <div className="space-y-2">
                           <label htmlFor="deadline" className="block text-sm font-semibold text-ink">
                             Frist (optional)
                           </label>
-                          <input type="text" id="deadline" name="deadline" maxLength={80} value={formData.deadline} onChange={handleInputChange} className="w-full px-4 py-3 bg-white border border-hairline rounded-xl text-ink placeholder-ink-soft focus:outline-none focus:ring-2 focus:ring-geo-violet focus:border-transparent transition-all text-sm" placeholder="z. B. erste Videos bis Ende Oktober" />
+                          <input type="text" id="deadline" name="deadline" maxLength={80} value={formData.deadline} onChange={handleInputChange} className="w-full px-4 py-3 bg-white border border-hairline rounded-xl text-ink placeholder-ink-soft focus:outline-none focus:ring-2 focus:ring-geo-violet focus:border-transparent transition-all text-sm" placeholder="z. B. erste Videos in 2 Wochen" />
                         </div>
                         <div className="space-y-2">
                           <label htmlFor="usageRights" className="block text-sm font-semibold text-ink">
@@ -393,15 +435,15 @@ export default function CreatorSelectionPopup({
                         </div>
                       </div>
                       <p className="text-xs text-ink-soft">
-                        Viele Creator arbeiten nicht kostenlos. Mit Vergütung und Budget bekommen Sie schneller eine Antwort.
+                        Viele Creator arbeiten gegen Honorar. Mit konkretem Budget und Rechteumfang bekommst du deutlich schneller Antworten.
                       </p>
 
                       <div className="rounded-xl border border-geo-violet bg-geo-violet/5 p-4 text-sm leading-6 text-ink">
-                        <p className="font-bold">Das passiert nach dem Absenden – echt und sofort:</p>
+                        <p className="font-bold">Das passiert nach dem Absenden:</p>
                         <ol className="mt-2 list-decimal space-y-1 pl-5 text-ink-soft">
-                          <li>Sie erhalten die Kontaktdaten der gewählten Creator per E-Mail.</li>
-                          <li>Wir schreiben die per E-Mail erreichbaren Creator in Ihrem Namen an. Dazu übermitteln wir ihnen Ihren Namen, Ihre E-Mail-Adresse und Ihre Projektbeschreibung. Antworten gehen direkt an Sie.</li>
-                          <li>Kostenlos und ohne Provision. Bitte nur echte, eigene Anfragen stellen (<a href="/datenschutz" className="underline">Datenschutz</a>).</li>
+                          <li>Du erhältst die verfügbaren Kontaktdaten und Social-Links deiner Auswahl direkt per E-Mail.</li>
+                          <li>Bei regulären bezahlten Projektanfragen können erreichbare Creator zusätzlich über dein Interesse informiert werden – Antworten gehen immer direkt an dich. Reine Barter-/Affiliate-Modelle klären wir kurz persönlich mit dir.</li>
+                          <li>Kostenlos, ohne Provision, keine automatische Buchung. Bitte nur echte, eigene Anfragen stellen (<a href="/datenschutz" className="underline">Datenschutz</a>).</li>
                         </ol>
                       </div>
 

@@ -57,11 +57,13 @@ const NoResults: React.FC<NoResultsProps> = ({ query }) => {
       });
 
       const data = await res.json();
-      if (!data.success) {
-        throw new Error(data.error || 'Failed to submit');
+      if (!res.ok || !data.success) {
+        const err = new Error(data.error || 'Failed to submit') as Error & { userMessage?: string };
+        if (typeof data.message === 'string' && data.message) err.userMessage = data.message;
+        throw err;
       }
 
-      toast.success('Ihre Anfrage wurde erfolgreich gesendet!');
+      toast.success('Deine Anfrage wurde gesendet! Wir prüfen passende Alternativen und melden uns per E-Mail.');
       setClientInfo({ name: '', email: '', message: '', website: '' });
       setSubmissionId('');
       setSubmitLoading(false);
@@ -72,7 +74,8 @@ const NoResults: React.FC<NoResultsProps> = ({ query }) => {
     } catch (error) {
       console.error('Error submitting request:', error);
       trackUGCEvents.leadFormError('no_results', 'submit_failed');
-      toast.error('Es ist ein Fehler aufgetreten. Bitte versuchen Sie es später erneut.');
+      const userMessage = (error as { userMessage?: string } | null)?.userMessage;
+      toast.error(userMessage || 'Es ist ein Fehler aufgetreten. Bitte versuche es später erneut.');
       setSubmitLoading(false);
     }
   };
@@ -101,15 +104,15 @@ const NoResults: React.FC<NoResultsProps> = ({ query }) => {
         </h3>
 
         <p className="text-ink-soft mb-6 leading-relaxed">
-          Für Ihre Suchanfrage <span className="text-geo-violet font-medium">&ldquo;{query}&rdquo;</span> konnten wir keine passenden UGC Creator in unserer aktuellen Datenbank finden.
+          Für deine Suchanfrage <span className="text-geo-violet font-medium">&ldquo;{query}&rdquo;</span> konnten wir keine passenden UGC Creator in unserer aktuellen Datenbank finden.
         </p>
 
         <div className="surface-card rounded-xl p-6 mb-6">
           <h4 className="text-lg font-medium text-geo-violet mb-3">
-            Wir helfen Ihnen gerne weiter!
+            Wir suchen passende Creator manuell für dich
           </h4>
           <p className="text-ink-soft mb-4 text-sm leading-relaxed">
-            Kontaktieren Sie uns - wir können die Anfrage manuell prüfen, weitere passende Creator recherchieren oder ergänzend KI-UGC-Ansätze für Ihre Kampagne vorschlagen.
+            Schick uns kurz deine Kontaktdaten – wir prüfen dein Briefing persönlich, recherchieren weitere Creator aus unserem Netzwerk oder schlagen dir passende Alternativen vor.
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -128,57 +131,71 @@ const NoResults: React.FC<NoResultsProps> = ({ query }) => {
               />
             </div>
             <div className="flex flex-col text-left">
-              <label htmlFor="name" className="text-sm text-ink-soft mb-1">Name *</label>
+              <label htmlFor="no-results-name" className="text-sm text-ink-soft mb-1">Dein Name *</label>
               <input
                 type="text"
-                id="name"
+                id="no-results-name"
                 value={clientInfo.name}
                 onChange={(e) => setClientInfo({...clientInfo, name: e.target.value})}
                 className="bg-white border border-hairline rounded-lg px-4 py-2 text-ink placeholder-ink-soft focus:outline-none focus:ring-2 focus:ring-geo-violet"
+                placeholder="Vor- und Nachname"
                 required
               />
             </div>
 
             <div className="flex flex-col text-left">
-              <label htmlFor="email" className="text-sm text-ink-soft mb-1">E-Mail *</label>
+              <label htmlFor="no-results-email" className="text-sm text-ink-soft mb-1">E-Mail *</label>
               <input
                 type="email"
-                id="email"
+                id="no-results-email"
                 value={clientInfo.email}
                 onChange={(e) => setClientInfo({...clientInfo, email: e.target.value})}
                 className="bg-white border border-hairline rounded-lg px-4 py-2 text-ink placeholder-ink-soft focus:outline-none focus:ring-2 focus:ring-geo-violet"
+                placeholder="name@deinebrand.de"
                 required
               />
             </div>
             
             <div className="flex flex-col text-left">
-              <label htmlFor="message" className="text-sm text-ink-soft mb-1">Nachricht</label>
+              <label htmlFor="no-results-message" className="text-sm text-ink-soft mb-1">Kurzbriefing (Budget, Timing, Format)</label>
               <textarea
-                id="message"
+                id="no-results-message"
                 value={clientInfo.message}
                 onChange={(e) => setClientInfo({...clientInfo, message: e.target.value})}
                 rows={3}
+                placeholder="z. B. 3 Produktvideos für Meta Ads, Budget ca. 250 € pro Video, Start innerhalb von 2 Wochen"
                 className="bg-white border border-hairline rounded-lg px-4 py-2 text-ink placeholder-ink-soft focus:outline-none focus:ring-2 focus:ring-geo-violet"
               ></textarea>
             </div>
             
             <button 
               type="submit"
-              className="w-full inline-flex items-center justify-center px-6 py-3 bg-geo-violet text-white rounded-lg hover:bg-geo-violet-soft transition-all font-medium"
+              className="w-full inline-flex items-center justify-center px-6 py-3 bg-geo-violet text-white rounded-xl hover:bg-geo-violet-soft transition-all font-semibold"
               disabled={submitLoading}
             >
-              {submitLoading ? 'Wird gesendet...' : 'Go'}
+              {submitLoading ? 'Wird gesendet …' : 'Kostenlose Creator-Suche anfragen'}
             </button>
           </form>
+
+          <p className="mt-4 text-xs text-ink-soft">
+            Dringende Kampagne?{' '}
+            <a
+              href="https://book.agentifizierung.de/gorden/intro-call?overlayCalendar=true"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-geo-violet underline hover:no-underline"
+            >
+              Direkt 15-Min-Kurzgespräch buchen →
+            </a>
+          </p>
         </div>
 
         <div className="text-left">
-          <h5 className="text-sm font-medium text-ink-soft mb-3">Versuchen Sie es mit:</h5>
+          <h5 className="text-sm font-medium text-ink-soft mb-3">Oder probiere es in der Suche mit:</h5>
           <ul className="text-sm text-ink-soft space-y-1">
-            <li>• Anderen Suchbegriffen oder Branchen</li>
-            <li>• Weniger spezifischen Kriterien</li>
-            <li>• Alternativen Plattformen (TikTok, Instagram, YouTube)</li>
-            <li>• Anderen Altersgruppen oder Zielgruppen</li>
+            <li>• Anderen Suchbegriffen oder breiterer Branche</li>
+            <li>• Weniger einschränkenden Kriterien (z. B. ohne feste Stadt)</li>
+            <li>• Alternativen Plattformen (TikTok, Instagram Reels, YouTube Shorts)</li>
           </ul>
         </div>
       </div>

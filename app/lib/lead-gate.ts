@@ -120,7 +120,7 @@ export async function checkBrandGate({
       return {
         status: 429,
         code: 'unlock_required',
-        message: `Das kostenlose Kontingent (${FREE_LEADS_PER_30D} Anfragen bzw. ${FREE_CREATORS_PER_30D} Creator pro 30 Tage) ist aufgebraucht. Schreiben Sie uns kurz über das Kontaktformular (ugc-vz.de/contact) oder an hi@ugc-vz.de, wofür Sie die Creator brauchen – wir schalten Sie kostenlos frei.`,
+        message: `Dein kostenloses Kontingent (${FREE_LEADS_PER_30D} Anfragen bzw. ${FREE_CREATORS_PER_30D} Creator pro 30 Tage) ist aufgebraucht. Buch dir ein kurzes Gespräch oder schreib uns an hi@ugc-vz.de, wofür du die Creator suchst – wir schalten dein Team kostenlos frei.`,
         messageEn: `Free allowance (${FREE_LEADS_PER_30D} requests / ${FREE_CREATORS_PER_30D} creators per 30 days) used up. Please send a short note (project, timeframe, rough budget) via https://ugc-vz.de/contact or hi@ugc-vz.de - we unlock free of charge, we just want to know what for.`,
       };
     }

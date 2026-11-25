@@ -148,20 +148,21 @@ const parsePriceValue = (priceText: string): number | null => {
 };
 
 const TOPIC_KEYWORDS: Record<string, string[]> = {
-  beauty: ['beauty', 'kosmetik', 'make-up', 'makeup', 'schminke'],
-  fashion: ['mode', 'fashion', 'kleidung', 'style'],
-  travel: ['reise', 'travel', 'urlaub', 'vacation'],
-  fitness: ['fitness', 'sport', 'workout', 'training'],
-  food: ['essen', 'food', 'kochen', 'cooking', 'rezepte'],
-  lifestyle: ['lifestyle', 'leben'],
-  tech: ['tech', 'technologie', 'gadgets', 'software', 'app', 'saas'],
-  family: ['family', 'familie', 'mama', 'papa', 'eltern', 'baby', 'kids'],
-  gaming: ['gaming', 'games', 'zocken', 'streaming'],
-  business: ['business', 'b2b', 'karriere', 'office', 'linkedin'],
-  finance: ['finance', 'finanzen', 'versicherung', 'bank', 'geld'],
-  health: ['health', 'gesundheit', 'wellness', 'pflege'],
-  home: ['home', 'wohnen', 'interior', 'diy', 'haushalt'],
-  automotive: ['auto', 'automotive', 'mobilität', 'car'],
+  beauty: ['beauty', 'kosmetik', 'make-up', 'makeup', 'schminke', 'skincare', 'hautpflege', 'serum', 'creme', 'haircare', 'haarpflege'],
+  fashion: ['mode', 'fashion', 'kleidung', 'style', 'streetwear', 'outfit', 'outfits'],
+  travel: ['reise', 'reisen', 'travel', 'urlaub', 'vacation', 'camping', 'outdoor'],
+  fitness: ['fitness', 'sport', 'workout', 'training', 'gym', 'laufen', 'yoga'],
+  food: ['essen', 'food', 'kochen', 'cooking', 'rezepte', 'ernährung', 'nutrition', 'supplements', 'protein', 'snacks', 'getränke', 'drinks'],
+  lifestyle: ['lifestyle', 'leben', 'alltag'],
+  tech: ['tech', 'technologie', 'gadgets', 'software', 'app', 'saas', 'ki', 'ai', 'elektronik', 'digital'],
+  family: ['family', 'familie', 'mama', 'papa', 'eltern', 'baby', 'kids', 'kinder'],
+  gaming: ['gaming', 'games', 'zocken', 'streaming', 'esports'],
+  business: ['business', 'b2b', 'karriere', 'office', 'linkedin', 'gründer', 'startup'],
+  finance: ['finance', 'finanzen', 'versicherung', 'bank', 'geld', 'aktien', 'etf', 'steuern'],
+  health: ['health', 'gesundheit', 'wellness', 'pflege', 'longevity', 'mental'],
+  home: ['home', 'wohnen', 'interior', 'diy', 'haushalt', 'deko', 'garten', 'möbel'],
+  pets: ['hund', 'hunde', 'katze', 'katzen', 'haustier', 'haustiere', 'pet', 'pets', 'tier', 'tierfutter', 'welpe'],
+  automotive: ['auto', 'automotive', 'mobilität', 'car', 'kfz', 'e-auto'],
 };
 
 const fetchNeonCreatorRecords = async (withWorkSamples = false): Promise<CachedCreatorEntry[]> => {

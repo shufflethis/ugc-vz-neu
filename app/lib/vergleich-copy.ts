@@ -169,11 +169,75 @@ const boksi: CopyBuilder = (c, own) => ({
   ],
 });
 
+const noovid: CopyBuilder = (c, own) => ({
+  pricingDetail: [
+    `Noovid arbeitet mit öffentlich einsehbaren Stückpreisen nach Videolänge: ${c.pricing.value}. Für kleinere Budgets und erste Creatives-Tests ist das leicht greifbar, weil vor dem Start klar ist, was ein einzelner Clip kostet.`,
+    `Eine laufende Grundgebühr gibt es laut Anbieterseite nicht; ${c.commission.value}. Damit ähnelt die Preislogik anderen Festpreis-Marktplätzen: Du zahlst pro Video einen Komplettpreis inklusive Plattform-Abwicklung statt getrennter Posten aus Abo und Provision.`,
+    'Wichtig beim Vergleichen ist der Leistungsumfang hinter dem Einstiegspreis. Ein standardisiertes Kurzvideo zum Festpreis deckt typische Ad-Grundformen ab. Sobald du mehrere alternative Hooks, unbearbeitetes Rohmaterial für eigenes Performance-Editing oder feste monatliche Retainer mit demselben Gesicht brauchst, stößt ein starres Stückpreis-Raster schneller an Grenzen als eine direkte Absprache.',
+    `Bei UGC VZ entfällt jede Plattform-Marge: Die Suche und Kontaktanfrage sind ${own.pricing.value}, es fällt ${own.commission.value} Provision an. Dafür existiert auch keine einheitliche Preisliste — du siehst die Selbstangaben im jeweiligen Profil und vereinbarst den Paketpreis direkt mit dem Creator.`,
+  ],
+  handling: [
+    'Der Hauptunterschied liegt im Grad der Standardisierung. Bei Noovid läuft der gesamte Prozess laut Anbieterseite über die Plattform: Online-Briefing anlegen, Produktmuster versenden, Lieferung meist innerhalb von bis zu zehn Tagen inklusive Korrekturrunden und kommerzieller Nutzungsrechte. Du gibst damit Organisation und Vertragsvorlage weitgehend ab.',
+    'Bei UGC VZ bekommst du stattdessen direkten Zugang zum Creator. Du prüfst vorab die verlinkten Arbeitsproben im Verzeichnis, forderst die Kontaktdaten an und besprichst Skript, Tonalität und Detailwünsche ohne Plattform-Filter. Das erfordert eigenes Briefing und eine schriftliche Rechtevereinbarung, zahlt sich aber aus, sobald ein Creator wiederkehrend für deine Marke dreht.',
+    'Auch bei der regionalen Ausrichtung unterscheiden sich die Schwerpunkte: Noovid deckt laut eigener Angabe Europa inklusive Deutschland ab, während UGC VZ ausschließlich auf den deutschsprachigen DACH-Raum fokussiert ist.',
+  ],
+  questionsIntro:
+    'Bevor du zwischen einem Festpreis-Marktplatz wie Noovid und einem Direktverzeichnis wählst, helfen diese Prüfpunkte:',
+  questions: [
+    'Paketumfang: Sind zusätzliche Hooks für die ersten drei Sekunden und unbearbeitetes Rohmaterial im genannten Preis enthalten oder kosten sie extra?',
+    'Rechteumfang: Gelten die enthaltenen kommerziellen Nutzungsrechte unbefristet für Paid Ads, und ist Whitelisting bzw. Spark Ads eingeschlossen?',
+    'Stamm-Creator: Kannst du denselben Creator unkompliziert erneut buchen, wenn ein Creative im Werbekonto stark performt?',
+    'Sprachqualität: Spricht der ausgewählte Creator akzentfrei und authentisch für deine deutsche Zielgruppe?',
+    'Abnahme & Nachbesserung: Was gilt als inkludierte Korrekturrunde und wie schnell erfolgt eine Nachlieferung?',
+  ],
+  notFor: [
+    'UGC VZ liefert keinen fertigen Bestellprozess mit Festpreis-Checkout, keinen integrierten Produktversand-Tracker und keine eingebauten Standard-Nutzungsrechte. Wenn du genau diese schlüsselfertige Einzelvideo-Bestellung suchst, nimmt dir eine Plattform wie Noovid spürbar Koordinationszeit ab.',
+    `Zudem veröffentlicht Noovid keine Gesamtzahl an Creatorn (${c.creatorCount.value}), arbeitet aber europaweit in mehreren Sprachen. Wenn du mehrsprachige Kampagnen außerhalb des DACH-Raums zentral über eine Oberfläche steuern willst, stößt unser auf ${own.markets.value} begrenztes Verzeichnis an seine Grenzen.`,
+  ],
+  conclusion: [
+    `Wer ohne Monatsabo möglichst schnell und mit geringem eigenem Abstimmungsaufwand einzelne Kurzvideos zum festen Stückpreis bestellen will, findet bei Noovid ein klares Angebot. ${c.bestFor}`,
+    `Wer dagegen im DACH-Raum direkt mit ausgewählten Creatorn zusammenarbeiten, individuelle Ad-Pakete frei verhandeln und 0 % Plattformgebühr zahlen möchte, fährt mit einem direkten Verzeichnis langfristig flexibler. ${own.bestFor}`,
+  ],
+});
+
+const contentmarkt: CopyBuilder = (c, own) => ({
+  pricingDetail: [
+    `Contentmarkt verfolgt ein grundsätzlich anderes Modell als klassische UGC-Video-Marktplätze: ${c.pricing.value}. Marken definieren vorab ein Gesamtbudget als harte Obergrenze; bezahlt wird nach verifizierten Aufrufen auf TikTok und Instagram statt nach festen Stückpreisen pro gelieferter Videodatei.`,
+    `Welche Servicegebühr oder Marge Contentmarkt dabei einbehält, ist auf der Website ${c.commission.value}. Für die Budgetplanung ist trotzdem klar erkennbar, worin der Reiz liegt: Du kaufst nicht blind Reichweite per Fixgage ein, sondern koppelst die Auszahlung an messbare Views innerhalb deines Budgetdeckels.`,
+    'Dieses Pay-per-View-Prinzip spielt seine Stärke dort aus, wo organische Verbreitung über viele Creator-Accounts das Ziel ist — etwa bei Clipping-Kampagnen rund um Podcasts, Produkt-Hypes oder Social-Trends. Wenn du hingegen gezielt Rohvideos und Hook-Varianten für dein eigenes Meta- oder TikTok-Werbekonto einkaufen willst, hilft dir eine reine View-Abrechnung auf fremden Profilen nur bedingt weiter.',
+    `Bei UGC VZ zahlst du keine Plattformgebühr (${own.pricing.value}, ${own.commission.value} Provision), sondern vereinbarst direkt mit dem Creator ein Honorar für die Content-Produktion und die benötigten Nutzungsrechte. Beide Ansätze lösen unterschiedliche Aufgaben im Marketing-Mix.`,
+  ],
+  handling: [
+    'Bei Contentmarkt laufen Kampagnen-Setup, Materialbereitstellung (z. B. für Clipping), Einreichung über die Creator-App, automatisierte Briefing- und View-Prüfung sowie die Abrechnung vollständig über die Plattform. Für größere Teams gibt es laut Anbieterseite zusätzlich eigene Agentur-Zugänge.',
+    'Bei UGC VZ bleibt die Zusammenarbeit bewusst direkt: Du filterst Profile nach Thema, Format und Preisvorstellung, forderst Kontaktdaten an und steuerst Briefing, Rechte und Abnahme unmittelbar mit dem Creator. Damit bekommst du Videodateien, die du selbst in Produktseiten, Newslettern und bezahlten Werbeanzeigen skalieren kannst.',
+    'In der Praxis schließen sich beide Kanäle nicht aus: Performance-Teams nutzen Direkt-UGC über UGC VZ für planbare Paid-Social-Creatives mit vollen Nutzungsrechten und ergänzen bei Bedarf organische View- oder Clipping-Kampagnen zur Markenbekanntheit.',
+  ],
+  questionsIntro:
+    'Weil Pay-per-View-Kampagnen und klassische UGC-Produktion unterschiedliche Ziele bedienen, solltest du vorab klären:',
+  questions: [
+    'Kampagnenziel: Brauchst du organische Views auf fremden Creator-Accounts (Clipping/Reach) oder lizenzierte Videodateien für dein eigenes Werbekonto (Paid Ads)?',
+    'Nutzungsrechte: Darfst du erfolgreiche Clips aus einer View-Kampagne anschließend auch als bezahlte Werbeanzeige auf Meta oder TikTok schalten?',
+    'Budget-Kontrolle: Wie wird sichergestellt, dass abgerechnete Views aus deiner relevanten DACH-Zielgruppe stammen und zum Briefing passen?',
+    'Content-Tiefe: Reichen kurze Clips aus bestehendem Material, oder muss ein Creator dein physisches Produkt detailliert testen und erklären?',
+    'Gesamtkosten: Wie hoch ist der effektive Tausend-Kontakt-Preis inklusive aller Plattformkosten im Vergleich zu deinen bestehenden Paid-Social-CPMs?',
+  ],
+  notFor: [
+    'UGC VZ bietet auf der öffentlichen Verzeichnisseite weder automatisierte View-Messung auf TikTok/Instagram noch Clipping-Verteilung über eine Creator-App und keine Sammel-Auszahlung nach Aufrufen. Wer genau diese Pay-per-View-Mechanik sucht, ist bei einem spezialisierten Marktplatz wie Contentmarkt besser aufgehoben.',
+    'Ebenso übernimmt UGC VZ im Verzeichnismodell keine automatische Briefing-Kontrolle und keine Vertragsabwicklung. Wenn dein Team möglichst viele Kurz-Beiträge ohne Einzelabstimmung ausspielen lassen möchte, spart eine Plattform-Abwicklung deutlich operativen Aufwand.',
+  ],
+  conclusion: [
+    `Contentmarkt ist eine starke Option, wenn dein Fokus auf organischer Reichweite, Clipping und leistungsbezogener View-Vergütung auf TikTok und Instagram liegt. ${c.bestFor}`,
+    `UGC VZ ist die richtige Wahl, wenn du echte deutschsprachige UGC Creator für deine eigenen Werbeanzeigen, Produktdemos und Testimonials suchst, direkten Kontakt bevorzugst und 0 % Vermittlungsgebühr zahlen willst. ${own.bestFor}`,
+  ],
+});
+
 export const vergleichCopy: Record<string, CopyBuilder> = {
   speekly,
   influee,
   'stylink-ugc': stylink,
   boksi,
+  noovid,
+  contentmarkt,
 };
 
 export function hasPageCopy(slug: string): boolean {
