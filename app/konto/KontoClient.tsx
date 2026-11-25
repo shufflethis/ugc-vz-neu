@@ -6,7 +6,9 @@ import { Check, LogOut, Mail, ShieldCheck, Sparkles } from 'lucide-react';
 import type { CreatorProfileView } from '../lib/creator-profile';
 import type { CreatorSocialConnection } from '../lib/brand-workspace';
 import type { SocialOAuthAvailability } from '../lib/social-oauth';
+import type { CreatorAiProfileRecord } from '../lib/creator-social-analyzer';
 import SocialVerifySection from './SocialVerifySection';
+import AiProfileReviewCard from './AiProfileReviewCard';
 
 const fieldClass = 'w-full rounded-xl border border-hairline bg-white px-4 py-3 text-ink outline-none transition focus:border-geo-violet focus:ring-4 focus:ring-geo-violet/10';
 const labelClass = 'mb-2 block text-sm font-semibold text-ink';
@@ -20,6 +22,7 @@ const joinLinks = (value: string[]) => (value || []).join('\n');
 
 export default function KontoClient({
   profile,
+  aiProfile = null,
   socialConnections = [],
   oauthEnabled = { tiktok: false, instagram: false },
   oauthStatus,
@@ -28,6 +31,7 @@ export default function KontoClient({
   loginNoSession = false,
 }: {
   profile: CreatorProfileView | null;
+  aiProfile?: CreatorAiProfileRecord | null;
   socialConnections?: CreatorSocialConnection[];
   oauthEnabled?: SocialOAuthAvailability;
   oauthStatus?: string;
@@ -38,7 +42,7 @@ export default function KontoClient({
   return (
     <div className="min-h-screen text-ink">
       {profile ? (
-        <EditView profile={profile} socialConnections={socialConnections} oauthEnabled={oauthEnabled} oauthStatus={oauthStatus} />
+        <EditView profile={profile} aiProfile={aiProfile} socialConnections={socialConnections} oauthEnabled={oauthEnabled} oauthStatus={oauthStatus} />
       ) : (
         <LoginView invalid={loginInvalid} error={loginError} noSession={loginNoSession} />
       )}
@@ -250,11 +254,13 @@ function LoginView({ invalid, error, noSession }: { invalid: boolean; error: boo
 
 function EditView({
   profile,
+  aiProfile,
   socialConnections,
   oauthEnabled,
   oauthStatus,
 }: {
   profile: CreatorProfileView;
+  aiProfile: CreatorAiProfileRecord | null;
   socialConnections: CreatorSocialConnection[];
   oauthEnabled: SocialOAuthAvailability;
   oauthStatus?: string;
@@ -347,6 +353,7 @@ function EditView({
           </Link>
         </div>
         <SocialVerifySection initialAccounts={socialConnections} oauthEnabled={oauthEnabled} oauthStatus={oauthStatus} />
+        <AiProfileReviewCard initialAiProfile={aiProfile} />
         <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
           <div>
             <p className="text-sm font-bold uppercase tracking-[0.15em] text-geo-violet">Creator-Konto</p>

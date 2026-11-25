@@ -5,6 +5,7 @@ import { verifySession, CREATOR_SESSION_COOKIE } from '../lib/creator-session';
 import { loadCreatorProfile } from '../lib/creator-profile';
 import { listCreatorSocialConnections, type CreatorSocialConnection } from '../lib/brand-workspace';
 import { getSocialOAuthAvailability } from '../lib/social-oauth';
+import { loadCreatorAiProfile, type CreatorAiProfileRecord } from '../lib/creator-social-analyzer';
 import KontoClient from './KontoClient';
 
 export const dynamic = 'force-dynamic';
@@ -31,16 +32,19 @@ export default async function KontoPage({
   const sql = getDatabase();
   const profile = await loadCreatorProfile(sql, creatorId);
   let socialConnections: CreatorSocialConnection[] = [];
+  let aiProfile: CreatorAiProfileRecord | null = null;
   if (profile) {
     try {
       socialConnections = await listCreatorSocialConnections(sql, creatorId);
     } catch {
       socialConnections = [];
     }
+    aiProfile = await loadCreatorAiProfile(sql, creatorId);
   }
   return (
     <KontoClient
       profile={profile}
+      aiProfile={aiProfile}
       socialConnections={socialConnections}
       oauthEnabled={getSocialOAuthAvailability()}
       oauthStatus={searchParams?.oauth}

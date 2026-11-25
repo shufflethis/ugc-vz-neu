@@ -13,6 +13,7 @@ import {
 } from '@/app/lib/creator-registration';
 import { tryUpdateSocialAvatar } from '@/app/lib/social-avatar';
 import { upsertCreatorSearchIndex } from '@/app/lib/search-index';
+import { queueCreatorAiAnalysis } from '@/app/lib/creator-social-analyzer';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -205,8 +206,10 @@ export async function GET(request: Request) {
       await tryUpdateSocialAvatar(sql, creatorId, socialLinks, 3000);
     }
 
-    // Best-Effort: Hybrid-Suchindex (tsvector + Embedding) sofort aktualisieren.
+    // Best-Effort: Hybrid-Suchindex (tsvector + Embedding) sofort aktualisieren
+    // und KI-Kanalanalyse non-blocking in die Warteschlange stellen.
     await upsertCreatorSearchIndex(sql, creatorId).catch(() => {});
+    await queueCreatorAiAnalysis(sql, creatorId).catch(() => {});
 
     if (process.env.RESEND_API_KEY && process.env.UGC_INTERNAL_EMAIL) {
       const resend = new Resend(process.env.RESEND_API_KEY);

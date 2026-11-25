@@ -16,6 +16,7 @@ import {
 } from '@/app/lib/creator-registration';
 import { tryUpdateSocialAvatar } from '@/app/lib/social-avatar';
 import { upsertCreatorSearchIndex } from '@/app/lib/search-index';
+import { queueCreatorAiAnalysis } from '@/app/lib/creator-social-analyzer';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -227,6 +228,9 @@ export async function POST(request: NextRequest) {
 
     // Best-Effort: Hybrid-Suchindex sofort auf neuen Profilstand bringen.
     await upsertCreatorSearchIndex(sql, creatorId).catch(() => {});
+    if (edits.some((e) => e.field_name === 'social_links' || e.field_name === 'portfolio_links')) {
+      await queueCreatorAiAnalysis(sql, creatorId).catch(() => {});
+    }
 
     return NextResponse.json({ success: true, message: 'Dein Profil wurde gespeichert.' });
   } catch (error) {
