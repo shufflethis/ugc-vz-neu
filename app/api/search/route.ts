@@ -1,6 +1,26 @@
 import { normalizeGenderValue } from '@/app/lib/normalize-gender';
-import { castingFilters, directorySearchWords, matchCasting, relatedCasting, type CastingEvidence, type CastingWork } from '@/app/lib/casting';
+import {
+  castingFilters,
+  directorySearchWords,
+  matchCasting,
+  relatedCasting,
+  type CastingEvidence,
+  type CastingFilter,
+} from '@/app/lib/casting';
 import { portfolioForCasting, reviewedCapHash, reviewedCapImage } from '@/app/lib/casting-portfolio';
+import { deriveVerificationLevel } from '@/app/lib/agent-verification';
+import {
+  analyzeQueryDeterministically,
+  calculateTotalReach,
+  detectTopicsInText,
+  evaluateCreatorRelevance,
+  extractMeaningfulKeywords,
+  generateReasoning,
+  parsePriceValue,
+  TOPIC_RULES,
+  type QueryAnalysis,
+  type SearchableCreatorProfile,
+} from '@/app/lib/search-scoring';
 import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
@@ -24,43 +44,12 @@ type ProcessedCreator = {
   preferredContent: string;
   gender: string | undefined;
   score: number;
+  relevanceScore: number;
   evidence?: CastingEvidence[];
+  matchReason?: string;
   relatedPriority: number;
-};
-
-type CachedCreatorEntry = {
-  id: string;
-  fullName: string;
-  firstName: string;
-  gender: string;
-  normalizedGender: 'male' | 'female' | 'any';
-  socialLinks: string;
-  networksList: string[];
-  platforms: {
-    tiktok: boolean;
-    instagram: boolean;
-    youtube: boolean;
-    facebook: boolean;
-    twitch: boolean;
-    snapchat: boolean;
-  };
-  reachText: string;
-  totalReach: number;
-  priceRange: string;
-  priceValue: number | null;
-  age: number | null;
-  location: string;
-  locationLower: string;
-  topicsText: string;
-  formatsText: string;
-  portfolioText: string;
-  works: CastingWork[];
-  capAvatar?: string;
-  equipmentText: string;
-  searchableText: string;
-  contactReachable: boolean;
-  finalImage: string;
-  hasCustomImage: boolean;
+  verificationLevel: 0 | 1;
+  topicSearchText: string;
 };
 
 export const maxDuration = 30;
@@ -82,7 +71,7 @@ const globalSearchState = globalThis as typeof globalThis & {
 const searchRateLimitStore = globalSearchState.__ugcSearchRateLimit
   ?? (globalSearchState.__ugcSearchRateLimit = new Map<string, RateLimitEntry>());
 
-let cachedNeonRecords: CachedCreatorEntry[] | null = null;
+let cachedNeonRecords: SearchableCreatorProfile[] | null = null;
 let lastNeonFetch = 0;
 let localCreatorImageIds: Set<string> | null = null;
 
@@ -142,37 +131,15 @@ function consumeSearchRateLimit(ip: string): { allowed: boolean; retryAfter: num
   return { allowed: true, retryAfter: 0 };
 }
 
-const parsePriceValue = (priceText: string): number | null => {
-  const match = priceText.replace(/\./g, '').match(/(\d{2,5})/);
-  return match ? Number(match[1]) : null;
-};
-
-const TOPIC_KEYWORDS: Record<string, string[]> = {
-  beauty: ['beauty', 'kosmetik', 'make-up', 'makeup', 'schminke', 'skincare', 'hautpflege', 'serum', 'creme', 'haircare', 'haarpflege'],
-  fashion: ['mode', 'fashion', 'kleidung', 'style', 'streetwear', 'outfit', 'outfits'],
-  travel: ['reise', 'reisen', 'travel', 'urlaub', 'vacation', 'camping', 'outdoor'],
-  fitness: ['fitness', 'sport', 'workout', 'training', 'gym', 'laufen', 'yoga'],
-  food: ['essen', 'food', 'kochen', 'cooking', 'rezepte', 'ernährung', 'nutrition', 'supplements', 'protein', 'snacks', 'getränke', 'drinks'],
-  lifestyle: ['lifestyle', 'leben', 'alltag'],
-  tech: ['tech', 'technologie', 'gadgets', 'software', 'app', 'saas', 'ki', 'ai', 'elektronik', 'digital'],
-  family: ['family', 'familie', 'mama', 'papa', 'eltern', 'baby', 'kids', 'kinder'],
-  gaming: ['gaming', 'games', 'zocken', 'streaming', 'esports'],
-  business: ['business', 'b2b', 'karriere', 'office', 'linkedin', 'gründer', 'startup'],
-  finance: ['finance', 'finanzen', 'versicherung', 'bank', 'geld', 'aktien', 'etf', 'steuern'],
-  health: ['health', 'gesundheit', 'wellness', 'pflege', 'longevity', 'mental'],
-  home: ['home', 'wohnen', 'interior', 'diy', 'haushalt', 'deko', 'garten', 'möbel'],
-  pets: ['hund', 'hunde', 'katze', 'katzen', 'haustier', 'haustiere', 'pet', 'pets', 'tier', 'tierfutter', 'welpe'],
-  automotive: ['auto', 'automotive', 'mobilität', 'car', 'kfz', 'e-auto'],
-};
-
-const fetchNeonCreatorRecords = async (withWorkSamples = false): Promise<CachedCreatorEntry[]> => {
+const fetchNeonCreatorRecords = async (withWorkSamples = false): Promise<SearchableCreatorProfile[]> => {
   const sql = getDatabase();
   const rows = await sql.query(`
     SELECT
-      public_id, display_name, birth_year, gender, city, special_traits,
-      industries, topics, preferred_content, equipment, rate_text, reach_text,
-      total_reach, profile_image_url, social_links, portfolio_links, networks,
-      has_social_avatar, contact_reachable,
+      public_id, display_name, stage_name, birth_year, gender, city, height_cm,
+      special_traits, experience_since, industries, topics, skin_type,
+      pet_context, children_context, preferred_content, equipment, rate_text,
+      reach_text, total_reach, profile_image_url, social_links, portfolio_links,
+      networks, has_social_avatar, contact_reachable,
       ${withWorkSamples ? portfolioForCasting : "'[]'::jsonb"} AS works,
       ${withWorkSamples ? reviewedCapHash : 'NULL'} AS cap_hash
     FROM creator_search_public p
@@ -183,17 +150,24 @@ const fetchNeonCreatorRecords = async (withWorkSamples = false): Promise<CachedC
   return rows.map((row: any) => {
     const id = String(row.public_id);
     const fullName = String(row.display_name || '').trim();
+    const stageName = String(row.stage_name || '').trim();
     const firstName = fullName.split(' ')[0] || 'Creator';
     const gender = String(row.gender || '').trim();
     const normalizedGender = normalizeGenderValue(gender);
     const socialLinks = String(row.social_links || '').trim();
     const socialLower = socialLinks.toLowerCase();
     const reachText = String(row.reach_text || '').trim();
-    const totalReach = calculateTotalReach(reachText);
+    const parsedReach = calculateTotalReach(reachText);
+    const totalReach = parsedReach > 0 ? parsedReach : Math.max(0, Number(row.total_reach) || 0);
     const priceRange = String(row.rate_text || '').trim();
     const rawAge = row.birth_year ? currentYear - Number(row.birth_year) : null;
-    const age = rawAge !== null && rawAge >= 16 && rawAge <= 70 ? rawAge : null;
+    const age = rawAge !== null && rawAge >= 16 && rawAge <= 80 ? rawAge : null;
     const location = String(row.city || '').trim();
+    const petContext = String(row.pet_context || '').trim();
+    const childrenContext = String(row.children_context || '').trim();
+    const skinType = String(row.skin_type || '').trim();
+    const experienceSince = String(row.experience_since || '').trim();
+    const heightCm = row.height_cm ? Number(row.height_cm) : null;
     const topicsText = [row.topics, row.industries, row.special_traits]
       .map((v) => String(v || '').trim())
       .filter(Boolean)
@@ -203,6 +177,9 @@ const fetchNeonCreatorRecords = async (withWorkSamples = false): Promise<CachedC
     const equipmentText = String(row.equipment || '').trim();
     const cachedImageUrl = String(row.profile_image_url || '').trim();
     const hasSocialAvatar = Boolean(row.has_social_avatar);
+    const networksList = socialLinks.split('\n').filter(Boolean);
+    const works = Array.isArray(row.works) ? row.works : [];
+    const workTitles = works.map((w: any) => String(w?.title || '').trim()).filter(Boolean).join(' ');
 
     // Bild-Prioritaet:
     // 1. vom Creator gesetzter direkter Bildlink (keine Social-Seiten-URLs,
@@ -225,35 +202,51 @@ const fetchNeonCreatorRecords = async (withWorkSamples = false): Promise<CachedC
         finalImage = localCreatorImage;
         hasCustomImage = true;
       } else {
-        finalImage = gender === 'Weiblich' ? '/female-placeholder.webp' : '/placeholder.jpg';
+        finalImage = normalizedGender === 'female' ? '/female-placeholder.webp' : '/placeholder.jpg';
         hasCustomImage = false;
       }
     }
 
-    const searchableText = [
-      fullName,
-      socialLinks,
-      reachText,
-      location,
+    // Topic-focused text intentionally excludes display_name and rate_text so creator names
+    // (e.g. "Carina") or price descriptions ("Preise auf Anfrage") never cause false topic hits.
+    const topicSearchText = [
       topicsText,
       formatsText,
-      portfolioText,
-      priceRange,
       equipmentText,
-    ].join(' ').toLowerCase();
+      petContext,
+      childrenContext,
+      skinType,
+      experienceSince,
+      workTitles,
+    ].filter(Boolean).join(' · ').toLowerCase();
+
+    const searchableText = [
+      fullName,
+      stageName,
+      location,
+      topicSearchText,
+      socialLinks,
+      portfolioText,
+    ].filter(Boolean).join(' ').toLowerCase();
+
+    const verificationLevel = deriveVerificationLevel({
+      portfolioCount: portfolioText ? 1 : 0,
+      socialCount: networksList.length,
+    }).level;
 
     return {
       id,
       fullName,
       firstName,
+      stageName,
       gender,
       normalizedGender,
       socialLinks,
-      networksList: socialLinks.split('\n').filter(Boolean),
+      networksList,
       platforms: {
         tiktok: socialLower.includes('tiktok'),
         instagram: socialLower.includes('instagram'),
-        youtube: socialLower.includes('youtube'),
+        youtube: socialLower.includes('youtube') || socialLower.includes('youtu.be'),
         facebook: socialLower.includes('facebook'),
         twitch: socialLower.includes('twitch'),
         snapchat: socialLower.includes('snapchat'),
@@ -268,119 +261,23 @@ const fetchNeonCreatorRecords = async (withWorkSamples = false): Promise<CachedC
       topicsText,
       formatsText,
       portfolioText,
-      works: row.works,
+      works,
       capAvatar: reviewedCapImage(id, row.cap_hash),
       equipmentText,
+      petContext,
+      childrenContext,
+      skinType,
+      experienceSince,
+      heightCm,
+      topicSearchText,
       searchableText,
       contactReachable: Boolean(row.contact_reachable),
       finalImage,
       hasCustomImage,
+      verificationLevel,
     };
   });
 };
-
-function scoreCreator(profile: CachedCreatorEntry, analysis: QueryAnalysis): number {
-  // matchCasting has already excluded profiles that fail a required gender.
-  let score = analysis.gender === 'any' ? 50 : 100;
-
-  // 2. Platform match
-  if (analysis.platforms.length > 0) {
-    let hasPlatformMatch = false;
-    for (const platform of analysis.platforms) {
-      if (profile.platforms[platform as keyof typeof profile.platforms]) {
-        score += 50;
-        hasPlatformMatch = true;
-      }
-    }
-    if (!hasPlatformMatch) {
-      score += 5;
-    }
-  } else {
-    score += 20;
-  }
-
-  // 3. Reach/follower count match
-  const totalReach = profile.totalReach;
-  if (analysis.minFollowers > 0 && totalReach < analysis.minFollowers) {
-    score += 5;
-  } else if (analysis.maxFollowers && totalReach > analysis.maxFollowers) {
-    score += 5;
-  }
-
-  if (analysis.minFollowers > 0 && analysis.maxFollowers) {
-    const idealReach = (analysis.minFollowers + analysis.maxFollowers) / 2;
-    const distanceFromIdeal = Math.abs(totalReach - idealReach) / idealReach;
-    score += 50 * (1 - Math.min(distanceFromIdeal, 1));
-  } else if (analysis.minFollowers > 0) {
-    score += Math.min(30 * (totalReach / analysis.minFollowers), 50);
-  } else if (analysis.maxFollowers) {
-    score += 50 * (1 - Math.min(totalReach / analysis.maxFollowers, 1));
-  } else {
-    // Reichweite 0 heisst hier "keine auslesbare Angabe", nicht "irrelevant":
-    // Math.log10(0) ist -Infinity und hat den Gesamtscore vernichtet, wodurch
-    // jedes Profil ohne Reichweitenangabe an der Schwelle score < 5 aus der
-    // Suche fiel (92 von 495 aktiven Profilen).
-    score += totalReach > 0 ? Math.min(Math.log10(totalReach) * 5, 30) : 0;
-  }
-
-  // 4. Topic/niche match
-  if (analysis.topics.length > 0) {
-    for (const topic of analysis.topics) {
-      const keywords = TOPIC_KEYWORDS[topic] || [];
-      for (const keyword of keywords) {
-        if (profile.searchableText.includes(keyword)) {
-          score += 40;
-          break;
-        }
-      }
-    }
-  }
-
-  // 5. Age match
-  if (analysis.ageRange.min !== null || analysis.ageRange.max !== null) {
-    if (profile.age === null) {
-      score -= 10;
-    } else if (
-      (analysis.ageRange.min !== null && profile.age < analysis.ageRange.min) ||
-      (analysis.ageRange.max !== null && profile.age > analysis.ageRange.max)
-    ) {
-      score -= 60;
-    } else {
-      score += 45;
-    }
-  }
-
-  // 6. Location match
-  if (analysis.location) {
-    if (profile.locationLower.includes(analysis.location)) {
-      score += 35;
-    } else if (profile.location) {
-      score -= 15;
-    }
-  }
-
-  // 7. Price match
-  if (profile.priceValue !== null && (analysis.priceRange.min !== null || analysis.priceRange.max !== null)) {
-    if (
-      (analysis.priceRange.min !== null && profile.priceValue < analysis.priceRange.min) ||
-      (analysis.priceRange.max !== null && profile.priceValue > analysis.priceRange.max)
-    ) {
-      score -= 25;
-    } else {
-      score += 20;
-    }
-  }
-
-  // 8. Quality signals from the canonical creator profile
-  if (profile.portfolioText) score += 18;
-  if (profile.formatsText) score += 12;
-
-  // 9. Per Mail erreichbare Creator zuerst: Anfragen an nicht erreichbare
-  // Profile enden bei der Brand sonst in einem manuellen DM-Versuch.
-  if (profile.contactReachable) score += 25;
-
-  return score;
-}
 
 export async function POST(req: Request) {
   const startedAt = Date.now();
@@ -472,35 +369,66 @@ export async function POST(req: Request) {
     }
 
     const requestedFilters = castingFilters(query);
+    const removedFilters: CastingFilter[] = Array.isArray(reqBody.removedFilters)
+      ? reqBody.removedFilters.filter((f: unknown): f is CastingFilter => typeof f === 'string')
+      : [];
     const fullyUnderstood = requestedFilters.length > 0 && directorySearchWords(query).length === 0;
+
     let initialAnalysis: QueryAnalysis;
     if (!fullyUnderstood && process.env.OPENROUTER_API_KEY) {
       try {
         initialAnalysis = await analyzeQueryWithOpenRouter(query, requestId);
       } catch (openRouterError) {
         console.warn(`[${requestId}] OpenRouter failed, using deterministic fallback:`, openRouterError instanceof Error ? openRouterError.message : openRouterError);
-        initialAnalysis = analyzeQueryWithAI(query);
+        initialAnalysis = analyzeQueryDeterministically(query);
       }
     } else {
-      initialAnalysis = analyzeQueryWithAI(query);
+      initialAnalysis = analyzeQueryDeterministically(query);
     }
 
-    const filters = requestedFilters.filter(filter =>
-      !Array.isArray(reqBody.removedFilters) || !reqBody.removedFilters.includes(filter));
-    const gender = filters.find(filter => filter === 'male' || filter === 'female');
-    initialAnalysis.gender = gender || 'any';
-    const withWorkSamples = filters.some(f => f !== 'male' && f !== 'female');
-    const reasoning = generateReasoning(initialAnalysis);
+    // Sanitize topics from OpenRouter: keep only known topic buckets, move unknown ones into keywords
+    const deterministicTopics = detectTopicsInText(query);
+    const validTopics = new Set<string>(deterministicTopics);
+    const extraKeywords: string[] = [];
+    for (const rawTopic of initialAnalysis.topics) {
+      const normalizedTopic = String(rawTopic || '').trim().toLowerCase();
+      if (normalizedTopic in TOPIC_RULES) validTopics.add(normalizedTopic);
+      else if (normalizedTopic.length >= 3) extraKeywords.push(normalizedTopic);
+    }
+    // If user explicitly removed a casting topic chip (e.g. 'fashion'), lift it from topics too
+    for (const removed of removedFilters) {
+      if (removed in TOPIC_RULES) validTopics.delete(removed);
+    }
+    initialAnalysis.topics = [...validTopics];
+    initialAnalysis.keywords = [...new Set([...initialAnalysis.keywords, ...extraKeywords])];
+
+    const filters = requestedFilters.filter((filter) => !removedFilters.includes(filter));
+    const genderWasRemoved = removedFilters.includes('male') || removedFilters.includes('female');
+    const castingGender = filters.find((filter) => filter === 'male' || filter === 'female');
+    const aiGender = initialAnalysis.gender === 'male' || initialAnalysis.gender === 'female' ? initialAnalysis.gender : null;
+    const effectiveGender: 'male' | 'female' | 'any' = genderWasRemoved ? 'any' : (castingGender || aiGender || 'any');
+    initialAnalysis.gender = effectiveGender;
+
+    // Include AI-detected gender in active casting filters when not explicitly removed
+    const effectiveCastingFilters: CastingFilter[] = [...filters];
+    if (effectiveGender !== 'any' && !effectiveCastingFilters.includes(effectiveGender)) {
+      effectiveCastingFilters.unshift(effectiveGender);
+    }
+
+    const hasNonGenderCasting = effectiveCastingFilters.some((f) => f !== 'male' && f !== 'female');
+    const meaningfulKeywords = extractMeaningfulKeywords(query, initialAnalysis, requestedFilters, removedFilters);
+    const reasoning = generateReasoning(initialAnalysis, meaningfulKeywords);
 
     const now = Date.now();
-    let searchRecords: CachedCreatorEntry[];
+    const bypassCache = hasNonGenderCasting || Boolean(process.env.DATABASE_URL?.includes('.invalid'));
+    let searchRecords: SearchableCreatorProfile[];
     try {
       // Evidence and publication status must be current after a team edit.
-      if (withWorkSamples) {
-        searchRecords = await fetchNeonCreatorRecords(true);
+      if (bypassCache) {
+        searchRecords = await fetchNeonCreatorRecords(hasNonGenderCasting);
       } else {
         if (!cachedNeonRecords || now - lastNeonFetch > CACHE_DURATION) {
-          cachedNeonRecords = await fetchNeonCreatorRecords();
+          cachedNeonRecords = await fetchNeonCreatorRecords(false);
           lastNeonFetch = now;
         }
         searchRecords = cachedNeonRecords;
@@ -517,24 +445,41 @@ export async function POST(req: Request) {
     const validCreators: ProcessedCreator[] = [];
     let droppedGenderFilter = 0;
     let droppedEvidenceFilter = 0;
+    let droppedRelevanceFilter = 0;
     let droppedLowScore = 0;
     let droppedError = 0;
 
     for (const profile of searchRecords) {
       try {
-        const exact = matchCasting(profile, filters);
-        const related = exact ? null : relatedCasting(profile, filters);
+        const exact = matchCasting(profile, effectiveCastingFilters);
+        const related = exact ? null : relatedCasting(profile, effectiveCastingFilters);
         const evidence = exact || related?.evidence;
         if (!evidence) {
-          if (gender && profile.normalizedGender !== gender) droppedGenderFilter++;
+          if (effectiveGender !== 'any' && profile.normalizedGender !== effectiveGender) droppedGenderFilter++;
           else droppedEvidenceFilter++;
           continue;
         }
-        const score = scoreCreator(profile, initialAnalysis);
-        if (score < 5) {
-          droppedLowScore += 1;
+
+        const evaluation = evaluateCreatorRelevance(
+          profile,
+          initialAnalysis,
+          meaningfulKeywords,
+          hasNonGenderCasting && Boolean(exact),
+        );
+
+        if (evaluation.hardExcluded) {
+          if (evaluation.exclusionReason === 'relevance') droppedRelevanceFilter += 1;
+          else droppedLowScore += 1;
           continue;
         }
+
+        const isAlternative = Boolean(related) || (evaluation.hasThematicRequirement && !evaluation.hasThematicMatch);
+        const relatedPriority = related
+          ? related.priority + 10
+          : isAlternative
+            ? 1
+            : 0;
+
         validCreators.push({
           id: profile.id,
           name: profile.firstName,
@@ -550,8 +495,14 @@ export async function POST(req: Request) {
           preferredContent: profile.formatsText,
           gender: profile.gender,
           ...(evidence.length ? { evidence } : {}),
-          relatedPriority: related?.priority || 0,
-          score,
+          ...(isAlternative
+            ? (evaluation.relatedReason ? { matchReason: evaluation.relatedReason } : {})
+            : (evaluation.matchReason ? { matchReason: evaluation.matchReason } : {})),
+          relatedPriority,
+          score: evaluation.totalScore,
+          relevanceScore: evaluation.relevanceScore,
+          verificationLevel: profile.verificationLevel,
+          topicSearchText: profile.topicSearchText,
         });
       } catch (error) {
         droppedError += 1;
@@ -562,6 +513,7 @@ export async function POST(req: Request) {
     validCreators.sort((a, b) => {
       if (a.relatedPriority !== b.relatedPriority) return b.relatedPriority - a.relatedPriority;
       if (a.score !== b.score) return b.score - a.score;
+      if (a.relevanceScore !== b.relevanceScore) return b.relevanceScore - a.relevanceScore;
       if (a.hasCustomImage !== b.hasCustomImage) return a.hasCustomImage ? -1 : 1;
       return b.totalReach - a.totalReach;
     });
@@ -573,19 +525,41 @@ export async function POST(req: Request) {
     const topicFilter: string[] = Array.isArray(reqBody.topics)
       ? reqBody.topics.filter((t: unknown) => typeof t === 'string' && t.trim()).map((t: string) => t.trim().toLowerCase())
       : [];
+    const minVerificationLevel =
+      typeof reqBody.humanVerificationLevelMin === 'number' && Number.isFinite(reqBody.humanVerificationLevelMin)
+        ? reqBody.humanVerificationLevelMin
+        : undefined;
+
     const eligible = validCreators.filter((creator) => {
       if (cityFilter && !String(creator.city || '').toLowerCase().includes(cityFilter)) return false;
-      if (topicFilter.length && !topicFilter.some((t) => String(creator.topics || '').toLowerCase().includes(t))) return false;
+      if (
+        topicFilter.length &&
+        !topicFilter.some((t) => creator.topicSearchText.includes(t) || String(creator.topics || '').toLowerCase().includes(t))
+      ) {
+        return false;
+      }
+      if (minVerificationLevel !== undefined && creator.verificationLevel < minVerificationLevel) return false;
       return true;
     });
 
-    const matchedCreators = eligible.filter(creator => !creator.relatedPriority);
-    const alternatives = eligible.filter(creator => creator.relatedPriority);
-    const publicCard = ({ hasCustomImage, totalReach, score, relatedPriority, ...rest }: ProcessedCreator) => rest;
+    const matchedCreators = eligible.filter((creator) => creator.relatedPriority === 0);
+    const alternatives = eligible.filter((creator) => creator.relatedPriority > 0);
+    const publicCard = ({
+      hasCustomImage,
+      totalReach,
+      score,
+      relevanceScore,
+      relatedPriority,
+      verificationLevel,
+      topicSearchText,
+      ...rest
+    }: ProcessedCreator) => rest;
     const finalCreators = matchedCreators.slice(0, 24).map(publicCard);
     const processingTime = Date.now() - startedAt;
 
-    console.log(`[${requestId}] Search done in ${processingTime}ms: matched=${matchedCreators.length}/${searchRecords.length} returned=${finalCreators.length}`);
+    console.log(
+      `[${requestId}] Search done in ${processingTime}ms: matched=${matchedCreators.length}/${searchRecords.length} alt=${alternatives.length} returned=${finalCreators.length}`,
+    );
 
     // Header setzt nur app/lib/agent-gateway.ts (MCP/A2A); Statistik, kein Zugriffsschutz.
     await logSearch(query, matchedCreators.length, req.headers.get('x-search-source') === 'agent' ? 'agent' : 'web');
@@ -599,6 +573,7 @@ export async function POST(req: Request) {
         size: searchRecords.length,
         scored: validCreators.length,
         droppedLowScore,
+        droppedRelevanceFilter,
         droppedError,
         droppedGenderFilter,
         droppedEvidenceFilter,
@@ -607,15 +582,17 @@ export async function POST(req: Request) {
       reasoning,
       analysis: {
         gender: initialAnalysis.gender,
-        castingFilters: filters,
+        castingFilters: effectiveCastingFilters,
         platforms: initialAnalysis.platforms,
         topics: initialAnalysis.topics,
+        location: initialAnalysis.location,
+        priceRange: initialAnalysis.priceRange,
         followerRange: {
           min: initialAnalysis.minFollowers,
           max: initialAnalysis.maxFollowers,
         },
         ageRange: initialAnalysis.ageRange,
-        keywords: initialAnalysis.keywords,
+        keywords: meaningfulKeywords,
       },
       timestamp: new Date().toISOString(),
       processingTime,
@@ -633,24 +610,6 @@ export async function POST(req: Request) {
       status: 500,
     });
   }
-}
-
-interface QueryAnalysis {
-  gender: 'male' | 'female' | 'any';
-  platforms: string[];
-  topics: string[];
-  minFollowers: number;
-  maxFollowers: number | null;
-  ageRange: {
-    min: number | null;
-    max: number | null;
-  };
-  location: string | null;
-  priceRange: {
-    min: number | null;
-    max: number | null;
-  };
-  keywords: string[];
 }
 
 // Bewusst nur kleine, guenstige Modelle: die Query-Analyse ist ein kurzer
@@ -692,24 +651,25 @@ Antworte NUR mit einem JSON-Objekt in diesem exakten Format (keine zusätzlichen
   "ageRange": {"min": null, "max": null},
   "location": null,
   "priceRange": {"min": null, "max": null},
-  "keywords": ["relevante", "begriffe"]
+  "keywords": ["relevante", "fachbegriffe", "synonyme"]
 }
 
 Regeln:
 - Erkenne Synonyme: "Insta" = "instagram", "YT" = "youtube"
-- Geschlecht nur aus ausdrücklichen Angaben übernehmen
+- Geschlecht nur aus ausdrücklichen oder eindeutigen Angaben (z. B. "Mama" = "female", "Papa" = "male", "Creatorin" = "female"); sonst "any"
+- Wähle topics NUR aus der obigen Liste und NUR wenn inhaltlich wirklich passend
+- Gib in "keywords" die wichtigsten konkreten Fachbegriffe / Nischenwörter (ohne Füllwörter wie "ich", "suche", "creator", "video") zurück
 - Extrahiere Reichweiten intelligent: "10k" = 10000, "1m" = 1000000
-- Extrahiere Alter: "ab 30" = {"min":30,"max":null}, "unter 25" = {"min":null,"max":25}
-- Extrahiere Orte: "Berlin", "Hamburg", "Deutschland", "NRW"
-- Extrahiere Budget/Preis: "bis 500 Euro" = {"min":null,"max":500}
-- Ohne ausdrückliche Angabe gilt gender "any"`,
+- Extrahiere Alter des Creators (nicht der Kinder): "ab 30" = {"min":30,"max":null}, "unter 25" = {"min":null,"max":25}
+- Extrahiere Orte: "Berlin", "Hamburg", "NRW", "Wien"
+- Extrahiere Budget/Preis in Euro: "bis 500 Euro" = {"min":null,"max":500}`,
             },
             {
               role: 'user',
               content: `Analysiere diese Creator-Suchanfrage: "${query}"`,
             },
           ],
-          temperature: 0.3,
+          temperature: 0.2,
           max_tokens: 300,
           // DeepSeek V4 Flash ist ein Reasoning-Modell: ohne diese Option
           // verbraucht es die 300 Tokens fuers Denken und liefert content: null.
@@ -735,21 +695,27 @@ Regeln:
 
       const parsed = JSON.parse(jsonMatch[0]);
       return {
-        gender: parsed.gender || 'any',
-        platforms: Array.isArray(parsed.platforms) ? parsed.platforms : [],
-        topics: Array.isArray(parsed.topics) ? parsed.topics : [],
+        gender: parsed.gender === 'male' || parsed.gender === 'female' ? parsed.gender : 'any',
+        platforms: Array.isArray(parsed.platforms)
+          ? parsed.platforms.map((p: unknown) => String(p).toLowerCase()).filter(Boolean)
+          : [],
+        topics: Array.isArray(parsed.topics)
+          ? parsed.topics.map((t: unknown) => String(t).toLowerCase()).filter(Boolean)
+          : [],
         minFollowers: Number(parsed.minFollowers) || 0,
-        maxFollowers: parsed.maxFollowers || null,
+        maxFollowers: parsed.maxFollowers ? Number(parsed.maxFollowers) : null,
         ageRange: {
-          min: parsed.ageRange?.min || null,
-          max: parsed.ageRange?.max || null,
+          min: parsed.ageRange?.min ? Number(parsed.ageRange.min) : null,
+          max: parsed.ageRange?.max ? Number(parsed.ageRange.max) : null,
         },
-        location: parsed.location || null,
+        location: typeof parsed.location === 'string' && parsed.location.trim() ? parsed.location.trim().toLowerCase() : null,
         priceRange: {
-          min: parsed.priceRange?.min || null,
-          max: parsed.priceRange?.max || null,
+          min: parsed.priceRange?.min ? Number(parsed.priceRange.min) : null,
+          max: parsed.priceRange?.max ? Number(parsed.priceRange.max) : null,
         },
-        keywords: Array.isArray(parsed.keywords) ? parsed.keywords : [],
+        keywords: Array.isArray(parsed.keywords)
+          ? parsed.keywords.map((k: unknown) => String(k).trim().toLowerCase()).filter(Boolean)
+          : [],
       };
     } catch (error) {
       lastError = error;
@@ -758,269 +724,4 @@ Regeln:
   }
 
   throw lastError || new Error('OpenRouter analysis failed for all models');
-}
-
-function analyzeQueryWithAI(query: string): QueryAnalysis {
-  const analysis: QueryAnalysis = {
-    gender: 'any',
-    platforms: [],
-    topics: [],
-    minFollowers: 0,
-    maxFollowers: null,
-    ageRange: { min: null, max: null },
-    location: null,
-    priceRange: { min: null, max: null },
-    keywords: [],
-  };
-
-  const queryLower = query.toLowerCase();
-  const queryWords = queryLower.split(/[\s,.;:!?()/"'-]+/).filter((w) => w.length >= 4);
-
-  if (queryLower.includes('tiktok')) analysis.platforms.push('tiktok');
-  if (queryLower.includes('instagram') || queryLower.includes('insta')) analysis.platforms.push('instagram');
-  if (queryLower.includes('youtube') || /\byt\b/.test(queryLower)) analysis.platforms.push('youtube');
-  if (queryLower.includes('facebook') || /\bfb\b/.test(queryLower)) analysis.platforms.push('facebook');
-  if (queryLower.includes('twitch')) analysis.platforms.push('twitch');
-  if (queryLower.includes('snapchat')) analysis.platforms.push('snapchat');
-
-  for (const [topic, keywords] of Object.entries(TOPIC_KEYWORDS)) {
-    const hasMatch = keywords.some((keyword) =>
-      queryLower.includes(keyword) ||
-      (keyword.length >= 4 && queryWords.some((word) => Math.abs(word.length - keyword.length) <= 2 && isSimilar(word, keyword, 2))),
-    );
-    if (hasMatch) analysis.topics.push(topic);
-  }
-
-  const minFollowerPatterns = [
-    /mehr als (\d+(?:\.\d+)?(?:k|m)?)/i,
-    /mindestens (\d+(?:\.\d+)?(?:k|m)?)/i,
-    /(\d+(?:\.\d+)?(?:k|m)?) follower oder mehr/i,
-    /über (\d+(?:\.\d+)?(?:k|m)?)/i,
-  ];
-
-  for (const pattern of minFollowerPatterns) {
-    const match = queryLower.match(pattern);
-    if (match && match[1]) {
-      let value = match[1].toLowerCase();
-      let multiplier = 1;
-      if (value.includes('k')) {
-        multiplier = 1000;
-        value = value.replace('k', '');
-      } else if (value.includes('m')) {
-        multiplier = 1000000;
-        value = value.replace('m', '');
-      }
-      analysis.minFollowers = parseFloat(value) * multiplier;
-      break;
-    }
-  }
-
-  const maxFollowerPatterns = [
-    /weniger als (\d+(?:\.\d+)?(?:k|m)?)/i,
-    /maximal (\d+(?:\.\d+)?(?:k|m)?)/i,
-    /höchstens (\d+(?:\.\d+)?(?:k|m)?)/i,
-    /unter (\d+(?:\.\d+)?(?:k|m)?)/i,
-  ];
-
-  for (const pattern of maxFollowerPatterns) {
-    const match = queryLower.match(pattern);
-    if (match && match[1]) {
-      let value = match[1].toLowerCase();
-      let multiplier = 1;
-      if (value.includes('k')) {
-        multiplier = 1000;
-        value = value.replace('k', '');
-      } else if (value.includes('m')) {
-        multiplier = 1000000;
-        value = value.replace('m', '');
-      }
-      analysis.maxFollowers = parseFloat(value) * multiplier;
-      break;
-    }
-  }
-
-  const agePatterns = [
-    { type: 'min', pattern: /(?:ab|über|ueber|mindestens)\s*(\d{2})/i },
-    { type: 'max', pattern: /(?:unter|bis|maximal|höchstens|hoechstens)\s*(\d{2})/i },
-    { type: 'range', pattern: /(?:zwischen\s*)?(\d{2})\s*(?:-|bis|und)\s*(\d{2})/i },
-  ];
-
-  for (const { type, pattern } of agePatterns) {
-    const match = queryLower.match(pattern);
-    if (match) {
-      if (type === 'range') {
-        analysis.ageRange.min = Number(match[1]);
-        analysis.ageRange.max = Number(match[2]);
-      } else if (type === 'min') {
-        analysis.ageRange.min = Number(match[1]);
-      } else if (type === 'max') {
-        analysis.ageRange.max = Number(match[1]);
-      }
-      break;
-    }
-  }
-
-  const knownLocations = ['berlin', 'hamburg', 'münchen', 'muenchen', 'köln', 'koeln', 'frankfurt', 'stuttgart', 'düsseldorf', 'duesseldorf', 'leipzig', 'nrw', 'deutschland', 'österreich', 'oesterreich', 'schweiz'];
-  analysis.location = knownLocations.find((location) => queryLower.includes(location)) || null;
-
-  const priceMaxMatch = queryLower.match(/(?:bis|maximal|unter)\s*(\d{2,5})\s*(?:€|euro|eur)?/i);
-  const priceMinMatch = queryLower.match(/(?:ab|mindestens|über|ueber)\s*(\d{2,5})\s*(?:€|euro|eur)/i);
-  if (priceMaxMatch) analysis.priceRange.max = Number(priceMaxMatch[1]);
-  if (priceMinMatch) analysis.priceRange.min = Number(priceMinMatch[1]);
-
-  const commonWords = ['ich', 'suche', 'nach', 'für', 'mit', 'und', 'oder', 'der', 'die', 'das', 'ein', 'eine', 'auf', 'in', 'bei'];
-  const words = queryLower.split(/\s+/).filter((word) =>
-    word.length > 3 && !commonWords.includes(word) && !/^\d+$/.test(word),
-  );
-  analysis.keywords = [...new Set(words)];
-
-  return analysis;
-}
-
-function generateReasoning(analysis: QueryAnalysis): string {
-  const topicsMap: Record<string, string> = {
-    beauty: 'Beauty/Kosmetik',
-    fashion: 'Mode/Fashion',
-    travel: 'Reisen',
-    fitness: 'Fitness/Sport',
-    food: 'Essen/Kochen',
-    lifestyle: 'Lifestyle',
-    tech: 'Technologie',
-  };
-
-  let reasoning = '1. Verständnis der Anfrage\nDie KI analysiert die Schlüsselwörter und Kriterien:\n\n';
-
-  if (analysis.gender === 'male') {
-    reasoning += '• Geschlecht: Männliche Creator werden gesucht.\n\n';
-  } else if (analysis.gender === 'female') {
-    reasoning += '• Geschlecht: Weibliche Creator werden gesucht.\n\n';
-  }
-
-  if (analysis.platforms.length > 0) {
-    const platformsFormatted = analysis.platforms.map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join(', ');
-    reasoning += `• Plattformen: ${platformsFormatted}.\n\n`;
-  }
-
-  if (analysis.topics.length > 0) {
-    const topicsFormatted = analysis.topics.map((t) => topicsMap[t] || t).join(', ');
-    reasoning += `• Themen: ${topicsFormatted}.\n\n`;
-  }
-
-  if (analysis.minFollowers > 0) {
-    reasoning += `• Mindestreichweite: ${analysis.minFollowers.toLocaleString('de-DE')} Follower.\n\n`;
-  }
-
-  if (analysis.maxFollowers) {
-    reasoning += `• Maximale Reichweite: ${analysis.maxFollowers.toLocaleString('de-DE')} Follower.\n\n`;
-  }
-
-  if (analysis.ageRange.min !== null || analysis.ageRange.max !== null) {
-    if (analysis.ageRange.min !== null && analysis.ageRange.max !== null) {
-      reasoning += `• Alter: Zwischen ${analysis.ageRange.min} und ${analysis.ageRange.max} Jahren.\n\n`;
-    } else if (analysis.ageRange.min !== null) {
-      reasoning += `• Alter: Über ${analysis.ageRange.min} Jahre.\n\n`;
-    } else if (analysis.ageRange.max !== null) {
-      reasoning += `• Alter: Unter ${analysis.ageRange.max} Jahre.\n\n`;
-    }
-  }
-
-  reasoning += '2. Datenbankabfrage\nDie KI durchsucht die Datenbank nach Creators, die folgende Kriterien erfüllen:\n\n';
-
-  if (analysis.gender !== 'any') {
-    reasoning += `• Geschlecht: ${analysis.gender === 'male' ? 'Männlich' : 'Weiblich'}.\n\n`;
-  }
-
-  if (analysis.platforms.length > 0) {
-    const platformsFormatted = analysis.platforms.map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join(', ');
-    reasoning += `• Aktiv auf: ${platformsFormatted}.\n\n`;
-  }
-
-  if (analysis.topics.length > 0) {
-    const topicsFormatted = analysis.topics.map((t) => topicsMap[t] || t).join(', ');
-    reasoning += `• Content-Nische: ${topicsFormatted}.\n\n`;
-  }
-
-  if (analysis.minFollowers > 0 || analysis.maxFollowers) {
-    let reachText = '• Reichweite: ';
-    if (analysis.minFollowers > 0 && analysis.maxFollowers) {
-      reachText += `Zwischen ${analysis.minFollowers.toLocaleString('de-DE')} und ${analysis.maxFollowers.toLocaleString('de-DE')} Follower.`;
-    } else if (analysis.minFollowers > 0) {
-      reachText += `Mindestens ${analysis.minFollowers.toLocaleString('de-DE')} Follower.`;
-    } else if (analysis.maxFollowers) {
-      reachText += `Maximal ${analysis.maxFollowers.toLocaleString('de-DE')} Follower.`;
-    }
-    reasoning += reachText + '\n\n';
-  }
-
-  reasoning += '3. Filterung und Priorisierung\nDie KI filtert die Ergebnisse und priorisiert Creators nach:\n\n';
-  reasoning += '• Relevanz: Passende Inhalte in den gesuchten Nischen.\n\n';
-
-  if (analysis.minFollowers > 0 || analysis.maxFollowers) {
-    reasoning += '• Reichweite: Innerhalb der angegebenen Grenzen.\n\n';
-  } else {
-    reasoning += '• Reichweite: Höhere Reichweite wird bevorzugt.\n\n';
-  }
-
-  reasoning += '• Bildqualität: Creators mit professionellen Profilbildern werden bevorzugt angezeigt.\n\n';
-
-  if (analysis.platforms.length > 1) {
-    reasoning += '• Multi-Plattform: Creator, die auf mehreren der gewünschten Plattformen aktiv sind, werden bevorzugt.\n\n';
-  }
-
-  return reasoning;
-}
-
-function levenshteinDistance(a: string, b: string): number {
-  const matrix: number[][] = [];
-
-  for (let i = 0; i <= b.length; i++) {
-    matrix[i] = [i];
-  }
-
-  for (let j = 0; j <= a.length; j++) {
-    matrix[0][j] = j;
-  }
-
-  for (let i = 1; i <= b.length; i++) {
-    for (let j = 1; j <= a.length; j++) {
-      if (b.charAt(i - 1) === a.charAt(j - 1)) {
-        matrix[i][j] = matrix[i - 1][j - 1];
-      } else {
-        matrix[i][j] = Math.min(
-          matrix[i - 1][j - 1] + 1,
-          matrix[i][j - 1] + 1,
-          matrix[i - 1][j] + 1,
-        );
-      }
-    }
-  }
-
-  return matrix[b.length][a.length];
-}
-
-function isSimilar(word: string, keyword: string, threshold = 2): boolean {
-  return levenshteinDistance(word.toLowerCase(), keyword.toLowerCase()) <= threshold;
-}
-
-function calculateTotalReach(reachText: string): number {
-  const platforms = reachText.split(/(?:Instagram|Insta|TikTok|YouTube|Facebook|LinkedIn|FB|YT):\s*/i).filter(Boolean);
-  let total = 0;
-
-  platforms.forEach((platform) => {
-    const numbers = platform.trim().match(/\d+(?:[.,]\d+)?(?:\s*[kKmM])?/g) || [];
-    numbers.forEach((num) => {
-      const cleanNum = num.trim().replace(/[.,]/g, '');
-      let value = parseFloat(cleanNum);
-      if (num.toLowerCase().includes('k')) {
-        value *= 1000;
-      } else if (num.toLowerCase().includes('m')) {
-        value *= 1000000;
-      }
-      if (!isNaN(value)) {
-        total += value;
-      }
-    });
-  });
-
-  return Math.round(total);
 }

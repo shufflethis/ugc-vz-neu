@@ -13,6 +13,7 @@ export interface SearchCreator {
   topics?: string;
   preferredContent?: string;
   evidence?: import('./casting').CastingEvidence[];
+  matchReason?: string;
 }
 
 export interface PublicCreatorProfile {

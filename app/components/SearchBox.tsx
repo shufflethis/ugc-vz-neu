@@ -46,10 +46,14 @@ interface SearchBoxProps {
 const understoodSummary = (analysis: SearchAnalysis | null): string => {
   if (!analysis) return '';
   const { min, max } = analysis.ageRange || { min: null, max: null };
+  const budgetMax = analysis.priceRange?.max;
   return [
     analysis.gender === 'male' ? 'Männlich' : analysis.gender === 'female' ? 'Weiblich' : '',
     min !== null || max !== null ? `${min ?? '?'}–${max ?? '?'} Jahre` : '',
+    analysis.location ? analysis.location : '',
+    budgetMax ? `bis ${budgetMax} €` : '',
     Array.isArray(analysis.topics) ? analysis.topics.slice(0, 3).join(', ') : '',
+    !analysis.topics?.length && Array.isArray(analysis.keywords) ? analysis.keywords.slice(0, 3).join(', ') : '',
     Array.isArray(analysis.platforms) ? analysis.platforms.join(', ') : '',
   ].filter(Boolean).join(' · ');
 };

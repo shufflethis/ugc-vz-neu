@@ -37,8 +37,8 @@ const boardSport = /\b(?:snowboard\w*|wakeboard\w*|bmx|parkour|surfen|surfer|sur
 const sportWord = /\b(?:sport|fitness|outdoor|fußball|fussball|training)\b/i;
 const hobbyPhrase = /\bhobby(?:s)?(?:\s+ist)?[\s:]+([\p{L}][\p{L}-]{2,39})(?![\p{L}-])/iu;
 const genderWords = {
-  male: /\b(?:m(?:ä|ae)nnlich(?:e[rmns]?)?|m(?:ä|ae)nner[n]?|mann|man|men|male|herren|jungs)\b/i,
-  female: /\b(?:weiblich(?:e[rmns]?)?|frau(?:en)?|wom[ae]n|female|creatorin(?:nen)?|damen|m(?:ä|ae)dchen|skaterin(?:nen)?)\b/i,
+  male: /\b(?:m(?:ä|ae)nnlich(?:e[rmns]?)?|m(?:ä|ae)nner[n]?|mann|man|men|male|herren|jungs|papa(?:s)?|vater|v(?:ä|ae)ter|dad(?:s)?|typ(?:en)?|kerl(?:e)?)\b/i,
+  female: /\b(?:weiblich(?:e[rmns]?)?|frau(?:en)?|wom[ae]n|female|creatorin(?:nen)?|influencerin(?:nen)?|damen|m(?:ä|ae)dchen|m(?:ä|ae)del(?:s)?|mama(?:s)?|mutter|m(?:ü|ue)tter|mom(?:s)?|skaterin(?:nen)?)\b/i,
 };
 
 export function castingFilters(query: string): CastingFilter[] {

@@ -12,7 +12,10 @@ export type SearchAnalysis = {
   castingFilters?: CastingFilter[];
   platforms?: string[];
   topics?: string[];
+  location?: string | null;
+  keywords?: string[];
   ageRange?: { min: number | null; max: number | null };
+  priceRange?: { min: number | null; max: number | null };
 };
 
 export const useSearch = () => {
