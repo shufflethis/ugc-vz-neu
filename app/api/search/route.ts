@@ -18,9 +18,21 @@ import {
   generateReasoning,
   parsePriceValue,
   TOPIC_RULES,
+  type CreatorRelevanceEvaluation,
   type QueryAnalysis,
   type SearchableCreatorProfile,
 } from '@/app/lib/search-scoring';
+import {
+  embedSingleText,
+  loadIndexedSearchData,
+  queryFullTextRanks,
+} from '@/app/lib/search-index';
+import {
+  buildRerankPayload,
+  fuseHybridCandidates,
+  rerankCandidatesWithLLM,
+  SEMANTIC_EXACT_SIMILARITY,
+} from '@/app/lib/search-rerank';
 import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
@@ -52,6 +64,11 @@ type ProcessedCreator = {
   topicSearchText: string;
 };
 
+type CachedSearchPool = {
+  records: SearchableCreatorProfile[];
+  embeddings: Map<string, number[]>;
+};
+
 export const maxDuration = 30;
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -61,6 +78,7 @@ const MAX_QUERY_CHARS = 500;
 const RATE_LIMIT_WINDOW_MS = 5 * 60 * 1000;
 const RATE_LIMIT_MAX_REQUESTS = 30;
 const CACHE_DURATION = 300_000; // 5 minutes
+const MAX_RERANK_CANDIDATES = 28;
 
 type RateLimitEntry = { count: number; resetAt: number };
 
@@ -71,7 +89,7 @@ const globalSearchState = globalThis as typeof globalThis & {
 const searchRateLimitStore = globalSearchState.__ugcSearchRateLimit
   ?? (globalSearchState.__ugcSearchRateLimit = new Map<string, RateLimitEntry>());
 
-let cachedNeonRecords: SearchableCreatorProfile[] | null = null;
+let cachedSearchPool: CachedSearchPool | null = null;
 let lastNeonFetch = 0;
 let localCreatorImageIds: Set<string> | null = null;
 
@@ -131,23 +149,26 @@ function consumeSearchRateLimit(ip: string): { allowed: boolean; retryAfter: num
   return { allowed: true, retryAfter: 0 };
 }
 
-const fetchNeonCreatorRecords = async (withWorkSamples = false): Promise<SearchableCreatorProfile[]> => {
+const fetchNeonCreatorPool = async (withWorkSamples = false): Promise<CachedSearchPool> => {
   const sql = getDatabase();
-  const rows = await sql.query(`
-    SELECT
-      public_id, display_name, stage_name, birth_year, gender, city, height_cm,
-      special_traits, experience_since, industries, topics, skin_type,
-      pet_context, children_context, preferred_content, equipment, rate_text,
-      reach_text, total_reach, profile_image_url, social_links, portfolio_links,
-      networks, has_social_avatar, contact_reachable,
-      ${withWorkSamples ? portfolioForCasting : "'[]'::jsonb"} AS works,
-      ${withWorkSamples ? reviewedCapHash : 'NULL'} AS cap_hash
-    FROM creator_search_public p
-    ORDER BY profile_quality_score DESC, total_reach DESC, display_name ASC
-  `);
+  const [rows, indexedData] = await Promise.all([
+    sql.query(`
+      SELECT
+        public_id, display_name, stage_name, birth_year, gender, city, height_cm,
+        special_traits, experience_since, industries, topics, skin_type,
+        pet_context, children_context, preferred_content, equipment, rate_text,
+        reach_text, total_reach, profile_image_url, social_links, portfolio_links,
+        networks, has_social_avatar, contact_reachable,
+        ${withWorkSamples ? portfolioForCasting : "'[]'::jsonb"} AS works,
+        ${withWorkSamples ? reviewedCapHash : 'NULL'} AS cap_hash
+      FROM creator_search_public p
+      ORDER BY profile_quality_score DESC, total_reach DESC, display_name ASC
+    `),
+    loadIndexedSearchData(sql),
+  ]);
   const currentYear = new Date().getFullYear();
 
-  return rows.map((row: any) => {
+  const records: SearchableCreatorProfile[] = rows.map((row: any) => {
     const id = String(row.public_id);
     const fullName = String(row.display_name || '').trim();
     const stageName = String(row.stage_name || '').trim();
@@ -180,13 +201,8 @@ const fetchNeonCreatorRecords = async (withWorkSamples = false): Promise<Searcha
     const networksList = socialLinks.split('\n').filter(Boolean);
     const works = Array.isArray(row.works) ? row.works : [];
     const workTitles = works.map((w: any) => String(w?.title || '').trim()).filter(Boolean).join(' ');
+    const aiProfile = indexedData.aiProfiles.get(id);
 
-    // Bild-Prioritaet:
-    // 1. vom Creator gesetzter direkter Bildlink (keine Social-Seiten-URLs,
-    //    keine ablaufenden CDN-Links aus dem Airtable-Altbestand)
-    // 2. automatisch geholtes Social-Profilbild (/api/avatar/..., eigene Domain)
-    // 3. lokal vorgerendertes Legacy-Bild
-    // 4. Placeholder nach Geschlecht
     let finalImage: string;
     let hasCustomImage: boolean;
 
@@ -218,6 +234,9 @@ const fetchNeonCreatorRecords = async (withWorkSamples = false): Promise<Searcha
       skinType,
       experienceSince,
       workTitles,
+      aiProfile?.summary || '',
+      aiProfile?.niches?.join(' ') || '',
+      aiProfile?.visualSignalsText || '',
     ].filter(Boolean).join(' · ').toLowerCase();
 
     const searchableText = [
@@ -269,6 +288,9 @@ const fetchNeonCreatorRecords = async (withWorkSamples = false): Promise<Searcha
       skinType,
       experienceSince,
       heightCm,
+      aiSummary: aiProfile?.summary,
+      aiNiches: aiProfile?.niches,
+      aiVisualSignalsText: aiProfile?.visualSignalsText,
       topicSearchText,
       searchableText,
       contactReachable: Boolean(row.contact_reachable),
@@ -277,6 +299,8 @@ const fetchNeonCreatorRecords = async (withWorkSamples = false): Promise<Searcha
       verificationLevel,
     };
   });
+
+  return { records, embeddings: indexedData.embeddings };
 };
 
 export async function POST(req: Request) {
@@ -294,8 +318,6 @@ export async function POST(req: Request) {
     }, { status: 413 });
   }
 
-  // Rate-Limit fuer direkte Browser-/Bot-Aufrufe (Agent-Routen pruefen ihr
-  // eigenes Web-Bot-Auth-Limit bereits vor dem internen Aufruf).
   if (!isInternalAgentCall && !isTestRequest) {
     const rateLimit = consumeSearchRateLimit(getClientIp(req));
     if (!rateLimit.allowed) {
@@ -386,7 +408,6 @@ export async function POST(req: Request) {
       initialAnalysis = analyzeQueryDeterministically(query);
     }
 
-    // Sanitize topics from OpenRouter: keep only known topic buckets, move unknown ones into keywords
     const deterministicTopics = detectTopicsInText(query);
     const validTopics = new Set<string>(deterministicTopics);
     const extraKeywords: string[] = [];
@@ -395,7 +416,6 @@ export async function POST(req: Request) {
       if (normalizedTopic in TOPIC_RULES) validTopics.add(normalizedTopic);
       else if (normalizedTopic.length >= 3) extraKeywords.push(normalizedTopic);
     }
-    // If user explicitly removed a casting topic chip (e.g. 'fashion'), lift it from topics too
     for (const removed of removedFilters) {
       if (removed in TOPIC_RULES) validTopics.delete(removed);
     }
@@ -409,7 +429,6 @@ export async function POST(req: Request) {
     const effectiveGender: 'male' | 'female' | 'any' = genderWasRemoved ? 'any' : (castingGender || aiGender || 'any');
     initialAnalysis.gender = effectiveGender;
 
-    // Include AI-detected gender in active casting filters when not explicitly removed
     const effectiveCastingFilters: CastingFilter[] = [...filters];
     if (effectiveGender !== 'any' && !effectiveCastingFilters.includes(effectiveGender)) {
       effectiveCastingFilters.unshift(effectiveGender);
@@ -417,21 +436,21 @@ export async function POST(req: Request) {
 
     const hasNonGenderCasting = effectiveCastingFilters.some((f) => f !== 'male' && f !== 'female');
     const meaningfulKeywords = extractMeaningfulKeywords(query, initialAnalysis, requestedFilters, removedFilters);
+    const hasThematicQuery = !fullyUnderstood && (initialAnalysis.topics.length > 0 || meaningfulKeywords.length > 0);
     const reasoning = generateReasoning(initialAnalysis, meaningfulKeywords);
 
     const now = Date.now();
     const bypassCache = hasNonGenderCasting || Boolean(process.env.DATABASE_URL?.includes('.invalid'));
-    let searchRecords: SearchableCreatorProfile[];
+    let pool: CachedSearchPool;
     try {
-      // Evidence and publication status must be current after a team edit.
       if (bypassCache) {
-        searchRecords = await fetchNeonCreatorRecords(hasNonGenderCasting);
+        pool = await fetchNeonCreatorPool(hasNonGenderCasting);
       } else {
-        if (!cachedNeonRecords || now - lastNeonFetch > CACHE_DURATION) {
-          cachedNeonRecords = await fetchNeonCreatorRecords(false);
+        if (!cachedSearchPool || now - lastNeonFetch > CACHE_DURATION) {
+          cachedSearchPool = await fetchNeonCreatorPool(false);
           lastNeonFetch = now;
         }
-        searchRecords = cachedNeonRecords;
+        pool = cachedSearchPool;
       }
     } catch (databaseError) {
       console.error(`[${requestId}] Neon creator search failed`, databaseError);
@@ -442,12 +461,24 @@ export async function POST(req: Request) {
       }, { status: 503 });
     }
 
-    const validCreators: ProcessedCreator[] = [];
+    const searchRecords = pool.records;
+
+    // Stage A: Hard casting/gender filter + deterministic relevance evaluation
     let droppedGenderFilter = 0;
     let droppedEvidenceFilter = 0;
     let droppedRelevanceFilter = 0;
     let droppedLowScore = 0;
     let droppedError = 0;
+
+    type EvaluatedEntry = {
+      profile: SearchableCreatorProfile;
+      exactCasting: CastingEvidence[] | null;
+      relatedCastingMatch: { priority: number; evidence: CastingEvidence[] } | null;
+      evidence: CastingEvidence[];
+      evaluation: CreatorRelevanceEvaluation;
+    };
+
+    const castingPassed: EvaluatedEntry[] = [];
 
     for (const profile of searchRecords) {
       try {
@@ -467,19 +498,137 @@ export async function POST(req: Request) {
           hasNonGenderCasting && Boolean(exact),
         );
 
-        if (evaluation.hardExcluded) {
-          if (evaluation.exclusionReason === 'relevance') droppedRelevanceFilter += 1;
-          else droppedLowScore += 1;
+        // Age exclusion always remains hard
+        if (evaluation.hardExcluded && evaluation.exclusionReason === 'age') {
+          droppedLowScore += 1;
           continue;
         }
 
-        const isAlternative = Boolean(related) || (evaluation.hasThematicRequirement && !evaluation.hasThematicMatch);
-        const relatedPriority = related
-          ? related.priority + 10
+        castingPassed.push({
+          profile,
+          exactCasting: exact,
+          relatedCastingMatch: related,
+          evidence,
+          evaluation,
+        });
+      } catch (error) {
+        droppedError += 1;
+        console.error(`[${requestId}] Error scoring creator ${profile.id}:`, error);
+      }
+    }
+
+    // Stage B: Hybrid retrieval (Postgres German Full-Text + Vector Embeddings via RRF)
+    const sql = getDatabase();
+    let ftsRanks = new Map<string, number>();
+    let queryEmbedding: number[] | null = null;
+    if (hasThematicQuery && castingPassed.length > 0) {
+      const ftsQueryText = [
+        query,
+        ...meaningfulKeywords.slice(0, 6),
+      ].join(' ');
+      const [ftsRes, embRes] = await Promise.all([
+        queryFullTextRanks(sql, ftsQueryText, 80),
+        pool.embeddings.size > 0 ? embedSingleText(query) : Promise.resolve(null),
+      ]);
+      ftsRanks = ftsRes;
+      queryEmbedding = embRes;
+    }
+
+    const hybridEntries = fuseHybridCandidates({
+      entries: castingPassed.map((e) => ({ profile: e.profile, evaluation: e.evaluation })),
+      ftsRanks,
+      embeddings: pool.embeddings,
+      queryEmbedding,
+    });
+    const hybridById = new Map(hybridEntries.map((h) => [h.profile.id, h]));
+
+    // Build candidate list eligible for reranking or direct deterministic+hybrid output
+    const candidatesForRanking: Array<EvaluatedEntry & {
+      ftsRank: number;
+      vectorSimilarity: number;
+      rrfScore: number;
+      hybridPromoted: boolean;
+      prelimScore: number;
+    }> = [];
+
+    for (const entry of castingPassed) {
+      const hybrid = hybridById.get(entry.profile.id)!;
+      const keep = !entry.evaluation.hardExcluded || hybrid.hybridPromoted;
+      if (!keep) {
+        droppedRelevanceFilter += 1;
+        continue;
+      }
+
+      const prelimScore =
+        entry.evaluation.totalScore +
+        Math.round(hybrid.rrfScore * 3_500) +
+        (hybrid.vectorSimilarity > 0 ? Math.round(hybrid.vectorSimilarity * 120) : 0);
+
+      candidatesForRanking.push({
+        ...entry,
+        ftsRank: hybrid.ftsRank,
+        vectorSimilarity: hybrid.vectorSimilarity,
+        rrfScore: hybrid.rrfScore,
+        hybridPromoted: hybrid.hybridPromoted,
+        prelimScore,
+      });
+    }
+
+    candidatesForRanking.sort((a, b) => b.prelimScore - a.prelimScore);
+
+    // Pre-filter agent hard constraints (city, topics, verification level) BEFORE rerank & 24-cap
+    const cityFilter = typeof reqBody.city === 'string' ? reqBody.city.trim().toLowerCase() : '';
+    const topicFilter: string[] = Array.isArray(reqBody.topics)
+      ? reqBody.topics.filter((t: unknown) => typeof t === 'string' && t.trim()).map((t: string) => t.trim().toLowerCase())
+      : [];
+    const minVerificationLevel =
+      typeof reqBody.humanVerificationLevelMin === 'number' && Number.isFinite(reqBody.humanVerificationLevelMin)
+        ? reqBody.humanVerificationLevelMin
+        : undefined;
+
+    const agentFiltered = candidatesForRanking.filter(({ profile }) => {
+      if (cityFilter && !profile.locationLower.includes(cityFilter)) return false;
+      if (
+        topicFilter.length &&
+        !topicFilter.some((t) => profile.topicSearchText.includes(t) || profile.topicsText.toLowerCase().includes(t))
+      ) {
+        return false;
+      }
+      if (minVerificationLevel !== undefined && profile.verificationLevel < minVerificationLevel) return false;
+      return true;
+    });
+
+    // Stage C: Grounded LLM Reranking on Top N candidates (only for thematic searches, with strict timeout & fallback)
+    let rerankVerdicts: Map<string, { fit: 'exact' | 'related' | 'reject'; score: number; reason: string }> | null = null;
+    if (hasThematicQuery && !hasNonGenderCasting && agentFiltered.length > 0 && Date.now() - startedAt < TIMEOUT_MS - 6_000) {
+      const topCandidates = agentFiltered.slice(0, MAX_RERANK_CANDIDATES);
+      rerankVerdicts = await rerankCandidatesWithLLM({
+        query,
+        analysis: initialAnalysis,
+        candidates: topCandidates.map((c) => buildRerankPayload(c.profile)),
+        requestId,
+        timeoutMs: 8_000,
+      });
+    }
+
+    const validCreators: ProcessedCreator[] = [];
+
+    for (const item of agentFiltered) {
+      const { profile, evaluation, relatedCastingMatch, evidence } = item;
+      const verdict = rerankVerdicts?.get(profile.id);
+
+      if (verdict) {
+        if (verdict.fit === 'reject') {
+          droppedRelevanceFilter += 1;
+          continue;
+        }
+        const isAlternative = Boolean(relatedCastingMatch) || verdict.fit === 'related';
+        const relatedPriority = relatedCastingMatch
+          ? relatedCastingMatch.priority + 10
           : isAlternative
             ? 1
             : 0;
-
+        const score = verdict.score * 10 + Math.round(evaluation.qualityScore);
         validCreators.push({
           id: profile.id,
           name: profile.firstName,
@@ -495,19 +644,64 @@ export async function POST(req: Request) {
           preferredContent: profile.formatsText,
           gender: profile.gender,
           ...(evidence.length ? { evidence } : {}),
-          ...(isAlternative
-            ? (evaluation.relatedReason ? { matchReason: evaluation.relatedReason } : {})
-            : (evaluation.matchReason ? { matchReason: evaluation.matchReason } : {})),
+          ...(verdict.reason
+            ? { matchReason: verdict.reason }
+            : isAlternative
+              ? (evaluation.relatedReason ? { matchReason: evaluation.relatedReason } : {})
+              : (evaluation.matchReason ? { matchReason: evaluation.matchReason } : {})),
           relatedPriority,
-          score: evaluation.totalScore,
-          relevanceScore: evaluation.relevanceScore,
+          score,
+          relevanceScore: verdict.score * 10,
           verificationLevel: profile.verificationLevel,
           topicSearchText: profile.topicSearchText,
         });
-      } catch (error) {
-        droppedError += 1;
-        console.error(`[${requestId}] Error scoring creator ${profile.id}:`, error);
+        continue;
       }
+
+      // Deterministic + Hybrid RRF fallback (used when no LLM rerank ran or for tail beyond top N)
+      const strongSemanticExact =
+        item.hybridPromoted && item.vectorSimilarity >= SEMANTIC_EXACT_SIMILARITY;
+      const isPrimaryMatch =
+        Boolean(item.exactCasting) &&
+        (!evaluation.hasThematicRequirement || evaluation.hasThematicMatch || strongSemanticExact);
+
+      const isAlternative = Boolean(relatedCastingMatch) || !isPrimaryMatch;
+      const relatedPriority = relatedCastingMatch
+        ? relatedCastingMatch.priority + 10
+        : isAlternative
+          ? 1
+          : 0;
+
+      const semanticReason = item.hybridPromoted
+        ? strongSemanticExact
+          ? 'Semantisch passendes Profil zur Anfrage'
+          : 'Thematisch verwandtes Profil'
+        : undefined;
+
+      validCreators.push({
+        id: profile.id,
+        name: profile.firstName,
+        image: profile.finalImage,
+        reach: profile.reachText,
+        totalReach: profile.totalReach,
+        hasCustomImage: profile.hasCustomImage,
+        networks: profile.networksList,
+        priceRange: profile.priceRange,
+        contactReachable: profile.contactReachable,
+        city: profile.location,
+        topics: profile.topicsText,
+        preferredContent: profile.formatsText,
+        gender: profile.gender,
+        ...(evidence.length ? { evidence } : {}),
+        ...(isAlternative
+          ? (evaluation.relatedReason || semanticReason ? { matchReason: evaluation.relatedReason || semanticReason } : {})
+          : (evaluation.matchReason || semanticReason ? { matchReason: evaluation.matchReason || semanticReason } : {})),
+        relatedPriority,
+        score: item.prelimScore,
+        relevanceScore: evaluation.relevanceScore + Math.round(item.rrfScore * 3_500),
+        verificationLevel: profile.verificationLevel,
+        topicSearchText: profile.topicSearchText,
+      });
     }
 
     validCreators.sort((a, b) => {
@@ -518,32 +712,8 @@ export async function POST(req: Request) {
       return b.totalReach - a.totalReach;
     });
 
-    // Harte Filter der Agenten-Schnittstellen (app/lib/agent-gateway.ts). Muessen
-    // VOR der 24er-Kappung greifen: danach blieb von 12 Berliner Profilen nur
-    // uebrig, wer zufaellig schon in den Top 24 stand.
-    const cityFilter = typeof reqBody.city === 'string' ? reqBody.city.trim().toLowerCase() : '';
-    const topicFilter: string[] = Array.isArray(reqBody.topics)
-      ? reqBody.topics.filter((t: unknown) => typeof t === 'string' && t.trim()).map((t: string) => t.trim().toLowerCase())
-      : [];
-    const minVerificationLevel =
-      typeof reqBody.humanVerificationLevelMin === 'number' && Number.isFinite(reqBody.humanVerificationLevelMin)
-        ? reqBody.humanVerificationLevelMin
-        : undefined;
-
-    const eligible = validCreators.filter((creator) => {
-      if (cityFilter && !String(creator.city || '').toLowerCase().includes(cityFilter)) return false;
-      if (
-        topicFilter.length &&
-        !topicFilter.some((t) => creator.topicSearchText.includes(t) || String(creator.topics || '').toLowerCase().includes(t))
-      ) {
-        return false;
-      }
-      if (minVerificationLevel !== undefined && creator.verificationLevel < minVerificationLevel) return false;
-      return true;
-    });
-
-    const matchedCreators = eligible.filter((creator) => creator.relatedPriority === 0);
-    const alternatives = eligible.filter((creator) => creator.relatedPriority > 0);
+    const matchedCreators = validCreators.filter((creator) => creator.relatedPriority === 0);
+    const alternatives = validCreators.filter((creator) => creator.relatedPriority > 0);
     const publicCard = ({
       hasCustomImage,
       totalReach,
@@ -558,10 +728,9 @@ export async function POST(req: Request) {
     const processingTime = Date.now() - startedAt;
 
     console.log(
-      `[${requestId}] Search done in ${processingTime}ms: matched=${matchedCreators.length}/${searchRecords.length} alt=${alternatives.length} returned=${finalCreators.length}`,
+      `[${requestId}] Search done in ${processingTime}ms: matched=${matchedCreators.length}/${searchRecords.length} alt=${alternatives.length} returned=${finalCreators.length} hybrid=${Boolean(queryEmbedding || ftsRanks.size)} reranked=${Boolean(rerankVerdicts)}`,
     );
 
-    // Header setzt nur app/lib/agent-gateway.ts (MCP/A2A); Statistik, kein Zugriffsschutz.
     await logSearch(query, matchedCreators.length, req.headers.get('x-search-source') === 'agent' ? 'agent' : 'web');
 
     return NextResponse.json({
@@ -577,6 +746,8 @@ export async function POST(req: Request) {
         droppedError,
         droppedGenderFilter,
         droppedEvidenceFilter,
+        hybridUsed: Boolean(queryEmbedding || ftsRanks.size > 0),
+        reranked: Boolean(rerankVerdicts),
       },
       query,
       reasoning,
@@ -612,9 +783,6 @@ export async function POST(req: Request) {
   }
 }
 
-// Bewusst nur kleine, guenstige Modelle: die Query-Analyse ist ein kurzer
-// JSON-Extraktionsjob. Obergrenze ist DeepSeek V4 Flash (0731 = gepinnte
-// Version, ohne Suffix = Alias als Fallback).
 const OPENROUTER_ANALYSIS_MODELS = [
   'deepseek/deepseek-v4-flash-0731',
   'deepseek/deepseek-v4-flash',
@@ -671,8 +839,6 @@ Regeln:
           ],
           temperature: 0.2,
           max_tokens: 300,
-          // DeepSeek V4 Flash ist ein Reasoning-Modell: ohne diese Option
-          // verbraucht es die 300 Tokens fuers Denken und liefert content: null.
           reasoning: { enabled: false },
         }),
         signal: AbortSignal.timeout(12_000),

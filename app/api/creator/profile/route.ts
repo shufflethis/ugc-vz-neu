@@ -15,6 +15,7 @@ import {
   socialPlatform,
 } from '@/app/lib/creator-registration';
 import { tryUpdateSocialAvatar } from '@/app/lib/social-avatar';
+import { upsertCreatorSearchIndex } from '@/app/lib/search-index';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -223,6 +224,9 @@ export async function POST(request: NextRequest) {
     if (!after.profileImageUrl && socialLinks.length > 0) {
       await tryUpdateSocialAvatar(sql, creatorId, socialLinks, 3000);
     }
+
+    // Best-Effort: Hybrid-Suchindex sofort auf neuen Profilstand bringen.
+    await upsertCreatorSearchIndex(sql, creatorId).catch(() => {});
 
     return NextResponse.json({ success: true, message: 'Dein Profil wurde gespeichert.' });
   } catch (error) {

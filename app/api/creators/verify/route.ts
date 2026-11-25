@@ -12,6 +12,7 @@ import {
   type CreatorRegistrationPayload,
 } from '@/app/lib/creator-registration';
 import { tryUpdateSocialAvatar } from '@/app/lib/social-avatar';
+import { upsertCreatorSearchIndex } from '@/app/lib/search-index';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -203,6 +204,9 @@ export async function GET(request: Request) {
     if (!profileImageUrl && socialLinks.length > 0) {
       await tryUpdateSocialAvatar(sql, creatorId, socialLinks, 3000);
     }
+
+    // Best-Effort: Hybrid-Suchindex (tsvector + Embedding) sofort aktualisieren.
+    await upsertCreatorSearchIndex(sql, creatorId).catch(() => {});
 
     if (process.env.RESEND_API_KEY && process.env.UGC_INTERNAL_EMAIL) {
       const resend = new Resend(process.env.RESEND_API_KEY);

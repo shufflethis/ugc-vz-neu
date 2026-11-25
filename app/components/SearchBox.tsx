@@ -568,6 +568,11 @@ export default function SearchBox({ initialQuery = '', showFeatured = false, dem
                   </div>
                   <div className="min-w-0 space-y-2 text-left">
                     <CastingEvidenceList evidence={creator.evidence} />
+                    {creator.matchReason && (
+                      <p className="rounded-lg bg-geo-violet/10 px-2.5 py-1.5 text-xs font-medium leading-4 text-geo-violet">
+                        {creator.matchReason}
+                      </p>
+                    )}
                     {creator.topics && <p className="line-clamp-2 break-words text-sm">{creator.topics}</p>}
                     {creator.preferredContent && <p className="line-clamp-2 break-words text-sm">{creator.preferredContent}</p>}
                     <p className="line-clamp-3 whitespace-pre-line break-words text-sm"><span className="font-semibold">Preisvorstellung: </span>{humanizePriceText(creator.priceRange) || 'Auf Anfrage'}</p>
