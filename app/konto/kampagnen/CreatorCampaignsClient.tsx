@@ -35,17 +35,25 @@ const COMP_MODEL_LABEL: Record<CreatorCampaignItem['compensationModel'], string>
 
 const PLATFORM_LABEL: Record<string, string> = {
   tiktok: 'TikTok',
-  instagram: 'Instagram',
-  youtube: 'YouTube',
+  instagram: 'Instagram Reels',
+  youtube: 'YouTube Shorts',
+  tiktok_shop: 'TikTok Shop',
   meta_ads: 'Meta Ads',
   other: 'Sonstige',
 };
 
+const CREATOR_POST_PLATFORMS: Array<{ id: string; label: string }> = [
+  { id: 'tiktok', label: 'TikTok' },
+  { id: 'instagram', label: 'Instagram Reels' },
+  { id: 'youtube', label: 'YouTube Shorts' },
+  { id: 'tiktok_shop', label: 'TikTok Shop' },
+];
+
 const formatBudget = (item: CreatorCampaignItem) => {
   const parts: string[] = [];
+  if (item.tkpEurCents) parts.push(`${(item.tkpEurCents / 100).toFixed(2).replace('.', ',')} € / 1.000 Views`);
   if (item.budgetPerVideoEur) parts.push(`${item.budgetPerVideoEur} € / Video`);
-  if (item.totalBudgetEur) parts.push(`${item.totalBudgetEur} € Gesamtbudget`);
-  if (item.tkpEurCents) parts.push(`${(item.tkpEurCents / 100).toFixed(2).replace('.', ',')} € TKP`);
+  if (item.totalBudgetEur) parts.push(`Budget-Limit ${item.totalBudgetEur.toLocaleString('de-DE')} €`);
   return parts.length ? parts.join(' · ') : COMP_MODEL_LABEL[item.compensationModel];
 };
 
@@ -231,10 +239,19 @@ function CampaignCard({
   onUpdated: (msg: string) => Promise<void>;
   onError: (msg: string) => void;
 }) {
+  const defaultPlatforms = item.targetPlatforms.length
+    ? item.targetPlatforms
+    : item.platforms.filter((p) => CREATOR_POST_PLATFORMS.some((cp) => cp.id === p));
   const [pitch, setPitch] = useState(item.creatorPitch || '');
   const [proposedFeeEur, setProposedFeeEur] = useState(item.proposedFeeEur ? String(item.proposedFeeEur) : item.budgetPerVideoEur ? String(item.budgetPerVideoEur) : '');
   const [availabilityNote, setAvailabilityNote] = useState(item.availabilityNote || '');
+  const [targetPlatforms, setTargetPlatforms] = useState<string[]>(defaultPlatforms.length ? defaultPlatforms : ['tiktok']);
+  const [productChoice, setProductChoice] = useState(item.productChoice || '');
   const [busyApply, setBusyApply] = useState(false);
+
+  const toggleTargetPlatform = (id: string) => {
+    setTargetPlatforms((prev) => (prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]));
+  };
 
   const [contentUrl, setContentUrl] = useState('');
   const [clipTitle, setClipTitle] = useState('');
@@ -247,9 +264,19 @@ function CampaignCard({
   const badge = STATUS_BADGE[item.status] || STATUS_BADGE.open;
   const canApplyOrRespond = ['open', 'invited', 'applied', 'shortlisted', 'declined'].includes(item.status);
   const canSubmitContent = ['selected', 'delivered', 'approved'].includes(item.status);
+  const isPureTkp = item.compensationModel === 'tkp' && Boolean(item.tkpEurCents);
+  const tkpPer1k = item.tkpEurCents ? item.tkpEurCents / 100 : null;
 
   const submitApplication = async (e: FormEvent, action: 'apply' | 'decline' = 'apply') => {
     e.preventDefault();
+    if (action !== 'decline' && targetPlatforms.length === 0) {
+      onError('Bitte wähle mindestens eine Plattform aus, auf der du posten möchtest.');
+      return;
+    }
+    if (action !== 'decline' && item.requiresProductChoice && !productChoice.trim()) {
+      onError('Bitte gib deine gewünschte Produkt-/Varianten-Auswahl an.');
+      return;
+    }
     setBusyApply(true);
     try {
       const res = await fetch(`/api/creator/campaigns/${encodeURIComponent(item.campaignPublicId)}/apply`, {
@@ -258,8 +285,10 @@ function CampaignCard({
         body: JSON.stringify({
           action,
           pitch,
-          proposedFeeEur: proposedFeeEur ? Number(proposedFeeEur) : null,
+          proposedFeeEur: !isPureTkp && item.compensationModel !== 'barter' && proposedFeeEur ? Number(proposedFeeEur) : null,
           availabilityNote,
+          targetPlatforms,
+          productChoice: productChoice.trim(),
         }),
       });
       const data = await res.json();
@@ -359,8 +388,27 @@ function CampaignCard({
         </div>
       </div>
 
+      {(tkpPer1k !== null || item.discountCode) && (
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-geo-green/50 bg-[#f6fbf1] px-4 py-3 text-xs text-[#385523]">
+          {tkpPer1k !== null && (
+            <p>
+              <strong>Pay-per-View:</strong> {tkpPer1k.toFixed(2).replace('.', ',')} € pro 1.000 Views
+              {' · '}z. B. 25.000 Views = <strong>{(25 * tkpPer1k).toLocaleString('de-DE')} €</strong>, 100.000 Views = <strong>{(100 * tkpPer1k).toLocaleString('de-DE')} €</strong>
+              {item.remainingBudgetEur !== null && (
+                <> · {item.capReached ? <strong>Budget-Limit erreicht</strong> : <>noch <strong>{item.remainingBudgetEur.toLocaleString('de-DE')} €</strong> im Budget frei</>}</>
+              )}
+            </p>
+          )}
+          {item.discountCode && (
+            <span className="rounded-full bg-white px-3 py-1 font-semibold text-ink">
+              Aktion: {item.discountCode}
+            </span>
+          )}
+        </div>
+      )}
+
       {canApplyOrRespond && (
-        <form onSubmit={(e) => submitApplication(e, 'apply')} className="mt-5 space-y-3 border-t border-hairline pt-5">
+        <form onSubmit={(e) => submitApplication(e, 'apply')} className="mt-5 space-y-3.5 border-t border-hairline pt-5">
           <p className="text-sm font-bold text-ink">
             {item.status === 'open'
               ? 'Jetzt auf diese Kampagne bewerben'
@@ -368,19 +416,71 @@ function CampaignCard({
                 ? 'Auf deine persönliche Einladung antworten'
                 : 'Deine Bewerbungsangaben aktualisieren'}
           </p>
-          <div className="grid gap-3 sm:grid-cols-2">
+
+          <div>
+            <span className="mb-1.5 block text-xs font-semibold text-ink">
+              Auf welchen Plattformen möchtest du posten? *
+            </span>
+            <div className="flex flex-wrap gap-2">
+              {CREATOR_POST_PLATFORMS.map((p) => {
+                const active = targetPlatforms.includes(p.id);
+                return (
+                  <button
+                    key={p.id}
+                    type="button"
+                    aria-pressed={active}
+                    onClick={() => toggleTargetPlatform(p.id)}
+                    className={`rounded-full border px-3.5 py-1.5 text-xs font-semibold transition ${
+                      active
+                        ? 'border-geo-violet bg-geo-violet text-white'
+                        : 'border-hairline bg-white text-ink hover:border-geo-violet'
+                    }`}
+                  >
+                    {active ? '✓ ' : '+ '}
+                    {p.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {item.requiresProductChoice && (
             <label className="block">
-              <span className="mb-1 block text-xs font-semibold text-ink">Dein Honorarvorschlag (€, optional)</span>
+              <span className="mb-1 block text-xs font-semibold text-ink">
+                {item.productChoicePrompt || 'Gewünschtes Produkt / Variante aus dem Shop'} *
+              </span>
               <input
-                type="number"
-                min={0}
-                max={50000}
-                value={proposedFeeEur}
-                onChange={(e) => setProposedFeeEur(e.target.value)}
-                placeholder="z. B. 250"
+                type="text"
+                required
+                maxLength={300}
+                value={productChoice}
+                onChange={(e) => setProductChoice(e.target.value)}
+                placeholder="z. B. Produktname, Farbe, Größe oder direkter Shop-Link"
                 className={fieldClass}
               />
             </label>
+          )}
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            {!isPureTkp && item.compensationModel !== 'barter' ? (
+              <label className="block">
+                <span className="mb-1 block text-xs font-semibold text-ink">Dein Honorarvorschlag (€, optional)</span>
+                <input
+                  type="number"
+                  min={0}
+                  max={50000}
+                  value={proposedFeeEur}
+                  onChange={(e) => setProposedFeeEur(e.target.value)}
+                  placeholder="z. B. 250"
+                  className={fieldClass}
+                />
+              </label>
+            ) : (
+              <div className="rounded-xl border border-hairline bg-surface/60 px-3.5 py-2.5 text-xs text-ink-soft">
+                <span className="block font-semibold text-ink">Feste Kampagnen-Vergütung</span>
+                <span className="mt-0.5 block">{formatBudget(item)}</span>
+              </div>
+            )}
             <label className="block">
               <span className="mb-1 block text-xs font-semibold text-ink">Verfügbarkeit / Lieferzeit (optional)</span>
               <input
@@ -388,7 +488,7 @@ function CampaignCard({
                 maxLength={200}
                 value={availabilityNote}
                 onChange={(e) => setAvailabilityNote(e.target.value)}
-                placeholder="z. B. Erste Drafts in 5 Tagen"
+                placeholder="z. B. Erste Clips innerhalb von 3 Tagen"
                 className={fieldClass}
               />
             </label>

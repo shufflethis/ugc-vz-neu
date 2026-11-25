@@ -4,6 +4,7 @@ import { getDatabase, isDatabaseConfigured } from '../lib/database';
 import { verifySession, CREATOR_SESSION_COOKIE } from '../lib/creator-session';
 import { loadCreatorProfile } from '../lib/creator-profile';
 import { listCreatorSocialConnections, type CreatorSocialConnection } from '../lib/brand-workspace';
+import { getSocialOAuthAvailability } from '../lib/social-oauth';
 import KontoClient from './KontoClient';
 
 export const dynamic = 'force-dynamic';
@@ -18,7 +19,7 @@ export const metadata: Metadata = {
 export default async function KontoPage({
   searchParams,
 }: {
-  searchParams?: { invalid?: string; error?: string; login?: string };
+  searchParams?: { invalid?: string; error?: string; login?: string; oauth?: string };
 }) {
   const token = cookies().get(CREATOR_SESSION_COOKIE)?.value;
   const creatorId = verifySession(token);
@@ -37,5 +38,13 @@ export default async function KontoPage({
       socialConnections = [];
     }
   }
-  return <KontoClient profile={profile} socialConnections={socialConnections} loginNoSession={!profile && searchParams?.login === '1'} />;
+  return (
+    <KontoClient
+      profile={profile}
+      socialConnections={socialConnections}
+      oauthEnabled={getSocialOAuthAvailability()}
+      oauthStatus={searchParams?.oauth}
+      loginNoSession={!profile && searchParams?.login === '1'}
+    />
+  );
 }

@@ -25,6 +25,7 @@ import { GET as getReportCsv } from '../app/api/brand/campaigns/[id]/report.csv/
 import { POST as creatorApply } from '../app/api/creator/campaigns/[id]/apply/route';
 import { POST as creatorSubmit } from '../app/api/creator/campaigns/[id]/submit/route';
 import { POST as creatorSocialVerify } from '../app/api/creator/social-verify/route';
+import { createPkcePair, signOAuthState, verifyOAuthState } from '../app/lib/social-oauth';
 
 async function main() {
   // 1. Unit tests for quick-fix price sanitization & social handle parsing
@@ -70,6 +71,7 @@ async function main() {
       '015_casting_portfolio',
       '016_avatar_casting_review',
       '017_brand_workspace',
+      '018_campaign_tkp_platforms_and_oauth',
     ]) {
       const sql = await readFile(`db/migrations/${migration}.sql`, 'utf8');
       await db.exec(sql.replace('CREATE EXTENSION IF NOT EXISTS pgcrypto;', ''));
@@ -331,7 +333,142 @@ async function main() {
     assert.ok(csvText.includes(`"'=Hook 1 Rasur"`), 'Formula-like CSV cells must be neutralized');
     assert.equal(csvText, buildCampaignReportCsv(detail));
 
-    console.log('OK: Brand-Workspace (Quick-Fixes, Auth, Kampagnen, Bewerbungen, Social-Verify, IDOR, Tracking, Reporting & CSV)');
+    // 3. Test TKP + Budget-Cap (2 EUR / 1.000 Views, 500 EUR Cap) + Platform & Product-Choice Flow
+    const tkpCamp = await createBrandCampaign(client, brandA, {
+      title: 'Performance TKP Test (500 EUR Cap)',
+      brandDisplayName: 'Nordic Grooming GmbH',
+      platforms: ['tiktok', 'instagram', 'tiktok_shop'],
+      compensationModel: 'tkp',
+      tkpEurCents: 200,
+      totalBudgetEur: 500,
+      requiresProductChoice: true,
+      productChoicePrompt: 'Welche Variante möchtest du testen?',
+      discountCode: '20 % Shop-Rabatt',
+      visibility: 'open',
+    });
+
+    // Empty targetPlatforms rejected
+    const badPlatRes = await creatorApply(
+      new NextRequest(`https://ugc-vz.de/api/creator/campaigns/${tkpCamp.publicId}/apply`, {
+        method: 'POST',
+        headers: { origin: 'https://ugc-vz.de', cookie: creator2Cookie },
+        body: JSON.stringify({ targetPlatforms: [], productChoice: 'Classic Schwarz' }),
+      }),
+      { params: { id: tkpCamp.publicId } },
+    );
+    assert.equal(badPlatRes.status, 400);
+
+    // Missing required productChoice rejected
+    const badProdRes = await creatorApply(
+      new NextRequest(`https://ugc-vz.de/api/creator/campaigns/${tkpCamp.publicId}/apply`, {
+        method: 'POST',
+        headers: { origin: 'https://ugc-vz.de', cookie: creator2Cookie },
+        body: JSON.stringify({ targetPlatforms: ['tiktok', 'tiktok_shop'], productChoice: '' }),
+      }),
+      { params: { id: tkpCamp.publicId } },
+    );
+    assert.equal(badProdRes.status, 400);
+
+    // Valid TKP application with targetPlatforms + productChoice
+    const tkpApplyRes = await creatorApply(
+      new NextRequest(`https://ugc-vz.de/api/creator/campaigns/${tkpCamp.publicId}/apply`, {
+        method: 'POST',
+        headers: { origin: 'https://ugc-vz.de', cookie: creator2Cookie },
+        body: JSON.stringify({
+          pitch: 'Ich poste auf TikTok & TikTok Shop!',
+          targetPlatforms: ['tiktok', 'tiktok_shop'],
+          productChoice: 'Classic Schwarz (Gr. M)',
+        }),
+      }),
+      { params: { id: tkpCamp.publicId } },
+    );
+    assert.equal(tkpApplyRes.status, 201);
+    const tkpAppId = (await tkpApplyRes.json()).applicationId;
+
+    // Select Creator 2 & submit two clips pushing over the 500 EUR cap
+    await patchApplication(
+      new NextRequest(`https://ugc-vz.de/api/brand/campaigns/${tkpCamp.publicId}/applications/${tkpAppId}`, {
+        method: 'PATCH',
+        headers: { origin: 'https://ugc-vz.de', cookie: brandACookie },
+        body: JSON.stringify({ status: 'selected' }),
+      }),
+      { params: { id: tkpCamp.publicId, appId: tkpAppId } },
+    );
+
+    const tkpSub1 = (
+      await (
+        await creatorSubmit(
+          new NextRequest(`https://ugc-vz.de/api/creator/campaigns/${tkpCamp.publicId}/submit`, {
+            method: 'POST',
+            headers: { origin: 'https://ugc-vz.de', cookie: creator2Cookie },
+            body: JSON.stringify({ contentUrl: 'https://www.tiktok.com/@sarah/video/1', views: 50000 }),
+          }),
+          { params: { id: tkpCamp.publicId } },
+        )
+      ).json()
+    ).submission;
+
+    // Brand updates views to 150.000 with autoCalculateTkp -> 300 EUR
+    const tkpUpd1 = await patchSubmission(
+      new NextRequest(`https://ugc-vz.de/api/brand/campaigns/${tkpCamp.publicId}/submissions/${tkpSub1.id}`, {
+        method: 'PATCH',
+        headers: { origin: 'https://ugc-vz.de', cookie: brandACookie },
+        body: JSON.stringify({ status: 'approved', views: 150000, autoCalculateTkp: true }),
+      }),
+      { params: { id: tkpCamp.publicId, subId: tkpSub1.id } },
+    );
+    assert.equal(tkpUpd1.status, 200);
+    assert.equal((await tkpUpd1.json()).submission.spendEurCents, 30000);
+
+    const midDetail = await getBrandCampaignDetail(client, brandA.id, tkpCamp.publicId);
+    assert.ok(midDetail);
+    assert.deepEqual(midDetail.applications[0].targetPlatforms, ['tiktok', 'tiktok_shop']);
+    assert.equal(midDetail.applications[0].productChoice, 'Classic Schwarz (Gr. M)');
+    assert.equal(midDetail.report.accruedTkpEur, 300);
+    assert.equal(midDetail.report.cappedPayoutEur, 300);
+    assert.equal(midDetail.report.remainingBudgetEur, 200);
+    assert.equal(midDetail.report.viewsUntilCap, 100000);
+    assert.equal(midDetail.report.maxCapViews, 250000);
+    assert.equal(midDetail.report.capReached, false);
+
+    // Clip 2 adds 125.000 views -> raw 550 EUR -> clamped at 500 EUR Cap!
+    await creatorSubmit(
+      new NextRequest(`https://ugc-vz.de/api/creator/campaigns/${tkpCamp.publicId}/submit`, {
+        method: 'POST',
+        headers: { origin: 'https://ugc-vz.de', cookie: creator2Cookie },
+        body: JSON.stringify({ contentUrl: 'https://www.instagram.com/reel/CAPTEST/', views: 125000 }),
+      }),
+      { params: { id: tkpCamp.publicId } },
+    );
+    const cappedDetail = await getBrandCampaignDetail(client, brandA.id, tkpCamp.publicId);
+    assert.ok(cappedDetail);
+    assert.equal(cappedDetail.report.accruedTkpEur, 550);
+    assert.equal(cappedDetail.report.cappedPayoutEur, 500);
+    assert.equal(cappedDetail.report.remainingBudgetEur, 0);
+    assert.equal(cappedDetail.report.viewsUntilCap, 0);
+    assert.equal(cappedDetail.report.capReached, true);
+
+    // Open-budget TKP report (without totalBudgetEur limit) stays uncapped
+    const openBudgetReport = computeCampaignReport(cappedDetail.submissions, {
+      totalBudgetEur: null,
+      compensationModel: 'tkp',
+      tkpEurCents: 200,
+    });
+    assert.equal(openBudgetReport.cappedPayoutEur, 550);
+    assert.equal(openBudgetReport.remainingBudgetEur, null);
+    assert.equal(openBudgetReport.capReached, false);
+
+    // 4. Test Social OAuth PKCE & Signed State roundtrip
+    const pkce = createPkcePair();
+    assert.ok(pkce.codeVerifier.length >= 40 && pkce.codeChallenge.length >= 40);
+    const signed = signOAuthState({ creatorId: creator1.id, provider: 'tiktok', nonce: 'nonce-123', codeVerifier: pkce.codeVerifier });
+    const parsed = verifyOAuthState(signed, 'tiktok');
+    assert.ok(parsed);
+    assert.equal(parsed.creatorId, creator1.id);
+    assert.equal(parsed.codeVerifier, pkce.codeVerifier);
+    assert.equal(verifyOAuthState(signed, 'instagram'), null, 'Provider mismatch must reject OAuth state');
+
+    console.log('OK: Brand-Workspace (Quick-Fixes, Auth, Kampagnen, TKP-Cap, Plattformen/Produktwahl, Social-Verify/OAuth, IDOR, Tracking, Reporting & CSV)');
   } finally {
     await db.close();
   }

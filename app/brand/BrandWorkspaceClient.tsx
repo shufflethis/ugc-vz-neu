@@ -203,14 +203,65 @@ function BrandDashboard({
   const [brandDisplayName, setBrandDisplayName] = useState(brand.companyName || brand.contactName || '');
   const [niche, setNiche] = useState('');
   const [deliverables, setDeliverables] = useState('3× 30s UGC-Videos (9:16) inkl. 2 Hooks');
-  const [compensationModel, setCompensationModel] = useState<CompensationModel>('fixed');
-  const [budgetPerVideoEur, setBudgetPerVideoEur] = useState('250');
-  const [totalBudgetEur, setTotalBudgetEur] = useState('1500');
-  const [usageRights, setUsageRights] = useState('12 Monate Paid Ads (Meta & TikTok)');
-  const [deadline, setDeadline] = useState('Erste Clips innerhalb von 14 Tagen');
+  const [compensationModel, setCompensationModel] = useState<CompensationModel>('tkp');
+  const [budgetPerVideoEur, setBudgetPerVideoEur] = useState('');
+  const [tkpEur, setTkpEur] = useState('2.00');
+  const [totalBudgetEur, setTotalBudgetEur] = useState('500');
+  const [requiresProductChoice, setRequiresProductChoice] = useState(false);
+  const [productChoicePrompt, setProductChoicePrompt] = useState('');
+  const [discountCode, setDiscountCode] = useState('');
+  const [usageRights, setUsageRights] = useState('Organische Nutzung + 6 Monate Repost-Rechte');
+  const [deadline, setDeadline] = useState('Laufzeit 14 Tage oder bis Budget-Limit erreicht');
   const [visibility, setVisibility] = useState<CampaignVisibility>('open');
-  const [platforms, setPlatforms] = useState<string[]>(['tiktok', 'instagram']);
+  const [platforms, setPlatforms] = useState<string[]>(['tiktok', 'instagram', 'youtube']);
   const [description, setDescription] = useState('');
+
+  const applyPreset = (preset: 'tkp_cap' | 'product_tkp' | 'fixed_ugc') => {
+    if (preset === 'tkp_cap') {
+      setCompensationModel('tkp');
+      setTkpEur('2.00');
+      setBudgetPerVideoEur('');
+      setTotalBudgetEur('500');
+      setDeliverables('1–3 authentische Short-Videos (TikTok / Reels / Shorts) inkl. Aktions-Hinweis');
+      setUsageRights('Organische Creator-Posts + Repost-Rechte (0 % Plattform-Provision)');
+      setDeadline('Aktionszeitraum / optionales Budget-Limit');
+      setPlatforms(['tiktok', 'instagram', 'youtube']);
+      setRequiresProductChoice(false);
+      setProductChoicePrompt('');
+      setDiscountCode('z. B. 20 % Aktionsrabatt im Shop (kein Produktversand nötig)');
+    } else if (preset === 'product_tkp') {
+      setCompensationModel('tkp');
+      setTkpEur('2.00');
+      setBudgetPerVideoEur('');
+      setTotalBudgetEur('');
+      setDeliverables('Produkt-Showcase / Review nach Musterversand (1–3 Clips)');
+      setUsageRights('Organische Posts + 6 Monate Paid Ads / TikTok Shop');
+      setDeadline('Erste Clips 10 Tage nach Produktzustellung');
+      setPlatforms(['tiktok', 'instagram', 'tiktok_shop']);
+      setRequiresProductChoice(true);
+      setProductChoicePrompt('Welches Produkt / welche Variante, Größe oder App-Option möchtest du testen?');
+      setDiscountCode('');
+    } else {
+      setCompensationModel('fixed');
+      setTkpEur('');
+      setBudgetPerVideoEur('250');
+      setTotalBudgetEur('1500');
+      setDeliverables('3× 30s UGC-Videos (9:16) inkl. 2 Hooks');
+      setUsageRights('12 Monate Paid Ads (Meta & TikTok)');
+      setDeadline('Erste Clips innerhalb von 14 Tagen');
+      setPlatforms(['tiktok', 'instagram', 'meta_ads']);
+      setRequiresProductChoice(false);
+      setProductChoicePrompt('');
+      setDiscountCode('');
+    }
+  };
+
+  const tkpNumeric = Number(String(tkpEur).replace(',', '.'));
+  const totalBudgetNumeric = Number(totalBudgetEur);
+  const estimatedCapViews =
+    (compensationModel === 'tkp' || compensationModel === 'hybrid') && tkpNumeric > 0 && totalBudgetNumeric > 0
+      ? Math.floor((totalBudgetNumeric / tkpNumeric) * 1000)
+      : null;
 
   const totals = campaigns.reduce(
     (acc, c) => ({
@@ -235,6 +286,10 @@ function BrandDashboard({
     }
     setCreating(true);
     try {
+      const tkpCents =
+        (compensationModel === 'tkp' || compensationModel === 'hybrid') && tkpNumeric > 0
+          ? Math.round(tkpNumeric * 100)
+          : null;
       const res = await fetch('/api/brand/campaigns', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -246,6 +301,10 @@ function BrandDashboard({
           compensationModel,
           budgetPerVideoEur: budgetPerVideoEur ? Number(budgetPerVideoEur) : null,
           totalBudgetEur: totalBudgetEur ? Number(totalBudgetEur) : null,
+          tkpEurCents: tkpCents,
+          requiresProductChoice,
+          productChoicePrompt,
+          discountCode,
           usageRights,
           deadline,
           visibility,
@@ -338,10 +397,44 @@ function BrandDashboard({
               </button>
             </div>
 
+            {/* 1-Klick Kampagnen-Vorlagen */}
+            <div className="space-y-2">
+              <span className={labelClass}>1-Klick-Vorlage wählen (optional)</span>
+              <div className="grid gap-2.5 sm:grid-cols-3">
+                {[
+                  {
+                    id: 'tkp_cap' as const,
+                    name: 'Pay-per-View / TKP',
+                    sub: 'z. B. 2 €/1.000 Views · optionales Budget-Limit · ohne Versand',
+                  },
+                  {
+                    id: 'product_tkp' as const,
+                    name: 'Produkt-Test + TKP',
+                    sub: 'Für alle Produkte & Services · inkl. Varianten-Auswahl',
+                  },
+                  {
+                    id: 'fixed_ugc' as const,
+                    name: 'UGC-Paket (Festpreis)',
+                    sub: 'z. B. 250 €/Video · Paid-Ads-Buyout',
+                  },
+                ].map((preset) => (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    onClick={() => applyPreset(preset.id)}
+                    className="rounded-2xl border border-hairline bg-white p-3.5 text-left transition hover:border-geo-violet hover:shadow-sm"
+                  >
+                    <p className="text-xs font-bold text-geo-violet">{preset.name}</p>
+                    <p className="mt-1 text-xs text-ink-soft">{preset.sub}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <div className="grid gap-4 md:grid-cols-2">
               <div>
                 <label htmlFor="camp-title" className={labelClass}>Kampagnentitel *</label>
-                <input id="camp-title" required value={title} onChange={(e) => setTitle(e.target.value)} placeholder="z. B. Winter-Launch Hautpflege Reels (DE)" className={fieldClass} />
+                <input id="camp-title" required value={title} onChange={(e) => setTitle(e.target.value)} placeholder="z. B. Aktions-Kampagne Short-Videos (DE)" className={fieldClass} />
               </div>
               <div>
                 <label htmlFor="camp-brand" className={labelClass}>Anzeigename der Brand</label>
@@ -349,7 +442,7 @@ function BrandDashboard({
               </div>
               <div>
                 <label htmlFor="camp-niche" className={labelClass}>Branche / Nische</label>
-                <input id="camp-niche" value={niche} onChange={(e) => setNiche(e.target.value)} placeholder="z. B. Beauty & Skincare, Food, Tech" className={fieldClass} />
+                <input id="camp-niche" value={niche} onChange={(e) => setNiche(e.target.value)} placeholder="z. B. Streetwear, Beauty, Food, Tech" className={fieldClass} />
               </div>
               <div>
                 <label htmlFor="camp-deliverables" className={labelClass}>Deliverables</label>
@@ -361,19 +454,26 @@ function BrandDashboard({
               <div>
                 <label htmlFor="camp-model" className={labelClass}>Vergütungsmodell</label>
                 <select id="camp-model" value={compensationModel} onChange={(e) => setCompensationModel(e.target.value as CompensationModel)} className={fieldClass}>
-                  <option value="fixed">Festpreis / Paket</option>
                   <option value="tkp">Pay-per-View (TKP)</option>
-                  <option value="hybrid">Hybrid (Fix + Provision)</option>
+                  <option value="fixed">Festpreis / Paket</option>
+                  <option value="hybrid">Hybrid (Fix + TKP-Bonus)</option>
                   <option value="barter">Produkt / Seeding</option>
                 </select>
               </div>
+              {(compensationModel === 'tkp' || compensationModel === 'hybrid') ? (
+                <div>
+                  <label htmlFor="camp-tkp" className={labelClass}>TKP (€ / 1.000 Views)</label>
+                  <input id="camp-tkp" type="number" min={0} step="0.10" value={tkpEur} onChange={(e) => setTkpEur(e.target.value)} placeholder="2.00" className={fieldClass} />
+                </div>
+              ) : (
+                <div>
+                  <label htmlFor="camp-per-video" className={labelClass}>Budget / Video (€)</label>
+                  <input id="camp-per-video" type="number" min={0} value={budgetPerVideoEur} onChange={(e) => setBudgetPerVideoEur(e.target.value)} className={fieldClass} />
+                </div>
+              )}
               <div>
-                <label htmlFor="camp-per-video" className={labelClass}>Budget / Video (€)</label>
-                <input id="camp-per-video" type="number" min={0} value={budgetPerVideoEur} onChange={(e) => setBudgetPerVideoEur(e.target.value)} className={fieldClass} />
-              </div>
-              <div>
-                <label htmlFor="camp-total" className={labelClass}>Gesamtbudget (€)</label>
-                <input id="camp-total" type="number" min={0} value={totalBudgetEur} onChange={(e) => setTotalBudgetEur(e.target.value)} className={fieldClass} />
+                <label htmlFor="camp-total" className={labelClass}>Budget-Limit (€, optional)</label>
+                <input id="camp-total" type="number" min={0} value={totalBudgetEur} onChange={(e) => setTotalBudgetEur(e.target.value)} placeholder="Leer = offen" className={fieldClass} />
               </div>
               <div>
                 <label htmlFor="camp-visibility" className={labelClass}>Sichtbarkeit</label>
@@ -384,7 +484,14 @@ function BrandDashboard({
               </div>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2">
+            {estimatedCapViews !== null && (
+              <div className="rounded-2xl border border-geo-green/60 bg-[#f6fbf1] px-4 py-3 text-xs leading-5 text-[#385523]">
+                <strong>Budget-Rechnung:</strong> Bei <strong>{tkpNumeric.toFixed(2).replace('.', ',')} € / 1.000 Views</strong> und einem optionalen Budget-Limit von <strong>{totalBudgetNumeric.toLocaleString('de-DE')} €</strong> sind bis zu{' '}
+                <strong>{estimatedCapViews.toLocaleString('de-DE')} bezahlte Views</strong> abgedeckt – ohne Plattform-Provision. (Leer lassen für offenes Budget ohne Obergrenze.)
+              </div>
+            )}
+
+            <div className="grid gap-4 md:grid-cols-3">
               <div>
                 <label htmlFor="camp-rights" className={labelClass}>Nutzungsrechte</label>
                 <input id="camp-rights" value={usageRights} onChange={(e) => setUsageRights(e.target.value)} className={fieldClass} />
@@ -393,12 +500,49 @@ function BrandDashboard({
                 <label htmlFor="camp-deadline" className={labelClass}>Zeitplan / Frist</label>
                 <input id="camp-deadline" value={deadline} onChange={(e) => setDeadline(e.target.value)} className={fieldClass} />
               </div>
+              <div>
+                <label htmlFor="camp-discount" className={labelClass}>Aktions- / Rabatt-Hinweis (optional)</label>
+                <input id="camp-discount" value={discountCode} onChange={(e) => setDiscountCode(e.target.value)} placeholder="z. B. 20 % Shop-Rabatt / Aktionscode" className={fieldClass} />
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-hairline bg-white p-4 space-y-3">
+              <label className="flex cursor-pointer items-start gap-3">
+                <input
+                  type="checkbox"
+                  checked={requiresProductChoice}
+                  onChange={(e) => setRequiresProductChoice(e.target.checked)}
+                  className="mt-1 h-4 w-4 accent-geo-violet"
+                />
+                <span className="text-sm text-ink">
+                  <strong>Produkt-/Varianten-Auswahl bei Bewerbung abfragen</strong>
+                  <span className="block text-xs text-ink-soft">Ideal für Musterversand: Creator geben direkt bei der Bewerbung ihr Wunschprodukt, Größe oder Shop-Link an.</span>
+                </span>
+              </label>
+              {requiresProductChoice && (
+                <div>
+                  <label htmlFor="camp-product-prompt" className={labelClass}>Frage an Creator</label>
+                  <input
+                    id="camp-product-prompt"
+                    value={productChoicePrompt}
+                    onChange={(e) => setProductChoicePrompt(e.target.value)}
+                    placeholder="z. B. Welches Produkt / welche Variante aus dem Shop möchtest du erhalten?"
+                    className={fieldClass}
+                  />
+                </div>
+              )}
             </div>
 
             <div>
               <span className={labelClass}>Ziel-Plattformen</span>
               <div className="flex flex-wrap gap-2">
-                {[['tiktok', 'TikTok'], ['instagram', 'Instagram Reels'], ['youtube', 'YouTube Shorts'], ['meta_ads', 'Meta Paid Ads']].map(([id, label]) => (
+                {[
+                  ['tiktok', 'TikTok'],
+                  ['instagram', 'Instagram Reels'],
+                  ['youtube', 'YouTube Shorts'],
+                  ['tiktok_shop', 'TikTok Shop'],
+                  ['meta_ads', 'Meta Paid Ads'],
+                ].map(([id, label]) => (
                   <button
                     key={id}
                     type="button"
@@ -463,13 +607,41 @@ function BrandDashboard({
                       </div>
                       <h3 className="mt-2 text-xl font-bold text-ink">{camp.title}</h3>
                       <p className="mt-1 text-sm text-ink-soft">
-                        {[camp.deliverables, camp.totalBudgetEur ? `Budget ${camp.totalBudgetEur.toLocaleString('de-DE')} €` : '', camp.deadline].filter(Boolean).join(' · ')}
+                        {[
+                          camp.deliverables,
+                          camp.tkpEurCents ? `${(camp.tkpEurCents / 100).toFixed(2).replace('.', ',')} € / 1.000 Views` : '',
+                          camp.totalBudgetEur ? `Budget-Limit ${camp.totalBudgetEur.toLocaleString('de-DE')} €` : '',
+                          camp.deadline,
+                        ]
+                          .filter(Boolean)
+                          .join(' · ')}
                       </p>
                     </div>
                     <span className="rounded-full bg-surface px-4 py-2 text-xs font-bold text-geo-violet">
                       Öffnen &amp; Reporting →
                     </span>
                   </div>
+
+                  {camp.totalBudgetEur && camp.totalBudgetEur > 0 && (
+                    <div className="mt-4">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-semibold text-ink-soft">
+                          Budget-Limit: <strong className="text-ink">{camp.metrics.accruedPayoutEur.toLocaleString('de-DE')} €</strong> von {camp.totalBudgetEur.toLocaleString('de-DE')} €
+                        </span>
+                        <span className={`font-bold ${camp.metrics.capReached ? 'text-red-700' : 'text-[#385523]'}`}>
+                          {camp.metrics.capReached
+                            ? 'Budget-Limit erreicht'
+                            : `Noch ${(camp.metrics.remainingBudgetEur ?? 0).toLocaleString('de-DE')} € frei`}
+                        </span>
+                      </div>
+                      <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-surface">
+                        <div
+                          className={`h-full rounded-full transition-all ${camp.metrics.capReached ? 'bg-red-500' : 'bg-geo-violet'}`}
+                          style={{ width: `${Math.min(100, Math.round((camp.metrics.accruedPayoutEur / camp.totalBudgetEur) * 100))}%` }}
+                        />
+                      </div>
+                    </div>
+                  )}
 
                   <div className="mt-5 grid grid-cols-2 gap-3 border-t border-hairline pt-4 text-xs sm:grid-cols-5">
                     <div>

@@ -33,6 +33,9 @@ export interface CampaignSummary {
   budgetPerVideoEur: number | null;
   totalBudgetEur: number | null;
   tkpEurCents: number | null;
+  requiresProductChoice: boolean;
+  productChoicePrompt: string;
+  discountCode: string;
   usageRights: string;
   deadline: string;
   visibility: CampaignVisibility;
@@ -51,6 +54,9 @@ export interface CampaignSummary {
     totalComments: number;
     totalShares: number;
     totalSpendEurCents: number;
+    accruedPayoutEur: number;
+    remainingBudgetEur: number | null;
+    capReached: boolean;
   };
 }
 
@@ -69,6 +75,8 @@ export interface CampaignApplicationView {
   creatorPitch: string;
   proposedFeeEur: number | null;
   availabilityNote: string;
+  targetPlatforms: string[];
+  productChoice: string;
   brandNote: string;
   updatedAt: string;
 }
@@ -87,6 +95,7 @@ export interface CampaignSubmissionView {
   comments: number;
   shares: number;
   spendEurCents: number;
+  tkpEarnedEur: number;
   engagementRatePct: number;
   effectiveCpmEur: number | null;
   metricsSource: 'manual' | 'oembed' | 'api';
@@ -98,12 +107,20 @@ export interface CampaignPerformanceReport {
   totalSubmissions: number;
   approvedSubmissions: number;
   totalViews: number;
+  approvedViews: number;
   totalLikes: number;
   totalComments: number;
   totalShares: number;
   totalEngagements: number;
   engagementRatePct: number;
   totalSpendEur: number;
+  accruedTkpEur: number;
+  approvedPayoutEur: number;
+  cappedPayoutEur: number;
+  remainingBudgetEur: number | null;
+  capReached: boolean;
+  viewsUntilCap: number | null;
+  maxCapViews: number | null;
   effectiveCpmEur: number | null;
   budgetUtilizationPct: number | null;
   byPlatform: Array<{
@@ -121,6 +138,7 @@ export interface CampaignPerformanceReport {
     engagements: number;
     engagementRatePct: number;
     spendEur: number;
+    tkpEarnedEur: number;
     effectiveCpmEur: number | null;
   }>;
 }
@@ -145,6 +163,11 @@ export interface CreatorCampaignItem {
   budgetPerVideoEur: number | null;
   totalBudgetEur: number | null;
   tkpEurCents: number | null;
+  requiresProductChoice: boolean;
+  productChoicePrompt: string;
+  discountCode: string;
+  remainingBudgetEur: number | null;
+  capReached: boolean;
   usageRights: string;
   deadline: string;
   status: ApplicationStatus | 'open';
@@ -152,6 +175,8 @@ export interface CreatorCampaignItem {
   creatorPitch: string;
   proposedFeeEur: number | null;
   availabilityNote: string;
+  targetPlatforms: string[];
+  productChoice: string;
   submissions: Array<{
     id: string;
     platform: SubmissionPlatform;
@@ -366,6 +391,9 @@ export async function createBrandCampaign(
     budgetPerVideoEur?: number | null;
     totalBudgetEur?: number | null;
     tkpEurCents?: number | null;
+    requiresProductChoice?: boolean;
+    productChoicePrompt?: string;
+    discountCode?: string;
     usageRights?: string;
     deadline?: string;
     visibility?: CampaignVisibility;
@@ -377,21 +405,25 @@ export async function createBrandCampaign(
   const brandDisplayName = cleanText(input.brandDisplayName || brand.companyName || brand.contactName, 120) || 'Brand';
   const description = cleanMultiline(input.description, 3000);
   const niche = cleanText(input.niche, 80);
-  const allowedPlatforms = new Set(['tiktok', 'instagram', 'youtube', 'meta_ads']);
+  const allowedPlatforms = new Set(['tiktok', 'instagram', 'youtube', 'tiktok_shop', 'meta_ads']);
   const platforms = [...new Set((input.platforms || []).map((p) => p.toLowerCase().trim()).filter((p) => allowedPlatforms.has(p)))];
   const deliverables = cleanText(input.deliverables, 240);
   const compensationModel: CompensationModel = ['fixed', 'tkp', 'hybrid', 'barter'].includes(String(input.compensationModel))
     ? (input.compensationModel as CompensationModel)
     : 'fixed';
   const visibility: CampaignVisibility = input.visibility === 'invite_only' ? 'invite_only' : 'open';
+  const requiresProductChoice = Boolean(input.requiresProductChoice);
+  const productChoicePrompt = cleanText(input.productChoicePrompt, 240);
+  const discountCode = cleanText(input.discountCode, 160);
   const publicId = generateCampaignPublicId();
 
   const [campaign] = (await sql.query(
     `INSERT INTO brand_campaigns (
        public_id, brand_id, title, brand_display_name, description, niche, platforms,
        deliverables, compensation_model, budget_per_video_eur, total_budget_eur,
-       tkp_eur_cents, usage_rights, deadline, visibility, status, source_lead_public_id
-     ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,'active',$16)
+       tkp_eur_cents, requires_product_choice, product_choice_prompt, discount_code,
+       usage_rights, deadline, visibility, status, source_lead_public_id
+     ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,'active',$19)
      RETURNING id, public_id`,
     [
       publicId,
@@ -406,6 +438,9 @@ export async function createBrandCampaign(
       toPositiveIntOrNull(input.budgetPerVideoEur, 50_000),
       toPositiveIntOrNull(input.totalBudgetEur, 1_000_000),
       toPositiveIntOrNull(input.tkpEurCents, 50_000),
+      requiresProductChoice,
+      productChoicePrompt,
+      discountCode,
       cleanText(input.usageRights, 160),
       cleanText(input.deadline, 120),
       visibility,
@@ -435,12 +470,41 @@ export async function createBrandCampaign(
   return { id: String(campaign.id), publicId: String(campaign.public_id), invitedCount };
 }
 
+const computeTkpEur = (views: number, tkpEurCents: number | null | undefined): number => {
+  if (!tkpEurCents || tkpEurCents <= 0 || views <= 0) return 0;
+  return Math.round(((views / 1000) * (tkpEurCents / 100)) * 100) / 100;
+};
+
+const computeBudgetCapState = (
+  compensationModel: CompensationModel,
+  totalViews: number,
+  totalSpendEurCents: number,
+  totalBudgetEur: number | null,
+  tkpEurCents: number | null,
+) => {
+  const spendEur = Math.round((totalSpendEurCents / 100) * 100) / 100;
+  const accruedTkpEur = computeTkpEur(totalViews, tkpEurCents);
+  const accruedPayoutEur =
+    compensationModel === 'tkp' && tkpEurCents && tkpEurCents > 0
+      ? Math.max(spendEur, accruedTkpEur)
+      : spendEur;
+  const cappedPayoutEur = totalBudgetEur && totalBudgetEur > 0
+    ? Math.min(accruedPayoutEur, totalBudgetEur)
+    : accruedPayoutEur;
+  const remainingBudgetEur = totalBudgetEur && totalBudgetEur > 0
+    ? Math.max(0, Math.round((totalBudgetEur - cappedPayoutEur) * 100) / 100)
+    : null;
+  const capReached = Boolean(totalBudgetEur && totalBudgetEur > 0 && accruedPayoutEur >= totalBudgetEur);
+  return { accruedPayoutEur, cappedPayoutEur, remainingBudgetEur, capReached };
+};
+
 export async function listBrandCampaigns(sql: DatabaseClient, brandId: string): Promise<CampaignSummary[]> {
   const rows = (await sql.query(
     `SELECT
        c.id, c.public_id, c.title, c.brand_display_name, c.niche, c.platforms,
        c.deliverables, c.compensation_model, c.budget_per_video_eur, c.total_budget_eur,
-       c.tkp_eur_cents, c.usage_rights, c.deadline, c.visibility, c.status, c.created_at,
+       c.tkp_eur_cents, c.requires_product_choice, c.product_choice_prompt, c.discount_code,
+       c.usage_rights, c.deadline, c.visibility, c.status, c.created_at,
        COALESCE(app.invited_count, 0)::int AS invited_count,
        COALESCE(app.applied_count, 0)::int AS applied_count,
        COALESCE(app.selected_count, 0)::int AS selected_count,
@@ -477,58 +541,121 @@ export async function listBrandCampaigns(sql: DatabaseClient, brandId: string): 
     [brandId],
   )) as unknown as Array<any>;
 
-  return rows.map((row) => ({
-    id: String(row.id),
-    publicId: String(row.public_id),
-    title: String(row.title),
-    brandDisplayName: String(row.brand_display_name),
-    niche: String(row.niche || ''),
-    platforms: Array.isArray(row.platforms) ? row.platforms.map(String) : [],
-    deliverables: String(row.deliverables || ''),
-    compensationModel: row.compensation_model as CompensationModel,
-    budgetPerVideoEur: row.budget_per_video_eur === null ? null : Number(row.budget_per_video_eur),
-    totalBudgetEur: row.total_budget_eur === null ? null : Number(row.total_budget_eur),
-    tkpEurCents: row.tkp_eur_cents === null ? null : Number(row.tkp_eur_cents),
-    usageRights: String(row.usage_rights || ''),
-    deadline: String(row.deadline || ''),
-    visibility: row.visibility as CampaignVisibility,
-    status: row.status as CampaignStatus,
-    createdAt: new Date(row.created_at).toISOString(),
-    counts: {
-      invited: Number(row.invited_count) || 0,
-      applied: Number(row.applied_count) || 0,
-      selected: Number(row.selected_count) || 0,
-      submissions: Number(row.submission_count) || 0,
-      approvedSubmissions: Number(row.approved_count) || 0,
-    },
-    metrics: {
-      totalViews: Number(row.total_views) || 0,
-      totalLikes: Number(row.total_likes) || 0,
-      totalComments: Number(row.total_comments) || 0,
-      totalShares: Number(row.total_shares) || 0,
-      totalSpendEurCents: Number(row.total_spend_cents) || 0,
-    },
-  }));
+  return rows.map((row) => {
+    const compensationModel = row.compensation_model as CompensationModel;
+    const totalBudgetEur = row.total_budget_eur === null ? null : Number(row.total_budget_eur);
+    const tkpEurCents = row.tkp_eur_cents === null ? null : Number(row.tkp_eur_cents);
+    const totalViews = Number(row.total_views) || 0;
+    const totalSpendEurCents = Number(row.total_spend_cents) || 0;
+    const capState = computeBudgetCapState(compensationModel, totalViews, totalSpendEurCents, totalBudgetEur, tkpEurCents);
+    return {
+      id: String(row.id),
+      publicId: String(row.public_id),
+      title: String(row.title),
+      brandDisplayName: String(row.brand_display_name),
+      niche: String(row.niche || ''),
+      platforms: Array.isArray(row.platforms) ? row.platforms.map(String) : [],
+      deliverables: String(row.deliverables || ''),
+      compensationModel,
+      budgetPerVideoEur: row.budget_per_video_eur === null ? null : Number(row.budget_per_video_eur),
+      totalBudgetEur,
+      tkpEurCents,
+      requiresProductChoice: Boolean(row.requires_product_choice),
+      productChoicePrompt: String(row.product_choice_prompt || ''),
+      discountCode: String(row.discount_code || ''),
+      usageRights: String(row.usage_rights || ''),
+      deadline: String(row.deadline || ''),
+      visibility: row.visibility as CampaignVisibility,
+      status: row.status as CampaignStatus,
+      createdAt: new Date(row.created_at).toISOString(),
+      counts: {
+        invited: Number(row.invited_count) || 0,
+        applied: Number(row.applied_count) || 0,
+        selected: Number(row.selected_count) || 0,
+        submissions: Number(row.submission_count) || 0,
+        approvedSubmissions: Number(row.approved_count) || 0,
+      },
+      metrics: {
+        totalViews,
+        totalLikes: Number(row.total_likes) || 0,
+        totalComments: Number(row.total_comments) || 0,
+        totalShares: Number(row.total_shares) || 0,
+        totalSpendEurCents,
+        accruedPayoutEur: capState.accruedPayoutEur,
+        remainingBudgetEur: capState.remainingBudgetEur,
+        capReached: capState.capReached,
+      },
+    };
+  });
 }
 
 export function computeCampaignReport(
   submissions: CampaignSubmissionView[],
-  totalBudgetEur: number | null,
+  totalBudgetOrOptions:
+    | number
+    | null
+    | { totalBudgetEur: number | null; compensationModel?: CompensationModel; tkpEurCents?: number | null },
 ): CampaignPerformanceReport {
+  const opts =
+    typeof totalBudgetOrOptions === 'object' && totalBudgetOrOptions !== null
+      ? totalBudgetOrOptions
+      : { totalBudgetEur: totalBudgetOrOptions, compensationModel: 'fixed' as CompensationModel, tkpEurCents: null };
+  const totalBudgetEur = opts.totalBudgetEur ?? null;
+  const compensationModel: CompensationModel = opts.compensationModel || 'fixed';
+  const tkpEurCents = opts.tkpEurCents ?? null;
+
   const totalViews = submissions.reduce((sum, s) => sum + s.views, 0);
+  const approvedSubs = submissions.filter((s) => s.status === 'approved');
+  const approvedViews = approvedSubs.reduce((sum, s) => sum + s.views, 0);
   const totalLikes = submissions.reduce((sum, s) => sum + s.likes, 0);
   const totalComments = submissions.reduce((sum, s) => sum + s.comments, 0);
   const totalShares = submissions.reduce((sum, s) => sum + s.shares, 0);
   const totalEngagements = totalLikes + totalComments + totalShares;
   const totalSpendCents = submissions.reduce((sum, s) => sum + s.spendEurCents, 0);
   const totalSpendEur = Math.round((totalSpendCents / 100) * 100) / 100;
+  const accruedTkpEur = computeTkpEur(totalViews, tkpEurCents);
+  const approvedSpendEur = Math.round((approvedSubs.reduce((sum, s) => sum + s.spendEurCents, 0) / 100) * 100) / 100;
+  const approvedTkpEur = computeTkpEur(approvedViews, tkpEurCents);
+  const approvedPayoutEur =
+    compensationModel === 'tkp' && tkpEurCents && tkpEurCents > 0
+      ? Math.max(approvedSpendEur, approvedTkpEur)
+      : approvedSpendEur;
+
+  const rawTotalPayoutEur =
+    compensationModel === 'tkp' && tkpEurCents && tkpEurCents > 0
+      ? Math.max(totalSpendEur, accruedTkpEur)
+      : totalSpendEur;
+  const cappedPayoutEur = totalBudgetEur && totalBudgetEur > 0
+    ? Math.min(rawTotalPayoutEur, totalBudgetEur)
+    : rawTotalPayoutEur;
+  const remainingBudgetEur = totalBudgetEur && totalBudgetEur > 0
+    ? Math.max(0, Math.round((totalBudgetEur - cappedPayoutEur) * 100) / 100)
+    : null;
+  const capReached = Boolean(totalBudgetEur && totalBudgetEur > 0 && rawTotalPayoutEur >= totalBudgetEur);
+  const maxCapViews =
+    totalBudgetEur && totalBudgetEur > 0 && tkpEurCents && tkpEurCents > 0
+      ? Math.floor(((totalBudgetEur * 100) / tkpEurCents) * 1000)
+      : null;
+  const viewsUntilCap =
+    remainingBudgetEur !== null && tkpEurCents && tkpEurCents > 0
+      ? Math.floor(((remainingBudgetEur * 100) / tkpEurCents) * 1000)
+      : null;
+
   const engagementRatePct = totalViews > 0 ? Math.round((totalEngagements / totalViews) * 10_000) / 100 : 0;
-  const effectiveCpmEur = totalViews > 0 && totalSpendEur > 0 ? Math.round((totalSpendEur / (totalViews / 1000)) * 100) / 100 : null;
+  const effectiveSpendForCpm = cappedPayoutEur > 0 ? cappedPayoutEur : totalSpendEur;
+  const effectiveCpmEur = totalViews > 0 && effectiveSpendForCpm > 0
+    ? Math.round((effectiveSpendForCpm / (totalViews / 1000)) * 100) / 100
+    : null;
   const budgetUtilizationPct =
-    totalBudgetEur && totalBudgetEur > 0 ? Math.min(999, Math.round((totalSpendEur / totalBudgetEur) * 1000) / 10) : null;
+    totalBudgetEur && totalBudgetEur > 0
+      ? Math.min(999, Math.round((rawTotalPayoutEur / totalBudgetEur) * 1000) / 10)
+      : null;
 
   const platformMap = new Map<SubmissionPlatform, { submissions: number; views: number; engagements: number }>();
-  const creatorMap = new Map<string, { creatorPublicId: string; creatorName: string; submissions: number; views: number; engagements: number; spendCents: number }>();
+  const creatorMap = new Map<
+    string,
+    { creatorPublicId: string; creatorName: string; submissions: number; views: number; engagements: number; spendCents: number; tkpEarnedEur: number }
+  >();
 
   for (const s of submissions) {
     const eng = s.likes + s.comments + s.shares;
@@ -538,6 +665,7 @@ export function computeCampaignReport(
     p.engagements += eng;
     platformMap.set(s.platform, p);
 
+    const clipTkpEur = computeTkpEur(s.views, tkpEurCents);
     const c = creatorMap.get(s.creatorPublicId) || {
       creatorPublicId: s.creatorPublicId,
       creatorName: s.creatorName,
@@ -545,24 +673,34 @@ export function computeCampaignReport(
       views: 0,
       engagements: 0,
       spendCents: 0,
+      tkpEarnedEur: 0,
     };
     c.submissions += 1;
     c.views += s.views;
     c.engagements += eng;
     c.spendCents += s.spendEurCents;
+    c.tkpEarnedEur = Math.round((c.tkpEarnedEur + clipTkpEur) * 100) / 100;
     creatorMap.set(s.creatorPublicId, c);
   }
 
   return {
     totalSubmissions: submissions.length,
-    approvedSubmissions: submissions.filter((s) => s.status === 'approved').length,
+    approvedSubmissions: approvedSubs.length,
     totalViews,
+    approvedViews,
     totalLikes,
     totalComments,
     totalShares,
     totalEngagements,
     engagementRatePct,
     totalSpendEur,
+    accruedTkpEur,
+    approvedPayoutEur,
+    cappedPayoutEur,
+    remainingBudgetEur,
+    capReached,
+    viewsUntilCap,
+    maxCapViews,
     effectiveCpmEur,
     budgetUtilizationPct,
     byPlatform: [...platformMap.entries()].map(([platform, p]) => ({
@@ -576,6 +714,10 @@ export function computeCampaignReport(
       .sort((a, b) => b.views - a.views)
       .map((c) => {
         const spendEur = Math.round((c.spendCents / 100) * 100) / 100;
+        const effectiveCreatorSpend =
+          compensationModel === 'tkp' && tkpEurCents && tkpEurCents > 0
+            ? Math.max(spendEur, c.tkpEarnedEur)
+            : spendEur;
         return {
           creatorPublicId: c.creatorPublicId,
           creatorName: c.creatorName,
@@ -584,7 +726,10 @@ export function computeCampaignReport(
           engagements: c.engagements,
           engagementRatePct: c.views > 0 ? Math.round((c.engagements / c.views) * 10_000) / 100 : 0,
           spendEur,
-          effectiveCpmEur: c.views > 0 && spendEur > 0 ? Math.round((spendEur / (c.views / 1000)) * 100) / 100 : null,
+          tkpEarnedEur: c.tkpEarnedEur,
+          effectiveCpmEur: c.views > 0 && effectiveCreatorSpend > 0
+            ? Math.round((effectiveCreatorSpend / (c.views / 1000)) * 100) / 100
+            : null,
         };
       }),
   };
@@ -604,7 +749,7 @@ export async function getBrandCampaignDetail(
   const appRows = (await sql.query(
     `SELECT
        a.id, a.source, a.status, a.creator_pitch, a.proposed_fee_eur,
-       a.availability_note, a.brand_note, a.updated_at,
+       a.availability_note, a.target_platforms, a.product_choice, a.brand_note, a.updated_at,
        p.public_id AS creator_public_id, p.display_name, p.city, p.topics, p.rate_text,
        CASE
          WHEN c.project_notifications_enabled AND c.notification_paused_at IS NULL
@@ -672,6 +817,8 @@ export async function getBrandCampaignDetail(
       creatorPitch: String(row.creator_pitch || ''),
       proposedFeeEur: row.proposed_fee_eur === null ? null : Number(row.proposed_fee_eur),
       availabilityNote: String(row.availability_note || ''),
+      targetPlatforms: Array.isArray(row.target_platforms) ? row.target_platforms.map(String) : [],
+      productChoice: String(row.product_choice || ''),
       brandNote: String(row.brand_note || ''),
       updatedAt: new Date(row.updated_at).toISOString(),
     };
@@ -690,15 +837,25 @@ export async function getBrandCampaignDetail(
     [campRow.id],
   )) as unknown as Array<any>;
 
+  const tkpEurCents = campRow.tkp_eur_cents === null ? null : Number(campRow.tkp_eur_cents);
+  const compensationModel = campRow.compensation_model as CompensationModel;
+
   const submissions: CampaignSubmissionView[] = subRows.map((row) => {
     const views = Number(row.views) || 0;
     const likes = Number(row.likes) || 0;
     const comments = Number(row.comments) || 0;
     const shares = Number(row.shares) || 0;
     const spendEurCents = Number(row.spend_eur_cents) || 0;
+    const tkpEarnedEur = computeTkpEur(views, tkpEurCents);
     const engagements = likes + comments + shares;
     const engagementRatePct = views > 0 ? Math.round((engagements / views) * 10_000) / 100 : 0;
-    const effectiveCpmEur = views > 0 && spendEurCents > 0 ? Math.round(((spendEurCents / 100) / (views / 1000)) * 100) / 100 : null;
+    const effectiveCostEur =
+      compensationModel === 'tkp' && tkpEurCents && tkpEurCents > 0
+        ? Math.max(spendEurCents / 100, tkpEarnedEur)
+        : spendEurCents / 100;
+    const effectiveCpmEur = views > 0 && effectiveCostEur > 0
+      ? Math.round((effectiveCostEur / (views / 1000)) * 100) / 100
+      : null;
     return {
       id: String(row.id),
       applicationId: String(row.application_id),
@@ -713,6 +870,7 @@ export async function getBrandCampaignDetail(
       comments,
       shares,
       spendEurCents,
+      tkpEarnedEur,
       engagementRatePct,
       effectiveCpmEur,
       metricsSource: (row.metrics_source || 'manual') as 'manual' | 'oembed' | 'api',
@@ -722,7 +880,7 @@ export async function getBrandCampaignDetail(
   });
 
   const totalBudgetEur = campRow.total_budget_eur === null ? null : Number(campRow.total_budget_eur);
-  const report = computeCampaignReport(submissions, totalBudgetEur);
+  const report = computeCampaignReport(submissions, { totalBudgetEur, compensationModel, tkpEurCents });
 
   return {
     campaign: {
@@ -734,10 +892,13 @@ export async function getBrandCampaignDetail(
       niche: String(campRow.niche || ''),
       platforms: Array.isArray(campRow.platforms) ? campRow.platforms.map(String) : [],
       deliverables: String(campRow.deliverables || ''),
-      compensationModel: campRow.compensation_model as CompensationModel,
+      compensationModel,
       budgetPerVideoEur: campRow.budget_per_video_eur === null ? null : Number(campRow.budget_per_video_eur),
       totalBudgetEur,
-      tkpEurCents: campRow.tkp_eur_cents === null ? null : Number(campRow.tkp_eur_cents),
+      tkpEurCents,
+      requiresProductChoice: Boolean(campRow.requires_product_choice),
+      productChoicePrompt: String(campRow.product_choice_prompt || ''),
+      discountCode: String(campRow.discount_code || ''),
       usageRights: String(campRow.usage_rights || ''),
       deadline: String(campRow.deadline || ''),
       visibility: campRow.visibility as CampaignVisibility,
@@ -756,6 +917,9 @@ export async function getBrandCampaignDetail(
         totalComments: report.totalComments,
         totalShares: report.totalShares,
         totalSpendEurCents: Math.round(report.totalSpendEur * 100),
+        accruedPayoutEur: report.cappedPayoutEur,
+        remainingBudgetEur: report.remainingBudgetEur,
+        capReached: report.capReached,
       },
     },
     applications,
@@ -770,7 +934,23 @@ export function buildCampaignReportCsv(detail: BrandCampaignDetail): string {
     if (/^[=+\-@\t\r]/.test(str)) str = `'${str}`;
     return `"${str.replace(/"/g, '""')}"`;
   };
-  const header = ['Kampagne', 'Creator', 'Plattform', 'Titel', 'URL', 'Status', 'Views', 'Likes', 'Comments', 'Shares', 'Engagement-Rate (%)', 'Spend (EUR)', 'Eff. TKP/CPM (EUR)', 'Erfasst am'];
+  const header = [
+    'Kampagne',
+    'Creator',
+    'Plattform',
+    'Titel',
+    'URL',
+    'Status',
+    'Views',
+    'Likes',
+    'Comments',
+    'Shares',
+    'Engagement-Rate (%)',
+    'TKP-Auszahlung (EUR)',
+    'Spend (EUR)',
+    'Eff. TKP/CPM (EUR)',
+    'Erfasst am',
+  ];
   const lines = [
     header.map(safeCell).join(','),
     ...detail.submissions.map((s) =>
@@ -786,6 +966,7 @@ export function buildCampaignReportCsv(detail: BrandCampaignDetail): string {
         s.comments,
         s.shares,
         s.engagementRatePct.toFixed(2),
+        s.tkpEarnedEur.toFixed(2),
         (s.spendEurCents / 100).toFixed(2),
         s.effectiveCpmEur === null ? '' : s.effectiveCpmEur.toFixed(2),
         s.lastTrackedAt || s.createdAt,
@@ -804,13 +985,21 @@ export async function listCreatorCampaigns(
   const myRows = (await sql.query(
     `SELECT
        a.id AS application_id, a.source, a.status AS app_status, a.creator_pitch,
-       a.proposed_fee_eur, a.availability_note,
+       a.proposed_fee_eur, a.availability_note, a.target_platforms, a.product_choice,
        c.public_id, c.title, c.brand_display_name, c.description, c.niche, c.platforms,
        c.deliverables, c.compensation_model, c.budget_per_video_eur, c.total_budget_eur,
-       c.tkp_eur_cents, c.usage_rights, c.deadline,
+       c.tkp_eur_cents, c.requires_product_choice, c.product_choice_prompt, c.discount_code,
+       c.usage_rights, c.deadline,
+       COALESCE(agg.total_views, 0)::int AS camp_views,
+       COALESCE(agg.total_spend_cents, 0)::int AS camp_spend_cents,
        COALESCE(subs.items, '[]'::json) AS submissions
      FROM brand_campaign_applications a
      JOIN brand_campaigns c ON c.id = a.campaign_id
+     LEFT JOIN LATERAL (
+       SELECT COALESCE(SUM(s.views), 0) AS total_views, COALESCE(SUM(s.spend_eur_cents), 0) AS total_spend_cents
+       FROM brand_campaign_submissions s
+       WHERE s.campaign_id = c.id
+     ) agg ON true
      LEFT JOIN LATERAL (
        SELECT json_agg(json_build_object(
          'id', s.id,
@@ -836,8 +1025,16 @@ export async function listCreatorCampaigns(
     `SELECT
        c.public_id, c.title, c.brand_display_name, c.description, c.niche, c.platforms,
        c.deliverables, c.compensation_model, c.budget_per_video_eur, c.total_budget_eur,
-       c.tkp_eur_cents, c.usage_rights, c.deadline
+       c.tkp_eur_cents, c.requires_product_choice, c.product_choice_prompt, c.discount_code,
+       c.usage_rights, c.deadline,
+       COALESCE(agg.total_views, 0)::int AS camp_views,
+       COALESCE(agg.total_spend_cents, 0)::int AS camp_spend_cents
      FROM brand_campaigns c
+     LEFT JOIN LATERAL (
+       SELECT COALESCE(SUM(s.views), 0) AS total_views, COALESCE(SUM(s.spend_eur_cents), 0) AS total_spend_cents
+       FROM brand_campaign_submissions s
+       WHERE s.campaign_id = c.id
+     ) agg ON true
      WHERE c.status = 'active'
        AND c.visibility = 'open'
        AND NOT EXISTS (
@@ -849,21 +1046,38 @@ export async function listCreatorCampaigns(
     [creatorId],
   )) as unknown as Array<any>;
 
-  const mapBase = (row: any) => ({
-    campaignPublicId: String(row.public_id),
-    title: String(row.title),
-    brandDisplayName: String(row.brand_display_name),
-    description: String(row.description || ''),
-    niche: String(row.niche || ''),
-    platforms: Array.isArray(row.platforms) ? row.platforms.map(String) : [],
-    deliverables: String(row.deliverables || ''),
-    compensationModel: row.compensation_model as CompensationModel,
-    budgetPerVideoEur: row.budget_per_video_eur === null ? null : Number(row.budget_per_video_eur),
-    totalBudgetEur: row.total_budget_eur === null ? null : Number(row.total_budget_eur),
-    tkpEurCents: row.tkp_eur_cents === null ? null : Number(row.tkp_eur_cents),
-    usageRights: String(row.usage_rights || ''),
-    deadline: String(row.deadline || ''),
-  });
+  const mapBase = (row: any) => {
+    const compensationModel = row.compensation_model as CompensationModel;
+    const totalBudgetEur = row.total_budget_eur === null ? null : Number(row.total_budget_eur);
+    const tkpEurCents = row.tkp_eur_cents === null ? null : Number(row.tkp_eur_cents);
+    const cap = computeBudgetCapState(
+      compensationModel,
+      Number(row.camp_views) || 0,
+      Number(row.camp_spend_cents) || 0,
+      totalBudgetEur,
+      tkpEurCents,
+    );
+    return {
+      campaignPublicId: String(row.public_id),
+      title: String(row.title),
+      brandDisplayName: String(row.brand_display_name),
+      description: String(row.description || ''),
+      niche: String(row.niche || ''),
+      platforms: Array.isArray(row.platforms) ? row.platforms.map(String) : [],
+      deliverables: String(row.deliverables || ''),
+      compensationModel,
+      budgetPerVideoEur: row.budget_per_video_eur === null ? null : Number(row.budget_per_video_eur),
+      totalBudgetEur,
+      tkpEurCents,
+      requiresProductChoice: Boolean(row.requires_product_choice),
+      productChoicePrompt: String(row.product_choice_prompt || ''),
+      discountCode: String(row.discount_code || ''),
+      remainingBudgetEur: cap.remainingBudgetEur,
+      capReached: cap.capReached,
+      usageRights: String(row.usage_rights || ''),
+      deadline: String(row.deadline || ''),
+    };
+  };
 
   const myCampaigns: CreatorCampaignItem[] = myRows.map((row) => ({
     ...mapBase(row),
@@ -873,6 +1087,8 @@ export async function listCreatorCampaigns(
     creatorPitch: String(row.creator_pitch || ''),
     proposedFeeEur: row.proposed_fee_eur === null ? null : Number(row.proposed_fee_eur),
     availabilityNote: String(row.availability_note || ''),
+    targetPlatforms: Array.isArray(row.target_platforms) ? row.target_platforms.map(String) : [],
+    productChoice: String(row.product_choice || ''),
     submissions: Array.isArray(row.submissions) ? row.submissions : [],
   }));
 
@@ -884,6 +1100,8 @@ export async function listCreatorCampaigns(
     creatorPitch: '',
     proposedFeeEur: null,
     availabilityNote: '',
+    targetPlatforms: [],
+    productChoice: '',
     submissions: [],
   }));
 

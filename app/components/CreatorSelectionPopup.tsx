@@ -68,9 +68,10 @@ export default function CreatorSelectionPopup({
     email: '',
     website: '',
     visibility: 'open' as 'open' | 'invite_only',
-    compensationModel: 'fixed' as 'fixed' | 'tkp' | 'hybrid' | 'barter',
+    compensationModel: 'tkp' as 'fixed' | 'tkp' | 'hybrid' | 'barter',
     budgetPerVideoEur: '',
-    totalBudgetEur: '',
+    tkpEur: '2.00',
+    totalBudgetEur: '500',
     deliverables: '',
     usageRights: '',
     deadline: '',
@@ -107,9 +108,10 @@ export default function CreatorSelectionPopup({
         email: '',
         website: '',
         visibility: 'open',
-        compensationModel: 'fixed',
+        compensationModel: 'tkp',
         budgetPerVideoEur: '',
-        totalBudgetEur: '',
+        tkpEur: '2.00',
+        totalBudgetEur: '500',
         deliverables: '',
         usageRights: '',
         deadline: '',
@@ -245,6 +247,10 @@ export default function CreatorSelectionPopup({
           visibility: campaignData.visibility,
           compensationModel: campaignData.compensationModel,
           budgetPerVideoEur: campaignData.budgetPerVideoEur ? Number(campaignData.budgetPerVideoEur) : null,
+          tkpEurCents:
+            (campaignData.compensationModel === 'tkp' || campaignData.compensationModel === 'hybrid') && Number(campaignData.tkpEur.replace(',', '.')) > 0
+              ? Math.round(Number(campaignData.tkpEur.replace(',', '.')) * 100)
+              : null,
           totalBudgetEur: campaignData.totalBudgetEur ? Number(campaignData.totalBudgetEur) : null,
           deliverables: campaignData.deliverables.trim(),
           usageRights: campaignData.usageRights.trim(),
@@ -344,7 +350,7 @@ export default function CreatorSelectionPopup({
                     <button
                       type="button"
                       onClick={() => openMode('workspace')}
-                      className="rounded-xl border border-geo-violet/40 bg-geo-violet/5 px-3.5 py-3 text-sm font-semibold text-geo-violet transition-colors hover:bg-geo-violet/10 focus-visible:ring-2 focus-visible:ring-geo-violet focus-visible:ring-offset-2"
+                      className="flex-1 rounded-xl bg-geo-violet px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#7531ae] focus-visible:ring-2 focus-visible:ring-geo-violet focus-visible:ring-offset-2 sm:flex-none"
                     >
                       Als Kampagne starten
                     </button>
@@ -353,7 +359,7 @@ export default function CreatorSelectionPopup({
                     <button
                       type="button"
                       onClick={() => openMode('email')}
-                      className="flex-1 rounded-xl bg-geo-violet px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#7531ae] focus-visible:ring-2 focus-visible:ring-geo-violet focus-visible:ring-offset-2 sm:flex-none"
+                      className="rounded-xl border border-geo-violet/40 bg-geo-violet/5 px-3.5 py-3 text-sm font-semibold text-geo-violet transition-colors hover:bg-geo-violet/10 focus-visible:ring-2 focus-visible:ring-geo-violet focus-visible:ring-offset-2"
                     >
                       Kostenlos Anfrage senden
                     </button>
@@ -643,25 +649,45 @@ export default function CreatorSelectionPopup({
                             </div>
 
                             <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-3">
-                              <div className="space-y-1.5">
-                                <label htmlFor="camp-budget-video" className="block text-xs font-semibold text-ink">
-                                  Budget / Video (€)
-                                </label>
-                                <input
-                                  type="number"
-                                  min={0}
-                                  max={50000}
-                                  id="camp-budget-video"
-                                  name="budgetPerVideoEur"
-                                  value={campaignData.budgetPerVideoEur}
-                                  onChange={handleCampaignInputChange}
-                                  className="w-full px-3 py-2.5 bg-white border border-hairline rounded-xl text-ink text-sm focus:outline-none focus:ring-2 focus:ring-geo-violet"
-                                  placeholder="250"
-                                />
-                              </div>
+                              {(campaignData.compensationModel === 'tkp' || campaignData.compensationModel === 'hybrid') ? (
+                                <div className="space-y-1.5">
+                                  <label htmlFor="camp-tkp-eur" className="block text-xs font-semibold text-ink">
+                                    TKP (€ / 1.000 Views)
+                                  </label>
+                                  <input
+                                    type="number"
+                                    min={0}
+                                    step="0.10"
+                                    max={500}
+                                    id="camp-tkp-eur"
+                                    name="tkpEur"
+                                    value={campaignData.tkpEur}
+                                    onChange={handleCampaignInputChange}
+                                    className="w-full px-3 py-2.5 bg-white border border-hairline rounded-xl text-ink text-sm focus:outline-none focus:ring-2 focus:ring-geo-violet"
+                                    placeholder="2.00"
+                                  />
+                                </div>
+                              ) : (
+                                <div className="space-y-1.5">
+                                  <label htmlFor="camp-budget-video" className="block text-xs font-semibold text-ink">
+                                    Budget / Video (€)
+                                  </label>
+                                  <input
+                                    type="number"
+                                    min={0}
+                                    max={50000}
+                                    id="camp-budget-video"
+                                    name="budgetPerVideoEur"
+                                    value={campaignData.budgetPerVideoEur}
+                                    onChange={handleCampaignInputChange}
+                                    className="w-full px-3 py-2.5 bg-white border border-hairline rounded-xl text-ink text-sm focus:outline-none focus:ring-2 focus:ring-geo-violet"
+                                    placeholder="250"
+                                  />
+                                </div>
+                              )}
                               <div className="space-y-1.5">
                                 <label htmlFor="camp-budget-total" className="block text-xs font-semibold text-ink">
-                                  Gesamtbudget (€)
+                                  Budget-Limit (€, optional)
                                 </label>
                                 <input
                                   type="number"
@@ -672,7 +698,7 @@ export default function CreatorSelectionPopup({
                                   value={campaignData.totalBudgetEur}
                                   onChange={handleCampaignInputChange}
                                   className="w-full px-3 py-2.5 bg-white border border-hairline rounded-xl text-ink text-sm focus:outline-none focus:ring-2 focus:ring-geo-violet"
-                                  placeholder="1500"
+                                  placeholder="Leer = offen"
                                 />
                               </div>
                               <div className="space-y-1.5">

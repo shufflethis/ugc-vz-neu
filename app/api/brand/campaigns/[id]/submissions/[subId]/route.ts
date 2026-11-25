@@ -26,7 +26,8 @@ export async function PATCH(
 
   const sql = getDatabase();
   const [existing] = (await sql.query(
-    `SELECT s.id, s.application_id, s.status, s.views, s.likes, s.comments, s.shares, s.spend_eur_cents
+    `SELECT s.id, s.application_id, s.status, s.views, s.likes, s.comments, s.shares, s.spend_eur_cents,
+            c.compensation_model, c.tkp_eur_cents
      FROM brand_campaign_submissions s
      JOIN brand_campaigns c ON c.id = s.campaign_id
      WHERE c.brand_id = $1 AND c.public_id = $2 AND s.id = $3
@@ -46,9 +47,17 @@ export async function PATCH(
   const likes = body.likes !== undefined ? (toPositiveIntOrNull(body.likes, 100_000_000) ?? Number(existing.likes)) : Number(existing.likes);
   const comments = body.comments !== undefined ? (toPositiveIntOrNull(body.comments, 10_000_000) ?? Number(existing.comments)) : Number(existing.comments);
   const shares = body.shares !== undefined ? (toPositiveIntOrNull(body.shares, 50_000_000) ?? Number(existing.shares)) : Number(existing.shares);
-  const spendEurCents = body.spendEur !== undefined
-    ? Math.max(0, Math.min(100_000_000, Math.round((Number(body.spendEur) || 0) * 100)))
-    : Number(existing.spend_eur_cents);
+  const tkpCents = existing.tkp_eur_cents === null ? 0 : Number(existing.tkp_eur_cents);
+  const autoTkpCents = tkpCents > 0 ? Math.round((views / 1000) * tkpCents) : 0;
+
+  let spendEurCents = Number(existing.spend_eur_cents);
+  if (body.autoCalculateTkp === true && tkpCents > 0) {
+    spendEurCents = Math.min(100_000_000, autoTkpCents);
+  } else if (body.spendEur !== undefined) {
+    spendEurCents = Math.max(0, Math.min(100_000_000, Math.round((Number(body.spendEur) || 0) * 100)));
+  } else if (existing.compensation_model === 'tkp' && tkpCents > 0 && views !== Number(existing.views)) {
+    spendEurCents = Math.min(100_000_000, autoTkpCents);
+  }
 
   const metricsChanged =
     views !== Number(existing.views)

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Check, LogOut, Mail, ShieldCheck, Sparkles } from 'lucide-react';
 import type { CreatorProfileView } from '../lib/creator-profile';
 import type { CreatorSocialConnection } from '../lib/brand-workspace';
+import type { SocialOAuthAvailability } from '../lib/social-oauth';
 import SocialVerifySection from './SocialVerifySection';
 
 const fieldClass = 'w-full rounded-xl border border-hairline bg-white px-4 py-3 text-ink outline-none transition focus:border-geo-violet focus:ring-4 focus:ring-geo-violet/10';
@@ -20,19 +21,27 @@ const joinLinks = (value: string[]) => (value || []).join('\n');
 export default function KontoClient({
   profile,
   socialConnections = [],
+  oauthEnabled = { tiktok: false, instagram: false },
+  oauthStatus,
   loginInvalid = false,
   loginError = false,
   loginNoSession = false,
 }: {
   profile: CreatorProfileView | null;
   socialConnections?: CreatorSocialConnection[];
+  oauthEnabled?: SocialOAuthAvailability;
+  oauthStatus?: string;
   loginInvalid?: boolean;
   loginError?: boolean;
   loginNoSession?: boolean;
 }) {
   return (
     <div className="min-h-screen text-ink">
-      {profile ? <EditView profile={profile} socialConnections={socialConnections} /> : <LoginView invalid={loginInvalid} error={loginError} noSession={loginNoSession} />}
+      {profile ? (
+        <EditView profile={profile} socialConnections={socialConnections} oauthEnabled={oauthEnabled} oauthStatus={oauthStatus} />
+      ) : (
+        <LoginView invalid={loginInvalid} error={loginError} noSession={loginNoSession} />
+      )}
     </div>
   );
 }
@@ -184,9 +193,13 @@ function LoginView({ invalid, error, noSession }: { invalid: boolean; error: boo
 function EditView({
   profile,
   socialConnections,
+  oauthEnabled,
+  oauthStatus,
 }: {
   profile: CreatorProfileView;
   socialConnections: CreatorSocialConnection[];
+  oauthEnabled: SocialOAuthAvailability;
+  oauthStatus?: string;
 }) {
   const [form, setForm] = useState({
     name: profile.name,
@@ -275,7 +288,7 @@ function EditView({
             <p className="mt-2 text-sm leading-6 text-ink-soft">Bestehende Einladungen ansehen, fehlende Angaben ergänzen und nächste Schritte fortsetzen.</p>
           </Link>
         </div>
-        <SocialVerifySection initialAccounts={socialConnections} />
+        <SocialVerifySection initialAccounts={socialConnections} oauthEnabled={oauthEnabled} oauthStatus={oauthStatus} />
         <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
           <div>
             <p className="text-sm font-bold uppercase tracking-[0.15em] text-geo-violet">Creator-Konto</p>

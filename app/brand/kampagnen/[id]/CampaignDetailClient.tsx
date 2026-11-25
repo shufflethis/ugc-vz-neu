@@ -28,6 +28,14 @@ const SUB_STATUS_LABEL: Record<SubmissionStatus, { text: string; tone: string }>
   rejected: { text: 'Abgelehnt', tone: 'bg-red-50 text-red-700' },
 };
 
+const TARGET_PLATFORM_LABELS: Record<string, string> = {
+  tiktok: 'TikTok',
+  instagram: 'Instagram Reels',
+  youtube: 'YouTube Shorts',
+  tiktok_shop: 'TikTok Shop',
+  meta_ads: 'Meta Ads',
+};
+
 export default function CampaignDetailClient({ initialDetail }: { initialDetail: BrandCampaignDetail }) {
   const [detail, setDetail] = useState<BrandCampaignDetail>(initialDetail);
   const [tab, setTab] = useState<'creators' | 'submissions' | 'report'>('creators');
@@ -111,10 +119,21 @@ export default function CampaignDetailClient({ initialDetail }: { initialDetail:
               </div>
               <h1 className="mt-2 text-3xl font-bold text-ink sm:text-4xl">{campaign.title}</h1>
               <p className="mt-1 text-sm text-ink-soft">
-                {[campaign.deliverables, campaign.totalBudgetEur ? `Budget ${campaign.totalBudgetEur.toLocaleString('de-DE')} €` : '', campaign.usageRights, campaign.deadline]
+                {[
+                  campaign.deliverables,
+                  campaign.tkpEurCents ? `${(campaign.tkpEurCents / 100).toFixed(2).replace('.', ',')} € / 1.000 Views` : '',
+                  campaign.totalBudgetEur ? `Budget-Limit ${campaign.totalBudgetEur.toLocaleString('de-DE')} €` : '',
+                  campaign.usageRights,
+                  campaign.deadline,
+                ]
                   .filter(Boolean)
                   .join(' · ')}
               </p>
+              {campaign.discountCode && (
+                <p className="mt-2 inline-flex items-center rounded-full border border-geo-violet/25 bg-geo-violet/5 px-3 py-1 text-xs font-semibold text-geo-violet">
+                  Aktions-Hinweis: {campaign.discountCode}
+                </p>
+              )}
             </div>
             <div className="flex flex-wrap gap-2">
               <button
@@ -147,6 +166,55 @@ export default function CampaignDetailClient({ initialDetail }: { initialDetail:
             </p>
           )}
         </div>
+
+        {/* Optionales Budget-Limit & TKP Fortschritt */}
+        {campaign.totalBudgetEur && campaign.totalBudgetEur > 0 && (
+          <div
+            className={`rounded-2xl border p-5 ${
+              report.capReached ? 'border-red-300 bg-red-50/70' : 'border-geo-violet/25 bg-[#FBF8FE]'
+            }`}
+          >
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wider text-geo-violet">
+                  {campaign.tkpEurCents
+                    ? `Performance-Budget · ${(campaign.tkpEurCents / 100).toFixed(2).replace('.', ',')} € / 1.000 Views`
+                    : 'Kampagnen-Budget-Limit'}
+                </p>
+                <p className="mt-1 text-lg font-extrabold text-ink">
+                  {report.cappedPayoutEur.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €{' '}
+                  <span className="text-sm font-medium text-ink-soft">
+                    von {campaign.totalBudgetEur.toLocaleString('de-DE')} € ({Math.min(100, report.budgetUtilizationPct ?? 0).toFixed(1).replace('.', ',')} %)
+                  </span>
+                </p>
+              </div>
+              <div className="text-right text-xs">
+                {report.capReached ? (
+                  <span className="inline-flex rounded-full bg-red-600 px-3 py-1 font-bold text-white">
+                    Budget-Limit erreicht – Kampagne pausierbar
+                  </span>
+                ) : (
+                  <div className="space-y-0.5">
+                    <p className="font-bold text-[#385523]">
+                      Restbudget: {(report.remainingBudgetEur ?? 0).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €
+                    </p>
+                    {report.viewsUntilCap !== null && (
+                      <p className="text-ink-soft">
+                        Noch ca. {report.viewsUntilCap.toLocaleString('de-DE')} Views im Budget (max. {(report.maxCapViews ?? 0).toLocaleString('de-DE')})
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="mt-3 h-2.5 w-full overflow-hidden rounded-full bg-white/90">
+              <div
+                className={`h-full rounded-full transition-all ${report.capReached ? 'bg-red-500' : 'bg-geo-violet'}`}
+                style={{ width: `${Math.min(100, report.budgetUtilizationPct ?? 0)}%` }}
+              />
+            </div>
+          </div>
+        )}
 
         {/* Kompakte KPI-Leiste */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -239,6 +307,27 @@ export default function CampaignDetailClient({ initialDetail }: { initialDetail:
                             <p className="mt-3 rounded-xl bg-surface p-3 text-sm leading-6 text-ink">{app.creatorPitch}</p>
                           )}
 
+                          {(app.targetPlatforms.length > 0 || app.productChoice) && (
+                            <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+                              {app.targetPlatforms.length > 0 && (
+                                <span className="font-semibold text-ink-soft">Postet auf:</span>
+                              )}
+                              {app.targetPlatforms.map((plat) => (
+                                <span
+                                  key={plat}
+                                  className="rounded-full bg-geo-violet/10 px-2.5 py-0.5 font-semibold text-geo-violet"
+                                >
+                                  {TARGET_PLATFORM_LABELS[plat] || plat}
+                                </span>
+                              ))}
+                              {app.productChoice && (
+                                <span className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-1 font-medium text-amber-950">
+                                  Produkt-Wunsch: <strong>{app.productChoice}</strong>
+                                </span>
+                              )}
+                            </div>
+                          )}
+
                           {/* Verifizierte Social-Accounts & Portfolio */}
                           <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
                             {app.verifiedSocials.map((s, idx) => (
@@ -326,6 +415,8 @@ export default function CampaignDetailClient({ initialDetail }: { initialDetail:
                   <SubmissionTrackerRow
                     key={sub.id}
                     campaignPublicId={campaign.publicId}
+                    tkpEurCents={campaign.tkpEurCents}
+                    compensationModel={campaign.compensationModel}
                     sub={sub}
                     onUpdated={reload}
                   />
@@ -357,11 +448,13 @@ export default function CampaignDetailClient({ initialDetail }: { initialDetail:
                 <p className="mt-1 text-xs text-ink-soft">(Likes + Comments + Shares) / Views</p>
               </div>
               <div className="rounded-2xl border border-hairline bg-white p-5">
-                <p className="text-xs uppercase tracking-wider text-ink-soft">Spend &amp; Eff. TKP</p>
-                <p className="mt-2 text-3xl font-extrabold text-ink">{report.totalSpendEur.toLocaleString('de-DE')} €</p>
+                <p className="text-xs uppercase tracking-wider text-ink-soft">Auszahlung &amp; Eff. TKP</p>
+                <p className="mt-2 text-3xl font-extrabold text-ink">
+                  {report.cappedPayoutEur.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €
+                </p>
                 <p className="mt-1 text-xs text-ink-soft">
                   Eff. TKP: {report.effectiveCpmEur !== null ? `${report.effectiveCpmEur.toFixed(2).replace('.', ',')} €` : 'noch offen'}
-                  {report.budgetUtilizationPct !== null ? ` · ${report.budgetUtilizationPct} % vom Budget` : ''}
+                  {report.remainingBudgetEur !== null ? ` · Rest ${report.remainingBudgetEur.toLocaleString('de-DE')} €` : ''}
                 </p>
               </div>
             </div>
@@ -405,6 +498,7 @@ export default function CampaignDetailClient({ initialDetail }: { initialDetail:
                         <th className="py-2.5 pr-4">Views</th>
                         <th className="py-2.5 pr-4">Engagements</th>
                         <th className="py-2.5 pr-4">ER %</th>
+                        {campaign.tkpEurCents ? <th className="py-2.5 pr-4">TKP-Verdienst</th> : null}
                         <th className="py-2.5 pr-4">Spend</th>
                         <th className="py-2.5">Eff. TKP</th>
                       </tr>
@@ -417,6 +511,11 @@ export default function CampaignDetailClient({ initialDetail }: { initialDetail:
                           <td className="py-3 pr-4 font-bold text-ink">{row.views.toLocaleString('de-DE')}</td>
                           <td className="py-3 pr-4 text-ink-soft">{row.engagements.toLocaleString('de-DE')}</td>
                           <td className="py-3 pr-4 text-ink-soft">{row.engagementRatePct.toFixed(2).replace('.', ',')} %</td>
+                          {campaign.tkpEurCents ? (
+                            <td className="py-3 pr-4 font-bold text-[#385523]">
+                              {row.tkpEarnedEur.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €
+                            </td>
+                          ) : null}
                           <td className="py-3 pr-4 text-ink-soft">{row.spendEur.toLocaleString('de-DE')} €</td>
                           <td className="py-3 font-semibold text-geo-violet">
                             {row.effectiveCpmEur !== null ? `${row.effectiveCpmEur.toFixed(2).replace('.', ',')} €` : '—'}
@@ -437,10 +536,14 @@ export default function CampaignDetailClient({ initialDetail }: { initialDetail:
 
 function SubmissionTrackerRow({
   campaignPublicId,
+  tkpEurCents,
+  compensationModel,
   sub,
   onUpdated,
 }: {
   campaignPublicId: string;
+  tkpEurCents: number | null;
+  compensationModel: string;
   sub: CampaignSubmissionView;
   onUpdated: () => Promise<void>;
 }) {
@@ -449,7 +552,13 @@ function SubmissionTrackerRow({
   const [comments, setComments] = useState(String(sub.comments));
   const [shares, setShares] = useState(String(sub.shares));
   const [spendEur, setSpendEur] = useState(String(sub.spendEurCents / 100));
+  const [autoTkp, setAutoTkp] = useState(compensationModel === 'tkp' && Boolean(tkpEurCents));
   const [saving, setSaving] = useState(false);
+
+  const liveTkpPreview =
+    tkpEurCents && tkpEurCents > 0
+      ? Math.round((((Number(views) || 0) / 1000) * (tkpEurCents / 100)) * 100) / 100
+      : null;
 
   const badge = SUB_STATUS_LABEL[sub.status];
 
@@ -467,12 +576,15 @@ function SubmissionTrackerRow({
             likes: Number(likes) || 0,
             comments: Number(comments) || 0,
             shares: Number(shares) || 0,
-            spendEur: Number(spendEur) || 0,
+            ...(autoTkp && tkpEurCents ? { autoCalculateTkp: true } : { spendEur: Number(spendEur) || 0 }),
           }),
         },
       );
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.error || 'Speichern fehlgeschlagen');
+      if (autoTkp && data.submission?.spendEurCents !== undefined) {
+        setSpendEur(String(data.submission.spendEurCents / 100));
+      }
       await onUpdated();
       toast.success('Tracking & Status gespeichert (Snapshot erfasst).');
     } catch (err) {
@@ -521,34 +633,53 @@ function SubmissionTrackerRow({
         </div>
       </div>
 
-      <div className="grid gap-3 rounded-xl bg-surface p-3.5 sm:grid-cols-6 sm:items-end">
-        {[
-          ['Views', views, setViews],
-          ['Likes', likes, setLikes],
-          ['Comments', comments, setComments],
-          ['Shares', shares, setShares],
-          ['Spend (€)', spendEur, setSpendEur],
-        ].map(([lbl, val, setter]) => (
-          <label key={lbl as string} className="block">
-            <span className="block text-[11px] font-semibold text-ink-soft">{lbl as string}</span>
-            <input
-              type="number"
-              min={0}
-              step={lbl === 'Spend (€)' ? '0.01' : '1'}
-              value={val as string}
-              onChange={(e) => (setter as (v: string) => void)(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-hairline bg-white px-2.5 py-1.5 text-xs font-semibold text-ink"
-            />
-          </label>
-        ))}
-        <button
-          type="button"
-          disabled={saving}
-          onClick={() => save()}
-          className="min-h-[34px] rounded-lg bg-geo-violet px-3 text-xs font-bold text-white hover:bg-[#7531ae] disabled:opacity-50"
-        >
-          {saving ? '…' : 'Werte speichern'}
-        </button>
+      <div className="space-y-2.5 rounded-xl bg-surface p-3.5">
+        {liveTkpPreview !== null && (
+          <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+            <label className="inline-flex cursor-pointer items-center gap-2 font-semibold text-ink">
+              <input
+                type="checkbox"
+                checked={autoTkp}
+                onChange={(e) => setAutoTkp(e.target.checked)}
+                className="h-3.5 w-3.5 accent-geo-violet"
+              />
+              <span>Auto-TKP berechnen ({((tkpEurCents || 0) / 100).toFixed(2).replace('.', ',')} € / 1.000 Views)</span>
+            </label>
+            <span className="font-bold text-[#385523]">
+              Aktueller TKP-Verdienst: {liveTkpPreview.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €
+            </span>
+          </div>
+        )}
+        <div className="grid gap-3 sm:grid-cols-6 sm:items-end">
+          {[
+            ['Views', views, setViews, false],
+            ['Likes', likes, setLikes, false],
+            ['Comments', comments, setComments, false],
+            ['Shares', shares, setShares, false],
+            ['Spend (€)', autoTkp && liveTkpPreview !== null ? liveTkpPreview.toFixed(2) : spendEur, setSpendEur, autoTkp && liveTkpPreview !== null],
+          ].map(([lbl, val, setter, disabled]) => (
+            <label key={lbl as string} className="block">
+              <span className="block text-[11px] font-semibold text-ink-soft">{lbl as string}</span>
+              <input
+                type="number"
+                min={0}
+                step={lbl === 'Spend (€)' ? '0.01' : '1'}
+                disabled={Boolean(disabled)}
+                value={val as string}
+                onChange={(e) => (setter as (v: string) => void)(e.target.value)}
+                className="mt-1 w-full rounded-lg border border-hairline bg-white px-2.5 py-1.5 text-xs font-semibold text-ink disabled:bg-surface disabled:text-ink-soft"
+              />
+            </label>
+          ))}
+          <button
+            type="button"
+            disabled={saving}
+            onClick={() => save()}
+            className="min-h-[34px] rounded-lg bg-geo-violet px-3 text-xs font-bold text-white hover:bg-[#7531ae] disabled:opacity-50"
+          >
+            {saving ? '…' : 'Werte speichern'}
+          </button>
+        </div>
       </div>
     </article>
   );

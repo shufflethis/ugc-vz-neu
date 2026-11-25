@@ -39,7 +39,8 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
   const sql = getDatabase();
   const publicId = cleanText(params.id, 30);
   const [existing] = (await sql.query(
-    `SELECT id, title, description, visibility, status, deliverables, usage_rights, deadline, total_budget_eur
+    `SELECT id, title, description, visibility, status, deliverables, usage_rights, deadline,
+            total_budget_eur, tkp_eur_cents, requires_product_choice, product_choice_prompt, discount_code
      FROM brand_campaigns WHERE brand_id = $1 AND public_id = $2 LIMIT 1`,
     [brandId, publicId],
   )) as unknown as Array<any>;
@@ -59,14 +60,41 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
   const nextBudget = body.totalBudgetEur !== undefined
     ? toPositiveIntOrNull(body.totalBudgetEur, 1_000_000)
     : existing.total_budget_eur;
+  const nextTkp = body.tkpEurCents !== undefined
+    ? toPositiveIntOrNull(body.tkpEurCents, 50_000)
+    : existing.tkp_eur_cents;
+  const nextReqProduct = body.requiresProductChoice !== undefined
+    ? Boolean(body.requiresProductChoice)
+    : Boolean(existing.requires_product_choice);
+  const nextProductPrompt = body.productChoicePrompt !== undefined
+    ? cleanText(body.productChoicePrompt, 240)
+    : String(existing.product_choice_prompt || '');
+  const nextDiscountCode = body.discountCode !== undefined
+    ? cleanText(body.discountCode, 160)
+    : String(existing.discount_code || '');
 
   await sql.query(
     `UPDATE brand_campaigns
      SET title = $2, description = $3, visibility = $4, status = $5,
          deliverables = $6, usage_rights = $7, deadline = $8, total_budget_eur = $9,
-         updated_at = now()
+         tkp_eur_cents = $10, requires_product_choice = $11, product_choice_prompt = $12,
+         discount_code = $13, updated_at = now()
      WHERE id = $1`,
-    [existing.id, nextTitle, nextDescription, nextVisibility, nextStatus, nextDeliverables, nextRights, nextDeadline, nextBudget],
+    [
+      existing.id,
+      nextTitle,
+      nextDescription,
+      nextVisibility,
+      nextStatus,
+      nextDeliverables,
+      nextRights,
+      nextDeadline,
+      nextBudget,
+      nextTkp,
+      nextReqProduct,
+      nextProductPrompt,
+      nextDiscountCode,
+    ],
   );
 
   const detail = await getBrandCampaignDetail(sql, brandId, publicId);

@@ -28,7 +28,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
 
   const sql = getDatabase();
   const [app] = (await sql.query(
-    `SELECT a.id, a.campaign_id, a.status, a.proposed_fee_eur
+    `SELECT a.id, a.campaign_id, a.status, a.proposed_fee_eur, c.compensation_model, c.tkp_eur_cents
      FROM brand_campaign_applications a
      JOIN brand_campaigns c ON c.id = a.campaign_id
      WHERE c.public_id = $1 AND a.creator_id = $2
@@ -49,7 +49,13 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
   const likes = toPositiveIntOrNull(body.likes, 100_000_000) ?? 0;
   const comments = toPositiveIntOrNull(body.comments, 10_000_000) ?? 0;
   const shares = toPositiveIntOrNull(body.shares, 50_000_000) ?? 0;
-  const spendCents = app.proposed_fee_eur ? Number(app.proposed_fee_eur) * 100 : 0;
+  const tkpCents = app.tkp_eur_cents === null ? 0 : Number(app.tkp_eur_cents);
+  const spendCents =
+    app.compensation_model === 'tkp' && tkpCents > 0
+      ? Math.round((views / 1000) * tkpCents)
+      : app.proposed_fee_eur
+        ? Number(app.proposed_fee_eur) * 100
+        : 0;
 
   const [created] = (await sql.query(
     `INSERT INTO brand_campaign_submissions (
