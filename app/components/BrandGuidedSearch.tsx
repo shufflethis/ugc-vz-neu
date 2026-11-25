@@ -54,11 +54,11 @@ export default function BrandGuidedSearch() {
   return (
     <div className="space-y-6">
       <div className="rounded-3xl border border-hairline bg-white p-4 text-left shadow-[0_24px_70px_rgba(35,22,47,0.08)] sm:p-7">
-        {/* Gefuehrter Quick-Filter fuer Brands ohne leere-Textbox-Huerde */}
-        <details className="mb-5 rounded-2xl border border-hairline bg-surface p-4" open>
+        {/* Gefuehrter Quick-Filter (standardmaessig kompakt eingeklappt, damit keine doppelten Chip-Bloecke entstehen) */}
+        <details className="mb-4 rounded-2xl border border-hairline bg-surface px-4 py-3">
           <summary className="flex cursor-pointer flex-wrap items-center justify-between gap-2 text-sm font-semibold text-ink">
-            <span>Schnell-Briefing zusammenklicken (optional)</span>
-            <span className="text-xs font-normal text-ink-soft">Füllt deine Suchanfrage automatisch aus</span>
+            <span>Schnell-Briefing zusammenklicken (Branche · Plattform · Budget)</span>
+            <span className="text-xs font-normal text-geo-violet">Aufklappen ↓</span>
           </summary>
           <div className="mt-4 grid gap-4 md:grid-cols-2">
             <div>
@@ -144,6 +144,12 @@ export default function BrandGuidedSearch() {
 
       {/* Direkte Brand-Tools fuer Onboarding & Budget-Freigabe */}
       <div className="flex flex-wrap items-center justify-center gap-3 text-xs sm:text-sm">
+        <Link
+          href="/brand"
+          className="inline-flex min-h-[40px] items-center rounded-full bg-void px-4 font-semibold text-white hover:bg-geo-violet"
+        >
+          Kampagne im Brand-Workspace ausschreiben →
+        </Link>
         <Link
           href="/brands/ugc-kosten-rechner"
           className="inline-flex min-h-[40px] items-center rounded-full border border-hairline bg-white px-4 font-semibold text-ink hover:border-geo-violet hover:text-geo-violet"

@@ -4,7 +4,7 @@
 import { Metadata } from 'next';
 import { getCreator } from '@/app/lib/agent-gateway';
 import { MAX_CREATORS_PER_REQUEST } from '@/app/lib/lead-limits';
-import { humanizeCreatorText } from '@/app/lib/creator-public';
+import { humanizeCreatorText, humanizePriceText } from '@/app/lib/creator-public';
 
 export const dynamic = 'force-dynamic';
 export const metadata: Metadata = {
@@ -37,7 +37,7 @@ export default async function SelectionPage({ searchParams }: { searchParams?: {
               <p className="text-sm text-ink-soft">{[c.city, c.humanVerification?.level >= 1 ? 'Portfolio vorhanden' : ''].filter(Boolean).join(' · ')}</p>
               {c.topics && <p className="mt-3 text-sm"><strong>Themen:</strong> {text(c.topics, 300)}</p>}
               {c.preferred_content && <p className="mt-1 text-sm"><strong>Formate:</strong> {text(c.preferred_content, 300)}</p>}
-              <p className="mt-1 whitespace-pre-line text-sm"><strong>Preisvorstellung:</strong> {text(c.rate_text) || 'Nicht angegeben'}</p>
+              <p className="mt-1 whitespace-pre-line text-sm"><strong>Preisvorstellung:</strong> {humanizePriceText(c.rate_text) || 'Auf Anfrage'}</p>
               {c.reach_text && <p className="mt-1 whitespace-pre-line text-sm"><strong>Reichweite:</strong> {text(c.reach_text, 300)}</p>}
               <p className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm">
                 {[...(c.socials || []).map((s: { platform?: string; url: string }) => [s.platform || 'Social', s.url]), ...(c.portfolio || []).slice(0, 3).map((u: string) => ['Portfolio', u])]

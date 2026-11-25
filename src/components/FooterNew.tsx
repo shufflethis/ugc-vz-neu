@@ -66,6 +66,7 @@ export default function Footer() {
               <li><Link href="/brandkit" className="text-white/60 hover:text-white transition-colors duration-200 text-sm">Brand Kit</Link></li>
               <li><Link href="/creator" className="text-white/60 hover:text-white transition-colors duration-200 text-sm">Als Creator anmelden</Link></li>
               <li><Link href="/konto" className="text-white/60 hover:text-white transition-colors duration-200 text-sm">Login für Creator</Link></li>
+              <li><Link href="/brand" className="text-white/60 hover:text-white transition-colors duration-200 text-sm">Brand-Workspace &amp; Login</Link></li>
               <li><Link href="/brands" className="text-white/60 hover:text-white transition-colors duration-200 text-sm">Für Brands</Link></li>
             </ul>
           </div>

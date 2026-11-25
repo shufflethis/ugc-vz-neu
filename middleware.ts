@@ -117,7 +117,7 @@ export async function middleware(request: NextRequest) {
   if (
     request.method === 'GET' &&
     (request.headers.get('accept') || '').toLowerCase().includes('text/markdown') &&
-    !/^\/(md($|\/)|api\/|a2a($|\/)|\.well-known\/|_next\/|konto($|\/))/.test(pathname) &&
+    !/^\/(md($|\/)|api\/|a2a($|\/)|\.well-known\/|_next\/|konto($|\/)|brand($|\/))/.test(pathname) &&
     !/\.[a-z0-9]{2,5}$/i.test(pathname)
   ) {
     const target = new URL(`/md${pathname === '/' ? '' : pathname.replace(/\/+$/, '')}`, request.url);

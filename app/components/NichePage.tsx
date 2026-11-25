@@ -4,7 +4,7 @@ import Link from 'next/link';
 import SearchBox from './SearchBox';
 import FAQSchema from './FAQSchema';
 import BreadcrumbSchema from './BreadcrumbSchema';
-import { humanizeCreatorText } from '@/app/lib/creator-public';
+import { humanizePriceText } from '@/app/lib/creator-public';
 import { NICHES, nichePath, nicheBySlug, type Niche } from '@/app/lib/niches';
 import { NICHE_EXTRAS } from '@/app/lib/niche-extras';
 import { loadNicheRows, matchesNiche, nicheStats, topCreators, type NicheRow } from '@/app/lib/niche-data';
@@ -22,7 +22,7 @@ export async function loadNicheData(niche: Niche) {
 function CreatorCard({ row }: { row: NicheRow }) {
   const firstName = (row.display_name || 'Creator').split(' ')[0];
   const topics = clip((row.topics || '').replace(/\s+/g, ' '), 90);
-  const price = clip(humanizeCreatorText(row.rate_text).replace(/\s+/g, ' '), 110);
+  const price = clip(humanizePriceText(row.rate_text).replace(/\s+/g, ' '), 110);
   return (
     <li className="surface-card rounded-lg p-5">
       <div className="flex items-center gap-3">

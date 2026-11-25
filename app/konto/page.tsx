@@ -3,6 +3,7 @@ import { cookies } from 'next/headers';
 import { getDatabase, isDatabaseConfigured } from '../lib/database';
 import { verifySession, CREATOR_SESSION_COOKIE } from '../lib/creator-session';
 import { loadCreatorProfile } from '../lib/creator-profile';
+import { listCreatorSocialConnections, type CreatorSocialConnection } from '../lib/brand-workspace';
 import KontoClient from './KontoClient';
 
 export const dynamic = 'force-dynamic';
@@ -26,6 +27,15 @@ export default async function KontoPage({
     return <KontoClient profile={null} loginInvalid={searchParams?.invalid === '1'} loginError={searchParams?.error === '1'} loginNoSession={searchParams?.login === '1'} />;
   }
 
-  const profile = await loadCreatorProfile(getDatabase(), creatorId);
-  return <KontoClient profile={profile} loginNoSession={!profile && searchParams?.login === '1'} />;
+  const sql = getDatabase();
+  const profile = await loadCreatorProfile(sql, creatorId);
+  let socialConnections: CreatorSocialConnection[] = [];
+  if (profile) {
+    try {
+      socialConnections = await listCreatorSocialConnections(sql, creatorId);
+    } catch {
+      socialConnections = [];
+    }
+  }
+  return <KontoClient profile={profile} socialConnections={socialConnections} loginNoSession={!profile && searchParams?.login === '1'} />;
 }

@@ -11,6 +11,7 @@ const NAV = [
   { href: '/brands/ugc-creator-preise', label: 'Preise & Rechner' },
   { href: '/creator', label: 'Für Creator' },
   { href: '/wissen', label: 'Wissen' },
+  { href: '/brand', label: 'Brand-Login' },
   { href: '/konto', label: 'Creator-Login' },
 ];
 

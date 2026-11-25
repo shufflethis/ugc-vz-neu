@@ -7,7 +7,7 @@ import FAQSchema from '../../components/FAQSchema';
 import JsonLdScript from '../../wissen/[slug]/JsonLdScript';
 import { CREATOR_COUNT_LABEL } from '@/app/lib/creator-count';
 import { NICHE_INDEX, nichePath } from '@/app/lib/niche-index';
-import { humanizeCreatorText } from '@/app/lib/creator-public';
+import { humanizePriceText } from '@/app/lib/creator-public';
 import { loadNicheRows, nicheStats, topCreators, type NicheRow } from '@/app/lib/niche-data';
 
 export const revalidate = 3600;
@@ -24,7 +24,7 @@ const clip = (value: string, max: number) => (value.length > max ? `${value.slic
 function CreatorPreviewCard({ row }: { row: NicheRow }) {
   const firstName = (row.display_name || 'Creator').split(' ')[0];
   const topics = clip((row.topics || '').replace(/\s+/g, ' '), 85);
-  const price = clip(humanizeCreatorText(row.rate_text).replace(/\s+/g, ' '), 95);
+  const price = clip(humanizePriceText(row.rate_text).replace(/\s+/g, ' '), 95);
   return (
     <li className="surface-card rounded-2xl p-5 flex flex-col">
       <div className="flex items-center gap-3">

@@ -56,3 +56,31 @@ export function humanizeCreatorText(raw: string | null | undefined): string {
     .replace(/\[([^\]]+)\]\((https?:[^)]+)\)/g, '$1 ($2)')
     .trim();
 }
+
+/**
+ * Bereinigt Altlasten aus dem frueheren Google-Formular in Preisvorstellungen
+ * (z. B. "Nein, ab 180 €", "Nein, Ihr?!", "nein", nackte Zahlen wie "250").
+ */
+export function humanizePriceText(raw: string | null | undefined): string {
+  let text = humanizeCreatorText(raw);
+  if (!text) return '';
+
+  // Reine Ablehnungen / Platzhalter ohne jede Preisangabe -> sauber leer ("Auf Anfrage")
+  if (/^(?:nein|no|nope|n\/a|keine angabe|nicht angegeben|[-–—.?!,\s]+)(?:[,\s.!?\-–—]+(?:ihr\??!?|danke|leider|nicht))?[?!.\s]*$/i.test(text)) {
+    return '';
+  }
+
+  // Fuehrendes "Nein, ..." / "Nein- ..." / "Nein. ..." aus der alten Barter-Frage entfernen
+  const stripped = text.replace(/^(?:nein|no)\s*[,.:;\-–—]+\s*/i, '').trim();
+  if (stripped !== text) {
+    if (!stripped || /^(?:ihr\??!?|nicht|danke)[?!.\s]*$/i.test(stripped)) return '';
+    text = stripped.charAt(0).toUpperCase() + stripped.slice(1);
+  }
+
+  // Nackte Zahl ("250" oder "150-250") mit Euro-Zeichen lesbar machen
+  if (/^\d{2,4}(?:\s*[–-]\s*\d{2,4})?$/.test(text)) {
+    return `${text} €`;
+  }
+
+  return text;
+}

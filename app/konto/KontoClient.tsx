@@ -4,6 +4,8 @@ import { FormEvent, useState } from 'react';
 import Link from 'next/link';
 import { Check, LogOut, Mail, ShieldCheck, Sparkles } from 'lucide-react';
 import type { CreatorProfileView } from '../lib/creator-profile';
+import type { CreatorSocialConnection } from '../lib/brand-workspace';
+import SocialVerifySection from './SocialVerifySection';
 
 const fieldClass = 'w-full rounded-xl border border-hairline bg-white px-4 py-3 text-ink outline-none transition focus:border-geo-violet focus:ring-4 focus:ring-geo-violet/10';
 const labelClass = 'mb-2 block text-sm font-semibold text-ink';
@@ -17,18 +19,20 @@ const joinLinks = (value: string[]) => (value || []).join('\n');
 
 export default function KontoClient({
   profile,
+  socialConnections = [],
   loginInvalid = false,
   loginError = false,
   loginNoSession = false,
 }: {
   profile: CreatorProfileView | null;
+  socialConnections?: CreatorSocialConnection[];
   loginInvalid?: boolean;
   loginError?: boolean;
   loginNoSession?: boolean;
 }) {
   return (
     <div className="min-h-screen text-ink">
-      {profile ? <EditView profile={profile} /> : <LoginView invalid={loginInvalid} error={loginError} noSession={loginNoSession} />}
+      {profile ? <EditView profile={profile} socialConnections={socialConnections} /> : <LoginView invalid={loginInvalid} error={loginError} noSession={loginNoSession} />}
     </div>
   );
 }
@@ -177,7 +181,13 @@ function LoginView({ invalid, error, noSession }: { invalid: boolean; error: boo
   );
 }
 
-function EditView({ profile }: { profile: CreatorProfileView }) {
+function EditView({
+  profile,
+  socialConnections,
+}: {
+  profile: CreatorProfileView;
+  socialConnections: CreatorSocialConnection[];
+}) {
   const [form, setForm] = useState({
     name: profile.name,
     stageName: profile.stageName,
@@ -253,10 +263,19 @@ function EditView({ profile }: { profile: CreatorProfileView }) {
     <div className="px-4 sm:px-8 md:px-16 lg:px-24 pb-24 pt-10 sm:pt-14">
       <div className="max-w-4xl mx-auto py-10">
         <ProjectRequests profile={profile} />
-        <Link href="/konto/kooperationen" className="mb-8 block rounded-2xl border border-geo-violet/30 bg-geo-violet/5 p-6 hover:bg-geo-violet/10">
-          <h2 className="text-xl font-semibold">Meine Kooperationen →</h2>
-          <p className="mt-2 text-sm leading-6 text-ink-soft">Einladungen ansehen, fehlende Angaben ergänzen und deine nächsten Schritte fortsetzen.</p>
-        </Link>
+        <div className="mb-8 grid gap-4 sm:grid-cols-2">
+          <Link href="/konto/kampagnen" className="block rounded-2xl border border-geo-violet/40 bg-geo-violet/5 p-6 transition hover:bg-geo-violet/10">
+            <p className="text-xs font-bold uppercase tracking-[0.14em] text-geo-violet">Neu · Brand-Workspace</p>
+            <h2 className="mt-1 text-xl font-semibold">Brand-Kampagnen &amp; Ausschreibungen →</h2>
+            <p className="mt-2 text-sm leading-6 text-ink-soft">Einladungen annehmen, auf offene Kampagnen bewerben und fertige Clips einreichen.</p>
+          </Link>
+          <Link href="/konto/kooperationen" className="block rounded-2xl border border-hairline bg-white p-6 transition hover:border-geo-violet/40 hover:bg-surface/60">
+            <p className="text-xs font-bold uppercase tracking-[0.14em] text-ink-soft">Direkt-Kooperationen</p>
+            <h2 className="mt-1 text-xl font-semibold">Meine Kooperationen →</h2>
+            <p className="mt-2 text-sm leading-6 text-ink-soft">Bestehende Einladungen ansehen, fehlende Angaben ergänzen und nächste Schritte fortsetzen.</p>
+          </Link>
+        </div>
+        <SocialVerifySection initialAccounts={socialConnections} />
         <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
           <div>
             <p className="text-sm font-bold uppercase tracking-[0.15em] text-geo-violet">Creator-Konto</p>

@@ -8,7 +8,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import NoResults from '../../components/NoResults';
 import CreatorSelectionPopup from './CreatorSelectionPopup';
 import CreatorProfileDialog from './CreatorProfileDialog';
-import { humanizeCreatorText, type SearchCreator } from '../lib/creator-public';
+import { humanizePriceText, type SearchCreator } from '../lib/creator-public';
 import { NICHE_INDEX } from '../lib/niche-index';
 import { castingLabel } from '../lib/casting';
 import CastingChips from './CastingChips';
@@ -566,7 +566,7 @@ export default function SearchBox({ initialQuery = '', showFeatured = false, dem
                     <CastingEvidenceList evidence={creator.evidence} />
                     {creator.topics && <p className="line-clamp-2 break-words text-sm">{creator.topics}</p>}
                     {creator.preferredContent && <p className="line-clamp-2 break-words text-sm">{creator.preferredContent}</p>}
-                    <p className="line-clamp-3 whitespace-pre-line break-words text-sm"><span className="font-semibold">Preisvorstellung: </span>{humanizeCreatorText(creator.priceRange) || 'Nicht angegeben'}</p>
+                    <p className="line-clamp-3 whitespace-pre-line break-words text-sm"><span className="font-semibold">Preisvorstellung: </span>{humanizePriceText(creator.priceRange) || 'Auf Anfrage'}</p>
                     <p className="text-xs text-ink-soft">{creator.contactReachable ? '✉ Per E-Mail erreichbar' : 'Kontakt über Social Media'}</p>
                   </div>
                   <div className={styles.networks}>
@@ -620,6 +620,8 @@ export default function SearchBox({ initialQuery = '', showFeatured = false, dem
               selectedCreators={selectedCreators}
               creators={creators}
               isVisible={selectedCreators.length > 0}
+              searchQuery={castingBrief || searchQuery}
+              demoMode={demoMode}
               onClose={() => {
                 // Nur die Auswahl zurücksetzen, Creator-Liste bleibt
                 clearSelection();

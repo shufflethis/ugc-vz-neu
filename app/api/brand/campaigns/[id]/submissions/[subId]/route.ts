@@ -1,0 +1,87 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { getDatabase, isDatabaseConfigured } from '@/app/lib/database';
+import { BRAND_SESSION_COOKIE, isTrustedSameOrigin, verifyBrandSession } from '@/app/lib/brand-session';
+import { cleanText, toPositiveIntOrNull, type SubmissionStatus } from '@/app/lib/brand-workspace';
+
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
+const ALLOWED_SUB_STATUSES = new Set<SubmissionStatus>(['submitted', 'revision_requested', 'approved', 'rejected']);
+
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: { id: string; subId: string } },
+) {
+  if (!isTrustedSameOrigin(request)) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+  const brandId = verifyBrandSession(request.cookies.get(BRAND_SESSION_COOKIE)?.value);
+  if (!brandId) return NextResponse.json({ success: false, error: 'Nicht angemeldet.' }, { status: 401 });
+  if (!isDatabaseConfigured()) return NextResponse.json({ success: false, error: 'Datenbank nicht verfügbar.' }, { status: 503 });
+
+  let body: Record<string, unknown>;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ success: false, error: 'Ungültige Anfrage.' }, { status: 400 });
+  }
+
+  const sql = getDatabase();
+  const [existing] = (await sql.query(
+    `SELECT s.id, s.application_id, s.status, s.views, s.likes, s.comments, s.shares, s.spend_eur_cents
+     FROM brand_campaign_submissions s
+     JOIN brand_campaigns c ON c.id = s.campaign_id
+     WHERE c.brand_id = $1 AND c.public_id = $2 AND s.id = $3
+     LIMIT 1`,
+    [brandId, cleanText(params.id, 30), cleanText(params.subId, 60)],
+  )) as unknown as Array<any>;
+
+  if (!existing) {
+    return NextResponse.json({ success: false, error: 'Einreichung nicht gefunden.' }, { status: 404 });
+  }
+
+  const nextStatus = body.status !== undefined && ALLOWED_SUB_STATUSES.has(cleanText(body.status, 30) as SubmissionStatus)
+    ? (cleanText(body.status, 30) as SubmissionStatus)
+    : (existing.status as SubmissionStatus);
+
+  const views = body.views !== undefined ? (toPositiveIntOrNull(body.views, 500_000_000) ?? Number(existing.views)) : Number(existing.views);
+  const likes = body.likes !== undefined ? (toPositiveIntOrNull(body.likes, 100_000_000) ?? Number(existing.likes)) : Number(existing.likes);
+  const comments = body.comments !== undefined ? (toPositiveIntOrNull(body.comments, 10_000_000) ?? Number(existing.comments)) : Number(existing.comments);
+  const shares = body.shares !== undefined ? (toPositiveIntOrNull(body.shares, 50_000_000) ?? Number(existing.shares)) : Number(existing.shares);
+  const spendEurCents = body.spendEur !== undefined
+    ? Math.max(0, Math.min(100_000_000, Math.round((Number(body.spendEur) || 0) * 100)))
+    : Number(existing.spend_eur_cents);
+
+  const metricsChanged =
+    views !== Number(existing.views)
+    || likes !== Number(existing.likes)
+    || comments !== Number(existing.comments)
+    || shares !== Number(existing.shares);
+
+  await sql.query(
+    `UPDATE brand_campaign_submissions
+     SET status = $2, views = $3, likes = $4, comments = $5, shares = $6,
+         spend_eur_cents = $7, last_tracked_at = CASE WHEN $8 THEN now() ELSE last_tracked_at END,
+         updated_at = now()
+     WHERE id = $1`,
+    [existing.id, nextStatus, views, likes, comments, shares, spendEurCents, metricsChanged],
+  );
+
+  if (metricsChanged) {
+    await sql.query(
+      `INSERT INTO brand_campaign_metric_snapshots (submission_id, views, likes, comments, shares)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [existing.id, views, likes, comments, shares],
+    );
+  }
+
+  if (nextStatus === 'approved') {
+    await sql.query(
+      `UPDATE brand_campaign_applications SET status = 'approved', updated_at = now() WHERE id = $1`,
+      [existing.application_id],
+    );
+  }
+
+  return NextResponse.json({
+    success: true,
+    submission: { id: existing.id, status: nextStatus, views, likes, comments, shares, spendEurCents },
+  });
+}
