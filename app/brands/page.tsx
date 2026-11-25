@@ -122,12 +122,12 @@ export default function BrandsPage() {
 
       <div className="px-4 sm:px-8 md:px-16 lg:px-24 pb-24 pt-10 sm:pt-14">
         <section className="max-w-5xl mx-auto py-16 text-center">
-          <p className="text-geo-violet font-semibold mb-4">Vom Produktbriefing zur Creator-Auswahl</p>
+          <p className="text-geo-violet font-semibold mb-4">DACH Creator-Pool &amp; Brand-Workspace</p>
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 text-ink">
             UGC Creator <span className="gradient-text">für deine Brand finden</span>
           </h1>
           <p className="text-xl text-ink-soft max-w-3xl mx-auto leading-relaxed mb-10">
-            Beschreibe Produkt, Zielgruppe und gewünschtes Format. Vergleiche Profile, Arbeitsproben und Preisvorstellungen, wähle deine Favoriten und fordere Kontaktdaten kostenlos an. Verfügbarkeit, Honorar und Nutzungsrechte vereinbart ihr direkt.
+            Entdecke über 750 echte DACH-Profile, starte View-Kampagnen (TKP) mit optionalem Budget-Limit oder beauftrage gezielt Creator für Produktvideos, TikTok, Reels und TikTok Shop direkt im Brand-Workspace.
           </p>
           <div className="max-w-4xl mx-auto">
             <BrandGuidedSearch />
@@ -180,10 +180,10 @@ export default function BrandsPage() {
               <h2 className="text-3xl font-bold mb-6 text-ink">Was passiert nach der Creator-Auswahl?</h2>
               <div className="space-y-5">
                 {[
-                  ['1', 'Demand eingeben', 'Du beschreibst kurz Produkt, Zielgruppe, Plattform und Content-Wunsch.'],
-                  ['2', 'Creator-Liste ansehen', 'UGC VZ interpretiert deine Suchanfrage mit KI und zeigt passende Profilvorschläge. Die Auswahl bleibt deine Entscheidung.'],
-                  ['3', 'E-Mail erhalten', 'Du bekommst eine Bestätigung mit den ausgewählten Creatorn und verfügbaren Kontakt-/Social-Daten.'],
-                  ['4', 'Direkt starten', 'Du kontaktierst die Creator direkt oder holst optional Support für Briefing, Vertrag und Kampagnen-Setup dazu.'],
+                  ['1', 'Briefing & Plattform festlegen', 'Du wählst TikTok, Instagram Reels, YouTube Shorts, TikTok Shop oder reine Videodateien und beschreibst dein Produkt.'],
+                  ['2', 'Creator-Liste prüfen oder offen ausschreiben', 'Vergleiche Arbeitsproben, Preisvorstellungen und verifizierte Social-Badges oder öffne die Kampagne für den kompletten DACH-Pool.'],
+                  ['3', 'Im Brand-Workspace einladen & auswählen', 'Alle Bewerbungen, Zielplattformen und Produktwünsche laufen strukturiert in deinem kostenlosen Brand-Konto zusammen.'],
+                  ['4', 'Beiträge prüfen & Views reporten', 'Eingereichte Links prüfst du gegen deine Briefing-Checkliste und teilst Views sowie effektiven TKP als CSV oder Live-Report-Link.'],
                 ].map(([step, title, copy]) => (
                   <div key={step} className="flex gap-4">
                     <div className="w-9 h-9 rounded-full bg-geo-violet text-white flex items-center justify-center font-bold shrink-0">{step}</div>

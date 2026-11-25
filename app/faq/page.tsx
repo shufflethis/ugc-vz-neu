@@ -37,15 +37,15 @@ const faqData: FAQSection[] = [
     items: [
       {
         question: "Was ist UGC-VZ?",
-        answer: "UGC-VZ ist ein kostenloses Verzeichnis, das UGC Creators und Unternehmen zusammenbringt. Creators können sich gratis registrieren und ihr Portfolio präsentieren, während Unternehmen kostenlos nach passenden Creators suchen und direkte Kontakte knüpfen können."
+        answer: "UGC-VZ ist die DACH-Plattform für messbaren User Generated Content: Brands entdecken über 750 aktive Creator-Profile, starten View-Kampagnen (TKP) mit optionalem Budget-Limit oder gezielte Produkt-Tests im Brand-Workspace und prüfen alle Beiträge samt Live-Reporting an einem Ort."
       },
       {
-        question: "Ist UGC-VZ wirklich komplett kostenlos?",
-        answer: "Ja, absolut! Es entstehen keine Kosten für die Registrierung, das Erstellen eines Profils oder die Kontaktaufnahme. Weder für Creators noch für Unternehmen. Das war von Anfang an unser Versprechen."
+        question: "Gibt es ein monatliches Pflicht-Abo?",
+        answer: "Nein. Für Creator ist das Profil dauerhaft kostenlos. Brands brauchen kein Pflicht-Abo: Du legst ein kostenloses Brand-Konto an, definierst dein Kampagnenbudget und zahlst nur für geprüfte Ergebnisse oder vereinbarte Produktionen."
       },
       {
-        question: "Wie verdient UGC-VZ Geld, wenn alles kostenlos ist?",
-        answer: "UGC-VZ ist ein Community-Projekt von famefact, einer etablierten Social Media Agentur. Wir betreiben das Verzeichnis als Service für die Creator-Community, ohne direkt daran zu verdienen. Falls größere Projekte entstehen, können Unternehmen optional unsere Agentur-Services nutzen – aber das ist kein Muss."
+        question: "Wer steckt hinter UGC-VZ?",
+        answer: "UGC-VZ wurde vom Team hinter famefact aufgebaut, einer der erfahrensten Social-Media-Agenturen im deutschsprachigen Raum. Auf Wunsch begleiten wir Pilotkampagnen, Creator-Auswahl und Strategie direkt aus der Agenturpraxis heraus."
       }
     ]
   },
@@ -95,8 +95,12 @@ const faqData: FAQSection[] = [
     title: "Technische Fragen",
     items: [
       {
-        question: "Brauche ich einen Account, um Creator zu kontaktieren?",
-        answer: "Nein, das Verzeichnis ist öffentlich zugänglich. Du kannst Creators direkt über ihre angegebenen Kontaktdaten erreichen."
+        question: "Brauche ich ein Brand-Konto, um Kampagnen zu starten?",
+        answer: "Ja. Stöbern im Creator-Pool geht direkt als Vorschau. Für Kampagnen-Briefings, Creator-Einladungen, Beitragsprüfung und Live-Reporting legst du in einer Minute ein kostenloses Brand-Konto per 6-stelligem E-Mail-Code an. So schützen wir Creator vor Spam und bündeln alle Ergebnisse an einem Ort."
+      },
+      {
+        question: "Wie funktioniert die Vergütung pro 1.000 Views (TKP)?",
+        answer: "Du legst deinen Satz je 1.000 Views und auf Wunsch ein maximales Budget-Limit fest. Gezählt werden geprüfte Beiträge in vollen 1.000er-Schritten. Im Brand-Workspace siehst du Views, effektiven TKP, Restbudget und kannst den Report als CSV oder teilbaren Link exportieren."
       },
       {
         question: "Kann ich mein Profil später bearbeiten?",

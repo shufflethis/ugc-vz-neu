@@ -6,15 +6,15 @@ import {
   isTrustedSameOrigin,
   signBrandSession,
 } from '@/app/lib/brand-session';
-import { consumeBrandLoginToken } from '@/app/lib/brand-workspace';
+import { consumeBrandLoginOtp, consumeBrandLoginToken } from '@/app/lib/brand-workspace';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
 
 /**
- * POST-only Einloesung: Mail-Scanner (Outlook Safe Links / Proofpoint) rufen nur GET/HEAD ab
- * und verbrauchen diesen Token daher niemals vor dem echten Nutzerklick auf /brand/verify.
+ * POST-only Einloesung: unterstuetzt sowohl den Magic-Link-Token (/brand/verify)
+ * als auch den 6-stelligen Einmal-Code direkt im Browser (resistent gegen Mail-Scanner).
  */
 export async function POST(request: NextRequest) {
   if (!isTrustedSameOrigin(request)) {
@@ -25,18 +25,33 @@ export async function POST(request: NextRequest) {
   }
 
   let token = '';
+  let email = '';
+  let code = '';
   try {
-    const body = (await request.json()) as { token?: unknown };
+    const body = (await request.json()) as { token?: unknown; email?: unknown; code?: unknown };
     token = typeof body.token === 'string' ? body.token.trim() : '';
+    email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
+    code = typeof body.code === 'string' ? body.code.replace(/\s+/g, '') : '';
   } catch {
     return NextResponse.json({ success: false, error: 'Ungültige Anfrage.' }, { status: 400 });
   }
 
   try {
-    const result = await consumeBrandLoginToken(getDatabase(), token);
+    const sql = getDatabase();
+    const result = token
+      ? await consumeBrandLoginToken(sql, token)
+      : email && /^\d{6}$/.test(code)
+        ? await consumeBrandLoginOtp(sql, email, code)
+        : null;
+
     if (!result) {
       return NextResponse.json(
-        { success: false, error: 'Dieser Anmeldelink ist ungültig oder abgelaufen. Bitte fordere einen neuen Link an.' },
+        {
+          success: false,
+          error: token
+            ? 'Dieser Anmeldelink ist ungültig oder abgelaufen. Bitte fordere einen neuen Code an.'
+            : 'Der 6-stellige Code ist ungültig oder abgelaufen. Bitte prüfe deine E-Mail oder fordere einen neuen Code an.',
+        },
         { status: 400 },
       );
     }

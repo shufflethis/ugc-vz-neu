@@ -38,7 +38,9 @@ function BrandLoginView() {
   const [company, setCompany] = useState('');
   const [email, setEmail] = useState('');
   const [website, setWebsite] = useState('');
+  const [otpCode, setOtpCode] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [verifying, setVerifying] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState('');
 
@@ -66,61 +68,117 @@ function BrandLoginView() {
     }
   };
 
+  const handleVerifyOtp = async (e: FormEvent) => {
+    e.preventDefault();
+    setError('');
+    const cleanCode = otpCode.replace(/\D/g, '');
+    if (cleanCode.length !== 6) {
+      setError('Bitte gib den 6-stelligen Code aus deiner E-Mail ein.');
+      return;
+    }
+    setVerifying(true);
+    try {
+      const res = await fetch('/api/brand/login/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim(), code: cleanCode }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.error || 'Code ungültig oder abgelaufen.');
+      window.location.assign(data.redirectTo || '/brand');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Code konnte nicht bestätigt werden.');
+      setVerifying(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-white px-4 pb-24 pt-12 text-ink sm:px-8">
-      <div className="mx-auto max-w-5xl">
-        <div className="grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
+      <div className="mx-auto max-w-6xl space-y-20">
+        {/* Hero + Code-Login */}
+        <div className="grid gap-10 lg:grid-cols-[1.08fr_0.92fr] lg:items-center">
           <div>
             <p className="font-mono text-xs font-semibold uppercase tracking-[0.16em] text-geo-violet">
-              UGC VZ Brand-Workspace · Kostenlos starten
+              UGC VZ Brand-Workspace · 750+ aktive DACH-Profile
             </p>
             <h1 className="mt-3 text-4xl font-bold leading-tight tracking-tight text-ink sm:text-5xl">
-              Kampagnen ausschreiben, Creator auswählen &amp; Performance tracken.
+              UGC-Kampagnen, die du nach echten Views steuerst.
             </h1>
             <p className="mt-4 text-base leading-7 text-ink-soft">
-              Schluss mit losen E-Mail-Threads und Excel-Listen: Verwalte deine Creator-Auswahl, offene Ausschreibungen an 750+ DACH-Profile, verifizierte Social-Kanäle und das komplette Kampagnen-Reporting an einem Ort.
+              Lege Briefing, Zielplattform und optionales Budget-Limit in wenigen Minuten fest. Verifizierte Creator aus unserem DACH-Pool posten auf TikTok, Instagram Reels, YouTube Shorts oder TikTok Shop, und du siehst jeden Beitrag samt Views direkt in deinem Workspace.
             </p>
             <ul className="mt-6 space-y-3 text-sm text-ink">
               <li className="flex items-start gap-3">
                 <Users size={18} className="mt-0.5 shrink-0 text-geo-violet" />
-                <span><strong>Direkt einladen oder offen ausschreiben:</strong> Markiere Favoriten aus der Suche oder lass passende Creator sich direkt mit Angebot &amp; Verfügbarkeit bewerben.</span>
+                <span><strong>Zwei flexible Wege:</strong> Vergütung pro 1.000 geprüfte Views (TKP) mit optionalem Budget-Limit oder gezielte Creator-Produktion &amp; Produkt-Tests.</span>
               </li>
               <li className="flex items-start gap-3">
                 <ShieldCheck size={18} className="mt-0.5 shrink-0 text-geo-violet" />
-                <span><strong>Verifizierte Social-Profile:</strong> Sieh direkt, welche Creator ihre Instagram- und TikTok-Kanäle bestätigt haben.</span>
+                <span><strong>Verifizierte Social-Profile:</strong> Sieh vorab, welche Creator ihre TikTok- und Instagram-Kanäle bestätigt haben.</span>
               </li>
               <li className="flex items-start gap-3">
                 <BarChart3 size={18} className="mt-0.5 shrink-0 text-geo-violet" />
-                <span><strong>Kampagnen-Tracking &amp; CSV-Reporting:</strong> Eingereichte TikTok-/Reels-Links freigeben, Views, Engagement &amp; effektiven TKP/CPM zentral reporten.</span>
+                <span><strong>Beitragsprüfung &amp; Live-Reporting:</strong> Eingereichte Links gegen deine Briefing-Checkliste prüfen, Views &amp; effektiven TKP als CSV oder Live-Report-Link teilen.</span>
               </li>
             </ul>
             <p className="mt-6 text-xs text-ink-soft">
-              Du möchtest erst stöbern?{' '}
+              Für direkte Kampagnen und Creator-Anfragen ist ein kurzes Brand-Konto nötig. So schützen wir Creator vor Spam und halten alle Absprachen an einem Ort.{' '}
               <Link href="/brands" className="font-semibold text-geo-violet underline hover:no-underline">
-                Creator weiter ohne Login durchsuchen →
+                Creator-Pool als Vorschau ansehen →
               </Link>
             </p>
           </div>
 
           <div className="rounded-3xl border border-hairline bg-white p-7 shadow-[0_24px_80px_rgba(35,22,47,0.10)] sm:p-8">
             {sent ? (
-              <div className="py-6 text-center">
-                <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-geo-violet/10 text-geo-violet">
-                  <Mail size={26} />
-                </span>
-                <h2 className="mt-5 text-2xl font-bold text-ink">Prüfe dein Postfach</h2>
-                <p className="mt-2 text-sm leading-6 text-ink-soft">
-                  Wir haben deinen persönlichen Zugangslink an <strong className="text-ink">{email}</strong> gesendet. Ein Klick genügt – kein Passwort nötig.
-                </p>
-                <p className="mt-4 rounded-xl bg-surface px-4 py-3 text-xs text-ink-soft">
-                  Der Link ist 30 Minuten gültig und gegen Mail-Scanner geschützt. Prüfe ggf. auch deinen Spam-Ordner.
+              <div className="space-y-5 py-2">
+                <div className="text-center">
+                  <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-geo-violet/10 text-geo-violet">
+                    <Mail size={26} />
+                  </span>
+                  <h2 className="mt-4 text-2xl font-bold text-ink">6-stelligen Code eingeben</h2>
+                  <p className="mt-2 text-sm leading-6 text-ink-soft">
+                    Wir haben deinen Code und einen geschützten Link an <strong className="text-ink">{email}</strong> gesendet.
+                  </p>
+                </div>
+
+                <form onSubmit={handleVerifyOtp} className="space-y-4">
+                  <div>
+                    <label htmlFor="brand-otp" className={labelClass}>6-stelliger Anmeldecode</label>
+                    <input
+                      id="brand-otp"
+                      type="text"
+                      inputMode="numeric"
+                      autoComplete="one-time-code"
+                      maxLength={8}
+                      value={otpCode}
+                      onChange={(e) => { setOtpCode(e.target.value); if (error) setError(''); }}
+                      placeholder="123456"
+                      className={`${fieldClass} text-center font-mono text-2xl font-bold tracking-[0.3em]`}
+                    />
+                  </div>
+                  {error && <p role="alert" className="rounded-xl border border-red-200 bg-red-50 px-3.5 py-2.5 text-sm text-red-700">{error}</p>}
+                  <button
+                    type="submit"
+                    disabled={verifying}
+                    className="min-h-[48px] w-full rounded-xl bg-geo-violet px-6 font-semibold text-white transition hover:bg-[#7531ae] disabled:opacity-60"
+                  >
+                    {verifying ? 'Code wird geprüft …' : 'Code bestätigen & Workspace öffnen →'}
+                  </button>
+                </form>
+
+                <p className="rounded-xl bg-surface px-4 py-3 text-center text-xs text-ink-soft">
+                  Code &amp; Link sind 30 Minuten gültig. Prüfe ggf. auch deinen Spam-Ordner.{' '}
+                  <button type="button" onClick={() => { setSent(false); setOtpCode(''); setError(''); }} className="font-semibold text-geo-violet underline">
+                    E-Mail ändern
+                  </button>
                 </p>
               </div>
             ) : (
               <form onSubmit={handleSubmit} noValidate className="space-y-4">
                 <div>
-                  <h2 className="text-2xl font-bold text-ink">Brand-Login / Konto erstellen</h2>
-                  <p className="mt-1 text-sm text-ink-soft">Kostenloser Magic-Link per E-Mail – für neue und bestehende Brands.</p>
+                  <h2 className="text-2xl font-bold text-ink">Brand-Workspace öffnen</h2>
+                  <p className="mt-1 text-sm text-ink-soft">Erstelle dein Brand-Konto oder melde dich mit einem 6-stelligen Einmal-Code per E-Mail an.</p>
                 </div>
 
                 <div aria-hidden="true" style={{ position: 'absolute', left: '-10000px', width: 1, height: 1, overflow: 'hidden' }}>
@@ -148,7 +206,7 @@ function BrandLoginView() {
                       type="text"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      placeholder="Optional bei bestehendem Konto"
+                      placeholder="Vor- und Nachname"
                       className={fieldClass}
                     />
                   </div>
@@ -159,7 +217,7 @@ function BrandLoginView() {
                       type="text"
                       value={company}
                       onChange={(e) => setCompany(e.target.value)}
-                      placeholder="z. B. GlowSkin GmbH"
+                      placeholder="z. B. Deine Marke GmbH"
                       className={fieldClass}
                     />
                   </div>
@@ -172,16 +230,76 @@ function BrandLoginView() {
                   disabled={submitting}
                   className="min-h-[48px] w-full rounded-xl bg-geo-violet px-6 font-semibold text-white transition hover:bg-[#7531ae] disabled:opacity-60"
                 >
-                  {submitting ? 'Link wird gesendet …' : 'Anmeldelink anfordern →'}
+                  {submitting ? 'Code wird gesendet …' : 'Brand-Konto anlegen / Code senden →'}
                 </button>
                 <p className="text-center text-xs text-ink-soft">
-                  Du bist Creator?{' '}
+                  Kein Pflicht-Abo. Du bist Creator?{' '}
                   <Link href="/konto" className="font-semibold text-geo-violet underline">Zum Creator-Login</Link>
                 </p>
               </form>
             )}
           </div>
         </div>
+
+        {/* Zwei Kampagnenwege */}
+        <section className="space-y-6">
+          <div className="text-center">
+            <p className="font-mono text-xs font-semibold uppercase tracking-[0.16em] text-geo-violet">Zwei Wege im selben Workspace</p>
+            <h2 className="mt-2 text-3xl font-bold text-ink">Wähle das Modell, das zu deinem Ziel passt</h2>
+          </div>
+          <div className="grid gap-6 md:grid-cols-2">
+            <div className="rounded-3xl border border-geo-violet/30 bg-[#FBF8FE] p-7">
+              <p className="text-xs font-bold uppercase tracking-wider text-geo-violet">Weg 1 · Performance &amp; Reichweite</p>
+              <h3 className="mt-2 text-2xl font-bold text-ink">View-Kampagne (TKP) mit optionalem Budget-Limit</h3>
+              <p className="mt-3 text-sm leading-6 text-ink-soft">
+                Creator posten auf ihren eigenen Accounts auf TikTok, Instagram Reels oder YouTube Shorts. Du zahlst pro 1.000 geprüfte Views und behältst über ein optionales Budget-Limit jederzeit die volle Kostenkontrolle. Ideal für Shop-Aktionen, Rabatt-Kampagnen und schnelle Produkt-Launches.
+              </p>
+            </div>
+            <div className="rounded-3xl border border-hairline bg-surface p-7">
+              <p className="text-xs font-bold uppercase tracking-wider text-ink-soft">Weg 2 · Content &amp; Seeding</p>
+              <h3 className="mt-2 text-2xl font-bold text-ink">Creator-Produktion &amp; Produkt-Tests</h3>
+              <p className="mt-3 text-sm leading-6 text-ink-soft">
+                Beauftrage gezielt passende Profile aus über 750 DACH-Creatorn für Produktvideos, Ad-Creatives, Produktmuster-Tests oder TikTok Shop. Mit klarer Plattform-Auswahl, Briefing-Checkliste und direkter Freigabe im Dashboard.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* 4 Schritte */}
+        <section className="space-y-6">
+          <h2 className="text-center text-3xl font-bold text-ink">In vier Schritten zur messbaren Kampagne</h2>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              ['1', 'Brand-Konto einrichten', 'Melde dich in einer Minute mit deiner geschäftlichen E-Mail per 6-stelligem Code an.'],
+              ['2', 'Kampagne & Plattform festlegen', 'Wähle TikTok, Instagram Reels, YouTube Shorts, TikTok Shop oder reine Videodateien, definiere deine Checkliste und dein optionales Budget-Limit.'],
+              ['3', 'Creator matchen & einladen', 'Lade gezielt Favoriten aus über 750 DACH-Profilen ein oder öffne deine Kampagne für Bewerbungen verifizierter Profile.'],
+              ['4', 'Beiträge prüfen & Views tracken', 'Prüfe eingereichte Links gegen dein Briefing und teile Views, effektiven TKP und Ergebnisse als CSV oder Live-Report-Link.'],
+            ].map(([num, heading, body]) => (
+              <div key={num} className="rounded-2xl border border-hairline bg-white p-5">
+                <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-geo-violet text-sm font-bold text-white">{num}</span>
+                <h3 className="mt-3 text-base font-bold text-ink">{heading}</h3>
+                <p className="mt-1.5 text-sm leading-6 text-ink-soft">{body}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Brand FAQ */}
+        <section className="mx-auto max-w-3xl space-y-4">
+          <h2 className="text-center text-3xl font-bold text-ink">Häufige Fragen von Brands</h2>
+          {[
+            ['Warum brauche ich ein Brand-Konto?', 'Damit Anfragen verbindlich bleiben, kein Spam entsteht und du alle Briefings, eingereichten Links, Views und Reports gesammelt in einem Dashboard siehst.'],
+            ['Wie funktioniert die Vergütung pro 1.000 Views?', 'Du definierst deinen Satz pro 1.000 Views und auf Wunsch ein maximales Budget-Limit. Nach Kampagnenende zählen nur geprüfte und aktive Beiträge in vollen 1.000er-Schritten bis zu diesem Limit.'],
+            ['Kann ich auch Videos ohne Posting-Pflicht oder mit Produktversand buchen?', 'Ja. Im Kampagnen-Setup wählst du aus, ob Creator auf eigenen Accounts posten, ob du Produkte versendest oder ob du fertige Videodateien für deine eigenen Kanäle und Ads brauchst.'],
+            ['Muss ich ein monatliches Abo abschließen?', 'Nein. Es gibt kein Pflicht-Abo. Du startest direkt mit deinem Kampagnenbudget und zahlst nur für geprüfte Ergebnisse innerhalb deines gesetzten Limits.'],
+            ['Was ist, wenn wir Unterstützung bei Strategie, Briefing oder Auswahl brauchen?', 'Unser Team hinter UGC VZ kommt aus der Agenturpraxis von famefact. Auf Wunsch begleiten wir Setup, Creator-Auswahl und Performance-Auswertung direkt mit.'],
+          ].map(([q, a]) => (
+            <details key={q} className="rounded-2xl border border-hairline bg-white p-5">
+              <summary className="cursor-pointer font-semibold text-ink">{q}</summary>
+              <p className="mt-2.5 text-sm leading-6 text-ink-soft">{a}</p>
+            </details>
+          ))}
+        </section>
       </div>
     </div>
   );
@@ -210,6 +328,11 @@ function BrandDashboard({
   const [requiresProductChoice, setRequiresProductChoice] = useState(false);
   const [productChoicePrompt, setProductChoicePrompt] = useState('');
   const [discountCode, setDiscountCode] = useState('');
+  const [requiredMention, setRequiredMention] = useState('');
+  const [requiredHashtags, setRequiredHashtags] = useState('');
+  const [checklistText, setChecklistText] = useState(
+    'Produkt oder Shop-Aktion klar im Bild\nAktion / Rabatt-Hinweis oder CTA genannt\nWerbekennzeichnung (Werbung / Anzeige) sichtbar',
+  );
   const [usageRights, setUsageRights] = useState('Organische Nutzung + 6 Monate Repost-Rechte');
   const [deadline, setDeadline] = useState('Laufzeit 14 Tage oder bis Budget-Limit erreicht');
   const [visibility, setVisibility] = useState<CampaignVisibility>('open');
@@ -305,6 +428,12 @@ function BrandDashboard({
           requiresProductChoice,
           productChoicePrompt,
           discountCode,
+          briefingChecklist: checklistText
+            .split('\n')
+            .map((line) => line.trim())
+            .filter(Boolean),
+          requiredMention,
+          requiredHashtags,
           usageRights,
           deadline,
           visibility,
@@ -534,13 +663,14 @@ function BrandDashboard({
             </div>
 
             <div>
-              <span className={labelClass}>Ziel-Plattformen</span>
+              <span className={labelClass}>Auf welcher Plattform soll gepostet werden? (Pflichtangabe) *</span>
               <div className="flex flex-wrap gap-2">
                 {[
                   ['tiktok', 'TikTok'],
                   ['instagram', 'Instagram Reels'],
                   ['youtube', 'YouTube Shorts'],
                   ['tiktok_shop', 'TikTok Shop'],
+                  ['files_only', 'Nur Videodateien (kein Posting)'],
                   ['meta_ads', 'Meta Paid Ads'],
                 ].map(([id, label]) => (
                   <button
@@ -556,6 +686,30 @@ function BrandDashboard({
                   </button>
                 ))}
               </div>
+              <p className="mt-1.5 text-xs text-ink-soft">Hinweis: Bei öffentlichen Creator-Postings muss der Beitrag gut sichtbar als „Werbung“ oder „Anzeige“ gekennzeichnet werden.</p>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <div>
+                <label htmlFor="camp-mention" className={labelClass}>Pflicht-Erwähnung / Tag (optional)</label>
+                <input id="camp-mention" value={requiredMention} onChange={(e) => setRequiredMention(e.target.value)} placeholder="z. B. @deinemarke" className={fieldClass} />
+              </div>
+              <div>
+                <label htmlFor="camp-hashtags" className={labelClass}>Pflicht-Hashtags (optional)</label>
+                <input id="camp-hashtags" value={requiredHashtags} onChange={(e) => setRequiredHashtags(e.target.value)} placeholder="z. B. #werbung #deinemarke" className={fieldClass} />
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="camp-checklist" className={labelClass}>Pflicht-Checkliste für die Beitragsprüfung (1 Punkt pro Zeile)</label>
+              <textarea
+                id="camp-checklist"
+                rows={3}
+                value={checklistText}
+                onChange={(e) => setChecklistText(e.target.value)}
+                placeholder={'Produkt klar sichtbar\nRabattcode oder CTA genannt\nWerbung sichtbar markiert'}
+                className={fieldClass}
+              />
             </div>
 
             <div>

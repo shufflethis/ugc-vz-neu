@@ -181,7 +181,7 @@ function BrandsFilm({ t, v }: { t: number; v: boolean }) {
         <div style={abs(sX, sY, { width: sW, transform: `scale(${sScale})`, transformOrigin: 'top center', borderRadius: 28, background: '#fff', border: '1px solid #E8E8E4', boxShadow: '0 30px 80px rgba(35,22,47,.10)', padding: v ? 34 : 30 })}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ fontSize: 22 * k, fontWeight: 700, color: '#171717', letterSpacing: '-0.02em' }}>Wofür suchst du Creator?</div>
-            {!v && <div style={{ fontSize: 13, color: '#5A5A5A' }}><span style={{ color: '#527B33' }}>✓</span> Kostenlos · Ohne Brand-Login</div>}
+            {!v && <div style={{ fontSize: 13, color: '#5A5A5A' }}><span style={{ color: '#527B33' }}>✓</span> Brand-Workspace · Live-Reporting</div>}
           </div>
           <div style={{ display: 'flex', gap: 10, marginTop: 18, flexWrap: 'wrap' }}>
             {(v ? ['Beauty-Reels', 'Food-Videos', 'App-Demo'] : ['Beauty-Reels', 'Food-Videos', 'App-Demo', 'Mode & Fashion', 'Home & Interior']).map((chip) => (

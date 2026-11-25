@@ -2,7 +2,7 @@ import crypto from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
 import { getDatabase, isDatabaseConfigured } from '@/app/lib/database';
-import { buildCreatorLoginEmail, CREATOR_LOGIN_TTL_MINUTES } from '@/app/lib/creator-login-email';
+import { buildCreatorLoginEmail, CREATOR_LOGIN_TTL_MINUTES, hashCreatorOtp } from '@/app/lib/creator-login-email';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -33,9 +33,7 @@ const consumeRateLimit = (key: string, limit: number) => {
   return true;
 };
 
-// Die Antwort ist bewusst generisch: Sie verraet nicht, ob zu einer Adresse
-// ein verifiziertes Profil existiert (kein E-Mail-Enumeration-Vektor).
-const GENERIC_MESSAGE = 'Wenn zu dieser E-Mail-Adresse ein verifiziertes Creator-Profil existiert, senden wir dir jetzt einen Anmeldelink. Prüfe auch deinen Spam-Ordner.';
+const GENERIC_MESSAGE = 'Wenn zu dieser E-Mail-Adresse ein Creator-Profil existiert, haben wir dir einen 6-stelligen Code und Anmeldelink geschickt. Prüfe auch deinen Spam-Ordner.';
 
 export async function POST(request: NextRequest) {
   if (!isDatabaseConfigured()) {
@@ -54,8 +52,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: false, error: 'Bitte gib eine gültige E-Mail-Adresse an.' }, { status: 400 });
   }
 
-  const ipAllowed = consumeRateLimit(`ip:${rateLimitKey(getIp(request))}`, 8);
-  const emailAllowed = consumeRateLimit(`email:${rateLimitKey(email)}`, 3);
+  const ipAllowed = consumeRateLimit(`ip:${rateLimitKey(getIp(request))}`, 10);
+  const emailAllowed = consumeRateLimit(`email:${rateLimitKey(email)}`, 4);
   if (!ipAllowed || !emailAllowed) {
     return NextResponse.json({
       success: false,
@@ -65,24 +63,23 @@ export async function POST(request: NextRequest) {
 
   const sql = getDatabase();
 
+  // Auch unbestaetigte (pending_verification) Profile koennen sich jetzt per Code/Link
+  // aktivieren und direkt einloggen statt still ins Leere zu laufen.
   const [creator] = await sql.query(
     `
-    SELECT p.id, p.display_name
+    SELECT p.id, p.display_name, p.status
     FROM creator_private_contacts c
     JOIN creator_profiles p ON p.id = c.creator_id
     WHERE lower(c.email) = lower($1)
-      AND p.status = 'active'
+      AND p.status IN ('active', 'pending_verification')
+    ORDER BY CASE WHEN p.status = 'active' THEN 0 ELSE 1 END
     LIMIT 1
   `,
     [email],
-  ) as unknown as Array<{ id: string; display_name: string }>;
+  ) as unknown as Array<{ id: string; display_name: string; status: string }>;
 
-  // Kein aktives Profil -> keine Mail, aber trotzdem generische Antwort.
-  // Der Log-Eintrag verraet dem Client nichts, macht aber genau diesen Fall
-  // nachvollziehbar: ohne ihn ist "Mail nie gesendet" im Support nicht von
-  // "Mail nicht angekommen" zu unterscheiden.
   if (!creator) {
-    console.warn('Creator login requested for unknown or inactive profile:', email);
+    console.warn('Creator login requested for unknown or archived profile:', email);
     return NextResponse.json({ success: true, message: GENERIC_MESSAGE });
   }
 
@@ -93,6 +90,8 @@ export async function POST(request: NextRequest) {
 
   const token = crypto.randomBytes(32).toString('base64url');
   const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+  const otpCode = String(crypto.randomInt(100000, 1000000));
+  const otpHash = hashCreatorOtp(email, otpCode);
   const expiresAt = new Date(Date.now() + CREATOR_LOGIN_TTL_MINUTES * 60 * 1000).toISOString();
 
   await sql.query(
@@ -103,16 +102,22 @@ export async function POST(request: NextRequest) {
   );
 
   await sql.query(
-    `INSERT INTO creator_verification_tokens (creator_id, token_hash, purpose, expires_at)
-     VALUES ($1, $2, 'edit_profile', $3)`,
-    [creator.id, tokenHash, expiresAt],
+    `INSERT INTO creator_verification_tokens (creator_id, token_hash, otp_code_hash, purpose, expires_at)
+     VALUES ($1, $2, $3, 'edit_profile', $4)`,
+    [creator.id, tokenHash, otpHash, expiresAt],
   );
 
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || request.nextUrl.origin;
-  const loginUrl = new URL('/api/creator/login/verify', baseUrl);
+  const loginUrl = new URL('/konto/verify', baseUrl);
   loginUrl.searchParams.set('token', token);
 
-  const emailPayload = buildCreatorLoginEmail({ name: creator.display_name, loginUrl: loginUrl.toString() });
+  const emailPayload = buildCreatorLoginEmail({
+    name: creator.display_name,
+    loginUrl: loginUrl.toString(),
+    otpCode,
+    isActivation: creator.status === 'pending_verification',
+  });
+
   const resend = new Resend(resendApiKey);
   const response = await resend.emails.send({
     from: process.env.RESEND_FROM || 'UGC VZ <hi@ugc-vz.de>',

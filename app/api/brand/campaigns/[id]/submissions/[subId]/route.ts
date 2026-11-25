@@ -27,7 +27,7 @@ export async function PATCH(
   const sql = getDatabase();
   const [existing] = (await sql.query(
     `SELECT s.id, s.application_id, s.status, s.views, s.likes, s.comments, s.shares, s.spend_eur_cents,
-            c.compensation_model, c.tkp_eur_cents
+            s.review_note, s.checklist_passed, c.compensation_model, c.tkp_eur_cents
      FROM brand_campaign_submissions s
      JOIN brand_campaigns c ON c.id = s.campaign_id
      WHERE c.brand_id = $1 AND c.public_id = $2 AND s.id = $3
@@ -65,13 +65,20 @@ export async function PATCH(
     || comments !== Number(existing.comments)
     || shares !== Number(existing.shares);
 
+  const reviewNote = body.reviewNote !== undefined ? cleanText(body.reviewNote, 400) : String(existing.review_note || '');
+  const checklistPassed = body.checklistPassed !== undefined
+    ? Boolean(body.checklistPassed)
+    : nextStatus === 'approved'
+      ? true
+      : Boolean(existing.checklist_passed);
+
   await sql.query(
     `UPDATE brand_campaign_submissions
      SET status = $2, views = $3, likes = $4, comments = $5, shares = $6,
          spend_eur_cents = $7, last_tracked_at = CASE WHEN $8 THEN now() ELSE last_tracked_at END,
-         updated_at = now()
+         review_note = $9, checklist_passed = $10, updated_at = now()
      WHERE id = $1`,
-    [existing.id, nextStatus, views, likes, comments, shares, spendEurCents, metricsChanged],
+    [existing.id, nextStatus, views, likes, comments, shares, spendEurCents, metricsChanged, reviewNote, checklistPassed],
   );
 
   if (metricsChanged) {

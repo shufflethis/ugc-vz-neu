@@ -8,7 +8,7 @@ import {
   cleanMultiline,
   cleanText,
   createBrandCampaign,
-  createBrandLoginToken,
+  createBrandLoginChallenge,
   getBrandAccount,
   toPositiveIntOrNull,
   upsertBrandAccount,
@@ -134,7 +134,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const token = await createBrandLoginToken(sql, brand.id, campaignPath);
+    const { token, otpCode } = await createBrandLoginChallenge(sql, brand.id, brand.email, campaignPath);
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || request.nextUrl.origin;
     const loginUrl = new URL('/brand/verify', baseUrl);
     loginUrl.searchParams.set('token', token);
@@ -143,6 +143,7 @@ export async function POST(request: NextRequest) {
       name: brand.contactName,
       company: brand.companyName,
       loginUrl: loginUrl.toString(),
+      otpCode,
       campaignTitle: title,
       invitedCount: created.invitedCount,
     });

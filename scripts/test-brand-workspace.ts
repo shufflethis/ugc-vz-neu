@@ -9,15 +9,21 @@ import { signBrandSession, BRAND_SESSION_COOKIE } from '../app/lib/brand-session
 import {
   buildCampaignReportCsv,
   computeCampaignReport,
+  consumeBrandLoginOtp,
   consumeBrandLoginToken,
   createBrandCampaign,
+  createBrandLoginChallenge,
   createBrandLoginToken,
   detectSubmissionPlatform,
   getBrandCampaignDetail,
+  getPublicCampaignReportByShareToken,
   listCreatorCampaigns,
   normalizeSocialHandle,
   upsertBrandAccount,
 } from '../app/lib/brand-workspace';
+import { POST as verifyBrandLogin } from '../app/api/brand/login/verify/route';
+import { GET as getCreatorVerify, POST as postCreatorVerify } from '../app/api/creator/login/verify/route';
+import { hashCreatorOtp } from '../app/lib/creator-login-email';
 import { GET as getBrandCampaign } from '../app/api/brand/campaigns/[id]/route';
 import { PATCH as patchApplication } from '../app/api/brand/campaigns/[id]/applications/[appId]/route';
 import { PATCH as patchSubmission } from '../app/api/brand/campaigns/[id]/submissions/[subId]/route';
@@ -72,6 +78,7 @@ async function main() {
       '016_avatar_casting_review',
       '017_brand_workspace',
       '018_campaign_tkp_platforms_and_oauth',
+      '019_otp_codes_briefing_and_reports',
     ]) {
       const sql = await readFile(`db/migrations/${migration}.sql`, 'utf8');
       await db.exec(sql.replace('CREATE EXTENSION IF NOT EXISTS pgcrypto;', ''));
@@ -468,7 +475,118 @@ async function main() {
     assert.equal(parsed.codeVerifier, pkce.codeVerifier);
     assert.equal(verifyOAuthState(signed, 'instagram'), null, 'Provider mismatch must reject OAuth state');
 
-    console.log('OK: Brand-Workspace (Quick-Fixes, Auth, Kampagnen, TKP-Cap, Plattformen/Produktwahl, Social-Verify/OAuth, IDOR, Tracking, Reporting & CSV)');
+    // 5. Test 6-digit Brand OTP + Creator pending_verification auto-activation + GET-safe redirect
+    const challenge = await createBrandLoginChallenge(client, brandA.id, brandA.email, `/brand/kampagnen/${tkpCamp.publicId}`);
+    assert.match(challenge.otpCode, /^\d{6}$/);
+    const wrongOtp = await consumeBrandLoginOtp(client, brandA.email, '000000');
+    assert.equal(wrongOtp, null);
+    const okOtpRes = await verifyBrandLogin(
+      new NextRequest('https://ugc-vz.de/api/brand/login/verify', {
+        method: 'POST',
+        headers: { origin: 'https://ugc-vz.de' },
+        body: JSON.stringify({ email: brandA.email, code: challenge.otpCode }),
+      }),
+    );
+    assert.equal(okOtpRes.status, 200);
+    const okOtpJson = await okOtpRes.json();
+    assert.equal(okOtpJson.redirectTo, `/brand/kampagnen/${tkpCamp.publicId}`);
+    // Replay must fail
+    assert.equal(await consumeBrandLoginOtp(client, brandA.email, challenge.otpCode), null);
+
+    // Creator in pending_verification gets activated via POST OTP, while GET never consumes token
+    await db.exec(`
+      INSERT INTO creator_profiles (id, public_id, display_name, status)
+      VALUES (gen_random_uuid(), 'UGC-3333333333', 'Pending Creator', 'pending_verification');
+    `);
+    const { rows: [pendingCreator] } = await db.query<{ id: string }>(
+      "SELECT id FROM creator_profiles WHERE public_id = 'UGC-3333333333'",
+    );
+    await db.query(
+      `INSERT INTO creator_private_contacts (creator_id, email) VALUES ($1, 'pending@creator.test')`,
+      [pendingCreator.id],
+    );
+    const creatorRawToken = 'A'.repeat(44);
+    const creatorOtp = '654321';
+    const tokenHash = (await import('node:crypto')).createHash('sha256').update(creatorRawToken).digest('hex');
+    await db.query(
+      `INSERT INTO creator_verification_tokens (creator_id, token_hash, otp_code_hash, purpose, expires_at)
+       VALUES ($1, $2, $3, 'edit_profile', now() + interval '15 minutes')`,
+      [pendingCreator.id, tokenHash, hashCreatorOtp('pending@creator.test', creatorOtp)],
+    );
+    const getPrefetch = await getCreatorVerify(
+      new NextRequest(`https://ugc-vz.de/api/creator/login/verify?token=${creatorRawToken}`),
+    );
+    assert.equal(getPrefetch.status, 303);
+    assert.ok(getPrefetch.headers.get('location')?.includes('/konto/verify?token='));
+    // Token still valid for POST OTP!
+    const postOtp = await postCreatorVerify(
+      new NextRequest('https://ugc-vz.de/api/creator/login/verify', {
+        method: 'POST',
+        headers: { origin: 'https://ugc-vz.de' },
+        body: JSON.stringify({ email: 'pending@creator.test', code: creatorOtp }),
+      }),
+    );
+    assert.equal(postOtp.status, 200);
+    const { rows: [activatedRow] } = await db.query<{ status: string }>(
+      "SELECT status FROM creator_profiles WHERE id = $1",
+      [pendingCreator.id],
+    );
+    assert.equal(activatedRow.status, 'active', 'Pending creator profile must auto-activate on OTP login');
+
+    // 6. Test Briefing Checklist, reviewNote, billedBlocks & PII-free Public Share Report
+    const checkCamp = await createBrandCampaign(client, brandA, {
+      title: 'Checklist & Public Report Test',
+      platforms: ['tiktok', 'files_only'],
+      compensationModel: 'tkp',
+      tkpEurCents: 200,
+      briefingChecklist: ['Produkt sichtbar', 'Werbung markiert'],
+      requiredMention: '@nordic',
+      requiredHashtags: '#werbung',
+      visibility: 'open',
+      creatorPublicIds: ['UGC-1111111111'],
+    });
+    assert.ok(checkCamp.reportShareToken && checkCamp.reportShareToken.length >= 16);
+    const checkDetail0 = await getBrandCampaignDetail(client, brandA.id, checkCamp.publicId);
+    assert.ok(checkDetail0);
+    assert.deepEqual(checkDetail0.campaign.briefingChecklist, ['Produkt sichtbar', 'Werbung markiert']);
+    assert.equal(checkDetail0.campaign.requiredMention, '@nordic');
+    assert.equal(checkDetail0.campaign.requiredHashtags, '#werbung');
+
+    // Select Creator 1, submit clip with 12.800 views -> 12 full 1,000-view blocks, approve with reviewNote
+    await patchApplication(
+      new NextRequest(`https://ugc-vz.de/api/brand/campaigns/${checkCamp.publicId}/applications/${checkDetail0.applications[0].id}`, {
+        method: 'PATCH',
+        headers: { origin: 'https://ugc-vz.de', cookie: brandACookie },
+        body: JSON.stringify({ status: 'selected' }),
+      }),
+      { params: { id: checkCamp.publicId, appId: checkDetail0.applications[0].id } },
+    );
+    const clipRes = await creatorSubmit(
+      new NextRequest(`https://ugc-vz.de/api/creator/campaigns/${checkCamp.publicId}/submit`, {
+        method: 'POST',
+        headers: { origin: 'https://ugc-vz.de', cookie: creator1Cookie },
+        body: JSON.stringify({ contentUrl: 'https://www.tiktok.com/@lukas/video/777', views: 12800 }),
+      }),
+      { params: { id: checkCamp.publicId } },
+    );
+    const clipId = (await clipRes.json()).submission.id;
+    await patchSubmission(
+      new NextRequest(`https://ugc-vz.de/api/brand/campaigns/${checkCamp.publicId}/submissions/${clipId}`, {
+        method: 'PATCH',
+        headers: { origin: 'https://ugc-vz.de', cookie: brandACookie },
+        body: JSON.stringify({ status: 'approved', views: 12800, checklistPassed: true, reviewNote: 'Top Umsetzung', autoCalculateTkp: true }),
+      }),
+      { params: { id: checkCamp.publicId, subId: clipId } },
+    );
+
+    const publicReport = await getPublicCampaignReportByShareToken(client, checkCamp.reportShareToken);
+    assert.ok(publicReport);
+    assert.equal(publicReport.submissions.length, 1);
+    assert.equal(publicReport.submissions[0].billedBlocks, 12);
+    assert.equal(JSON.stringify(publicReport).includes('lukas@creator.test'), false, 'Public report must never expose private emails');
+    assert.equal(JSON.stringify(publicReport).includes('team@nordic-grooming.test'), false, 'Public report must never expose brand email');
+
+    console.log('OK: Brand-Workspace (Quick-Fixes, 6-Digit OTP, Creator Auto-Activation, TKP-Cap, Checklists, Shareable Public Report, OAuth, IDOR & CSV)');
   } finally {
     await db.close();
   }

@@ -36,6 +36,10 @@ export interface CampaignSummary {
   requiresProductChoice: boolean;
   productChoicePrompt: string;
   discountCode: string;
+  briefingChecklist: string[];
+  requiredMention: string;
+  requiredHashtags: string;
+  reportShareToken: string | null;
   usageRights: string;
   deadline: string;
   visibility: CampaignVisibility;
@@ -96,6 +100,9 @@ export interface CampaignSubmissionView {
   shares: number;
   spendEurCents: number;
   tkpEarnedEur: number;
+  billedBlocks: number;
+  reviewNote: string;
+  checklistPassed: boolean;
   engagementRatePct: number;
   effectiveCpmEur: number | null;
   metricsSource: 'manual' | 'oembed' | 'api';
@@ -166,6 +173,9 @@ export interface CreatorCampaignItem {
   requiresProductChoice: boolean;
   productChoicePrompt: string;
   discountCode: string;
+  briefingChecklist: string[];
+  requiredMention: string;
+  requiredHashtags: string;
   remainingBudgetEur: number | null;
   capReached: boolean;
   usageRights: string;
@@ -330,6 +340,32 @@ export async function getBrandAccount(sql: DatabaseClient, brandId: string): Pro
   return row ? mapBrandAccount(row) : null;
 }
 
+const hashBrandOtp = (email: string, code: string) =>
+  crypto.createHash('sha256').update(`brand_otp:${email.toLowerCase().trim()}:${code.trim()}`).digest('hex');
+
+const MAX_BRAND_OTP_ATTEMPTS = 5;
+
+export async function createBrandLoginChallenge(
+  sql: DatabaseClient,
+  brandId: string,
+  email: string,
+  redirectTo?: string,
+): Promise<{ token: string; otpCode: string }> {
+  const token = crypto.randomBytes(32).toString('base64url');
+  const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+  const otpCode = String(crypto.randomInt(100000, 1000000));
+  const otpHash = hashBrandOtp(email, otpCode);
+  const expiresAt = new Date(Date.now() + BRAND_LOGIN_TTL_MINUTES * 60 * 1000).toISOString();
+  const safeRedirect = redirectTo && redirectTo.startsWith('/brand') && !redirectTo.startsWith('//') ? redirectTo : '/brand';
+
+  await sql.query(
+    `INSERT INTO brand_login_tokens (brand_id, token_hash, otp_code_hash, redirect_to, expires_at)
+     VALUES ($1, $2, $3, $4, $5)`,
+    [brandId, tokenHash, otpHash, safeRedirect, expiresAt],
+  );
+  return { token, otpCode };
+}
+
 export async function createBrandLoginToken(
   sql: DatabaseClient,
   brandId: string,
@@ -346,6 +382,70 @@ export async function createBrandLoginToken(
     [brandId, tokenHash, safeRedirect, expiresAt],
   );
   return token;
+}
+
+export async function consumeBrandLoginOtp(
+  sql: DatabaseClient,
+  email: string,
+  code: string,
+): Promise<{ brandId: string; redirectTo: string } | null> {
+  const cleanEmail = cleanText(email, 254).toLowerCase();
+  const cleanCode = code.replace(/\s+/g, '');
+  if (!cleanEmail || !/^\d{6}$/.test(cleanCode)) return null;
+
+  const [latest] = (await sql.query(
+    `SELECT t.id, t.brand_id, t.otp_code_hash, t.otp_attempts, t.redirect_to
+     FROM brand_login_tokens t
+     JOIN brand_accounts b ON b.id = t.brand_id
+     WHERE lower(b.email) = lower($1)
+       AND t.used_at IS NULL
+       AND t.expires_at > now()
+       AND t.otp_code_hash IS NOT NULL
+     ORDER BY t.created_at DESC
+     LIMIT 1`,
+    [cleanEmail],
+  )) as unknown as Array<any>;
+
+  if (!latest || Number(latest.otp_attempts) >= MAX_BRAND_OTP_ATTEMPTS) return null;
+
+  const candidateHash = hashBrandOtp(cleanEmail, cleanCode);
+  const storedHash = String(latest.otp_code_hash || '');
+  const match =
+    candidateHash.length === storedHash.length &&
+    crypto.timingSafeEqual(Buffer.from(candidateHash), Buffer.from(storedHash));
+
+  if (!match) {
+    await sql.query(
+      `UPDATE brand_login_tokens
+       SET otp_attempts = otp_attempts + 1,
+           used_at = CASE WHEN otp_attempts + 1 >= $2 THEN now() ELSE used_at END
+       WHERE id = $1`,
+      [latest.id, MAX_BRAND_OTP_ATTEMPTS],
+    );
+    return null;
+  }
+
+  const rows = (await sql.query(
+    `WITH consumed AS (
+       UPDATE brand_login_tokens
+       SET used_at = now()
+       WHERE id = $1 AND used_at IS NULL AND expires_at > now()
+       RETURNING brand_id, redirect_to
+     )
+     UPDATE brand_accounts b
+     SET email_verified_at = COALESCE(b.email_verified_at, now()), updated_at = now()
+     FROM consumed
+     WHERE b.id = consumed.brand_id
+     RETURNING b.id AS brand_id, consumed.redirect_to`,
+    [latest.id],
+  )) as unknown as Array<any>;
+
+  if (!rows.length) return null;
+  const row = rows[0];
+  const redirectTo = typeof row.redirect_to === 'string' && row.redirect_to.startsWith('/brand') && !row.redirect_to.startsWith('//')
+    ? row.redirect_to
+    : '/brand';
+  return { brandId: String(row.brand_id), redirectTo };
 }
 
 export async function consumeBrandLoginToken(
@@ -394,18 +494,21 @@ export async function createBrandCampaign(
     requiresProductChoice?: boolean;
     productChoicePrompt?: string;
     discountCode?: string;
+    briefingChecklist?: string[];
+    requiredMention?: string;
+    requiredHashtags?: string;
     usageRights?: string;
     deadline?: string;
     visibility?: CampaignVisibility;
     creatorPublicIds?: string[];
     sourceLeadPublicId?: string;
   },
-): Promise<{ id: string; publicId: string; invitedCount: number }> {
+): Promise<{ id: string; publicId: string; invitedCount: number; reportShareToken: string }> {
   const title = cleanText(input.title, 140) || 'Neue UGC-Kampagne';
   const brandDisplayName = cleanText(input.brandDisplayName || brand.companyName || brand.contactName, 120) || 'Brand';
   const description = cleanMultiline(input.description, 3000);
   const niche = cleanText(input.niche, 80);
-  const allowedPlatforms = new Set(['tiktok', 'instagram', 'youtube', 'tiktok_shop', 'meta_ads']);
+  const allowedPlatforms = new Set(['tiktok', 'instagram', 'youtube', 'tiktok_shop', 'meta_ads', 'files_only']);
   const platforms = [...new Set((input.platforms || []).map((p) => p.toLowerCase().trim()).filter((p) => allowedPlatforms.has(p)))];
   const deliverables = cleanText(input.deliverables, 240);
   const compensationModel: CompensationModel = ['fixed', 'tkp', 'hybrid', 'barter'].includes(String(input.compensationModel))
@@ -415,15 +518,23 @@ export async function createBrandCampaign(
   const requiresProductChoice = Boolean(input.requiresProductChoice);
   const productChoicePrompt = cleanText(input.productChoicePrompt, 240);
   const discountCode = cleanText(input.discountCode, 160);
+  const briefingChecklist = (input.briefingChecklist || [])
+    .map((item) => cleanText(item, 180))
+    .filter(Boolean)
+    .slice(0, 8);
+  const requiredMention = cleanText(input.requiredMention, 120);
+  const requiredHashtags = cleanText(input.requiredHashtags, 240);
   const publicId = generateCampaignPublicId();
+  const reportShareToken = crypto.randomBytes(18).toString('base64url');
 
   const [campaign] = (await sql.query(
     `INSERT INTO brand_campaigns (
        public_id, brand_id, title, brand_display_name, description, niche, platforms,
        deliverables, compensation_model, budget_per_video_eur, total_budget_eur,
        tkp_eur_cents, requires_product_choice, product_choice_prompt, discount_code,
+       briefing_checklist, required_mention, required_hashtags, report_share_token,
        usage_rights, deadline, visibility, status, source_lead_public_id
-     ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,'active',$19)
+     ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,'active',$23)
      RETURNING id, public_id`,
     [
       publicId,
@@ -441,6 +552,10 @@ export async function createBrandCampaign(
       requiresProductChoice,
       productChoicePrompt,
       discountCode,
+      briefingChecklist,
+      requiredMention,
+      requiredHashtags,
+      reportShareToken,
       cleanText(input.usageRights, 160),
       cleanText(input.deadline, 120),
       visibility,
@@ -467,7 +582,7 @@ export async function createBrandCampaign(
     invitedCount = invited.length;
   }
 
-  return { id: String(campaign.id), publicId: String(campaign.public_id), invitedCount };
+  return { id: String(campaign.id), publicId: String(campaign.public_id), invitedCount, reportShareToken };
 }
 
 const computeTkpEur = (views: number, tkpEurCents: number | null | undefined): number => {
@@ -504,6 +619,7 @@ export async function listBrandCampaigns(sql: DatabaseClient, brandId: string): 
        c.id, c.public_id, c.title, c.brand_display_name, c.niche, c.platforms,
        c.deliverables, c.compensation_model, c.budget_per_video_eur, c.total_budget_eur,
        c.tkp_eur_cents, c.requires_product_choice, c.product_choice_prompt, c.discount_code,
+       c.briefing_checklist, c.required_mention, c.required_hashtags, c.report_share_token,
        c.usage_rights, c.deadline, c.visibility, c.status, c.created_at,
        COALESCE(app.invited_count, 0)::int AS invited_count,
        COALESCE(app.applied_count, 0)::int AS applied_count,
@@ -563,6 +679,10 @@ export async function listBrandCampaigns(sql: DatabaseClient, brandId: string): 
       requiresProductChoice: Boolean(row.requires_product_choice),
       productChoicePrompt: String(row.product_choice_prompt || ''),
       discountCode: String(row.discount_code || ''),
+      briefingChecklist: Array.isArray(row.briefing_checklist) ? row.briefing_checklist.map(String) : [],
+      requiredMention: String(row.required_mention || ''),
+      requiredHashtags: String(row.required_hashtags || ''),
+      reportShareToken: row.report_share_token ? String(row.report_share_token) : null,
       usageRights: String(row.usage_rights || ''),
       deadline: String(row.deadline || ''),
       visibility: row.visibility as CampaignVisibility,
@@ -828,7 +948,7 @@ export async function getBrandCampaignDetail(
     `SELECT
        s.id, s.application_id, s.platform, s.content_url, s.title, s.status,
        s.views, s.likes, s.comments, s.shares, s.spend_eur_cents, s.metrics_source,
-       s.last_tracked_at, s.created_at,
+       s.review_note, s.checklist_passed, s.last_tracked_at, s.created_at,
        p.public_id AS creator_public_id, p.display_name
      FROM brand_campaign_submissions s
      JOIN creator_profiles p ON p.id = s.creator_id
@@ -836,6 +956,15 @@ export async function getBrandCampaignDetail(
      ORDER BY s.created_at DESC`,
     [campRow.id],
   )) as unknown as Array<any>;
+
+  let reportShareToken: string | null = campRow.report_share_token ? String(campRow.report_share_token) : null;
+  if (!reportShareToken) {
+    reportShareToken = crypto.randomBytes(18).toString('base64url');
+    await sql.query(
+      `UPDATE brand_campaigns SET report_share_token = $2 WHERE id = $1 AND report_share_token IS NULL`,
+      [campRow.id, reportShareToken],
+    );
+  }
 
   const tkpEurCents = campRow.tkp_eur_cents === null ? null : Number(campRow.tkp_eur_cents);
   const compensationModel = campRow.compensation_model as CompensationModel;
@@ -847,6 +976,7 @@ export async function getBrandCampaignDetail(
     const shares = Number(row.shares) || 0;
     const spendEurCents = Number(row.spend_eur_cents) || 0;
     const tkpEarnedEur = computeTkpEur(views, tkpEurCents);
+    const billedBlocks = Math.floor(views / 1000);
     const engagements = likes + comments + shares;
     const engagementRatePct = views > 0 ? Math.round((engagements / views) * 10_000) / 100 : 0;
     const effectiveCostEur =
@@ -871,6 +1001,9 @@ export async function getBrandCampaignDetail(
       shares,
       spendEurCents,
       tkpEarnedEur,
+      billedBlocks,
+      reviewNote: String(row.review_note || ''),
+      checklistPassed: Boolean(row.checklist_passed),
       engagementRatePct,
       effectiveCpmEur,
       metricsSource: (row.metrics_source || 'manual') as 'manual' | 'oembed' | 'api',
@@ -899,6 +1032,10 @@ export async function getBrandCampaignDetail(
       requiresProductChoice: Boolean(campRow.requires_product_choice),
       productChoicePrompt: String(campRow.product_choice_prompt || ''),
       discountCode: String(campRow.discount_code || ''),
+      briefingChecklist: Array.isArray(campRow.briefing_checklist) ? campRow.briefing_checklist.map(String) : [],
+      requiredMention: String(campRow.required_mention || ''),
+      requiredHashtags: String(campRow.required_hashtags || ''),
+      reportShareToken,
       usageRights: String(campRow.usage_rights || ''),
       deadline: String(campRow.deadline || ''),
       visibility: campRow.visibility as CampaignVisibility,
@@ -989,6 +1126,7 @@ export async function listCreatorCampaigns(
        c.public_id, c.title, c.brand_display_name, c.description, c.niche, c.platforms,
        c.deliverables, c.compensation_model, c.budget_per_video_eur, c.total_budget_eur,
        c.tkp_eur_cents, c.requires_product_choice, c.product_choice_prompt, c.discount_code,
+       c.briefing_checklist, c.required_mention, c.required_hashtags,
        c.usage_rights, c.deadline,
        COALESCE(agg.total_views, 0)::int AS camp_views,
        COALESCE(agg.total_spend_cents, 0)::int AS camp_spend_cents,
@@ -1026,6 +1164,7 @@ export async function listCreatorCampaigns(
        c.public_id, c.title, c.brand_display_name, c.description, c.niche, c.platforms,
        c.deliverables, c.compensation_model, c.budget_per_video_eur, c.total_budget_eur,
        c.tkp_eur_cents, c.requires_product_choice, c.product_choice_prompt, c.discount_code,
+       c.briefing_checklist, c.required_mention, c.required_hashtags,
        c.usage_rights, c.deadline,
        COALESCE(agg.total_views, 0)::int AS camp_views,
        COALESCE(agg.total_spend_cents, 0)::int AS camp_spend_cents
@@ -1072,6 +1211,9 @@ export async function listCreatorCampaigns(
       requiresProductChoice: Boolean(row.requires_product_choice),
       productChoicePrompt: String(row.product_choice_prompt || ''),
       discountCode: String(row.discount_code || ''),
+      briefingChecklist: Array.isArray(row.briefing_checklist) ? row.briefing_checklist.map(String) : [],
+      requiredMention: String(row.required_mention || ''),
+      requiredHashtags: String(row.required_hashtags || ''),
       remainingBudgetEur: cap.remainingBudgetEur,
       capReached: cap.capReached,
       usageRights: String(row.usage_rights || ''),
@@ -1132,4 +1274,131 @@ export async function listCreatorSocialConnections(
     verificationMethod: row.verification_method ? String(row.verification_method) : null,
     verifiedAt: row.verified_at ? new Date(row.verified_at).toISOString() : null,
   }));
+}
+
+export interface PublicCampaignReport {
+  publicId: string;
+  title: string;
+  brandDisplayName: string;
+  platforms: string[];
+  compensationModel: CompensationModel;
+  totalBudgetEur: number | null;
+  tkpEurCents: number | null;
+  status: CampaignStatus;
+  report: CampaignPerformanceReport;
+  submissions: Array<{
+    id: string;
+    creatorName: string;
+    platform: SubmissionPlatform;
+    contentUrl: string;
+    title: string;
+    status: SubmissionStatus;
+    views: number;
+    likes: number;
+    comments: number;
+    shares: number;
+    billedBlocks: number;
+    tkpEarnedEur: number;
+    engagementRatePct: number;
+  }>;
+}
+
+/**
+ * Oeffentlicher, PII-freier Read-Only Live-Report ueber einen zufaelligen Share-Token.
+ * Keine E-Mails, keine internen Notizen, keine abgelehnten Entwuerfe.
+ */
+export async function getPublicCampaignReportByShareToken(
+  sql: DatabaseClient,
+  shareToken: string,
+): Promise<PublicCampaignReport | null> {
+  if (!/^[A-Za-z0-9_-]{16,64}$/.test(shareToken)) return null;
+  const [campRow] = (await sql.query(
+    `SELECT id, public_id, title, brand_display_name, platforms, compensation_model,
+            total_budget_eur, tkp_eur_cents, status
+     FROM brand_campaigns
+     WHERE report_share_token = $1
+     LIMIT 1`,
+    [shareToken],
+  )) as unknown as Array<any>;
+  if (!campRow) return null;
+
+  const tkpEurCents = campRow.tkp_eur_cents === null ? null : Number(campRow.tkp_eur_cents);
+  const compensationModel = campRow.compensation_model as CompensationModel;
+  const totalBudgetEur = campRow.total_budget_eur === null ? null : Number(campRow.total_budget_eur);
+
+  const subRows = (await sql.query(
+    `SELECT s.id, s.application_id, s.platform, s.content_url, s.title, s.status,
+            s.views, s.likes, s.comments, s.shares, s.spend_eur_cents, s.created_at,
+            p.public_id AS creator_public_id, p.display_name
+     FROM brand_campaign_submissions s
+     JOIN creator_profiles p ON p.id = s.creator_id
+     WHERE s.campaign_id = $1 AND s.status IN ('approved', 'submitted')
+     ORDER BY s.views DESC, s.created_at DESC`,
+    [campRow.id],
+  )) as unknown as Array<any>;
+
+  const fullSubs: CampaignSubmissionView[] = subRows.map((row) => {
+    const views = Number(row.views) || 0;
+    const likes = Number(row.likes) || 0;
+    const comments = Number(row.comments) || 0;
+    const shares = Number(row.shares) || 0;
+    const spendEurCents = Number(row.spend_eur_cents) || 0;
+    const tkpEarnedEur = computeTkpEur(views, tkpEurCents);
+    const billedBlocks = Math.floor(views / 1000);
+    const eng = likes + comments + shares;
+    const engagementRatePct = views > 0 ? Math.round((eng / views) * 10_000) / 100 : 0;
+    const effectiveCost = compensationModel === 'tkp' && tkpEurCents ? Math.max(spendEurCents / 100, tkpEarnedEur) : spendEurCents / 100;
+    return {
+      id: String(row.id),
+      applicationId: String(row.application_id),
+      creatorPublicId: String(row.creator_public_id),
+      creatorName: String(row.display_name || 'Creator').split(' ')[0],
+      platform: row.platform as SubmissionPlatform,
+      contentUrl: String(row.content_url),
+      title: String(row.title || ''),
+      status: row.status as SubmissionStatus,
+      views,
+      likes,
+      comments,
+      shares,
+      spendEurCents,
+      tkpEarnedEur,
+      billedBlocks,
+      reviewNote: '',
+      checklistPassed: row.status === 'approved',
+      engagementRatePct,
+      effectiveCpmEur: views > 0 && effectiveCost > 0 ? Math.round((effectiveCost / (views / 1000)) * 100) / 100 : null,
+      metricsSource: 'manual',
+      lastTrackedAt: null,
+      createdAt: new Date(row.created_at).toISOString(),
+    };
+  });
+
+  const report = computeCampaignReport(fullSubs, { totalBudgetEur, compensationModel, tkpEurCents });
+  return {
+    publicId: String(campRow.public_id),
+    title: String(campRow.title),
+    brandDisplayName: String(campRow.brand_display_name),
+    platforms: Array.isArray(campRow.platforms) ? campRow.platforms.map(String) : [],
+    compensationModel,
+    totalBudgetEur,
+    tkpEurCents,
+    status: campRow.status as CampaignStatus,
+    report,
+    submissions: fullSubs.map((s) => ({
+      id: s.id,
+      creatorName: s.creatorName,
+      platform: s.platform,
+      contentUrl: s.contentUrl,
+      title: s.title,
+      status: s.status,
+      views: s.views,
+      likes: s.likes,
+      comments: s.comments,
+      shares: s.shares,
+      billedBlocks: s.billedBlocks,
+      tkpEarnedEur: s.tkpEarnedEur,
+      engagementRatePct: s.engagementRatePct,
+    })),
+  };
 }

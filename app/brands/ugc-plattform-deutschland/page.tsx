@@ -75,11 +75,10 @@ export default function UGCPlattformDeutschlandPage() {
           {/* Direktantwort zuerst: Suchmaschinen und AI-Systeme zitieren bevorzugt
               einen ersten Absatz, der ohne den Rest der Seite verstaendlich ist. */}
           <p className="text-xl text-ink-soft max-w-3xl mb-6 leading-relaxed">
-            UGC VZ ist eine <strong className="text-ink">kostenlose UGC Plattform für den deutschsprachigen Raum</strong>.
-            {CREATOR_COUNT_LABEL} kuratierte Creator, keine Plattformgebühr, keine Provision auf das Honorar — und statt eines
-            Nachrichten-Postfachs bekommst du die direkten Kontaktdaten der Creator, die du ausgewählt hast. Diese Seite
-            erklärt, wie das Modell funktioniert, wo seine Grenzen liegen und wann eine klassische Buchungsplattform die
-            bessere Wahl ist.
+            UGC VZ verbindet einen <strong className="text-ink">kuratierten DACH-Creator-Pool ({CREATOR_COUNT_LABEL} Profile)</strong> mit
+            einem eigenen <strong className="text-ink">Brand-Workspace für Kampagnen, Beitragsprüfung und Live-Reporting</strong>.
+            Ohne Pflicht-Abo entscheidest du pro Kampagne, ob du nach geprüften Views (TKP mit optionalem Budget-Limit)
+            oder gezielt einzelne Produktvideos und Produkt-Tests umsetzt.
           </p>
           <div className="max-w-3xl">
             <SearchBox initialQuery="UGC Creator für Produktvideo auf TikTok" />

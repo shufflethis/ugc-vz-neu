@@ -36,14 +36,15 @@ export const metadata: Metadata = {
   },
 };
 
-const team = [
-  { slug: 'tobias', name: 'Tobias', role: 'Gründer & CEO', bio: 'Treibt die Vision von UGC-VZ voran: ein Verzeichnis, das Marken und authentische Creator ohne Umwege zusammenbringt.' },
-  { slug: 'gorden', name: 'Gorden', role: 'Co-Founder', bio: 'Verantwortet Partnerschaften und sorgt dafür, dass UGC-VZ für Creator wie für Brands kostenlos bleibt.' },
-  { slug: 'robert', name: 'Robert', role: 'Lead Creator Relations', bio: 'Betreut die Creator-Community und hilft Talenten, mit dem richtigen Profil entdeckt zu werden.' },
-  { slug: 'marcel', name: 'Marcel', role: 'Head of Performance & UGC-Ads', bio: 'Weiß, welcher Creator-Content auf Paid Social tatsächlich konvertiert – und welcher nur schön aussieht.' },
-  { slug: 'patrick', name: 'Patrick', role: 'Senior Campaign Manager', bio: 'Bringt Brands und Creator in Projekten zusammen und hält Kampagnen zuverlässig on track.' },
-  { slug: 'jan', name: 'Jan', role: 'Head of Tech & Plattform', bio: 'Hält das Verzeichnis schnell, stabil und für beide Seiten einfach bedienbar.' },
-  { slug: 'thomas', name: 'Thomas', role: 'Head of Sound', bio: 'Kümmert sich darum, dass UGC-Videos auch akustisch im Kopf hängen bleiben.' },
+const team: Array<{ slug: string; name: string; role: string; bio: string; hasPhoto?: boolean; initials?: string }> = [
+  { slug: 'tobias', name: 'Tobias', role: 'Gründer & CEO', bio: 'Treibt die Vision von UGC-VZ voran: messbarer UGC aus dem DACH-Raum mit klarem Brand-Workspace und starken Creator-Partnerschaften.', hasPhoto: true },
+  { slug: 'gorden', name: 'Gorden', role: 'Co-Founder', bio: 'Verantwortet Produkt, Plattform-Architektur und Partnerschaften bei UGC-VZ.', hasPhoto: true },
+  { slug: 'florian', name: 'Florian', role: 'Brand Partnerships & Wachstum', bio: 'Erster Ansprechpartner für Pilotkampagnen, View-Modelle (TKP), TikTok Shop und laufende Creator-Programme.', hasPhoto: false, initials: 'FR' },
+  { slug: 'robert', name: 'Robert', role: 'Lead Creator Relations', bio: 'Betreut die Creator-Community und hilft Talenten, mit verifizierten Profilen passende Kampagnen zu gewinnen.', hasPhoto: true },
+  { slug: 'marcel', name: 'Marcel', role: 'Head of Performance & UGC-Ads', bio: 'Weiß, welcher Creator-Content auf Paid Social tatsächlich konvertiert – und welcher nur schön aussieht.', hasPhoto: true },
+  { slug: 'patrick', name: 'Patrick', role: 'Senior Campaign Manager', bio: 'Bringt Brands und Creator in Projekten zusammen und hält Kampagnen zuverlässig on track.', hasPhoto: true },
+  { slug: 'jan', name: 'Jan', role: 'Head of Tech & Plattform', bio: 'Hält Plattform, Tracking und Brand-Workspace schnell, stabil und für beide Seiten einfach bedienbar.', hasPhoto: true },
+  { slug: 'thomas', name: 'Thomas', role: 'Head of Sound', bio: 'Kümmert sich darum, dass UGC-Videos auch akustisch im Kopf hängen bleiben.', hasPhoto: true },
 ];
 
 export default function AboutPage() {
@@ -165,13 +166,23 @@ export default function AboutPage() {
               {team.map((member) => (
                 <div key={member.slug} className="surface-card rounded-2xl overflow-hidden flex flex-col">
                   <div className="relative aspect-[4/5] w-full bg-geo-violet/5">
-                    <Image
-                      src={`/team/${member.slug}.webp`}
-                      alt={`${member.name} – ${member.role} bei UGC-VZ`}
-                      fill
-                      sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                      className="object-cover object-top"
-                    />
+                    {member.hasPhoto ? (
+                      <Image
+                        src={`/team/${member.slug}.webp`}
+                        alt={`${member.name} – ${member.role} bei UGC-VZ`}
+                        fill
+                        sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                        className="object-cover object-top"
+                      />
+                    ) : (
+                      <div
+                        className="flex h-full w-full items-center justify-center text-4xl font-extrabold tracking-tight text-white"
+                        style={{ background: 'linear-gradient(152deg, #0396F8 0%, #3F58F2 50%, #9131EF 100%)' }}
+                        aria-label={`${member.name} – ${member.role}`}
+                      >
+                        {member.initials || member.name.slice(0, 2).toUpperCase()}
+                      </div>
+                    )}
                   </div>
                   <div className="p-4 flex flex-col flex-1">
                     <h3 className="text-lg font-bold text-ink">{member.name}</h3>
@@ -197,12 +208,11 @@ export default function AboutPage() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                     </svg>
                   </div>
-                  <h3 className="text-xl font-semibold text-geo-violet">Kostenlos bleibt kostenlos</h3>
+                  <h3 className="text-xl font-semibold text-geo-violet">Fair, transparent &amp; ohne Pflicht-Abo</h3>
                 </div>
                 <p className="text-ink-soft leading-relaxed">
-                  Wir verdienen kein Geld mit UGC-VZ. Stattdessen investieren wir in die Creator-Community und helfen dabei,
-                  ein Ökosystem zu schaffen, in dem authentischer Content gedeihen kann. Wenn du später unsere Agentur-Services brauchst – großartig.
-                  Wenn nicht – auch großartig.
+                  Für Creator ist das Profil bei UGC VZ dauerhaft kostenlos. Brands starten ohne monatliches Pflicht-Abo im Brand-Workspace,
+                  steuern View-Kampagnen oder Produkt-Tests mit voller Kostenkontrolle und können bei Bedarf direkt auf die Agentur-Expertise von famefact zurückgreifen.
                 </p>
               </div>
 

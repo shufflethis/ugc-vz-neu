@@ -169,7 +169,7 @@ export default async function UGCCreatorDeutschlandPage() {
                 </li>
               )}
               <li className="rounded-full border border-hairline bg-surface px-3.5 py-1.5 text-ink">{share(stats.withPortfolio)} % mit Portfolio</li>
-              <li className="rounded-full border border-hairline bg-surface px-3.5 py-1.5 text-ink">Ohne Brand-Login</li>
+              <li className="rounded-full border border-hairline bg-surface px-3.5 py-1.5 text-ink">Brand-Workspace &amp; Live-Reporting</li>
             </ul>
           )}
           <div className="rounded-3xl border border-hairline bg-white p-4 text-left shadow-[0_24px_70px_rgba(35,22,47,0.08)] sm:p-8">

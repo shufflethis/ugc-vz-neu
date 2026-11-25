@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { BarChart3, CheckCircle2, Download, ExternalLink, Film, ShieldCheck, Users } from 'lucide-react';
+import { BarChart3, CheckCircle2, Copy, Download, ExternalLink, Film, ShieldCheck, Users } from 'lucide-react';
 import { toast } from 'react-toastify';
 import type {
   ApplicationStatus,
@@ -33,6 +33,7 @@ const TARGET_PLATFORM_LABELS: Record<string, string> = {
   instagram: 'Instagram Reels',
   youtube: 'YouTube Shorts',
   tiktok_shop: 'TikTok Shop',
+  files_only: 'Nur Videodateien',
   meta_ads: 'Meta Ads',
 };
 
@@ -152,6 +153,23 @@ export default function CampaignDetailClient({ initialDetail }: { initialDetail:
               >
                 {campaign.status === 'active' ? 'Pausieren' : 'Wieder aktivieren'}
               </button>
+              {campaign.reportShareToken && (
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      const shareUrl = `${window.location.origin}/report/${campaign.reportShareToken}`;
+                      await navigator.clipboard.writeText(shareUrl);
+                      toast.success('Teilbarer Live-Report-Link kopiert!');
+                    } catch {
+                      toast.error('Link konnte nicht kopiert werden.');
+                    }
+                  }}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-geo-violet/40 bg-geo-violet/5 px-3.5 py-2 text-xs font-bold text-geo-violet hover:bg-geo-violet/10"
+                >
+                  <Copy size={13} /> Report-Link teilen
+                </button>
+              )}
               <a
                 href={`/api/brand/campaigns/${encodeURIComponent(campaign.publicId)}/report.csv`}
                 className="inline-flex items-center gap-1.5 rounded-xl bg-void px-3.5 py-2 text-xs font-bold text-white hover:bg-geo-violet"
@@ -160,10 +178,30 @@ export default function CampaignDetailClient({ initialDetail }: { initialDetail:
               </a>
             </div>
           </div>
-          {campaign.description && (
-            <p className="mt-4 max-w-4xl whitespace-pre-line rounded-2xl border border-hairline bg-surface p-4 text-sm leading-6 text-ink-soft">
-              {campaign.description}
-            </p>
+          {(campaign.description || campaign.briefingChecklist.length > 0 || campaign.requiredMention || campaign.requiredHashtags) && (
+            <div className="mt-4 max-w-4xl space-y-3 rounded-2xl border border-hairline bg-surface p-4 text-sm leading-6 text-ink-soft">
+              {campaign.description && <p className="whitespace-pre-line">{campaign.description}</p>}
+              {(campaign.requiredMention || campaign.requiredHashtags) && (
+                <div className="flex flex-wrap gap-2 text-xs">
+                  {campaign.requiredMention && (
+                    <span className="rounded-full bg-white px-3 py-1 font-semibold text-ink">Pflicht-Tag: {campaign.requiredMention}</span>
+                  )}
+                  {campaign.requiredHashtags && (
+                    <span className="rounded-full bg-white px-3 py-1 font-semibold text-ink">Hashtags: {campaign.requiredHashtags}</span>
+                  )}
+                </div>
+              )}
+              {campaign.briefingChecklist.length > 0 && (
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-wide text-ink">Briefing-Checkliste für die Beitragsprüfung</p>
+                  <ul className="mt-1 list-disc space-y-0.5 pl-5 text-xs text-ink">
+                    {campaign.briefingChecklist.map((point) => (
+                      <li key={point}>{point}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
           )}
         </div>
 
@@ -171,7 +209,11 @@ export default function CampaignDetailClient({ initialDetail }: { initialDetail:
         {campaign.totalBudgetEur && campaign.totalBudgetEur > 0 && (
           <div
             className={`rounded-2xl border p-5 ${
-              report.capReached ? 'border-red-300 bg-red-50/70' : 'border-geo-violet/25 bg-[#FBF8FE]'
+              report.capReached
+                ? 'border-red-300 bg-red-50/70'
+                : (report.budgetUtilizationPct ?? 0) >= 80
+                  ? 'border-amber-300 bg-amber-50/80'
+                  : 'border-geo-violet/25 bg-[#FBF8FE]'
             }`}
           >
             <div className="flex flex-wrap items-center justify-between gap-2">
@@ -193,6 +235,15 @@ export default function CampaignDetailClient({ initialDetail }: { initialDetail:
                   <span className="inline-flex rounded-full bg-red-600 px-3 py-1 font-bold text-white">
                     Budget-Limit erreicht – Kampagne pausierbar
                   </span>
+                ) : (report.budgetUtilizationPct ?? 0) >= 80 ? (
+                  <div className="space-y-0.5">
+                    <span className="inline-flex rounded-full bg-amber-600 px-3 py-1 font-bold text-white">
+                      Über 80 % Budget ausgeschöpft
+                    </span>
+                    <p className="font-bold text-amber-900">
+                      Restbudget: {(report.remainingBudgetEur ?? 0).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €
+                    </p>
+                  </div>
                 ) : (
                   <div className="space-y-0.5">
                     <p className="font-bold text-[#385523]">
@@ -209,34 +260,49 @@ export default function CampaignDetailClient({ initialDetail }: { initialDetail:
             </div>
             <div className="mt-3 h-2.5 w-full overflow-hidden rounded-full bg-white/90">
               <div
-                className={`h-full rounded-full transition-all ${report.capReached ? 'bg-red-500' : 'bg-geo-violet'}`}
+                className={`h-full rounded-full transition-all ${
+                  report.capReached ? 'bg-red-500' : (report.budgetUtilizationPct ?? 0) >= 80 ? 'bg-amber-500' : 'bg-geo-violet'
+                }`}
                 style={{ width: `${Math.min(100, report.budgetUtilizationPct ?? 0)}%` }}
               />
             </div>
           </div>
         )}
 
-        {/* Kompakte KPI-Leiste */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {/* 5 KPI-Karten */}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
           <div className="rounded-2xl border border-hairline bg-surface p-4">
-            <p className="text-xs font-semibold text-ink-soft">Creator im Funnel</p>
-            <p className="mt-1 text-2xl font-extrabold text-ink">
-              {applications.length} <span className="text-sm font-semibold text-[#385523]">({campaign.counts.selected} ausgewählt)</span>
+            <p className="text-xs font-semibold text-ink-soft">Budget-Status</p>
+            <p className="mt-1 text-xl font-extrabold text-ink">
+              {report.cappedPayoutEur.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €
+            </p>
+            <p className="mt-0.5 text-[11px] text-ink-soft">
+              {campaign.totalBudgetEur ? `von ${campaign.totalBudgetEur.toLocaleString('de-DE')} € Limit` : 'Offenes Budget'}
             </p>
           </div>
           <div className="rounded-2xl border border-hairline bg-surface p-4">
-            <p className="text-xs font-semibold text-ink-soft">Gesamt-Views</p>
-            <p className="mt-1 text-2xl font-extrabold text-geo-violet">{report.totalViews.toLocaleString('de-DE')}</p>
+            <p className="text-xs font-semibold text-ink-soft">Geprüfte Views</p>
+            <p className="mt-1 text-xl font-extrabold text-geo-violet">{report.approvedViews.toLocaleString('de-DE')}</p>
+            <p className="mt-0.5 text-[11px] text-ink-soft">Gesamt: {report.totalViews.toLocaleString('de-DE')}</p>
           </div>
           <div className="rounded-2xl border border-hairline bg-surface p-4">
-            <p className="text-xs font-semibold text-ink-soft">Ø Engagement-Rate</p>
-            <p className="mt-1 text-2xl font-extrabold text-ink">{report.engagementRatePct.toFixed(2).replace('.', ',')} %</p>
+            <p className="text-xs font-semibold text-ink-soft">Beiträge</p>
+            <p className="mt-1 text-xl font-extrabold text-ink">{report.totalSubmissions}</p>
+            <p className="mt-0.5 text-[11px] text-ink-soft">
+              {report.approvedSubmissions} frei · {submissions.filter((s) => s.status === 'submitted').length} in Prüfung
+            </p>
           </div>
           <div className="rounded-2xl border border-hairline bg-surface p-4">
-            <p className="text-xs font-semibold text-ink-soft">Effektiver TKP / CPM</p>
-            <p className="mt-1 text-2xl font-extrabold text-ink">
+            <p className="text-xs font-semibold text-ink-soft">Effektiver TKP</p>
+            <p className="mt-1 text-xl font-extrabold text-ink">
               {report.effectiveCpmEur !== null ? `${report.effectiveCpmEur.toFixed(2).replace('.', ',')} €` : '—'}
             </p>
+            <p className="mt-0.5 text-[11px] text-ink-soft">Ø ER: {report.engagementRatePct.toFixed(2).replace('.', ',')} %</p>
+          </div>
+          <div className="rounded-2xl border border-hairline bg-surface p-4">
+            <p className="text-xs font-semibold text-ink-soft">Aktive Creator</p>
+            <p className="mt-1 text-xl font-extrabold text-[#385523]">{campaign.counts.selected}</p>
+            <p className="mt-0.5 text-[11px] text-ink-soft">{applications.length} im Funnel</p>
           </div>
         </div>
 
@@ -553,11 +619,15 @@ function SubmissionTrackerRow({
   const [shares, setShares] = useState(String(sub.shares));
   const [spendEur, setSpendEur] = useState(String(sub.spendEurCents / 100));
   const [autoTkp, setAutoTkp] = useState(compensationModel === 'tkp' && Boolean(tkpEurCents));
+  const [checklistPassed, setChecklistPassed] = useState(Boolean(sub.checklistPassed));
+  const [reviewNote, setReviewNote] = useState(sub.reviewNote || '');
   const [saving, setSaving] = useState(false);
 
+  const liveViews = Number(views) || 0;
+  const liveBlocks = Math.floor(liveViews / 1000);
   const liveTkpPreview =
     tkpEurCents && tkpEurCents > 0
-      ? Math.round((((Number(views) || 0) / 1000) * (tkpEurCents / 100)) * 100) / 100
+      ? Math.round(((liveViews / 1000) * (tkpEurCents / 100)) * 100) / 100
       : null;
 
   const badge = SUB_STATUS_LABEL[sub.status];
@@ -572,10 +642,12 @@ function SubmissionTrackerRow({
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             ...(nextStatus ? { status: nextStatus } : {}),
-            views: Number(views) || 0,
+            views: liveViews,
             likes: Number(likes) || 0,
             comments: Number(comments) || 0,
             shares: Number(shares) || 0,
+            checklistPassed: nextStatus === 'approved' ? true : checklistPassed,
+            reviewNote: reviewNote.trim(),
             ...(autoTkp && tkpEurCents ? { autoCalculateTkp: true } : { spendEur: Number(spendEur) || 0 }),
           }),
         },
@@ -586,7 +658,7 @@ function SubmissionTrackerRow({
         setSpendEur(String(data.submission.spendEurCents / 100));
       }
       await onUpdated();
-      toast.success('Tracking & Status gespeichert (Snapshot erfasst).');
+      toast.success('Beitragsprüfung & Metriken gespeichert (Snapshot erfasst).');
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Fehler beim Speichern.');
     } finally {
@@ -620,7 +692,7 @@ function SubmissionTrackerRow({
             onClick={() => save('approved')}
             className="inline-flex items-center gap-1 rounded-xl bg-[#385523] px-3 py-2 text-xs font-semibold text-white hover:opacity-90 disabled:opacity-50"
           >
-            <CheckCircle2 size={13} /> Freigeben
+            <CheckCircle2 size={13} /> Freigeben (Zählt)
           </button>
           <button
             type="button"
@@ -630,12 +702,40 @@ function SubmissionTrackerRow({
           >
             Korrektur anfragen
           </button>
+          <button
+            type="button"
+            disabled={saving}
+            onClick={() => save('rejected')}
+            className="rounded-xl border border-hairline px-3 py-2 text-xs font-semibold text-red-700 hover:border-red-300 disabled:opacity-50"
+          >
+            Ablehnen (Zählt nicht)
+          </button>
         </div>
       </div>
 
+      <div className="grid gap-3 rounded-xl border border-hairline bg-white p-3 sm:grid-cols-[auto_1fr] sm:items-center">
+        <label className="inline-flex cursor-pointer items-center gap-2 text-xs font-semibold text-ink">
+          <input
+            type="checkbox"
+            checked={checklistPassed}
+            onChange={(e) => setChecklistPassed(e.target.checked)}
+            className="h-4 w-4 accent-[#385523]"
+          />
+          <span>Briefing-Checkliste erfüllt (Link aktiv, Thema &amp; CTA drin)</span>
+        </label>
+        <input
+          type="text"
+          maxLength={400}
+          value={reviewNote}
+          onChange={(e) => setReviewNote(e.target.value)}
+          placeholder="Prüfnotiz / Ablehnungsgrund (optional)"
+          className="w-full rounded-lg border border-hairline bg-surface/60 px-3 py-1.5 text-xs text-ink"
+        />
+      </div>
+
       <div className="space-y-2.5 rounded-xl bg-surface p-3.5">
-        {liveTkpPreview !== null && (
-          <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+        <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+          {liveTkpPreview !== null ? (
             <label className="inline-flex cursor-pointer items-center gap-2 font-semibold text-ink">
               <input
                 type="checkbox"
@@ -643,13 +743,22 @@ function SubmissionTrackerRow({
                 onChange={(e) => setAutoTkp(e.target.checked)}
                 className="h-3.5 w-3.5 accent-geo-violet"
               />
-              <span>Auto-TKP berechnen ({((tkpEurCents || 0) / 100).toFixed(2).replace('.', ',')} € / 1.000 Views)</span>
+              <span>Auto-TKP ({((tkpEurCents || 0) / 100).toFixed(2).replace('.', ',')} € / 1.000 Views)</span>
             </label>
-            <span className="font-bold text-[#385523]">
-              Aktueller TKP-Verdienst: {liveTkpPreview.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €
+          ) : (
+            <span className="font-semibold text-ink-soft">Metriken &amp; Abrechnung</span>
+          )}
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="text-ink-soft">
+              Volle 1.000er-Blöcke: <strong className="text-ink">{liveBlocks.toLocaleString('de-DE')}</strong>
             </span>
+            {liveTkpPreview !== null && (
+              <span className="font-bold text-[#385523]">
+                TKP-Verdienst: {liveTkpPreview.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €
+              </span>
+            )}
           </div>
-        )}
+        </div>
         <div className="grid gap-3 sm:grid-cols-6 sm:items-end">
           {[
             ['Views', views, setViews, false],

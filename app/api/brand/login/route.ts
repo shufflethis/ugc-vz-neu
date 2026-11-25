@@ -4,7 +4,7 @@ import { Resend } from 'resend';
 import { getDatabase, isDatabaseConfigured } from '@/app/lib/database';
 import { buildBrandLoginEmail } from '@/app/lib/brand-login-email';
 import { isTrustedSameOrigin } from '@/app/lib/brand-session';
-import { cleanText, createBrandLoginToken, upsertBrandAccount } from '@/app/lib/brand-workspace';
+import { cleanText, createBrandLoginChallenge, upsertBrandAccount } from '@/app/lib/brand-workspace';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
       companyName: cleanText(body.company, 140),
     });
     const redirectTo = cleanText(body.redirectTo, 200);
-    const token = await createBrandLoginToken(sql, brand.id, redirectTo);
+    const { token, otpCode } = await createBrandLoginChallenge(sql, brand.id, email, redirectTo);
 
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || request.nextUrl.origin;
     const loginUrl = new URL('/brand/verify', baseUrl);
@@ -77,6 +77,7 @@ export async function POST(request: NextRequest) {
       name: brand.contactName,
       company: brand.companyName,
       loginUrl: loginUrl.toString(),
+      otpCode,
     });
 
     const resend = new Resend(resendApiKey);

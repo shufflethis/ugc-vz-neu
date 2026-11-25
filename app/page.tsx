@@ -75,13 +75,13 @@ const features = [
     ),
   },
   {
-    title: 'Kontakte per Mail – ohne Provision',
-    text: 'Du erhältst die verfügbaren Kontaktdaten kostenlos per E-Mail. Honorar und Rechte klärt ihr direkt.',
+    title: 'Kampagne, Tracking & Reporting',
+    text: 'Im Brand-Workspace verwaltest du Bewerbungen, Briefing-Checkliste, Views und CSV-Reports an einem Ort.',
     ui: (
       <div className="rounded-2xl border border-hairline bg-white p-4">
-        <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-geo-violet">Dein kostenloses Matching</p>
-        <p className="mt-1 text-base font-bold tracking-tight">Deine Creator-Auswahl ist da</p>
-        <div className="mt-3 flex items-center gap-2 rounded-xl bg-surface px-3 py-2 text-xs"><span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#edf5e5] font-bold text-[#385523]">✓</span>2 Kontakte · 0 € Provision</div>
+        <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-geo-violet">Brand-Workspace</p>
+        <p className="mt-1 text-base font-bold tracking-tight">Alle Beiträge &amp; Views im Blick</p>
+        <div className="mt-3 flex items-center gap-2 rounded-xl bg-surface px-3 py-2 text-xs"><span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#edf5e5] font-bold text-[#385523]">✓</span>TKP-Tracking · Optionales Budget-Limit · CSV</div>
       </div>
     ),
   },
@@ -154,11 +154,11 @@ export default async function Home() {
               <span className="bg-clip-text text-transparent" style={{ backgroundImage: GRADIENT }}>Passende Creator.</span>
             </h1>
             <p className="mx-auto mt-5 max-w-xl text-base leading-7 text-ink-soft sm:text-lg lg:mx-0">
-              Finde echte UGC Creator, prüfe Arbeitsproben und frage deine Favoriten kostenlos an – ohne Provision, ohne Agentur dazwischen.
+              Messbarer UGC aus dem DACH-Raum an einem Ort: Profile entdecken, Kampagnen nach Views (TKP) oder Festpreis starten und Ergebnisse im Brand-Workspace tracken.
             </p>
             <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center lg:justify-start">
-              <Link href="#search" className="inline-flex min-h-[48px] items-center gap-2 rounded-full bg-geo-violet px-6 font-semibold text-white shadow-[0_14px_30px_rgba(139,63,202,0.35)] transition-transform hover:-translate-y-0.5">Creator finden <Arrow /></Link>
-              <Link href="#so-funktionierts" className="inline-flex min-h-[48px] items-center gap-2 rounded-full border border-hairline bg-white px-6 font-semibold transition-colors hover:border-ink">So funktioniert&apos;s</Link>
+              <Link href="/brand" className="inline-flex min-h-[48px] items-center gap-2 rounded-full bg-geo-violet px-6 font-semibold text-white shadow-[0_14px_30px_rgba(139,63,202,0.35)] transition-transform hover:-translate-y-0.5">Kampagne starten <Arrow /></Link>
+              <Link href="#search" className="inline-flex min-h-[48px] items-center gap-2 rounded-full border border-hairline bg-white px-6 font-semibold transition-colors hover:border-ink">Creator entdecken</Link>
             </div>
             {/* Zweite Zielgruppe: bewusst eine Stufe leiser als die Brand-CTAs.
                 Creator schrieben "Bewerbungen" per Mail, weil sie keinen Einstieg fanden. */}
@@ -179,11 +179,11 @@ export default async function Home() {
         <div id="search" className="home-search-panel mx-auto max-w-6xl scroll-mt-6 rounded-3xl border border-hairline bg-white p-4 shadow-[0_30px_90px_rgba(35,22,47,0.10)] sm:p-8">
           <div className="mb-4 flex flex-col gap-2 sm:mb-5 sm:flex-row sm:items-center sm:justify-between">
             <h2 className="text-lg font-semibold tracking-tight sm:text-xl">Wofür suchst du Creator?</h2>
-            <p className="flex items-center gap-1.5 text-xs text-ink-soft"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#527b33" strokeWidth="2" aria-hidden="true"><path d="m5 12 4 4L19 6" /></svg>Kostenlos · Ohne Brand-Login</p>
+            <p className="flex items-center gap-1.5 text-xs text-ink-soft"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#527b33" strokeWidth="2" aria-hidden="true"><path d="m5 12 4 4L19 6" /></svg>Kostenlose Suche · Kampagnen im Brand-Workspace</p>
           </div>
           <SearchBox showFeatured />
         </div>
-        <p className="mx-auto mt-5 max-w-6xl text-center text-xs leading-5 text-ink-soft">Suche und Kontaktanfrage sind kostenlos. Produktion und Nutzungsrechte vereinbart ihr direkt.</p>
+        <p className="mx-auto mt-5 max-w-6xl text-center text-xs leading-5 text-ink-soft">Stöbere direkt im DACH-Pool. Kampagnen-Briefings, Einladungen, Beitragsprüfung und Reporting laufen gesammelt über dein Brand-Konto.</p>
       </section>
 
       <div className="mt-10"><TrustElements compact /></div>
@@ -217,7 +217,7 @@ export default async function Home() {
             <h2 id="home-how-title" className="mx-auto mt-4 max-w-3xl text-center text-3xl font-bold leading-tight tracking-[-0.045em] sm:text-5xl">
               Vom Briefing zur Zusammenarbeit.
             </h2>
-            <p className="mx-auto mt-4 max-w-xl text-center leading-7 text-white/60">Du prüfst die Profile. Du wählst aus. Den Rest vereinbart ihr direkt – für Brands und Creator kostenlos.</p>
+            <p className="mx-auto mt-4 max-w-xl text-center leading-7 text-white/60">Ob Pay-per-View mit optionalem Budget-Limit oder gezielte Creator-Produktion: Alles läuft strukturiert im Brand-Workspace, ohne Pflicht-Abo.</p>
             <div className="mt-10 sm:mt-12"><FilmPlayer /></div>
           </div>
         </div>
@@ -290,11 +290,11 @@ export default async function Home() {
       <section className="px-5 sm:px-8" aria-label="Kostenlos starten">
         <div className="relative mx-auto max-w-6xl">
           <div className="relative z-10 mx-auto -mb-8 w-fit rounded-full bg-white p-2">
-            <Link href="#search" className="inline-flex min-h-[56px] items-center gap-3 rounded-full px-8 text-base font-semibold text-white shadow-[0_18px_40px_rgba(91,70,240,0.4)] sm:text-lg" style={{ background: GRADIENT }}>Kostenlos Creator finden <Arrow /></Link>
+            <Link href="/brand" className="inline-flex min-h-[56px] items-center gap-3 rounded-full px-8 text-base font-semibold text-white shadow-[0_18px_40px_rgba(91,70,240,0.4)] sm:text-lg" style={{ background: GRADIENT }}>Brand-Konto anlegen <Arrow /></Link>
           </div>
           <div className="rounded-[36px] bg-void px-6 pb-12 pt-16 text-center text-white sm:pb-14">
-            <p className="text-2xl font-bold tracking-[-0.04em] sm:text-3xl">{CREATOR_COUNT_LABEL} echte Creator. 0 € Provision.</p>
-            <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-white/60">Suche, Auswahl und Kontaktdaten sind kostenlos. Du sprichst direkt mit den Creatorn.</p>
+            <p className="text-2xl font-bold tracking-[-0.04em] sm:text-3xl">{CREATOR_COUNT_LABEL} echte DACH-Creator. Ein Workspace.</p>
+            <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-white/60">Starte View-Kampagnen oder Creator-Produktionen mit klarem Briefing, Beitragsprüfung und Live-Reporting. Kein Pflicht-Abo.</p>
           </div>
         </div>
       </section>

@@ -43,7 +43,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
   const pitch = cleanMultiline(body.pitch, 1500);
   const proposedFeeEur = toPositiveIntOrNull(body.proposedFeeEur, 50_000);
   const availabilityNote = cleanText(body.availabilityNote, 200);
-  const allowedTargetPlatforms = new Set(['tiktok', 'instagram', 'youtube', 'tiktok_shop']);
+  const allowedTargetPlatforms = new Set(['tiktok', 'instagram', 'youtube', 'tiktok_shop', 'files_only']);
   const targetPlatforms = Array.isArray(body.targetPlatforms)
     ? [...new Set(body.targetPlatforms.map((p) => cleanText(p, 30).toLowerCase()).filter((p) => allowedTargetPlatforms.has(p)))]
     : [];

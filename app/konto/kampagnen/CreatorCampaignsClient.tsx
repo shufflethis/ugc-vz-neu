@@ -38,6 +38,7 @@ const PLATFORM_LABEL: Record<string, string> = {
   instagram: 'Instagram Reels',
   youtube: 'YouTube Shorts',
   tiktok_shop: 'TikTok Shop',
+  files_only: 'Nur Videodateien',
   meta_ads: 'Meta Ads',
   other: 'Sonstige',
 };
@@ -47,6 +48,7 @@ const CREATOR_POST_PLATFORMS: Array<{ id: string; label: string }> = [
   { id: 'instagram', label: 'Instagram Reels' },
   { id: 'youtube', label: 'YouTube Shorts' },
   { id: 'tiktok_shop', label: 'TikTok Shop' },
+  { id: 'files_only', label: 'Nur Videodateien' },
 ];
 
 const formatBudget = (item: CreatorCampaignItem) => {
@@ -363,6 +365,32 @@ function CampaignCard({
 
       {item.description && (
         <p className="mt-3 whitespace-pre-line text-sm leading-6 text-ink-soft">{item.description}</p>
+      )}
+
+      {(item.briefingChecklist.length > 0 || item.requiredMention || item.requiredHashtags) && (
+        <div className="mt-3 space-y-2 rounded-2xl border border-geo-violet/20 bg-[#FBF8FE] p-4 text-xs">
+          {(item.requiredMention || item.requiredHashtags) && (
+            <div className="flex flex-wrap gap-2">
+              {item.requiredMention && (
+                <span className="rounded-full bg-white px-3 py-1 font-semibold text-ink">Pflicht-Tag: {item.requiredMention}</span>
+              )}
+              {item.requiredHashtags && (
+                <span className="rounded-full bg-white px-3 py-1 font-semibold text-ink">Hashtags: {item.requiredHashtags}</span>
+              )}
+            </div>
+          )}
+          {item.briefingChecklist.length > 0 && (
+            <div>
+              <p className="font-bold text-ink">Pflicht-Checkliste fürs Video:</p>
+              <ul className="mt-1 list-disc space-y-0.5 pl-5 text-ink-soft">
+                {item.briefingChecklist.map((point) => (
+                  <li key={point}>{point}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+          <p className="text-[11px] text-ink-soft">Bitte kennzeichne öffentliche Kampagnen-Posts gut sichtbar am Anfang als „Werbung“ oder „Anzeige“.</p>
+        </div>
       )}
 
       <div className="mt-4 grid gap-3 rounded-2xl border border-hairline bg-surface/60 p-4 text-xs sm:grid-cols-2 lg:grid-cols-4">

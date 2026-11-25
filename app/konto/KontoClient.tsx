@@ -104,7 +104,9 @@ function ProjectRequests({ profile }: { profile: CreatorProfileView }) {
 
 function LoginView({ invalid, error, noSession }: { invalid: boolean; error: boolean; noSession: boolean }) {
   const [email, setEmail] = useState('');
+  const [otpCode, setOtpCode] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [verifying, setVerifying] = useState(false);
   const [sent, setSent] = useState(false);
   const [message, setMessage] = useState('');
 
@@ -132,31 +134,87 @@ function LoginView({ invalid, error, noSession }: { invalid: boolean; error: boo
     }
   };
 
+  const verifyOtp = async (event: FormEvent) => {
+    event.preventDefault();
+    const cleanCode = otpCode.replace(/\D/g, '');
+    if (cleanCode.length !== 6) {
+      setMessage('Bitte gib den 6-stelligen Code aus deiner E-Mail ein.');
+      return;
+    }
+    setVerifying(true);
+    setMessage('');
+    try {
+      const response = await fetch('/api/creator/login/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim(), code: cleanCode }),
+      });
+      const result = await response.json();
+      if (!response.ok || !result.success) throw new Error(result.error || 'Code konnte nicht bestätigt werden.');
+      window.location.assign(result.redirectTo || '/konto?login=1');
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : 'Anmeldung fehlgeschlagen.');
+      setVerifying(false);
+    }
+  };
+
   return (
     <div className="px-4 sm:px-8 md:px-16 lg:px-24 pb-24 pt-10 sm:pt-14">
       <section className="max-w-lg mx-auto py-16">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold">Creator-Konto</h1>
-          <p className="mt-3 text-ink-soft">Melde dich mit deiner E-Mail an, um dein Profil zu sehen und zu bearbeiten.</p>
+          <p className="mt-3 text-ink-soft">Melde dich mit deiner E-Mail per 6-stelligem Code an, um dein Profil zu bearbeiten, Social-Kanäle zu verifizieren und offene Kampagnen zu sehen.</p>
         </div>
 
         {sent ? (
-          <div className="flex flex-col items-center text-center rounded-3xl border border-hairline bg-white p-10 shadow-[0_24px_80px_rgba(35,22,47,0.10)]">
-            <span className="flex h-16 w-16 items-center justify-center rounded-full bg-geo-violet/10 text-geo-violet"><Mail size={30} /></span>
-            <h2 className="mt-6 text-2xl font-bold">Prüfe dein Postfach</h2>
-            <p className="mt-3 leading-7 text-ink-soft">Wenn zu dieser Adresse ein verifiziertes Profil existiert, haben wir dir einen Anmeldelink geschickt.</p>
-            <p className="mt-4 rounded-xl bg-surface px-4 py-3 text-sm text-ink-soft">Keine E-Mail? Prüfe bitte auch Spam. Der Link ist 15 Minuten gültig.</p>
+          <div className="rounded-3xl border border-hairline bg-white p-8 shadow-[0_24px_80px_rgba(35,22,47,0.10)] sm:p-10">
+            <div className="flex flex-col items-center text-center">
+              <span className="flex h-16 w-16 items-center justify-center rounded-full bg-geo-violet/10 text-geo-violet"><Mail size={30} /></span>
+              <h2 className="mt-5 text-2xl font-bold">6-stelligen Code eingeben</h2>
+              <p className="mt-2 text-sm leading-6 text-ink-soft">
+                Wenn zu <strong className="text-ink">{email}</strong> ein Profil existiert (auch noch unbestätigte Profile!), haben wir dir einen 6-stelligen Code und einen Link geschickt.
+              </p>
+            </div>
+            <form onSubmit={verifyOtp} className="mt-6 space-y-4">
+              <label className="block">
+                <span className={labelClass}>6-stelliger Code aus deiner E-Mail</span>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  maxLength={8}
+                  value={otpCode}
+                  onChange={(e) => { setOtpCode(e.target.value); if (message) setMessage(''); }}
+                  placeholder="123456"
+                  className={`${fieldClass} text-center font-mono text-2xl font-bold tracking-[0.3em]`}
+                />
+              </label>
+              {message && <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">{message}</div>}
+              <button
+                type="submit"
+                disabled={verifying}
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-geo-violet px-6 py-3 font-semibold text-white transition hover:bg-geo-violet-soft disabled:opacity-60"
+              >
+                {verifying ? 'Wird geprüft …' : 'Code bestätigen & einloggen →'}
+              </button>
+            </form>
+            <p className="mt-4 rounded-xl bg-surface px-4 py-3 text-center text-xs text-ink-soft">
+              Kein Code im Posteingang? Prüfe bitte auch Spam oder „Benachrichtigungen“. Code &amp; Link sind 20 Minuten gültig.{' '}
+              <button type="button" onClick={() => { setSent(false); setOtpCode(''); setMessage(''); }} className="font-semibold text-geo-violet underline">
+                Andere E-Mail verwenden
+              </button>
+            </p>
           </div>
         ) : (
           <form onSubmit={submit} noValidate className="rounded-3xl border border-hairline bg-white p-8 shadow-[0_24px_80px_rgba(35,22,47,0.10)]">
             {noSession && (
               <div className="mb-5 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900" role="alert">
-                Dein Anmeldelink war gültig, aber dein Browser hat die Anmeldung nicht behalten. Das passiert oft, wenn eine Mail-App Links in einem eingebauten Fenster öffnet. Öffne den Link bitte direkt in Chrome oder Safari (Link lange drücken und „In Chrome öffnen“ wählen, oder die Adresse kopieren). Fordere dafür hier einen neuen Link an. Oder schreib uns an hi@ugc-vz.de, dann tragen wir deine Änderungen für dich ein.
+                Dein Browser hat die Anmeldung nicht behalten (oft in eingebauten Mail-App-Fenstern). Fordere hier einfach einen neuen 6-stelligen Code an und tippe ihn direkt in Chrome oder Safari ein.
               </div>
             )}
             {(invalid || error) && (
               <div className="mb-5 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900" role="alert">
-                {invalid ? 'Der Anmeldelink ist ungültig oder abgelaufen. Fordere einfach einen neuen an.' : 'Die Anmeldung konnte gerade nicht abgeschlossen werden. Bitte versuche es erneut oder schreibe an hi@ugc-vz.de.'}
+                {invalid ? 'Der Anmeldelink ist ungültig oder abgelaufen. Fordere einfach einen neuen 6-stelligen Code an.' : 'Die Anmeldung konnte gerade nicht abgeschlossen werden. Bitte versuche es erneut oder schreibe an hi@ugc-vz.de.'}
               </div>
             )}
             <label>
@@ -172,7 +230,7 @@ function LoginView({ invalid, error, noSession }: { invalid: boolean; error: boo
                 required
               />
             </label>
-            <p className="mt-3 text-xs leading-5 text-ink-soft">Wir schicken dir einen Anmeldelink. Kein Passwort nötig.</p>
+            <p className="mt-3 text-xs leading-5 text-ink-soft">Wir senden dir einen 6-stelligen Einmal-Code und einen geschützten Link. Funktioniert auch, um noch nicht bestätigte Profile sofort freizuschalten.</p>
 
             {message && <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">{message}</div>}
 
@@ -181,7 +239,7 @@ function LoginView({ invalid, error, noSession }: { invalid: boolean; error: boo
               disabled={submitting}
               className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-geo-violet px-6 py-3 font-semibold text-white transition hover:bg-geo-violet-soft disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {submitting ? 'Wird gesendet …' : 'Anmeldelink anfordern'}
+              {submitting ? 'Wird gesendet …' : '6-stelligen Code anfordern'}
             </button>
           </form>
         )}
