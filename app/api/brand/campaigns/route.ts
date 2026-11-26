@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
   const title = cleanText(body.title, 140);
   if (!title) return NextResponse.json({ success: false, error: 'Bitte gib einen Kampagnentitel an.' }, { status: 400 });
 
-  const compensationModel = (['fixed', 'tkp', 'hybrid', 'affiliate', 'barter'].includes(String(body.compensationModel))
+  const compensationModel = (['fixed', 'tkp', 'hybrid', 'affiliate', 'retainer', 'barter'].includes(String(body.compensationModel))
     ? body.compensationModel
     : 'fixed') as CompensationModel;
   const affiliateEnabled = compensationModel === 'affiliate' || Boolean(body.affiliateEnabled);
@@ -83,6 +83,10 @@ export async function POST(request: NextRequest) {
     affiliateRateBps: toPositiveIntOrNull(body.affiliateRateBps, 8000),
     affiliateFixedCents: toPositiveIntOrNull(body.affiliateFixedCents, 500_000),
     affiliateTargetUrl: cleanText(body.affiliateTargetUrl, 400),
+    retainerMonthlyEur: toPositiveIntOrNull(body.retainerMonthlyEur, 100_000),
+    retainerVideosPerMonth: toPositiveIntOrNull(body.retainerVideosPerMonth, 200),
+    retainerMinMonths: toPositiveIntOrNull(body.retainerMinMonths, 36),
+    retainerPerks: cleanText(body.retainerPerks, 300),
     requiresProductChoice: Boolean(body.requiresProductChoice),
     productChoicePrompt: cleanText(body.productChoicePrompt, 240),
     discountCode: cleanText(body.discountCode, 160),

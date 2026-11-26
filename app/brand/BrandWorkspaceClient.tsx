@@ -2,8 +2,15 @@
 
 import { FormEvent, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { CheckCircle2, LogOut, Mail, Plus, Search } from 'lucide-react';
+import { CheckCircle2, LogOut, Mail, Plus, Search, ShieldAlert } from 'lucide-react';
 import type { BrandAccount, CampaignSummary, CampaignVisibility, CompensationModel } from '@/app/lib/brand-workspace';
+import {
+  detectHighRiskKeywords,
+  INDUSTRY_CATEGORIES,
+  INDUSTRY_CATEGORY_LIST,
+  isHighRiskCategory,
+  type IndustryCategory,
+} from '@/app/lib/high-risk-compliance';
 import { clearQuickBriefDraft, loadQuickBriefDraft } from '@/app/lib/quick-brief';
 import OtpInput from '@/app/components/auth/OtpInput';
 import ResendTimer from '@/app/components/auth/ResendTimer';
@@ -19,6 +26,7 @@ const MODEL_LABELS: Record<CompensationModel, string> = {
   tkp: 'Pay-per-View (TKP)',
   hybrid: 'Hybrid (Fix + Views)',
   affiliate: 'Affiliate / Kickback',
+  retainer: 'Core-Creator Retainer',
   barter: 'Produkt / Seeding',
 };
 
@@ -46,6 +54,7 @@ function BrandLoginView({ initialTab }: { initialTab: 'login' | 'signup' }) {
   const [mode, setMode] = useState<'login' | 'signup'>(initialTab);
   const [name, setName] = useState('');
   const [company, setCompany] = useState('');
+  const [industryCategory, setIndustryCategory] = useState<IndustryCategory>('standard');
   const [email, setEmail] = useState('');
   const [website, setWebsite] = useState('');
   const [rememberMe, setRememberMe] = useState(true);
@@ -93,6 +102,7 @@ function BrandLoginView({ initialTab }: { initialTab: 'login' | 'signup' }) {
           mode: targetMode,
           name: targetMode === 'signup' ? name.trim() : undefined,
           company: targetMode === 'signup' ? company.trim() : undefined,
+          industryCategory: targetMode === 'signup' ? industryCategory : undefined,
           email: trimmedEmail,
           website,
         }),
@@ -354,6 +364,34 @@ function BrandLoginView({ initialTab }: { initialTab: 'login' | 'signup' }) {
                       className={fieldClass}
                     />
                   </div>
+                  <div>
+                    <label htmlFor="brand-industry" className={labelClass}>Branche / Geschäftsmodell</label>
+                    <select
+                      id="brand-industry"
+                      value={industryCategory}
+                      onChange={(e) => setIndustryCategory(e.target.value as IndustryCategory)}
+                      className={fieldClass}
+                    >
+                      {INDUSTRY_CATEGORY_LIST.map((cat) => (
+                        <option key={cat.id} value={cat.id}>
+                          {cat.label}
+                        </option>
+                      ))}
+                    </select>
+                    {(isHighRiskCategory(industryCategory) || detectHighRiskKeywords(company, email).flagged) && (
+                      <div className="mt-2.5 flex items-start gap-2 rounded-xl border border-[#F2072A]/30 bg-[#F2072A]/5 p-3 text-xs leading-5 text-[#202124]">
+                        <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-[#D10523]" aria-hidden="true" />
+                        <div>
+                          <p className="font-bold text-[#D10523]">Sonderbranche / High-Risk-Abrechnung</p>
+                          <p className="mt-0.5 text-[#5C6470]">
+                            {isHighRiskCategory(industryCategory)
+                              ? `${INDUSTRY_CATEGORIES[industryCategory].description} Kondition: ${Math.round(INDUSTRY_CATEGORIES[industryCategory].defaultFeeBps / 100)} % Servicegebühr (Creator 0 %). Direkt nach dem Login kannst du einen kurzen Call oder E-Mail-Check starten.`
+                              : detectHighRiskKeywords(company, email).summary}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </>
               )}
 
@@ -465,6 +503,10 @@ function BrandDashboard({
   const [affiliateRatePercent, setAffiliateRatePercent] = useState('10');
   const [affiliateFixedEur, setAffiliateFixedEur] = useState('15');
   const [affiliateTargetUrl, setAffiliateTargetUrl] = useState('');
+  const [retainerMonthlyEur, setRetainerMonthlyEur] = useState('1000');
+  const [retainerVideosPerMonth, setRetainerVideosPerMonth] = useState('4');
+  const [retainerMinMonths, setRetainerMinMonths] = useState('3');
+  const [retainerPerks, setRetainerPerks] = useState('Monatlicher Store-Credit + 20 % Community-Rabattcode');
   const [requiredMention, setRequiredMention] = useState('');
   const [requiredHashtags, setRequiredHashtags] = useState('');
   const [checklistText, setChecklistText] = useState(
@@ -501,7 +543,7 @@ function BrandDashboard({
     setLoadedFromQuickBrief(true);
   }, []);
 
-  const applyPreset = (preset: 'tkp_cap' | 'fixed_ugc' | 'fixed_affiliate' | 'affiliate_only') => {
+  const applyPreset = (preset: 'tkp_cap' | 'fixed_ugc' | 'fixed_affiliate' | 'retainer_core' | 'affiliate_only') => {
     if (preset === 'tkp_cap') {
       setCompensationModel('tkp');
       setTkpEur('2.00');
@@ -543,6 +585,25 @@ function BrandDashboard({
       setRequiresProductChoice(true);
       setProductChoicePrompt('Welches Produkt / welche Variante möchtest du testen?');
       setDiscountCode('10 % Community-Rabatt + 10 % Creator-Kickback');
+    } else if (preset === 'retainer_core') {
+      setCompensationModel('retainer');
+      setTkpEur('');
+      setBudgetPerVideoEur('250');
+      setRetainerMonthlyEur('1000');
+      setRetainerVideosPerMonth('4');
+      setRetainerMinMonths('3');
+      setRetainerPerks('Monatlicher Store-Credit + 20 % Community-Code + direktes Portal-Onboarding');
+      setTotalBudgetEur('3000');
+      setAffiliateEnabled(true);
+      setAffiliateType('percent');
+      setAffiliateRatePercent('20');
+      setDeliverables('Core-Creator Partnerschaft: 4 Videos / Monat + 20 % laufende Provision');
+      setUsageRights('Organisch & Paid Ads für die Vertragslaufzeit');
+      setDeadline('Start flexibel · monatliche Freigabe im Portal');
+      setPlatforms(['tiktok', 'instagram', 'meta_ads']);
+      setRequiresProductChoice(true);
+      setProductChoicePrompt('Welche Produkte / Varianten passen am besten zu deinem Profil?');
+      setDiscountCode('20 % Community-Code + bis zu 20 % Affiliate-Provision');
     } else {
       setCompensationModel('affiliate');
       setTkpEur('');
@@ -626,6 +687,10 @@ function BrandDashboard({
               ? Math.round((Number(affiliateFixedEur.replace(',', '.')) || 15) * 100)
               : null,
           affiliateTargetUrl: affiliateTargetUrl.trim(),
+          retainerMonthlyEur: compensationModel === 'retainer' && retainerMonthlyEur ? Number(retainerMonthlyEur) : null,
+          retainerVideosPerMonth: compensationModel === 'retainer' && retainerVideosPerMonth ? Number(retainerVideosPerMonth) : null,
+          retainerMinMonths: compensationModel === 'retainer' && retainerMinMonths ? Number(retainerMinMonths) : null,
+          retainerPerks: compensationModel === 'retainer' ? retainerPerks.trim() : '',
           requiresProductChoice,
           productChoicePrompt,
           discountCode,
@@ -753,27 +818,32 @@ function BrandDashboard({
             {/* 1-Klick Kampagnen-Vorlagen */}
             <div className="space-y-2">
               <span className={labelClass}>1-Klick-Vorlage wählen (optional)</span>
-              <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-5">
                 {[
                   {
                     id: 'tkp_cap' as const,
                     name: 'Pay-per-View (TKP)',
-                    sub: 'z. B. 2 €/1.000 Views · feste Budget-Obergrenze',
+                    sub: 'z. B. 2 €/1.000 Views · festes Limit',
                   },
                   {
                     id: 'fixed_ugc' as const,
                     name: 'Pay-per-Video (Fixpreis)',
-                    sub: 'z. B. 250 €/Video · Budget-Sicherung & Freigabe',
+                    sub: 'z. B. 250 €/Video · Budget-Sicherung',
+                  },
+                  {
+                    id: 'retainer_core' as const,
+                    name: 'Core-Creator Retainer',
+                    sub: 'z. B. 1.000 €/Monat + 20 % Provision',
                   },
                   {
                     id: 'fixed_affiliate' as const,
                     name: 'Fixpreis + Affiliate',
-                    sub: 'z. B. 150 €/Video + 10 % Kickback pro Sale',
+                    sub: 'z. B. 150 €/Video + 10 % Kickback',
                   },
                   {
                     id: 'affiliate_only' as const,
                     name: 'Affiliate / Kickback',
-                    sub: 'z. B. 15 % Provision via Creator-Code & Link',
+                    sub: 'z. B. 15 % Provision via Creator-Link',
                   },
                 ].map((preset) => (
                   <button
@@ -817,12 +887,13 @@ function BrandDashboard({
                   onChange={(e) => {
                     const next = e.target.value as CompensationModel;
                     setCompensationModel(next);
-                    if (next === 'affiliate') setAffiliateEnabled(true);
+                    if (next === 'affiliate' || next === 'retainer') setAffiliateEnabled(true);
                   }}
                   className={fieldClass}
                 >
                   <option value="tkp">Pay-per-View (TKP)</option>
-                  <option value="fixed">Pay-per-Video (Fixpreis · Escrow)</option>
+                  <option value="fixed">Pay-per-Video (Fixpreis · Budget-Sicherung)</option>
+                  <option value="retainer">Core-Creator Retainer (Monats-Fixum + %)</option>
                   <option value="hybrid">Hybrid (Fixpreis + TKP-Bonus)</option>
                   <option value="affiliate">Affiliate / Kickback (% oder € / Sale)</option>
                   <option value="barter">Produkt / Seeding</option>
@@ -832,6 +903,19 @@ function BrandDashboard({
                 <div>
                   <label htmlFor="camp-tkp" className={labelClass}>TKP (€ / 1.000 Views)</label>
                   <input id="camp-tkp" type="number" min={0} step="0.10" value={tkpEur} onChange={(e) => setTkpEur(e.target.value)} placeholder="2.00" className={fieldClass} />
+                </div>
+              ) : compensationModel === 'retainer' ? (
+                <div>
+                  <label htmlFor="camp-retainer-monthly" className={labelClass}>Monats-Fixum (€ / Monat)</label>
+                  <input
+                    id="camp-retainer-monthly"
+                    type="number"
+                    min={0}
+                    value={retainerMonthlyEur}
+                    onChange={(e) => setRetainerMonthlyEur(e.target.value)}
+                    placeholder="z. B. 1000"
+                    className={fieldClass}
+                  />
                 </div>
               ) : compensationModel === 'affiliate' ? (
                 <div>
@@ -881,6 +965,67 @@ function BrandDashboard({
                 </select>
               </div>
             </div>
+
+            {compensationModel === 'retainer' && (
+              <div className="space-y-3 rounded-[14px] border border-[#06458F]/25 bg-white p-4">
+                <div>
+                  <p className="text-sm font-bold text-[#06458F]">Core-Creator Retainer-Details (langfristige Partnerschaft)</p>
+                  <p className="text-xs text-[#5C6470]">
+                    Ideal für feste Brand-Gesichter: monatliches Fixum + wiederkehrende Videos + Affiliate-Provision &amp; Perks — komplett im Portal mit direktem Chat.
+                  </p>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <div>
+                    <label htmlFor="camp-retainer-videos" className={labelClass}>Videos pro Monat</label>
+                    <input
+                      id="camp-retainer-videos"
+                      type="number"
+                      min={1}
+                      max={200}
+                      value={retainerVideosPerMonth}
+                      onChange={(e) => setRetainerVideosPerMonth(e.target.value)}
+                      placeholder="z. B. 4 oder 30"
+                      className={fieldClass}
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="camp-retainer-months" className={labelClass}>Mindestlaufzeit (Monate)</label>
+                    <input
+                      id="camp-retainer-months"
+                      type="number"
+                      min={1}
+                      max={36}
+                      value={retainerMinMonths}
+                      onChange={(e) => setRetainerMinMonths(e.target.value)}
+                      placeholder="z. B. 3"
+                      className={fieldClass}
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="camp-retainer-perks" className={labelClass}>Zusatz-Perks (optional)</label>
+                    <input
+                      id="camp-retainer-perks"
+                      value={retainerPerks}
+                      onChange={(e) => setRetainerPerks(e.target.value)}
+                      placeholder="z. B. Store-Credit, 20 % Code, Discord"
+                      className={fieldClass}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {detectHighRiskKeywords(title, brandDisplayName, niche, description, retainerPerks).flagged && (
+              <div className="flex items-start gap-2.5 rounded-[14px] border border-[#F2072A]/35 bg-[#F2072A]/5 p-4 text-xs leading-5 text-[#202124]">
+                <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-[#D10523]" aria-hidden="true" />
+                <div>
+                  <p className="font-bold text-[#D10523]">Hinweis: Sonderbranche / Stripe-Restricted erkannt</p>
+                  <p className="mt-0.5 text-[#5C6470]">
+                    {detectHighRiskKeywords(title, brandDisplayName, niche, description, retainerPerks).summary}
+                  </p>
+                </div>
+              </div>
+            )}
 
             {estimatedCapViews !== null && (
               <div className="rounded-2xl border border-[#1F9D55]/30 bg-[#f6fbf1] px-4 py-3 text-xs leading-5 text-[#202124]">

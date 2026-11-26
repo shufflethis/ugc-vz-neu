@@ -342,6 +342,163 @@ export function buildCreatorRevisionNotification({
 }
 
 /**
+ * Benachrichtigung bei neuer In-Portal-Nachricht zwischen Brand und Creator.
+ */
+export function buildPortalMessageNotification({
+  recipientName,
+  senderName,
+  senderRole,
+  campaignPublicId,
+  campaignTitle,
+  messagePreview,
+}: {
+  recipientName: string;
+  senderName: string;
+  senderRole: 'brand' | 'creator';
+  campaignPublicId: string;
+  campaignTitle: string;
+  messagePreview: string;
+}) {
+  const firstName = recipientName.trim().split(/\s+/)[0] || (senderRole === 'brand' ? 'Creator' : 'Team');
+  const portalUrl =
+    senderRole === 'brand'
+      ? `${BASE_URL}/konto/kampagnen`
+      : `${BASE_URL}/brand/kampagnen/${encodeURIComponent(campaignPublicId)}`;
+  const e = htmlEscape;
+
+  const body = `<tr>
+    <td class="email-pad" style="padding:8px 42px 32px;">
+      <p style="margin:0;font-size:16px;line-height:26px;color:#202124;">Hallo ${e(firstName)},</p>
+      <p style="margin:14px 0 0;font-size:15px;line-height:25px;color:#5C6470;">
+        <strong style="color:#202124;">${e(senderName)}</strong> hat dir zur Kampagne <strong style="color:#202124;">„${e(campaignTitle)}“</strong> eine neue Nachricht im UGC VZ Portal geschrieben:
+      </p>
+      <div style="margin:20px 0;padding:16px 18px;border-radius:12px;background:#F5F7FA;border-left:4px solid #06458F;font-size:14px;line-height:22px;color:#202124;">
+        ${e(messagePreview.slice(0, 500))}
+      </div>
+      <table role="presentation" cellspacing="0" cellpadding="0" style="margin:22px 0;">
+        <tr>
+          <td style="border-radius:8px;background:#06458F;">
+            <a href="${e(portalUrl)}" style="display:inline-block;padding:14px 24px;color:#FFFFFF;text-decoration:none;font-size:15px;font-weight:700;">Direkt im Portal antworten &rarr;</a>
+          </td>
+        </tr>
+      </table>
+      <p style="margin:0;font-size:12px;line-height:19px;color:#5C6470;">
+        Tipp: Bleib für Absprachen, Retainer-Konditionen und Freigaben im Portal – so greift der volle Budget- &amp; Auszahlungsschutz.
+      </p>
+    </td>
+  </tr>`;
+
+  return {
+    subject: `Neue Nachricht zu „${campaignTitle}“ von ${senderName}`,
+    html: emailShell({
+      preheader: `${senderName}: ${messagePreview.slice(0, 90)}`,
+      eyebrow: 'Portal-Nachricht',
+      title: 'Neue Nachricht im Workspace',
+      headerTagline: senderRole === 'brand' ? 'Creator-Konto' : 'Marken-Konto',
+      children: body,
+      footerNote: 'Direkte Kampagnen-Kommunikation im UGC VZ Portal.',
+    }),
+    text: `Hallo ${firstName},\n\n${senderName} hat dir zu "${campaignTitle}" geschrieben:\n\n"${messagePreview.slice(0, 500)}"\n\nDirekt im Portal antworten:\n${portalUrl}\n\nUGC VZ · track by track GmbH · Berlin`,
+  };
+}
+
+/**
+ * Interne Compliance-Anfrage an das UGC VZ Team (High-Risk / Stripe-Restricted Brand).
+ */
+export function buildHighRiskComplianceTeamNotification(input: {
+  brandCompany: string;
+  brandContact: string;
+  brandEmail: string;
+  industryLabel: string;
+  feePercent: number;
+  preferredContact: 'call' | 'email';
+  phoneOrHandle: string;
+  preferredPsp: string;
+  estimatedMonthlyBudgetEur: number | null;
+  websiteUrl: string;
+  message: string;
+}) {
+  const e = htmlEscape;
+  const body = `<tr>
+    <td class="email-pad" style="padding:8px 42px 32px;">
+      <p style="margin:0;font-size:15px;line-height:24px;color:#202124;">
+        Eine Marke aus einer <strong>Sonderbranche / Stripe-Restricted-Kategorie</strong> hat eine individuelle Abrechnung &amp; Compliance-Prüfung angefragt. Das Standard-Stripe-Checkout wurde für dieses Konto automatisch gesperrt.
+      </p>
+      <div style="margin:20px 0;padding:18px 20px;border-radius:12px;background:#F5F7FA;border:1px solid #DCE2EA;font-size:14px;line-height:23px;color:#202124;">
+        <div><strong>Marke:</strong> ${e(input.brandCompany)} (${e(input.brandContact)})</div>
+        <div><strong>E-Mail:</strong> ${e(input.brandEmail)}</div>
+        <div><strong>Branche:</strong> <span style="color:#D10523;font-weight:700;">${e(input.industryLabel)}</span></div>
+        <div><strong>Kondition:</strong> ${input.feePercent} % High-Risk-Servicegebühr</div>
+        <div><strong>Gewünschter Kontakt:</strong> ${input.preferredContact === 'call' ? 'Kurzer Call' : 'E-Mail-Austausch'} ${input.phoneOrHandle ? `(${e(input.phoneOrHandle)})` : ''}</div>
+        <div><strong>Zahlungsweg-Wunsch:</strong> ${e(input.preferredPsp)}</div>
+        ${input.estimatedMonthlyBudgetEur ? `<div><strong>Geschätztes Monatsbudget:</strong> ${input.estimatedMonthlyBudgetEur.toLocaleString('de-DE')} €</div>` : ''}
+        ${input.websiteUrl ? `<div><strong>Website:</strong> ${e(input.websiteUrl)}</div>` : ''}
+        ${input.message ? `<div style="margin-top:10px;padding-top:10px;border-top:1px solid #DCE2EA;"><strong>Nachricht:</strong><br/>${e(input.message)}</div>` : ''}
+      </div>
+    </td>
+  </tr>`;
+
+  return {
+    subject: `[High-Risk Compliance] ${input.brandCompany} · ${input.industryLabel}`,
+    html: emailShell({
+      preheader: `${input.brandCompany} fragt Sonderabrechnung (${input.industryLabel}) an.`,
+      eyebrow: 'High-Risk Compliance',
+      title: 'Neue Sonderbranchen-Anfrage',
+      headerTagline: 'Intern · Payment Ops',
+      children: body,
+      footerNote: 'Automatische Meldung des UGC VZ Stripe-Schutzschirms.',
+    }),
+    text: `High-Risk Compliance-Anfrage:\nMarke: ${input.brandCompany} (${input.brandContact} / ${input.brandEmail})\nBranche: ${input.industryLabel}\nKondition: ${input.feePercent} % Servicegebühr\nKontaktwunsch: ${input.preferredContact} (${input.phoneOrHandle || '-'})\nZahlungsweg: ${input.preferredPsp}\nMonatsbudget: ${input.estimatedMonthlyBudgetEur || '-'} €\nWebsite: ${input.websiteUrl || '-'}\nNachricht: ${input.message || '-'}`,
+  };
+}
+
+/**
+ * Bestätigungs-E-Mail an die Marke nach Einreichen des High-Risk / Sonderbranchen-Checks.
+ */
+export function buildHighRiskComplianceBrandConfirmation(input: {
+  contactName: string;
+  companyName: string;
+  industryLabel: string;
+  feePercent: number;
+  preferredContact: 'call' | 'email';
+}) {
+  const firstName = input.contactName.trim().split(/\s+/)[0] || 'Team';
+  const e = htmlEscape;
+  const body = `<tr>
+    <td class="email-pad" style="padding:8px 42px 32px;">
+      <p style="margin:0;font-size:16px;line-height:26px;color:#202124;">Hallo ${e(firstName)},</p>
+      <p style="margin:14px 0 0;font-size:15px;line-height:25px;color:#5C6470;">
+        danke für deine Anfrage zur Sonderbranchen-Freischaltung für <strong style="color:#202124;">${e(input.companyName)}</strong> (<strong style="color:#202124;">${e(input.industryLabel)}</strong>).
+      </p>
+      <div style="margin:20px 0;padding:18px 20px;border-radius:12px;background:#F5F7FA;border:1px solid #DCE2EA;font-size:14px;line-height:23px;color:#202124;">
+        <div style="font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#06458F;">So geht es weiter</div>
+        <ul style="margin:10px 0 0;padding-left:18px;color:#5C6470;">
+          <li>Da Stripe reguläre Zahlungen in dieser Kategorie einschränkt, richten wir für euch den passenden Zahlungsweg ein (<strong>SEPA-Vorkasse auf Rechnung</strong>, <strong>High-Risk-PSP</strong> oder <strong>USDC/Sonder-Settlement</strong>).</li>
+          <li>Die transparente Servicegebühr inkl. Compliance &amp; Sonder-Abwicklung liegt bei <strong>${input.feePercent} %</strong> (Creator zahlen weiterhin <strong>0 %</strong>).</li>
+          <li>Unser Team meldet sich innerhalb von 24 Stunden per <strong>${input.preferredContact === 'call' ? 'kurzem Call' : 'E-Mail'}</strong> bei dir.</li>
+        </ul>
+      </div>
+      <p style="margin:0;font-size:13px;line-height:20px;color:#5C6470;">
+        Du kannst deine Kampagne und dein Briefing im Brand-Workspace schon vollständig vorbereiten – sobald das Guthaben freigeschaltet ist, geht es sofort los.
+      </p>
+    </td>
+  </tr>`;
+
+  return {
+    subject: `Deine Sonderbranchen-Anfrage bei UGC VZ (${input.companyName})`,
+    html: emailShell({
+      preheader: `Wir melden uns in 24h per ${input.preferredContact === 'call' ? 'Call' : 'E-Mail'} zur Freischaltung eurer Abrechnung.`,
+      eyebrow: 'Sonderabrechnung',
+      title: 'Anfrage erhalten – wir melden uns',
+      headerTagline: 'Marken-Konto',
+      children: body,
+      footerNote: 'UGC VZ Compliance & Payment Operations · hi@ugc-vz.de',
+    }),
+    text: `Hallo ${firstName},\n\ndanke für deine Anfrage zur Sonderbranchen-Abrechnung (${input.industryLabel}) für ${input.companyName}.\nKondition: ${input.feePercent} % High-Risk-Servicegebühr (Creator 0 %).\nUnser Team meldet sich innerhalb von 24h per ${input.preferredContact === 'call' ? 'Call' : 'E-Mail'}.\n\nUGC VZ · track by track GmbH · Berlin`,
+  };
+}
+
+/**
  * Best-effort Versand fuer Portal-Benachrichtigungen (blockiert niemals die API-Antwort).
  */
 export async function sendCampaignNotificationEmail(payload: CampaignNotificationPayload): Promise<boolean> {

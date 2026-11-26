@@ -74,6 +74,7 @@ export async function POST(request: NextRequest) {
         email,
         contactName: name,
         companyName: cleanText(body.company, 140) || name,
+        industryCategory: cleanText(body.industryCategory, 40) || undefined,
       });
     }
 
@@ -86,7 +87,7 @@ export async function POST(request: NextRequest) {
       : [];
 
     const visibility: CampaignVisibility = body.visibility === 'invite_only' ? 'invite_only' : 'open';
-    const compensationModel: CompensationModel = ['fixed', 'tkp', 'hybrid', 'affiliate', 'barter'].includes(String(body.compensationModel))
+    const compensationModel: CompensationModel = ['fixed', 'tkp', 'hybrid', 'affiliate', 'retainer', 'barter'].includes(String(body.compensationModel))
       ? (body.compensationModel as CompensationModel)
       : 'fixed';
     const affiliateEnabled = compensationModel === 'affiliate' || Boolean(body.affiliateEnabled);
@@ -94,6 +95,10 @@ export async function POST(request: NextRequest) {
     const affiliateRateBps = toPositiveIntOrNull(body.affiliateRateBps, 8000);
     const affiliateFixedCents = toPositiveIntOrNull(body.affiliateFixedCents, 500_000);
     const affiliateTargetUrl = cleanText(body.affiliateTargetUrl, 400);
+    const retainerMonthlyEur = toPositiveIntOrNull(body.retainerMonthlyEur, 100_000);
+    const retainerVideosPerMonth = toPositiveIntOrNull(body.retainerVideosPerMonth, 200);
+    const retainerMinMonths = toPositiveIntOrNull(body.retainerMinMonths, 36);
+    const retainerPerks = cleanText(body.retainerPerks, 300);
     const platforms = sanitizeCampaignPlatforms(
       Array.isArray(body.platforms) ? body.platforms : ['tiktok', 'instagram'],
     );
@@ -128,6 +133,10 @@ export async function POST(request: NextRequest) {
       affiliateRateBps,
       affiliateFixedCents,
       affiliateTargetUrl,
+      retainerMonthlyEur,
+      retainerVideosPerMonth,
+      retainerMinMonths,
+      retainerPerks,
       requiresProductChoice: Boolean(body.requiresProductChoice),
       productChoicePrompt: cleanText(body.productChoicePrompt, 240),
       discountCode: cleanText(body.discountCode, 160),
@@ -141,7 +150,11 @@ export async function POST(request: NextRequest) {
     if (created.invitedCount > 0 && creatorPublicIds.length > 0) {
       const compParts: string[] = [];
       if (tkpEurCents) compParts.push(`${(tkpEurCents / 100).toFixed(2).replace('.', ',')} € / 1.000 Views`);
-      if (budgetPerVideoEur) compParts.push(`${budgetPerVideoEur} € Fixpreis / Video`);
+      if (compensationModel === 'retainer' && retainerMonthlyEur) {
+        compParts.push(`${retainerMonthlyEur.toLocaleString('de-DE')} € / Monat Retainer`);
+      } else if (budgetPerVideoEur) {
+        compParts.push(`${budgetPerVideoEur} € Fixpreis / Video`);
+      }
       if (affiliateEnabled) {
         compParts.push(
           affiliateType === 'fixed_per_sale'

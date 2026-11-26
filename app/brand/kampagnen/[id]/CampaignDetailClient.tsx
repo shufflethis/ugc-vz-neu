@@ -12,7 +12,10 @@ import {
   Film,
   Link2,
   Lock,
+  MessageSquare,
   Plus,
+  Send,
+  ShieldAlert,
   ShieldCheck,
   Users,
 } from 'lucide-react';
@@ -54,6 +57,7 @@ const TARGET_PLATFORM_LABELS: Record<string, string> = {
 const COMP_MODEL_BADGE: Record<string, string> = {
   tkp: 'Pay-per-View (TKP)',
   fixed: 'Pay-per-Video (Fixpreis)',
+  retainer: 'Core-Creator Retainer (Monatlich)',
   hybrid: 'Hybrid (Fixpreis + TKP)',
   affiliate: 'Affiliate / Kickback',
   barter: 'Produkt / Barter',
@@ -288,11 +292,19 @@ export default function CampaignDetailClient({ initialDetail }: { initialDetail:
                 <span className="rounded-full border border-[#DCE2EA] bg-[#F5F7FA] px-2.5 py-0.5 text-[#5C6470]">
                   {campaign.visibility === 'open' ? 'Offen für 750+ Creator' : 'Nur Direkteinladung'}
                 </span>
+                {campaign.requiresHighRiskBilling && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-[#F2072A]/10 px-2.5 py-0.5 text-[#D10523]">
+                    <ShieldAlert size={11} /> Sonderbranche / High-Risk-Abrechnung
+                  </span>
+                )}
               </div>
               <h1 className="mt-2 text-3xl font-bold text-[#202124] sm:text-4xl">{campaign.title}</h1>
               <p className="mt-1 text-sm text-[#5C6470]">
                 {[
                   campaign.deliverables,
+                  campaign.compensationModel === 'retainer' && campaign.retainerMonthlyEur
+                    ? `${campaign.retainerMonthlyEur.toLocaleString('de-DE')} € / Monat${campaign.retainerVideosPerMonth ? ` (${campaign.retainerVideosPerMonth} Videos/Monat)` : ''}`
+                    : '',
                   campaign.tkpEurCents ? `${(campaign.tkpEurCents / 100).toFixed(2).replace('.', ',')} € / 1.000 Views` : '',
                   campaign.budgetPerVideoEur ? `${campaign.budgetPerVideoEur} € / Video` : '',
                   affiliateRateLabel,
@@ -303,6 +315,11 @@ export default function CampaignDetailClient({ initialDetail }: { initialDetail:
                   .filter(Boolean)
                   .join(' · ')}
               </p>
+              {campaign.retainerPerks && (
+                <p className="mt-2 inline-flex items-center rounded-full border border-[#06458F]/20 bg-[#F5F7FA] px-3 py-1 text-xs font-semibold text-[#202124]">
+                  Retainer-Perks: {campaign.retainerPerks}
+                </p>
+              )}
               {campaign.discountCode && (
                 <p className="mt-2 inline-flex items-center rounded-full border border-[#06458F]/25 bg-[#06458F]/5 px-3 py-1 text-xs font-semibold text-[#06458F]">
                   Aktions-Hinweis: {campaign.discountCode}
@@ -658,6 +675,11 @@ export default function CampaignDetailClient({ initialDetail }: { initialDetail:
                           </button>
                         </div>
                       </div>
+                      <BrandPortalMessageDrawer
+                        campaignPublicId={campaign.publicId}
+                        applicationId={app.id}
+                        creatorName={app.creatorName}
+                      />
                     </article>
                   );
                 })}
@@ -1102,7 +1124,7 @@ function SubmissionTrackerRow({
   sub: CampaignSubmissionView;
   onUpdated: () => Promise<void>;
 }) {
-  const isFixedModel = compensationModel === 'fixed' || compensationModel === 'hybrid';
+  const isFixedModel = compensationModel === 'fixed' || compensationModel === 'hybrid' || compensationModel === 'retainer';
   const initialSpendEur =
     sub.spendEurCents > 0
       ? String(sub.spendEurCents / 100)
@@ -1306,5 +1328,135 @@ function SubmissionTrackerRow({
         </div>
       </div>
     </article>
+  );
+}
+
+interface PortalMessageItem {
+  id: string;
+  senderRole: 'brand' | 'creator';
+  senderName: string;
+  body: string;
+  createdAt: string;
+}
+
+function BrandPortalMessageDrawer({
+  campaignPublicId,
+  applicationId,
+  creatorName,
+}: {
+  campaignPublicId: string;
+  applicationId: string;
+  creatorName: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [messages, setMessages] = useState<PortalMessageItem[]>([]);
+  const [draft, setDraft] = useState('');
+  const [sending, setSending] = useState(false);
+
+  const loadMessages = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(
+        `/api/brand/campaigns/${encodeURIComponent(campaignPublicId)}/messages?applicationId=${encodeURIComponent(applicationId)}`,
+        { cache: 'no-store' },
+      );
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setMessages(Array.isArray(data.messages) ? data.messages : []);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [campaignPublicId, applicationId]);
+
+  useEffect(() => {
+    if (open) void loadMessages();
+  }, [open, loadMessages]);
+
+  const sendMessage = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!draft.trim()) return;
+    setSending(true);
+    try {
+      const res = await fetch(`/api/brand/campaigns/${encodeURIComponent(campaignPublicId)}/messages`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ applicationId, body: draft.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.error || 'Senden fehlgeschlagen.');
+      setMessages((prev) => [...prev, data.message]);
+      setDraft('');
+      toast.success(`Nachricht an ${creatorName} gesendet (E-Mail-Benachrichtigung raus).`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Nachricht konnte nicht gesendet werden.');
+    } finally {
+      setSending(false);
+    }
+  };
+
+  return (
+    <div className="mt-4 border-t border-[#DCE2EA] pt-3">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#06458F] hover:underline"
+      >
+        <MessageSquare size={13} aria-hidden="true" />
+        {open ? 'Portal-Nachrichten schließen' : `Direkt im Portal mit ${creatorName} schreiben`}
+        {messages.length > 0 ? ` (${messages.length})` : ''}
+      </button>
+
+      {open && (
+        <div className="mt-3 space-y-3 rounded-xl border border-[#DCE2EA] bg-[#F5F7FA] p-4">
+          <p className="text-[11px] text-[#5C6470]">
+            Klärt Briefing, Retainer-Konditionen, Produktversand und Hooks direkt hier. {creatorName} wird automatisch per E-Mail benachrichtigt.
+          </p>
+          {loading ? (
+            <p className="text-xs text-[#5C6470]">Lade Nachrichten ...</p>
+          ) : messages.length === 0 ? (
+            <p className="text-xs text-[#5C6470]">Noch keine Nachrichten in diesem Thread.</p>
+          ) : (
+            <div className="max-h-60 space-y-2 overflow-y-auto pr-1">
+              {messages.map((m) => (
+                <div
+                  key={m.id}
+                  className={`rounded-lg px-3 py-2 text-xs leading-5 ${
+                    m.senderRole === 'brand'
+                      ? 'ml-6 bg-[#06458F] text-white'
+                      : 'mr-6 border border-[#DCE2EA] bg-white text-[#202124]'
+                  }`}
+                >
+                  <div className={`flex items-center justify-between gap-2 text-[10px] ${m.senderRole === 'brand' ? 'text-white/75' : 'text-[#5C6470]'}`}>
+                    <span className="font-bold">{m.senderName}</span>
+                    <span>{new Date(m.createdAt).toLocaleString('de-DE', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>
+                  </div>
+                  <p className="mt-1 whitespace-pre-line">{m.body}</p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <form onSubmit={sendMessage} className="flex flex-wrap gap-2">
+            <input
+              type="text"
+              maxLength={2000}
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              placeholder={`Nachricht an ${creatorName} (z. B. Retainer-Paket, Produktwunsch, Hook-Idee) ...`}
+              className="min-w-[200px] flex-1 rounded-lg border border-[#DCE2EA] bg-white px-3 py-2 text-xs text-[#202124]"
+            />
+            <button
+              type="submit"
+              disabled={sending || !draft.trim()}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-[#06458F] px-3.5 py-2 text-xs font-semibold text-white hover:bg-[#053673] disabled:opacity-50"
+            >
+              <Send size={12} /> {sending ? '...' : 'Senden'}
+            </button>
+          </form>
+        </div>
+      )}
+    </div>
   );
 }

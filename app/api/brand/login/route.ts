@@ -116,6 +116,7 @@ export async function POST(request: NextRequest) {
         email,
         contactName,
         companyName,
+        industryCategory: cleanText(body.industryCategory, 40) || undefined,
       });
     }
 

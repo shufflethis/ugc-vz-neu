@@ -210,7 +210,7 @@ export default function CampaignHowTabs() {
           aria-labelledby="tab-how-brand"
           // @ts-expect-error React 18 supports hidden="until-found" as DOM attribute
           hidden={activeTab !== 'brand' ? 'until-found' : undefined}
-          className="mt-12 grid items-start gap-8 lg:grid-cols-12 lg:gap-12"
+          className={activeTab === 'brand' ? 'mt-12 grid items-start gap-8 lg:grid-cols-12 lg:gap-12' : 'hidden'}
         >
           <ol className="space-y-3 lg:col-span-6">
             {BRAND_STEPS.map((step, index) => {
@@ -250,7 +250,7 @@ export default function CampaignHowTabs() {
           aria-labelledby="tab-how-creator"
           // @ts-expect-error React 18 supports hidden="until-found" as DOM attribute
           hidden={activeTab !== 'creator' ? 'until-found' : undefined}
-          className="mt-12 grid items-start gap-8 lg:grid-cols-12 lg:gap-12"
+          className={activeTab === 'creator' ? 'mt-12 grid items-start gap-8 lg:grid-cols-12 lg:gap-12' : 'hidden'}
         >
           <ol className="space-y-3 lg:col-span-6">
             {CREATOR_STEPS.map((step, index) => {

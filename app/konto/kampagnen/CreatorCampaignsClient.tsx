@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
   ArrowLeft,
@@ -12,6 +12,7 @@ import {
   ExternalLink,
   Link2,
   Megaphone,
+  MessageSquare,
   Send,
   ShieldAlert,
 } from 'lucide-react';
@@ -41,6 +42,7 @@ const SUBMISSION_STATUS_LABEL: Record<SubmissionStatus, { label: string; classNa
 const COMP_MODEL_LABEL: Record<CreatorCampaignItem['compensationModel'], string> = {
   fixed: 'Pay-per-Video (Fixpreis)',
   tkp: 'Pay-per-View (TKP)',
+  retainer: 'Core-Creator Retainer (Monatlich)',
   hybrid: 'Hybrid (Fixpreis + TKP)',
   affiliate: 'Affiliate / Kickback',
   barter: 'Produkt / Barter',
@@ -76,6 +78,11 @@ const formatAffiliateSummary = (item: CreatorCampaignItem): string => {
 
 const formatBudget = (item: CreatorCampaignItem) => {
   const parts: string[] = [];
+  if (item.compensationModel === 'retainer' && item.retainerMonthlyEur) {
+    parts.push(
+      `${item.retainerMonthlyEur.toLocaleString('de-DE')} € / Monat${item.retainerVideosPerMonth ? ` (${item.retainerVideosPerMonth} Videos)` : ''}`,
+    );
+  }
   if (item.tkpEurCents) parts.push(`${(item.tkpEurCents / 100).toFixed(2).replace('.', ',')} € / 1.000 Views`);
   if (item.budgetPerVideoEur) parts.push(`${item.budgetPerVideoEur} € Fixpreis / Video`);
   const aff = formatAffiliateSummary(item);
@@ -84,12 +91,13 @@ const formatBudget = (item: CreatorCampaignItem) => {
   return parts.length ? parts.join(' · ') : COMP_MODEL_LABEL[item.compensationModel];
 };
 
-type ModelFilter = 'all' | 'tkp' | 'fixed' | 'affiliate';
+type ModelFilter = 'all' | 'tkp' | 'fixed' | 'retainer' | 'affiliate';
 
 const matchesModelFilter = (item: CreatorCampaignItem, filter: ModelFilter): boolean => {
   if (filter === 'all') return true;
   if (filter === 'tkp') return item.compensationModel === 'tkp' || item.compensationModel === 'hybrid';
   if (filter === 'fixed') return item.compensationModel === 'fixed' || item.compensationModel === 'hybrid';
+  if (filter === 'retainer') return item.compensationModel === 'retainer';
   if (filter === 'affiliate') return Boolean(item.affiliateEnabled || item.compensationModel === 'affiliate');
   return true;
 };
@@ -208,6 +216,7 @@ export default function CreatorCampaignsClient({
                 ['all', 'Alle'],
                 ['tkp', 'Pay-per-View'],
                 ['fixed', 'Fixpreis / Video'],
+                ['retainer', 'Monats-Retainer'],
                 ['affiliate', 'Affiliate & Bonus'],
               ] as const
             ).map(([key, label]) => (
@@ -534,6 +543,24 @@ function CampaignCard({
         </div>
       </div>
 
+      {/* Core-Creator Retainer Callout */}
+      {item.compensationModel === 'retainer' && item.retainerMonthlyEur && (
+        <div className="mt-3 rounded-xl border border-[#06458F]/25 bg-[#EBF2FA] px-4 py-3 text-xs text-[#06458F]">
+          <p>
+            <strong>Core-Creator Monats-Retainer:</strong>{' '}
+            <strong>{item.retainerMonthlyEur.toLocaleString('de-DE')} € / Monat</strong>
+            {item.retainerVideosPerMonth ? ` · ${item.retainerVideosPerMonth} Videos / Monat` : ''}
+            {item.retainerMinMonths ? ` · ab ${item.retainerMinMonths} Monat(en)` : ''}
+            {' · '}<strong>0 % Creator-Gebühr</strong> · Auszahlung über dein UGC VZ Konto.
+          </p>
+          {item.retainerPerks && (
+            <p className="mt-1 text-[#202124]">
+              <strong>Extras / Perks:</strong> {item.retainerPerks}
+            </p>
+          )}
+        </div>
+      )}
+
       {/* Fixpreis-Hinweis */}
       {(item.compensationModel === 'fixed' || item.compensationModel === 'hybrid') && item.budgetPerVideoEur && (
         <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[#06458F]/20 bg-[#06458F]/5 px-4 py-3 text-xs text-[#06458F]">
@@ -845,6 +872,147 @@ function CampaignCard({
           </form>
         </div>
       )}
+
+      {/* Direkter Portal-Chat zwischen Creator & Brand fuer bestehende Einladungen/Bewerbungen */}
+      {item.status !== 'open' && (
+        <CreatorPortalMessageDrawer
+          campaignPublicId={item.campaignPublicId}
+          brandDisplayName={item.brandDisplayName}
+          onNotice={onNotice}
+          onError={onError}
+        />
+      )}
     </article>
+  );
+}
+
+interface CreatorChatMessage {
+  id: string;
+  senderRole: 'brand' | 'creator';
+  senderName: string;
+  body: string;
+  createdAt: string;
+}
+
+function CreatorPortalMessageDrawer({
+  campaignPublicId,
+  brandDisplayName,
+  onNotice,
+  onError,
+}: {
+  campaignPublicId: string;
+  brandDisplayName: string;
+  onNotice: (msg: string) => void;
+  onError: (msg: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [messages, setMessages] = useState<CreatorChatMessage[]>([]);
+  const [draft, setDraft] = useState('');
+  const [sending, setSending] = useState(false);
+
+  const loadMessages = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/creator/campaigns/${encodeURIComponent(campaignPublicId)}/messages`, {
+        cache: 'no-store',
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setMessages(Array.isArray(data.messages) ? data.messages : []);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [campaignPublicId]);
+
+  useEffect(() => {
+    if (open) void loadMessages();
+  }, [open, loadMessages]);
+
+  const sendMessage = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!draft.trim()) return;
+    setSending(true);
+    try {
+      const res = await fetch(`/api/creator/campaigns/${encodeURIComponent(campaignPublicId)}/messages`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ body: draft.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.error || 'Senden fehlgeschlagen.');
+      setMessages((prev) => [...prev, data.message]);
+      setDraft('');
+      onNotice(`Nachricht an ${brandDisplayName} gesendet!`);
+    } catch (err) {
+      onError(err instanceof Error ? err.message : 'Nachricht konnte nicht gesendet werden.');
+    } finally {
+      setSending(false);
+    }
+  };
+
+  return (
+    <div className="mt-4 border-t border-[#DCE2EA] pt-4">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#06458F] hover:underline"
+      >
+        <MessageSquare className="h-3.5 w-3.5" aria-hidden="true" />
+        {open ? 'Nachrichten schließen' : `Nachrichten mit ${brandDisplayName} im Portal öffnen`}
+        {messages.length > 0 ? ` (${messages.length})` : ''}
+      </button>
+
+      {open && (
+        <div className="mt-3 space-y-3 rounded-xl border border-[#DCE2EA] bg-[#F5F7FA] p-4">
+          <p className="text-[11px] text-[#5C6470]">
+            Kläre Rückfragen zu Briefing, Retainer-Konditionen oder Produktversand direkt hier. Deine Budget-Sicherung und 0-%-Gebühr gelten für alle im Portal freigegebenen Leistungen.
+          </p>
+          {loading ? (
+            <p className="text-xs text-[#5C6470]">Lade Nachrichten ...</p>
+          ) : messages.length === 0 ? (
+            <p className="text-xs text-[#5C6470]">Noch keine Nachrichten. Schreib {brandDisplayName} direkt hier!</p>
+          ) : (
+            <div className="max-h-60 space-y-2 overflow-y-auto pr-1">
+              {messages.map((m) => (
+                <div
+                  key={m.id}
+                  className={`rounded-lg px-3 py-2 text-xs leading-5 ${
+                    m.senderRole === 'creator'
+                      ? 'ml-6 bg-[#06458F] text-white'
+                      : 'mr-6 border border-[#DCE2EA] bg-white text-[#202124]'
+                  }`}
+                >
+                  <div className={`flex items-center justify-between gap-2 text-[10px] ${m.senderRole === 'creator' ? 'text-white/75' : 'text-[#5C6470]'}`}>
+                    <span className="font-bold">{m.senderName}</span>
+                    <span>{new Date(m.createdAt).toLocaleString('de-DE', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>
+                  </div>
+                  <p className="mt-1 whitespace-pre-line">{m.body}</p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <form onSubmit={sendMessage} className="flex flex-wrap gap-2">
+            <input
+              type="text"
+              maxLength={2000}
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              placeholder={`Nachricht an ${brandDisplayName} ...`}
+              className="min-w-[200px] flex-1 rounded-lg border border-[#DCE2EA] bg-white px-3 py-2 text-xs text-[#202124]"
+            />
+            <button
+              type="submit"
+              disabled={sending || !draft.trim()}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-[#06458F] px-3.5 py-2 text-xs font-semibold text-white hover:bg-[#053673] disabled:opacity-50"
+            >
+              <Send className="h-3.5 w-3.5" aria-hidden="true" /> {sending ? '...' : 'Senden'}
+            </button>
+          </form>
+        </div>
+      )}
+    </div>
   );
 }

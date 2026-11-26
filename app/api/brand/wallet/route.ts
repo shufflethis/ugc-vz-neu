@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { getDatabase, isDatabaseConfigured } from '@/app/lib/database';
 import { BRAND_SESSION_COOKIE, verifyBrandSession } from '@/app/lib/brand-session';
+import { getBrandAccount } from '@/app/lib/brand-workspace';
 import { ensureBrandWallet } from '@/app/lib/payments-ledger';
 import { isStripeConfigured } from '@/app/lib/stripe-connect';
 
@@ -19,7 +20,50 @@ export async function GET() {
 
   try {
     const sql = getDatabase();
-    const wallet = await ensureBrandWallet(sql, brandId);
+    const [brand, wallet] = await Promise.all([
+      getBrandAccount(sql, brandId),
+      ensureBrandWallet(sql, brandId),
+    ]);
+    let latestComplianceRequest: {
+      id: string;
+      industryCategory: string;
+      preferredContact: string;
+      preferredPsp: string;
+      status: string;
+      createdAt: string;
+    } | null = null;
+    try {
+      const [reqRow] = (await sql.query(
+        `SELECT id, industry_category, preferred_contact, preferred_psp, status, created_at
+         FROM brand_compliance_requests
+         WHERE brand_id = $1
+         ORDER BY created_at DESC
+         LIMIT 1`,
+        [brandId],
+      )) as unknown as Array<any>;
+      if (reqRow) {
+        latestComplianceRequest = {
+          id: String(reqRow.id),
+          industryCategory: String(reqRow.industry_category),
+          preferredContact: String(reqRow.preferred_contact),
+          preferredPsp: String(reqRow.preferred_psp),
+          status: String(reqRow.status),
+          createdAt: new Date(String(reqRow.created_at)).toISOString(),
+        };
+      }
+    } catch (crErr: any) {
+      if (crErr?.code !== '42P01') throw crErr;
+    }
+
+    const billingProfile = {
+      industryCategory: brand?.industryCategory || 'standard',
+      billingTier: brand?.billingTier || 'stripe_standard',
+      complianceStatus: brand?.complianceStatus || 'approved',
+      highRiskFeeBps: brand?.highRiskFeeBps || 2200,
+      website: brand?.website || '',
+      latestComplianceRequest,
+    };
+
     const [topups, reservations] = await Promise.all([
       sql.query(
         `SELECT id, amount_cents, surcharge_cents, surcharge_label, total_charged_cents,
@@ -46,6 +90,7 @@ export async function GET() {
     return NextResponse.json({
       success: true,
       stripeConfigured: isStripeConfigured(),
+      billingProfile,
       wallet,
       topups: topups.map((t) => ({
         id: String(t.id),

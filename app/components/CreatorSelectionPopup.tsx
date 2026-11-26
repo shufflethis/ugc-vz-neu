@@ -1,11 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { BriefcaseBusiness, CheckCircle2, Lock, Sparkles } from 'lucide-react';
+import { BriefcaseBusiness, CheckCircle2, Lock, ShieldAlert, Sparkles } from 'lucide-react';
 import { toast } from 'react-toastify';
 import CreatorAvatar from './CreatorAvatar';
 import OtpInput from './auth/OtpInput';
 import { trackUGCEvents } from '../lib/analytics';
+import { detectHighRiskKeywords } from '../lib/high-risk-compliance';
 
 interface Creator {
   id: string;
@@ -17,7 +18,7 @@ interface Creator {
   gender?: string;
 }
 
-type PopupCompensationModel = 'fixed' | 'tkp' | 'hybrid' | 'affiliate';
+type PopupCompensationModel = 'fixed' | 'tkp' | 'hybrid' | 'retainer' | 'affiliate';
 
 interface CreatorSelectionPopupProps {
   selectedCreators: string[];
@@ -58,6 +59,8 @@ export default function CreatorSelectionPopup({
     compensationModel: 'fixed' as PopupCompensationModel,
     budgetPerVideoEur: '200',
     tkpEur: '2.00',
+    retainerMonthlyEur: '1000',
+    retainerVideosPerMonth: '4',
     totalBudgetEur: '600',
     affiliateEnabled: false,
     affiliatePercent: '10',
@@ -147,8 +150,12 @@ export default function CreatorSelectionPopup({
         return;
       }
 
-      const affiliateActive = campaignData.compensationModel === 'affiliate' || campaignData.affiliateEnabled;
+      const affiliateActive =
+        campaignData.compensationModel === 'affiliate'
+        || campaignData.compensationModel === 'retainer'
+        || campaignData.affiliateEnabled;
       const affiliatePct = Math.max(1, Math.min(80, Number(campaignData.affiliatePercent) || 10));
+      const detectedHr = detectHighRiskKeywords(campaignData.company, campaignData.email, campaignData.title, campaignData.message);
 
       const response = await fetch('/api/brand/start-campaign', {
         method: 'POST',
@@ -159,12 +166,22 @@ export default function CreatorSelectionPopup({
           name: campaignData.name.trim(),
           email: campaignData.email.trim(),
           website: campaignData.website,
+          industryCategory: detectedHr.flagged ? detectedHr.suggestedCategory : 'standard',
           visibility: campaignData.visibility,
           compensationModel: campaignData.compensationModel,
           budgetPerVideoEur:
             campaignData.compensationModel === 'fixed' || campaignData.compensationModel === 'hybrid'
               ? Number(campaignData.budgetPerVideoEur) || null
               : null,
+          retainerMonthlyEur:
+            campaignData.compensationModel === 'retainer'
+              ? Number(campaignData.retainerMonthlyEur) || null
+              : null,
+          retainerVideosPerMonth:
+            campaignData.compensationModel === 'retainer'
+              ? Number(campaignData.retainerVideosPerMonth) || null
+              : null,
+          retainerMinMonths: campaignData.compensationModel === 'retainer' ? 3 : null,
           tkpEurCents:
             (campaignData.compensationModel === 'tkp' || campaignData.compensationModel === 'hybrid')
             && Number(campaignData.tkpEur.replace(',', '.')) > 0
@@ -460,15 +477,16 @@ export default function CreatorSelectionPopup({
                         />
                       </div>
 
-                      {/* Verguetungsmodell als klare 4-Kachel-Auswahl */}
+                      {/* Verguetungsmodell als klare 5-Kachel-Auswahl */}
                       <div>
                         <span className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-[#5C6470]">
                           Wie möchtest du die Creator vergüten?
                         </span>
-                        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
                           {[
-                            { id: 'fixed' as const, title: 'Fixpreis pro Video', sub: 'Klassisches UGC-Paket · Escrow' },
+                            { id: 'fixed' as const, title: 'Fixpreis / Video', sub: 'Klassisches UGC · Budget-Sicherung' },
                             { id: 'tkp' as const, title: 'Pay-per-View (TKP)', sub: 'Pro 1.000 geprüfte Views' },
+                            { id: 'retainer' as const, title: 'Monats-Retainer', sub: 'Core-Creator Fixum + %' },
                             { id: 'hybrid' as const, title: 'Hybrid (Fix + Views)', sub: 'Basis-Honorar + Reichweite' },
                             { id: 'affiliate' as const, title: 'Affiliate / Kickback', sub: '% oder € pro Sale via Code' },
                           ].map((opt) => {
@@ -481,7 +499,10 @@ export default function CreatorSelectionPopup({
                                   setCampaignData((prev) => ({
                                     ...prev,
                                     compensationModel: opt.id,
-                                    affiliateEnabled: opt.id === 'affiliate' ? true : prev.affiliateEnabled,
+                                    affiliateEnabled:
+                                      opt.id === 'affiliate' || opt.id === 'retainer' ? true : prev.affiliateEnabled,
+                                    affiliatePercent: opt.id === 'retainer' ? '20' : prev.affiliatePercent,
+                                    totalBudgetEur: opt.id === 'retainer' ? '3000' : prev.totalBudgetEur,
                                   }))
                                 }
                                 className={`rounded-[10px] border p-3 text-left transition-all ${
@@ -571,6 +592,42 @@ export default function CreatorSelectionPopup({
                       </div>
 
                       <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-4">
+                        {campaignData.compensationModel === 'retainer' && (
+                          <>
+                            <div>
+                              <label htmlFor="camp-retainer-eur" className="mb-1 block text-xs font-semibold text-[#202124]">
+                                Monats-Fixum (€ / Monat)
+                              </label>
+                              <input
+                                type="number"
+                                min={0}
+                                max={100000}
+                                id="camp-retainer-eur"
+                                name="retainerMonthlyEur"
+                                value={campaignData.retainerMonthlyEur}
+                                onChange={handleCampaignInputChange}
+                                className="w-full rounded-[8px] border border-[#DCE2EA] bg-white px-3 py-2.5 text-sm text-[#202124] outline-none focus:border-[#06458F]"
+                                placeholder="1000"
+                              />
+                            </div>
+                            <div>
+                              <label htmlFor="camp-retainer-vids" className="mb-1 block text-xs font-semibold text-[#202124]">
+                                Videos / Monat
+                              </label>
+                              <input
+                                type="number"
+                                min={1}
+                                max={200}
+                                id="camp-retainer-vids"
+                                name="retainerVideosPerMonth"
+                                value={campaignData.retainerVideosPerMonth}
+                                onChange={handleCampaignInputChange}
+                                className="w-full rounded-[8px] border border-[#DCE2EA] bg-white px-3 py-2.5 text-sm text-[#202124] outline-none focus:border-[#06458F]"
+                                placeholder="4"
+                              />
+                            </div>
+                          </>
+                        )}
                         {(campaignData.compensationModel === 'fixed' || campaignData.compensationModel === 'hybrid') && (
                           <div>
                             <label htmlFor="camp-budget-video" className="mb-1 block text-xs font-semibold text-[#202124]">
@@ -720,6 +777,18 @@ export default function CreatorSelectionPopup({
                           />
                         </div>
                       </div>
+
+                      {detectHighRiskKeywords(campaignData.company, campaignData.email, campaignData.title, campaignData.message).flagged && (
+                        <div className="flex items-start gap-2 rounded-[10px] border border-[#F2072A]/35 bg-[#F2072A]/5 p-3 text-xs leading-5 text-[#202124]">
+                          <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-[#D10523]" aria-hidden="true" />
+                          <div>
+                            <p className="font-bold text-[#D10523]">Sonderbranche / High-Risk-Abrechnung erkannt</p>
+                            <p className="mt-0.5 text-[#5C6470]">
+                              {detectHighRiskKeywords(campaignData.company, campaignData.email, campaignData.title, campaignData.message).summary}
+                            </p>
+                          </div>
+                        </div>
+                      )}
 
                       {campaignError && (
                         <div role="alert" className="rounded-[8px] border border-[#F2072A]/30 bg-[#FDECEF] px-4 py-3 text-sm font-medium text-[#D10523]">

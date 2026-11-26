@@ -3,10 +3,19 @@ import type { getDatabase } from '@/app/lib/database';
 import { BRAND_LOGIN_TTL_MINUTES } from '@/app/lib/brand-login-email';
 import { humanizePriceText, safePortfolioUrl } from '@/app/lib/creator-public';
 import { getActivePromo } from '@/app/lib/platform-pricing';
+import {
+  detectHighRiskKeywords,
+  getHighRiskFeeBps,
+  isHighRiskCategory,
+  normalizeIndustryCategory,
+  type BrandBillingTier,
+  type BrandComplianceStatus,
+  type IndustryCategory,
+} from '@/app/lib/high-risk-compliance';
 
 type DatabaseClient = ReturnType<typeof getDatabase>;
 
-export type CompensationModel = 'fixed' | 'tkp' | 'hybrid' | 'affiliate' | 'barter';
+export type CompensationModel = 'fixed' | 'tkp' | 'hybrid' | 'affiliate' | 'retainer' | 'barter';
 export type AffiliateType = 'percent' | 'fixed_per_sale';
 export type CampaignVisibility = 'invite_only' | 'open';
 export type CampaignStatus = 'draft' | 'active' | 'paused' | 'completed';
@@ -21,6 +30,10 @@ export interface BrandAccount {
   companyName: string;
   website: string;
   emailVerifiedAt: string | null;
+  industryCategory: IndustryCategory;
+  billingTier: BrandBillingTier;
+  complianceStatus: BrandComplianceStatus;
+  highRiskFeeBps: number;
 }
 
 export interface CampaignSummary {
@@ -40,6 +53,11 @@ export interface CampaignSummary {
   affiliateRateBps?: number | null;
   affiliateFixedCents?: number | null;
   affiliateTargetUrl?: string;
+  retainerMonthlyEur?: number | null;
+  retainerVideosPerMonth?: number | null;
+  retainerMinMonths?: number | null;
+  retainerPerks?: string;
+  requiresHighRiskBilling?: boolean;
   requiresProductChoice: boolean;
   productChoicePrompt: string;
   discountCode: string;
@@ -186,6 +204,11 @@ export interface CreatorCampaignItem {
   affiliateTargetUrl?: string;
   affiliateCode?: string | null;
   affiliateClicks?: number;
+  retainerMonthlyEur?: number | null;
+  retainerVideosPerMonth?: number | null;
+  retainerMinMonths?: number | null;
+  retainerPerks?: string;
+  requiresHighRiskBilling?: boolean;
   requiresProductChoice: boolean;
   productChoicePrompt: string;
   discountCode: string;
@@ -340,33 +363,100 @@ export function validateCampaignBusinessRules(input: {
 export async function findBrandByEmail(sql: DatabaseClient, rawEmail: string): Promise<BrandAccount | null> {
   const email = cleanText(rawEmail, 254).toLowerCase();
   if (!email) return null;
-  const [existing] = (await sql.query(
-    `SELECT id, email, contact_name, company_name, website, email_verified_at
-     FROM brand_accounts WHERE lower(btrim(email)) = lower($1) LIMIT 1`,
-    [email],
-  )) as unknown as Array<any>;
-  return existing ? mapBrandAccount(existing) : null;
+  try {
+    const [existing] = (await sql.query(
+      `SELECT id, email, contact_name, company_name, website, email_verified_at,
+              industry_category, billing_tier, compliance_status, high_risk_fee_bps
+       FROM brand_accounts WHERE lower(btrim(email)) = lower($1) LIMIT 1`,
+      [email],
+    )) as unknown as Array<any>;
+    return existing ? mapBrandAccount(existing) : null;
+  } catch (err: any) {
+    if (err?.code !== '42703') throw err;
+    const [existing] = (await sql.query(
+      `SELECT id, email, contact_name, company_name, website, email_verified_at
+       FROM brand_accounts WHERE lower(btrim(email)) = lower($1) LIMIT 1`,
+      [email],
+    )) as unknown as Array<any>;
+    return existing ? mapBrandAccount(existing) : null;
+  }
 }
 
 export async function upsertBrandAccount(
   sql: DatabaseClient,
-  input: { email: string; contactName?: string; companyName?: string; website?: string },
+  input: { email: string; contactName?: string; companyName?: string; website?: string; industryCategory?: string },
 ): Promise<BrandAccount> {
   const email = cleanText(input.email, 254).toLowerCase();
   const contactName = cleanText(input.contactName, 120);
   const companyName = cleanText(input.companyName, 140);
   const website = input.website ? safePortfolioUrl(cleanText(input.website, 300)) || '' : '';
 
-  const [existing] = (await sql.query(
-    `SELECT id, email, contact_name, company_name, website, email_verified_at
-     FROM brand_accounts WHERE lower(btrim(email)) = lower($1) LIMIT 1`,
-    [email],
-  )) as unknown as Array<any>;
+  const explicitCategory = input.industryCategory ? normalizeIndustryCategory(input.industryCategory) : null;
+  const detected = detectHighRiskKeywords(companyName, email, website);
+  const effectiveCategory: IndustryCategory =
+    explicitCategory && explicitCategory !== 'standard'
+      ? explicitCategory
+      : detected.flagged
+        ? detected.suggestedCategory
+        : explicitCategory || 'standard';
+  const highRisk = isHighRiskCategory(effectiveCategory);
+  const billingTier: BrandBillingTier = highRisk ? 'high_risk_custom' : 'stripe_standard';
+  const complianceStatus: BrandComplianceStatus = highRisk ? 'review_required' : 'approved';
+  const highRiskFeeBps = highRisk ? getHighRiskFeeBps(effectiveCategory) : 2200;
+
+  let existing: any;
+  let hasComplianceCols = true;
+  try {
+    const [row] = (await sql.query(
+      `SELECT id, email, contact_name, company_name, website, email_verified_at,
+              industry_category, billing_tier, compliance_status, high_risk_fee_bps
+       FROM brand_accounts WHERE lower(btrim(email)) = lower($1) LIMIT 1`,
+      [email],
+    )) as unknown as Array<any>;
+    existing = row;
+  } catch (err: any) {
+    if (err?.code !== '42703') throw err;
+    hasComplianceCols = false;
+    const [row] = (await sql.query(
+      `SELECT id, email, contact_name, company_name, website, email_verified_at
+       FROM brand_accounts WHERE lower(btrim(email)) = lower($1) LIMIT 1`,
+      [email],
+    )) as unknown as Array<any>;
+    existing = row;
+  }
 
   if (existing) {
     const nextName = contactName || String(existing.contact_name || '');
     const nextCompany = companyName || String(existing.company_name || '');
     const nextWebsite = website || String(existing.website || '');
+    if (hasComplianceCols) {
+      const nextCategory =
+        highRisk || (explicitCategory && explicitCategory !== 'standard')
+          ? effectiveCategory
+          : normalizeIndustryCategory(existing.industry_category);
+      const nextTier: BrandBillingTier =
+        existing.billing_tier === 'high_risk_custom' || isHighRiskCategory(nextCategory)
+          ? 'high_risk_custom'
+          : 'stripe_standard';
+      const nextCompliance: BrandComplianceStatus =
+        existing.compliance_status === 'custom_psp_active'
+          ? 'custom_psp_active'
+          : nextTier === 'high_risk_custom'
+            ? 'review_required'
+            : ((existing.compliance_status as BrandComplianceStatus) || 'approved');
+      const nextFeeBps = nextTier === 'high_risk_custom' ? getHighRiskFeeBps(nextCategory) : Number(existing.high_risk_fee_bps || 2200);
+      const [updated] = (await sql.query(
+        `UPDATE brand_accounts
+         SET contact_name = $2, company_name = $3, website = NULLIF($4, ''),
+             industry_category = $5, billing_tier = $6, compliance_status = $7, high_risk_fee_bps = $8,
+             updated_at = now()
+         WHERE id = $1
+         RETURNING id, email, contact_name, company_name, website, email_verified_at,
+                   industry_category, billing_tier, compliance_status, high_risk_fee_bps`,
+        [existing.id, nextName, nextCompany, nextWebsite, nextCategory, nextTier, nextCompliance, nextFeeBps],
+      )) as unknown as Array<any>;
+      return mapBrandAccount(updated);
+    }
     const [updated] = (await sql.query(
       `UPDATE brand_accounts
        SET contact_name = $2, company_name = $3, website = NULLIF($4, ''), updated_at = now()
@@ -375,6 +465,20 @@ export async function upsertBrandAccount(
       [existing.id, nextName, nextCompany, nextWebsite],
     )) as unknown as Array<any>;
     return mapBrandAccount(updated);
+  }
+
+  if (hasComplianceCols) {
+    const [created] = (await sql.query(
+      `INSERT INTO brand_accounts (
+         email, contact_name, company_name, website,
+         industry_category, billing_tier, compliance_status, high_risk_fee_bps
+       )
+       VALUES ($1, $2, $3, NULLIF($4, ''), $5, $6, $7, $8)
+       RETURNING id, email, contact_name, company_name, website, email_verified_at,
+                 industry_category, billing_tier, compliance_status, high_risk_fee_bps`,
+      [email, contactName, companyName, website, effectiveCategory, billingTier, complianceStatus, highRiskFeeBps],
+    )) as unknown as Array<any>;
+    return mapBrandAccount(created);
   }
 
   const [created] = (await sql.query(
@@ -386,22 +490,50 @@ export async function upsertBrandAccount(
   return mapBrandAccount(created);
 }
 
-const mapBrandAccount = (row: any): BrandAccount => ({
-  id: String(row.id),
-  email: String(row.email),
-  contactName: String(row.contact_name || ''),
-  companyName: String(row.company_name || ''),
-  website: String(row.website || ''),
-  emailVerifiedAt: row.email_verified_at ? new Date(row.email_verified_at).toISOString() : null,
-});
+const mapBrandAccount = (row: any): BrandAccount => {
+  const industryCategory = normalizeIndustryCategory(row.industry_category);
+  const billingTier: BrandBillingTier =
+    row.billing_tier === 'high_risk_custom' || isHighRiskCategory(industryCategory)
+      ? 'high_risk_custom'
+      : 'stripe_standard';
+  const complianceStatus: BrandComplianceStatus =
+    ['approved', 'review_required', 'custom_psp_active', 'rejected'].includes(String(row.compliance_status))
+      ? (String(row.compliance_status) as BrandComplianceStatus)
+      : billingTier === 'high_risk_custom'
+        ? 'review_required'
+        : 'approved';
+  return {
+    id: String(row.id),
+    email: String(row.email),
+    contactName: String(row.contact_name || ''),
+    companyName: String(row.company_name || ''),
+    website: String(row.website || ''),
+    emailVerifiedAt: row.email_verified_at ? new Date(row.email_verified_at).toISOString() : null,
+    industryCategory,
+    billingTier,
+    complianceStatus,
+    highRiskFeeBps: Number(row.high_risk_fee_bps || getHighRiskFeeBps(industryCategory) || 2200),
+  };
+};
 
 export async function getBrandAccount(sql: DatabaseClient, brandId: string): Promise<BrandAccount | null> {
-  const [row] = (await sql.query(
-    `SELECT id, email, contact_name, company_name, website, email_verified_at
-     FROM brand_accounts WHERE id = $1 LIMIT 1`,
-    [brandId],
-  )) as unknown as Array<any>;
-  return row ? mapBrandAccount(row) : null;
+  try {
+    const [row] = (await sql.query(
+      `SELECT id, email, contact_name, company_name, website, email_verified_at,
+              industry_category, billing_tier, compliance_status, high_risk_fee_bps
+       FROM brand_accounts WHERE id = $1 LIMIT 1`,
+      [brandId],
+    )) as unknown as Array<any>;
+    return row ? mapBrandAccount(row) : null;
+  } catch (err: any) {
+    if (err?.code !== '42703') throw err;
+    const [row] = (await sql.query(
+      `SELECT id, email, contact_name, company_name, website, email_verified_at
+       FROM brand_accounts WHERE id = $1 LIMIT 1`,
+      [brandId],
+    )) as unknown as Array<any>;
+    return row ? mapBrandAccount(row) : null;
+  }
 }
 
 const hashBrandOtp = (email: string, code: string) =>
@@ -560,6 +692,10 @@ export async function createBrandCampaign(
     affiliateRateBps?: number | null;
     affiliateFixedCents?: number | null;
     affiliateTargetUrl?: string;
+    retainerMonthlyEur?: number | null;
+    retainerVideosPerMonth?: number | null;
+    retainerMinMonths?: number | null;
+    retainerPerks?: string;
     requiresProductChoice?: boolean;
     productChoicePrompt?: string;
     discountCode?: string;
@@ -580,7 +716,7 @@ export async function createBrandCampaign(
   const allowedPlatforms = new Set(['tiktok', 'instagram', 'youtube', 'tiktok_shop', 'meta_ads', 'files_only']);
   const platforms = [...new Set((input.platforms || []).map((p) => p.toLowerCase().trim()).filter((p) => allowedPlatforms.has(p)))];
   const deliverables = cleanText(input.deliverables, 240);
-  const compensationModel: CompensationModel = ['fixed', 'tkp', 'hybrid', 'affiliate', 'barter'].includes(String(input.compensationModel))
+  const compensationModel: CompensationModel = ['fixed', 'tkp', 'hybrid', 'affiliate', 'retainer', 'barter'].includes(String(input.compensationModel))
     ? (input.compensationModel as CompensationModel)
     : 'fixed';
   const affiliateEnabled = compensationModel === 'affiliate' || Boolean(input.affiliateEnabled);
@@ -593,6 +729,35 @@ export async function createBrandCampaign(
     : null;
   const affiliateTargetUrl = cleanText(input.affiliateTargetUrl, 400);
   const affiliateWebhookSecret = affiliateEnabled ? `aff_${crypto.randomBytes(18).toString('hex')}` : '';
+  const retainerMonthlyEur = compensationModel === 'retainer' ? toPositiveIntOrNull(input.retainerMonthlyEur, 100_000) : null;
+  const retainerVideosPerMonth = compensationModel === 'retainer' ? toPositiveIntOrNull(input.retainerVideosPerMonth, 200) : null;
+  const retainerMinMonths = compensationModel === 'retainer' ? (toPositiveIntOrNull(input.retainerMinMonths, 36) || 1) : null;
+  const retainerPerks = compensationModel === 'retainer' ? cleanText(input.retainerPerks, 300) : '';
+
+  // Automatischer High-Risk / Stripe-Restricted Check auf Brand & Kampagnentext
+  const detectedHighRisk = detectHighRiskKeywords(title, brandDisplayName, niche, description, retainerPerks);
+  const requiresHighRiskBilling =
+    brand.billingTier === 'high_risk_custom'
+    || isHighRiskCategory(brand.industryCategory)
+    || detectedHighRisk.flagged;
+  if (detectedHighRisk.flagged && brand.billingTier !== 'high_risk_custom') {
+    try {
+      await sql.query(
+        `UPDATE brand_accounts
+         SET industry_category = $2,
+             billing_tier = 'high_risk_custom',
+             compliance_status = CASE WHEN compliance_status = 'custom_psp_active' THEN 'custom_psp_active' ELSE 'review_required' END,
+             high_risk_fee_bps = $3,
+             updated_at = now()
+         WHERE id = $1`,
+        [brand.id, detectedHighRisk.suggestedCategory, getHighRiskFeeBps(detectedHighRisk.suggestedCategory)],
+      );
+    } catch (flagErr: any) {
+      if (flagErr?.code !== '42703') {
+        console.error('High-risk account auto-flag failed:', flagErr instanceof Error ? flagErr.message : 'unknown');
+      }
+    }
+  }
   const visibility: CampaignVisibility = input.visibility === 'invite_only' ? 'invite_only' : 'open';
   const requiresProductChoice = Boolean(input.requiresProductChoice);
   const productChoicePrompt = cleanText(input.productChoicePrompt, 240);
@@ -634,6 +799,9 @@ export async function createBrandCampaign(
   ];
 
   let campaign: any;
+  const effectiveFeeBps = requiresHighRiskBilling
+    ? Math.max(promo.rateBps, brand.highRiskFeeBps || getHighRiskFeeBps(detectedHighRisk.suggestedCategory))
+    : promo.rateBps;
   try {
     const [row] = (await sql.query(
       `INSERT INTO brand_campaigns (
@@ -644,13 +812,15 @@ export async function createBrandCampaign(
          usage_rights, deadline, visibility, status, source_lead_public_id,
          platform_fee_bps, fee_promo_code, creator_fee_bps,
          affiliate_enabled, affiliate_type, affiliate_rate_bps, affiliate_fixed_cents,
-         affiliate_target_url, affiliate_webhook_secret
-       ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,'active',$23,$24,$25,$26,$27,$28,$29,$30,$31,$32)
+         affiliate_target_url, affiliate_webhook_secret,
+         retainer_monthly_eur, retainer_videos_per_month, retainer_min_months,
+         retainer_perks, requires_high_risk_billing
+       ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,'active',$23,$24,$25,$26,$27,$28,$29,$30,$31,$32,$33,$34,$35,$36,$37)
        RETURNING id, public_id`,
       [
         ...baseParams,
-        promo.rateBps,
-        promo.code,
+        effectiveFeeBps,
+        requiresHighRiskBilling ? 'HIGH_RISK' : promo.code,
         promo.creatorFeeBps,
         affiliateEnabled,
         affiliateType,
@@ -658,13 +828,23 @@ export async function createBrandCampaign(
         affiliateFixedCents,
         affiliateTargetUrl,
         affiliateWebhookSecret,
+        retainerMonthlyEur,
+        retainerVideosPerMonth,
+        retainerMinMonths,
+        retainerPerks,
+        requiresHighRiskBilling,
       ],
     )) as unknown as Array<any>;
     campaign = row;
   } catch (err: any) {
-    // Graceful fallback wenn Migration 022/026 in einer Umgebung noch nicht eingespielt ist.
+    // Graceful fallback wenn Migration 022/026/027 in einer Umgebung noch nicht eingespielt ist.
     const message = String(err?.message || '');
-    if (err?.code !== '42703' && !message.includes('platform_fee_bps') && !message.includes('affiliate_enabled')) {
+    if (
+      err?.code !== '42703'
+      && !message.includes('platform_fee_bps')
+      && !message.includes('affiliate_enabled')
+      && !message.includes('retainer_monthly_eur')
+    ) {
       throw err;
     }
     const [row] = (await sql.query(
@@ -740,6 +920,8 @@ export async function listBrandCampaigns(sql: DatabaseClient, brandId: string): 
          c.deliverables, c.compensation_model, c.budget_per_video_eur, c.total_budget_eur,
          c.tkp_eur_cents, c.affiliate_enabled, c.affiliate_type, c.affiliate_rate_bps,
          c.affiliate_fixed_cents, c.affiliate_target_url,
+         c.retainer_monthly_eur, c.retainer_videos_per_month, c.retainer_min_months,
+         c.retainer_perks, c.requires_high_risk_billing,
          c.requires_product_choice, c.product_choice_prompt, c.discount_code,
          c.briefing_checklist, c.required_mention, c.required_hashtags, c.report_share_token,
          c.usage_rights, c.deadline, c.visibility, c.status, c.created_at,
@@ -848,8 +1030,11 @@ export async function listBrandCampaigns(sql: DatabaseClient, brandId: string): 
       affiliateRateBps: row.affiliate_rate_bps === null || row.affiliate_rate_bps === undefined ? null : Number(row.affiliate_rate_bps),
       affiliateFixedCents: row.affiliate_fixed_cents === null || row.affiliate_fixed_cents === undefined ? null : Number(row.affiliate_fixed_cents),
       affiliateTargetUrl: String(row.affiliate_target_url || ''),
-      affiliateCode: row.affiliate_code ? String(row.affiliate_code) : null,
-      affiliateClicks: Number(row.affiliate_clicks || 0),
+      retainerMonthlyEur: row.retainer_monthly_eur === null || row.retainer_monthly_eur === undefined ? null : Number(row.retainer_monthly_eur),
+      retainerVideosPerMonth: row.retainer_videos_per_month === null || row.retainer_videos_per_month === undefined ? null : Number(row.retainer_videos_per_month),
+      retainerMinMonths: row.retainer_min_months === null || row.retainer_min_months === undefined ? null : Number(row.retainer_min_months),
+      retainerPerks: String(row.retainer_perks || ''),
+      requiresHighRiskBilling: Boolean(row.requires_high_risk_billing),
       requiresProductChoice: Boolean(row.requires_product_choice),
       productChoicePrompt: String(row.product_choice_prompt || ''),
       discountCode: String(row.discount_code || ''),
@@ -1261,6 +1446,11 @@ export async function getBrandCampaignDetail(
       affiliateRateBps: campRow.affiliate_rate_bps === null || campRow.affiliate_rate_bps === undefined ? null : Number(campRow.affiliate_rate_bps),
       affiliateFixedCents: campRow.affiliate_fixed_cents === null || campRow.affiliate_fixed_cents === undefined ? null : Number(campRow.affiliate_fixed_cents),
       affiliateTargetUrl: String(campRow.affiliate_target_url || ''),
+      retainerMonthlyEur: campRow.retainer_monthly_eur === null || campRow.retainer_monthly_eur === undefined ? null : Number(campRow.retainer_monthly_eur),
+      retainerVideosPerMonth: campRow.retainer_videos_per_month === null || campRow.retainer_videos_per_month === undefined ? null : Number(campRow.retainer_videos_per_month),
+      retainerMinMonths: campRow.retainer_min_months === null || campRow.retainer_min_months === undefined ? null : Number(campRow.retainer_min_months),
+      retainerPerks: String(campRow.retainer_perks || ''),
+      requiresHighRiskBilling: Boolean(campRow.requires_high_risk_billing),
       requiresProductChoice: Boolean(campRow.requires_product_choice),
       productChoicePrompt: String(campRow.product_choice_prompt || ''),
       discountCode: String(campRow.discount_code || ''),
@@ -1363,6 +1553,8 @@ export async function listCreatorCampaigns(
          c.deliverables, c.compensation_model, c.budget_per_video_eur, c.total_budget_eur,
          c.tkp_eur_cents, c.affiliate_enabled, c.affiliate_type, c.affiliate_rate_bps,
          c.affiliate_fixed_cents, c.affiliate_target_url,
+         c.retainer_monthly_eur, c.retainer_videos_per_month, c.retainer_min_months,
+         c.retainer_perks, c.requires_high_risk_billing,
          c.requires_product_choice, c.product_choice_prompt, c.discount_code,
          c.briefing_checklist, c.required_mention, c.required_hashtags,
          c.usage_rights, c.deadline,
@@ -1403,6 +1595,8 @@ export async function listCreatorCampaigns(
          c.deliverables, c.compensation_model, c.budget_per_video_eur, c.total_budget_eur,
          c.tkp_eur_cents, c.affiliate_enabled, c.affiliate_type, c.affiliate_rate_bps,
          c.affiliate_fixed_cents, c.affiliate_target_url,
+         c.retainer_monthly_eur, c.retainer_videos_per_month, c.retainer_min_months,
+         c.retainer_perks, c.requires_high_risk_billing,
          c.requires_product_choice, c.product_choice_prompt, c.discount_code,
          c.briefing_checklist, c.required_mention, c.required_hashtags,
          c.usage_rights, c.deadline,
@@ -1523,6 +1717,11 @@ export async function listCreatorCampaigns(
       affiliateTargetUrl: String(row.affiliate_target_url || ''),
       affiliateCode: row.affiliate_code ? String(row.affiliate_code) : null,
       affiliateClicks: Number(row.affiliate_clicks || 0),
+      retainerMonthlyEur: row.retainer_monthly_eur === null || row.retainer_monthly_eur === undefined ? null : Number(row.retainer_monthly_eur),
+      retainerVideosPerMonth: row.retainer_videos_per_month === null || row.retainer_videos_per_month === undefined ? null : Number(row.retainer_videos_per_month),
+      retainerMinMonths: row.retainer_min_months === null || row.retainer_min_months === undefined ? null : Number(row.retainer_min_months),
+      retainerPerks: String(row.retainer_perks || ''),
+      requiresHighRiskBilling: Boolean(row.requires_high_risk_billing),
       requiresProductChoice: Boolean(row.requires_product_choice),
       productChoicePrompt: String(row.product_choice_prompt || ''),
       discountCode: String(row.discount_code || ''),

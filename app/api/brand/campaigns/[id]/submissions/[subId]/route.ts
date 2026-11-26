@@ -71,7 +71,7 @@ export async function PATCH(
   } else if (existing.compensation_model === 'tkp' && tkpCents > 0 && views !== Number(existing.views)) {
     spendEurCents = Math.min(100_000_000, autoTkpCents);
   } else if (
-    (existing.compensation_model === 'fixed' || existing.compensation_model === 'hybrid')
+    (existing.compensation_model === 'fixed' || existing.compensation_model === 'hybrid' || existing.compensation_model === 'retainer')
     && spendEurCents === 0
     && existing.budget_per_video_eur
   ) {
@@ -96,7 +96,7 @@ export async function PATCH(
   let settlementWarning: string | null = null;
   if (
     nextStatus === 'approved'
-    && (existing.compensation_model === 'fixed' || existing.compensation_model === 'hybrid')
+    && (existing.compensation_model === 'fixed' || existing.compensation_model === 'hybrid' || existing.compensation_model === 'retainer')
     && spendEurCents > 0
   ) {
     try {
@@ -154,7 +154,10 @@ export async function PATCH(
         brandName: String(existing.brand_display_name || 'Brand'),
         campaignTitle: String(existing.campaign_title),
         creditedCents: settlement.grantedCreatorCents,
-        reasonLabel: 'Video freigegeben · Fixpreis gutgeschrieben',
+        reasonLabel:
+          existing.compensation_model === 'retainer'
+            ? 'Retainer-Meilenstein freigegeben · Guthaben gutgeschrieben'
+            : 'Video freigegeben · Fixpreis gutgeschrieben',
       });
       await sendCampaignNotificationEmail({
         to: String(existing.creator_email),

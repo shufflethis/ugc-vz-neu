@@ -3,6 +3,7 @@ import { cookies } from 'next/headers';
 import { getDatabase, isDatabaseConfigured } from '@/app/lib/database';
 import { BRAND_SESSION_COOKIE, verifyBrandSession } from '@/app/lib/brand-session';
 import { getBrandAccount } from '@/app/lib/brand-workspace';
+import { INDUSTRY_CATEGORIES, isHighRiskCategory } from '@/app/lib/high-risk-compliance';
 import {
   calculatePayInSurchargeCents,
   createPendingTopup,
@@ -61,28 +62,45 @@ export async function POST(request: NextRequest) {
 
   const feeBreakdown = calculatePayInSurchargeCents(amountCents, method);
 
-  if (!isStripeConfigured()) {
-    return NextResponse.json(
-      {
-        success: false,
-        code: 'stripe_not_configured',
-        error:
-          'Online-Aufladungen über Stripe Connect werden gerade freigeschaltet. Schreib uns an hi@ugc-vz.de, um dein Kampagnenguthaben sofort per Rechnung zu aktivieren.',
-        preview: {
-          amountCents,
-          ...feeBreakdown,
-          method,
-        },
-      },
-      { status: 503 },
-    );
-  }
-
   try {
     const sql = getDatabase();
     const brand = await getBrandAccount(sql, brandId);
     if (!brand) {
       return NextResponse.json({ success: false, error: 'Marken-Konto nicht gefunden.' }, { status: 404 });
+    }
+
+    // HARD STRIPE-SCHUTZSCHIRM: High-Risk / Restricted Businesses (Krypto, Peptide, CBD, iGaming)
+    // duerfen niemals versehentlich ueber das Standard-Stripe-Connect-Konto abgerechnet werden!
+    if (brand.billingTier === 'high_risk_custom' || isHighRiskCategory(brand.industryCategory)) {
+      const meta = INDUSTRY_CATEGORIES[brand.industryCategory] || INDUSTRY_CATEGORIES.other_high_risk;
+      const feePct = Math.round((brand.highRiskFeeBps || meta.defaultFeeBps) / 100);
+      return NextResponse.json(
+        {
+          success: false,
+          code: 'high_risk_stripe_blocked',
+          industryCategory: brand.industryCategory,
+          highRiskFeePercent: feePct,
+          error: `Dein Konto ist als Sonderbranche (${meta.shortLabel}) eingestuft. Stripe akzeptiert diese Branche nicht regulär – die Aufladung erfolgt über SEPA-Vorkasse, High-Risk-PSP oder Sonder-Settlement (${feePct} % Servicegebühr). Starte direkt im Wallet den kurzen Compliance-Check per Call oder E-Mail.`,
+        },
+        { status: 403 },
+      );
+    }
+
+    if (!isStripeConfigured()) {
+      return NextResponse.json(
+        {
+          success: false,
+          code: 'stripe_not_configured',
+          error:
+            'Online-Aufladungen über Stripe Connect werden gerade freigeschaltet. Schreib uns an hi@ugc-vz.de, um dein Kampagnenguthaben sofort per Rechnung zu aktivieren.',
+          preview: {
+            amountCents,
+            ...feeBreakdown,
+            method,
+          },
+        },
+        { status: 503 },
+      );
     }
 
     const customer = await ensureStripeBrandCustomerAndVirtualIban(sql, brand);

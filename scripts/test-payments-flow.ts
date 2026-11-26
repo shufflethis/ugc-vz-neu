@@ -32,6 +32,11 @@ import {
 } from '../app/lib/credit-note-generator';
 import Stripe from 'stripe';
 import { constructVerifiedStripeEvent } from '../app/lib/stripe-connect';
+import {
+  detectHighRiskKeywords,
+  getHighRiskFeeBps,
+  isHighRiskCategory,
+} from '../app/lib/high-risk-compliance';
 
 function createPgliteSqlAdapter(db: PGlite) {
   const queryFn = async (text: string, params: unknown[] = []) => {
@@ -69,8 +74,8 @@ async function applyMigrations(db: PGlite) {
       try {
         await db.exec(stmt);
       } catch (err) {
-        // Ignore optional pgvector or RLS role issues in PGlite while strictly failing on 024 & 026
-        if (file.startsWith('024_') || file.startsWith('026_')) throw err;
+        // Ignore optional pgvector or RLS role issues in PGlite while strictly failing on 024, 026 & 027
+        if (file.startsWith('024_') || file.startsWith('026_') || file.startsWith('027_')) throw err;
       }
     }
   }
@@ -614,9 +619,82 @@ async function run() {
     /Nicht genügend Guthaben im Marken-Wallet/,
   );
 
+  // 9. Migration 027: Core-Creator Retainer, In-Portal-Nachrichten & High-Risk Compliance Shield
+  const hrPeptide = detectHighRiskKeywords('nextgenpeptide.de', 'Skincare-Linie mit Peptiden');
+  assert.equal(hrPeptide.flagged, true);
+  assert.equal(hrPeptide.suggestedCategory, 'peptides_supplements');
+  assert.equal(hrPeptide.skincareNuance, true);
+  assert.equal(hrPeptide.feePercent, 22);
+
+  const hrCrypto = detectHighRiskKeywords('fomo App', 'Krypto Trading Wallet');
+  assert.equal(hrCrypto.flagged, true);
+  assert.equal(hrCrypto.suggestedCategory, 'crypto_web3');
+  assert.equal(isHighRiskCategory('crypto_web3'), true);
+  assert.equal(getHighRiskFeeBps('igaming_trading'), 2500);
+
+  const hrNormal = detectHighRiskKeywords('Nordic Care GmbH', 'Bio-Kaffee & Keramik Tassen');
+  assert.equal(hrNormal.flagged, false);
+  assert.equal(hrNormal.suggestedCategory, 'standard');
+
+  // High-Risk Brand Account + Compliance Request persistence
+  const [hrBrand] = await sql.query(
+    `INSERT INTO brand_accounts (
+       email, contact_name, company_name, industry_category, billing_tier, compliance_status, high_risk_fee_bps
+     ) VALUES (
+       'nabil@nextgenpeptide.de', 'Nabil', 'nextgenpeptide.de', 'peptides_supplements', 'high_risk_custom', 'review_required', 2200
+     ) RETURNING id, billing_tier, high_risk_fee_bps`,
+  );
+  assert.equal(hrBrand.billing_tier, 'high_risk_custom');
+  assert.equal(Number(hrBrand.high_risk_fee_bps), 2200);
+
+  const [compReq] = await sql.query(
+    `INSERT INTO brand_compliance_requests (
+       brand_id, industry_category, preferred_contact, phone_or_handle, preferred_psp, estimated_monthly_budget_eur, message
+     ) VALUES ($1, 'peptides_supplements', 'call', '+49170123456', 'invoice_sepa', 3000, 'Core-Creator Skincare Paket')
+     RETURNING id, status`,
+    [hrBrand.id],
+  );
+  assert.equal(compReq.status, 'open');
+
+  // Core-Creator Retainer Campaign + Portal Message Thread (Brand <-> Creator)
+  const [campRetainer] = await sql.query(
+    `INSERT INTO brand_campaigns (
+       public_id, brand_id, title, brand_display_name, compensation_model,
+       retainer_monthly_eur, retainer_videos_per_month, retainer_min_months, retainer_perks,
+       affiliate_enabled, affiliate_type, affiliate_rate_bps, requires_high_risk_billing, platforms
+     ) VALUES (
+       'CMP-4444DDDD', $1, 'Core-Creator Partnerschaft', 'nextgenpeptide.de', 'retainer',
+       1000, 4, 3, 'Monatlicher Store-Credit + 20 % Community-Code',
+       true, 'percent', 2000, true, ARRAY['tiktok', 'instagram']
+     ) RETURNING id`,
+    [hrBrand.id],
+  );
+  const [appRet] = await sql.query(
+    `INSERT INTO brand_campaign_applications (campaign_id, creator_id, status)
+     VALUES ($1, $2, 'selected') RETURNING id`,
+    [campRetainer.id, creatorIds[2]],
+  );
+  await sql.query(
+    `INSERT INTO campaign_messages (campaign_id, application_id, sender_role, sender_name, body)
+     VALUES ($1, $2, 'brand', 'nextgenpeptide.de', 'Hallo Tatjana, wir schlagen 1.000 €/Monat + 20 % vor.')`,
+    [campRetainer.id, appRet.id],
+  );
+  await sql.query(
+    `INSERT INTO campaign_messages (campaign_id, application_id, sender_role, sender_name, body)
+     VALUES ($1, $2, 'creator', 'Creator 3', 'Klingt super – lass uns im Portal starten!')`,
+    [campRetainer.id, appRet.id],
+  );
+  const thread = await sql.query(
+    `SELECT sender_role, body FROM campaign_messages WHERE application_id = $1 ORDER BY created_at ASC`,
+    [appRet.id],
+  );
+  assert.equal(thread.length, 2);
+  assert.equal(thread[0].sender_role, 'brand');
+  assert.equal(thread[1].sender_role, 'creator');
+
   await db.close();
   console.log(
-    'OK: Etappe 6 + Mig 026 Payments Flow (0% SEPA / 3% Karte, Dual-Secret Webhooks, idempotent Webhooks, 5x Concurrency Cap-Safety, Close Refund, KYC+DAC7 Guardrails, 4x DACH ZUGFeRD Gutschrift PDFs, Brand Invoice PDF, Fixed-Video Escrow & Affiliate Kickbacks).',
+    'OK: Etappe 6 + Mig 026 + Mig 027 Payments Flow (0% SEPA / 3% Karte, Dual-Secret Webhooks, 5x Concurrency Cap-Safety, Close Refund, KYC+DAC7, ZUGFeRD PDFs, Fixed-Video Escrow, Affiliate Kickbacks, Core-Creator Retainer, Portal Chat & High-Risk Shield).',
   );
 }
 
