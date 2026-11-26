@@ -31,11 +31,55 @@ export const getSocialOAuthAvailability = (): SocialOAuthAvailability => ({
   youtube: isYouTubeApiConfigured(),
 });
 
+export const getMetaGraphApiVersion = (): string =>
+  (process.env.META_GRAPH_API_VERSION || 'v22.0').trim();
+
+export const getInstagramLoginConfigId = (): string =>
+  (process.env.INSTAGRAM_LOGIN_CONFIG_ID || '').trim();
+
+export const isInstagramFacebookBusinessLogin = (): boolean =>
+  Boolean(getInstagramLoginConfigId()) || process.env.INSTAGRAM_AUTH_MODE === 'facebook_business';
+
 export const getTikTokOAuthScopes = (): string =>
   (process.env.TIKTOK_OAUTH_SCOPES || 'user.info.basic,user.info.profile,user.info.stats,video.list').trim();
 
 export const getInstagramOAuthScopes = (): string =>
   (process.env.INSTAGRAM_OAUTH_SCOPES || 'instagram_business_basic,instagram_business_manage_insights').trim();
+
+export const getInstagramFacebookBusinessScopes = (): string =>
+  (process.env.INSTAGRAM_FB_SCOPES || 'instagram_basic,instagram_manage_insights,pages_show_list').trim();
+
+export function buildInstagramAuthorizeUrl(input: {
+  redirectUri: string;
+  stateNonce: string;
+}): string {
+  const appId = process.env.INSTAGRAM_APP_ID!.trim();
+
+  if (isInstagramFacebookBusinessLogin()) {
+    const version = getMetaGraphApiVersion();
+    const configId = getInstagramLoginConfigId();
+    const authorizeUrl = new URL(`https://www.facebook.com/${version}/dialog/oauth`);
+    authorizeUrl.searchParams.set('client_id', appId);
+    authorizeUrl.searchParams.set('redirect_uri', input.redirectUri);
+    authorizeUrl.searchParams.set('response_type', 'code');
+    authorizeUrl.searchParams.set('state', input.stateNonce);
+    if (configId) {
+      authorizeUrl.searchParams.set('config_id', configId);
+      authorizeUrl.searchParams.set('override_default_response_type', 'true');
+    } else {
+      authorizeUrl.searchParams.set('scope', getInstagramFacebookBusinessScopes());
+    }
+    return authorizeUrl.toString();
+  }
+
+  const authorizeUrl = new URL('https://www.instagram.com/oauth/authorize');
+  authorizeUrl.searchParams.set('client_id', appId);
+  authorizeUrl.searchParams.set('redirect_uri', input.redirectUri);
+  authorizeUrl.searchParams.set('response_type', 'code');
+  authorizeUrl.searchParams.set('scope', getInstagramOAuthScopes());
+  authorizeUrl.searchParams.set('state', input.stateNonce);
+  return authorizeUrl.toString();
+}
 
 const getOAuthStateSecret = () => {
   const secret = process.env.BRAND_SESSION_SECRET || process.env.CREATOR_SESSION_SECRET;

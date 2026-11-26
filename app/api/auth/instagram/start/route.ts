@@ -2,7 +2,7 @@ import crypto from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { CREATOR_SESSION_COOKIE, verifySession } from '@/app/lib/creator-session';
 import {
-  getInstagramOAuthScopes,
+  buildInstagramAuthorizeUrl,
   isInstagramOAuthConfigured,
   signOAuthState,
   SOCIAL_OAUTH_STATE_COOKIE,
@@ -25,14 +25,9 @@ export async function GET(request: NextRequest) {
   const nonce = crypto.randomBytes(16).toString('base64url');
   const signedState = signOAuthState({ creatorId, provider: 'instagram', nonce });
 
-  const authorizeUrl = new URL('https://www.instagram.com/oauth/authorize');
-  authorizeUrl.searchParams.set('client_id', process.env.INSTAGRAM_APP_ID!.trim());
-  authorizeUrl.searchParams.set('redirect_uri', redirectUri);
-  authorizeUrl.searchParams.set('response_type', 'code');
-  authorizeUrl.searchParams.set('scope', getInstagramOAuthScopes());
-  authorizeUrl.searchParams.set('state', nonce);
+  const authorizeUrl = buildInstagramAuthorizeUrl({ redirectUri, stateNonce: nonce });
 
-  const response = NextResponse.redirect(authorizeUrl.toString(), 303);
+  const response = NextResponse.redirect(authorizeUrl, 303);
   response.cookies.set(SOCIAL_OAUTH_STATE_COOKIE, signedState, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',

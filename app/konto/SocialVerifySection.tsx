@@ -21,6 +21,10 @@ const OAUTH_STATUS_MESSAGES: Record<string, { ok: boolean; text: string }> = {
   instagram_invalid: { ok: false, text: 'Die Instagram-Verbindung wurde abgebrochen oder ist abgelaufen. Bitte starte sie erneut.' },
   tiktok_error: { ok: false, text: 'TikTok konnte gerade nicht verbunden werden. Alternativ kannst du unten sofort den Bio-Code nutzen.' },
   instagram_error: { ok: false, text: 'Instagram konnte gerade nicht verbunden werden. Alternativ kannst du unten sofort den Bio-Code nutzen.' },
+  instagram_no_business_account: {
+    ok: false,
+    text: 'Es wurde kein mit deiner Facebook-Seite verknüpftes Instagram-Business- oder Creator-Konto gefunden. Bitte verknüpfe dein professionelles Instagram-Profil mit einer Facebook-Seite und versuche es erneut, oder nutze unten den Bio-Code.',
+  },
 };
 
 export default function SocialVerifySection({

@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { PGlite } from '@electric-sql/pglite';
 import {
+  buildInstagramAuthorizeUrl,
   decryptSocialToken,
   encryptSocialToken,
   upsertVerifiedOAuthSocialAccount,
@@ -89,6 +90,22 @@ async function main() {
   assert.equal(decryptSocialToken('invalid'), null);
   console.log('OK: AES-256-GCM Token-Verschluesselung & Manipulationsschutz');
 
+  // 2b. Meta Unified Login (Facebook Login for Business) Authorize URL
+  process.env.INSTAGRAM_APP_ID = '30375935252007802';
+  process.env.INSTAGRAM_LOGIN_CONFIG_ID = '1015225364970318';
+  const fbAuthUrl = new URL(buildInstagramAuthorizeUrl({
+    redirectUri: 'https://ugc-vz.de/api/auth/instagram/callback',
+    stateNonce: 'nonce-123',
+  }));
+  assert.equal(fbAuthUrl.origin, 'https://www.facebook.com');
+  assert.equal(fbAuthUrl.pathname, '/v22.0/dialog/oauth');
+  assert.equal(fbAuthUrl.searchParams.get('client_id'), '30375935252007802');
+  assert.equal(fbAuthUrl.searchParams.get('config_id'), '1015225364970318');
+  assert.equal(fbAuthUrl.searchParams.get('response_type'), 'code');
+  assert.equal(fbAuthUrl.searchParams.get('override_default_response_type'), 'true');
+  assert.equal(fbAuthUrl.searchParams.get('scope'), null, 'Bei config_id darf kein scope-Parameter mitgesendet werden');
+  console.log('OK: Meta Unified Login (Facebook Login for Business) Authorize-URL mit config_id');
+
   // 3. PGlite DB Integration (Migrations 001..025 + Public View Safety + Official View Sync)
   const db = new PGlite();
   await runMigrations(db);
@@ -153,10 +170,10 @@ async function main() {
     platform: 'instagram',
     handle: '@leatest',
     url: 'https://www.instagram.com/leatest/',
-    providerAccountId: 'ig-user-1',
+    providerAccountId: '17841400000000001',
     followers: 22000,
-    scope: 'instagram_business_basic,instagram_business_manage_insights',
-    accessToken: 'ig-long-lived-token-abc',
+    scope: 'facebook_business:instagram_basic,instagram_manage_insights,pages_show_list',
+    accessToken: 'fb-long-lived-user-token-abc',
     expiresInSeconds: 5184000,
   });
 
@@ -242,9 +259,9 @@ async function main() {
       }), { status: 200 });
     }
 
-    // Instagram Graph API me/media
-    if (url.startsWith('https://graph.instagram.com/me/media')) {
-      assert.ok(url.includes('access_token=ig-long-lived-token-abc'));
+    // Meta Graph API v22.0 (Unified Login / Facebook Login for Business) /{ig-user-id}/media
+    if (url.startsWith('https://graph.facebook.com/v22.0/17841400000000001/media')) {
+      assert.ok(url.includes('access_token=fb-long-lived-user-token-abc'));
       return new Response(JSON.stringify({
         data: [{
           id: '17999999999999999',
@@ -255,8 +272,8 @@ async function main() {
       }), { status: 200 });
     }
 
-    // Instagram Graph API insights
-    if (url.startsWith('https://graph.instagram.com/17999999999999999/insights')) {
+    // Meta Graph API v22.0 /{media-id}/insights
+    if (url.startsWith('https://graph.facebook.com/v22.0/17999999999999999/insights')) {
       return new Response(JSON.stringify({
         data: [
           { name: 'views', values: [{ value: 4500 }] },

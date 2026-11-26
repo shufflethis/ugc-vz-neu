@@ -2,6 +2,8 @@ import type { getDatabase } from '@/app/lib/database';
 import {
   decryptSocialToken,
   encryptSocialToken,
+  getMetaGraphApiVersion,
+  isInstagramFacebookBusinessLogin,
   isTikTokOAuthConfigured,
   isYouTubeApiConfigured,
 } from '@/app/lib/social-oauth';
@@ -257,13 +259,31 @@ export async function fetchInstagramMediaMetrics(
   shortcode: string,
   accessToken: string,
   fetchFn: FetchLike = fetch,
+  options: {
+    mode?: 'facebook_business' | 'instagram_direct';
+    igUserId?: string | null;
+    graphVersion?: string;
+  } = {},
 ): Promise<SocialMetricResult> {
   if (!accessToken.trim()) {
     return { ok: false, skippedUnconfigured: true, error: 'instagram_token_missing' };
   }
+  const mode = options.mode || 'instagram_direct';
+  const graphVersion = options.graphVersion || getMetaGraphApiVersion();
+  const apiBase = mode === 'facebook_business'
+    ? `https://graph.facebook.com/${graphVersion}`
+    : 'https://graph.instagram.com';
+
+  if (mode === 'facebook_business' && !options.igUserId?.trim()) {
+    return { ok: false, skippedUnconfigured: true, error: 'instagram_business_account_id_missing' };
+  }
+
   try {
     let nextUrl: string | null = (() => {
-      const url = new URL('https://graph.instagram.com/me/media');
+      const mediaPath = mode === 'facebook_business'
+        ? `${apiBase}/${encodeURIComponent(options.igUserId!.trim())}/media`
+        : `${apiBase}/me/media`;
+      const url = new URL(mediaPath);
       url.searchParams.set('fields', 'id,permalink,media_type,like_count,comments_count');
       url.searchParams.set('limit', '50');
       url.searchParams.set('access_token', accessToken.trim());
@@ -334,7 +354,7 @@ export async function fetchInstagramMediaMetrics(
 
     // Fetch official views (Meta Graph API v22+) with graceful fallback to legacy plays metric.
     const fetchInsights = async (metrics: string) => {
-      const url = new URL(`https://graph.instagram.com/${encodeURIComponent(matched!.id)}/insights`);
+      const url = new URL(`${apiBase}/${encodeURIComponent(matched!.id)}/insights`);
       url.searchParams.set('metric', metrics);
       url.searchParams.set('access_token', accessToken.trim());
       const res = await fetchFn(url.toString(), { signal: AbortSignal.timeout(8_000) });
@@ -398,6 +418,8 @@ interface SubmissionSyncRow {
   total_budget_eur: number | null;
   compensation_model: string;
   social_account_id: string | null;
+  provider_account_id: string | null;
+  oauth_scope: string | null;
   oauth_access_token_enc: string | null;
   oauth_refresh_token_enc: string | null;
   oauth_token_expires_at: string | null;
@@ -450,13 +472,15 @@ export async function syncActiveCampaignSubmissionViews(
          c.total_budget_eur,
          c.compensation_model,
          sa.id AS social_account_id,
+         sa.provider_account_id,
+         sa.oauth_scope,
          sa.oauth_access_token_enc,
          sa.oauth_refresh_token_enc,
          sa.oauth_token_expires_at
        FROM brand_campaign_submissions s
        JOIN brand_campaigns c ON c.id = s.campaign_id
        LEFT JOIN LATERAL (
-         SELECT id, oauth_access_token_enc, oauth_refresh_token_enc, oauth_token_expires_at
+         SELECT id, provider_account_id, oauth_scope, oauth_access_token_enc, oauth_refresh_token_enc, oauth_token_expires_at
          FROM creator_social_accounts
          WHERE creator_id = s.creator_id
            AND platform = s.platform
@@ -540,7 +564,15 @@ export async function syncActiveCampaignSubmissionViews(
         if (!accessToken) {
           result = { ok: false, skippedUnconfigured: true, error: 'instagram_oauth_not_connected' };
         } else {
-          result = await fetchInstagramMediaMetrics(shortcode, accessToken, fetchFn);
+          const scope = (row.oauth_scope || '').toLowerCase();
+          const useFacebookBusiness =
+            scope.startsWith('facebook_business:')
+            || scope.includes('instagram_manage_insights')
+            || (isInstagramFacebookBusinessLogin() && Boolean(row.provider_account_id));
+          result = await fetchInstagramMediaMetrics(shortcode, accessToken, fetchFn, {
+            mode: useFacebookBusiness ? 'facebook_business' : 'instagram_direct',
+            igUserId: row.provider_account_id,
+          });
         }
       }
     } else {
