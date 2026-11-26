@@ -165,7 +165,18 @@ export default function QuickBriefCard() {
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="mt-8">
+          <form
+            onSubmit={handleSubmit}
+            aria-label="Kampagnen-Schnell-Brief erstellen"
+            aria-describedby="qb-form-error"
+            className="mt-8"
+            {...({
+              toolname: 'create_quick_campaign_brief',
+              tooldescription:
+                'Erstellt einen 60-Sekunden-Kampagnen-Brief (Pay-per-View TKP oder Fixpreis pro Video, optional mit 10 % Affiliate-Kickback) und speichert ihn für das Marken-Konto.',
+              toolautosubmit: 'false',
+            } as Record<string, string>)}
+          >
             <div className="grid gap-6 lg:grid-cols-3">
               {/* Schritt 1 */}
               <div className="rounded-[12px] border border-[#DCE2EA] bg-[#F5F7FA]/75 p-5">
@@ -179,7 +190,12 @@ export default function QuickBriefCard() {
                 </div>
                 <textarea
                   id="qb-goal"
+                  name="goal"
                   rows={3}
+                  autoComplete="off"
+                  aria-describedby="qb-goal-hint"
+                  aria-invalid={Boolean(error)}
+                  aria-errormessage={error ? 'qb-form-error' : undefined}
                   value={goal}
                   onChange={(e) => {
                     setGoal(e.target.value);
@@ -187,7 +203,14 @@ export default function QuickBriefCard() {
                   }}
                   placeholder="z. B. unsere Cap im Alltag, 20 % Rabatt im Shop"
                   className="mt-3 w-full resize-none rounded-[12px] border border-[#DCE2EA] bg-white px-3.5 py-3 text-sm text-[#202124] placeholder-[#5C6470]/70 outline-none transition-colors focus:border-[#06458F] focus:ring-4 focus:ring-[#06458F]/15"
+                  {...({
+                    toolparamdescription:
+                      'Kurzes Kampagnen-Briefing: Produkt, Zielgruppe, Video-Idee und optionaler Rabattcode.',
+                  } as Record<string, string>)}
                 />
+                <p id="qb-goal-hint" className="sr-only">
+                  Beschreibe kurz dein Produkt, das gewünschte Format und den Call-to-Action für Creator.
+                </p>
                 <div className="mt-2.5 flex flex-wrap gap-1.5">
                   {QUICK_EXAMPLES.map((example) => (
                     <button
@@ -263,14 +286,23 @@ export default function QuickBriefCard() {
                       </label>
                       <input
                         id="qb-cpm"
+                        name="price_per_1000_views_eur"
                         type="text"
                         inputMode="decimal"
+                        autoComplete="off"
+                        required
+                        aria-describedby="qb-budget-hint"
+                        aria-invalid={Boolean(error)}
+                        aria-errormessage={error ? 'qb-form-error' : undefined}
                         value={pricePerThousandInput}
                         onChange={(e) => {
                           setPricePerThousandInput(e.target.value);
                           setExpandedAll(true);
                         }}
                         className="mt-1.5 min-h-[44px] w-full rounded-[12px] border border-[#DCE2EA] bg-white px-3 text-sm font-semibold tabular-nums text-[#202124] outline-none focus:border-[#06458F] focus:ring-4 focus:ring-[#06458F]/15"
+                        {...({
+                          toolparamdescription: 'Vergütung pro 1.000 geprüfte Views in Euro (ab 0,50 EUR).',
+                        } as Record<string, string>)}
                       />
                     </div>
                   ) : (
@@ -280,15 +312,24 @@ export default function QuickBriefCard() {
                       </label>
                       <input
                         id="qb-video-fee"
+                        name="fixed_price_per_video_eur"
                         type="number"
                         min={20}
                         step={25}
+                        autoComplete="off"
+                        required
+                        aria-describedby="qb-budget-hint"
+                        aria-invalid={Boolean(error)}
+                        aria-errormessage={error ? 'qb-form-error' : undefined}
                         value={budgetPerVideoInput}
                         onChange={(e) => {
                           setBudgetPerVideoInput(e.target.value);
                           setExpandedAll(true);
                         }}
                         className="mt-1.5 min-h-[44px] w-full rounded-[12px] border border-[#DCE2EA] bg-white px-3 text-sm font-semibold tabular-nums text-[#202124] outline-none focus:border-[#06458F] focus:ring-4 focus:ring-[#06458F]/15"
+                        {...({
+                          toolparamdescription: 'Festes Honorar pro freigegebenem Video in Euro (ab 20 EUR).',
+                        } as Record<string, string>)}
                       />
                     </div>
                   )}
@@ -298,18 +339,30 @@ export default function QuickBriefCard() {
                     </label>
                     <input
                       id="qb-budget"
+                      name="budget_cap_eur"
                       type="number"
                       min={50}
                       step={50}
+                      autoComplete="off"
+                      required
+                      aria-describedby="qb-budget-hint"
+                      aria-invalid={Boolean(error)}
+                      aria-errormessage={error ? 'qb-form-error' : undefined}
                       value={budgetCapInput}
                       onChange={(e) => {
                         setBudgetCapInput(e.target.value);
                         setExpandedAll(true);
                       }}
                       className="mt-1.5 min-h-[44px] w-full rounded-[12px] border border-[#DCE2EA] bg-white px-3 text-sm font-semibold tabular-nums text-[#202124] outline-none focus:border-[#06458F] focus:ring-4 focus:ring-[#06458F]/15"
+                      {...({
+                        toolparamdescription: 'Verbindliche maximale Budget-Obergrenze in Euro (ab 50 EUR).',
+                      } as Record<string, string>)}
                     />
                   </div>
                 </div>
+                <p id="qb-budget-hint" className="sr-only">
+                  Im Kampagnen-Budget sind 15 Prozent Servicegebühr enthalten, Creator zahlen 0 Prozent.
+                </p>
                 <div className="mt-3 flex flex-wrap gap-1.5">
                   {[500, 1000, 2500].map((preset) => (
                     <button
@@ -329,8 +382,10 @@ export default function QuickBriefCard() {
                     </button>
                   ))}
                 </div>
-                <label className="mt-3 flex cursor-pointer items-center gap-2 text-xs font-medium text-[#5C6470]">
+                <label htmlFor="qb-affiliate" className="mt-3 flex cursor-pointer items-center gap-2 text-xs font-medium text-[#5C6470]">
                   <input
+                    id="qb-affiliate"
+                    name="affiliate_bonus_enabled"
                     type="checkbox"
                     checked={affiliateBonus}
                     onChange={(e) => {
@@ -338,6 +393,9 @@ export default function QuickBriefCard() {
                       setExpandedAll(true);
                     }}
                     className="h-3.5 w-3.5 rounded accent-[#06458F]"
+                    {...({
+                      toolparamdescription: 'Aktiviert zusätzlich 10 % Affiliate-Kickback pro bestätigtem Sale.',
+                    } as Record<string, string>)}
                   />
                   <span>Zusätzlich 10 % Affiliate-Kickback pro Sale</span>
                 </label>
@@ -385,11 +443,15 @@ export default function QuickBriefCard() {
               </div>
             </div>
 
-            {error && (
-              <p role="alert" className="mt-3 text-sm font-medium text-[#D93025]">
-                {error}
-              </p>
-            )}
+            <div
+              id="qb-form-error"
+              role="alert"
+              aria-live="assertive"
+              aria-atomic="true"
+              className={error ? 'mt-3 text-sm font-medium text-[#D93025]' : 'sr-only'}
+            >
+              {error}
+            </div>
           </form>
         </div>
       </div>

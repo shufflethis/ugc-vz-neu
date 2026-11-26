@@ -30,46 +30,36 @@ export async function GET() {
 
   const content = `# UGC VZ
 
-> UGC VZ ist eine Plattform für Creator-Kampagnen in Deutschland, Österreich und der Schweiz.
-> Marken legen ein kurzes Briefing, einen Preis pro 1.000 Views und eine feste Budget-Obergrenze fest.
-> Creator posten auf TikTok, Instagram Reels oder YouTube Shorts. Bezahlt werden nur geprüfte Views.
-> Betreiber: track by track GmbH (Team der Social-Media-Agentur famefact), Berlin.
+> UGC VZ ist eine Plattform für Creator-Kampagnen im DACH-Raum (Deutschland, Österreich, Schweiz). Marken starten Kampagnen nach geprüften Views (TKP), Fixpreis pro Video, Core-Creator-Retainer oder Affiliate-Kickbacks mit fester Budget-Obergrenze. Creator zahlen 0 % Plattformgebühr. Betreiber: track by track GmbH (Team famefact), Berlin.
 
-## Für Marken
+Aktive Creator-Profile: ${activeCreators} (Stand ${standDate}). Öffentliche Suchergebnisse enthalten niemals private Kontaktdaten.
 
-- View-Kampagne: Preis pro 1.000 geprüfte Views, feste Budget-Obergrenze, kein Abo.
-- Creator-Produktion: Produktvideos und Ad-Creatives direkt bei Creatorn beauftragen.
-- Konto kostenlos. Servicegebühr: 15 % fest, schon im Budget enthalten (Creator zahlen 0 %).
-- Start: ${baseUrl}/brands
+## Für Marken & Creator
 
-## Für Creator
+- [Für Marken & Creator-Suche](${baseUrl}/brands): KI-Suche in 20 Kategorien, feste Budget-Obergrenze, kein Abo, 15 % Marken-Servicegebühr im Budget enthalten.
+- [Marken-Workspace & Kampagnenstart](${baseUrl}/brand): Passwortloser Zugang per 6-stelligem Code für Pay-per-View, Pay-per-Video, Retainer und Affiliate-Kampagnen.
+- [Für Creator](${baseUrl}/creator): Kostenlose Anmeldung, 0 % Plattformgebühr, 100 % Auszahlung des Satzes über Stripe Connect.
+- [Preise & Gebührenmodell](${baseUrl}/preise): Transparente Konditionen für Marken (15 % Servicegebühr, SEPA 0 %, Karte +3 %) und Creator (0 %).
+- [Häufige Fragen (FAQ)](${baseUrl}/faq): Antworten zu View-Prüfung, Abrechnung, Rechten und Auszahlungen.
+- [Wissen & Ratgeber](${baseUrl}/wissen): DACH-Guides zu UGC-Preisen, Verträgen, Briefings und Plattform-Vergleichen.
 
-- Anmeldung kostenlos. 0 % Plattformgebühr für Creator.
-- Jede Kampagne zeigt vorher ihren Satz pro 1.000 Views. Der Satz kommt vollständig beim Creator an.
-- Start: ${baseUrl}/creator
+## Schnittstellen für KI-Agenten
 
-## Zahlen (live)
+- [Authentifizierung & Zugangsregeln (auth.md)](${baseUrl}/auth.md): Dokumentation für anonymen Lesezugriff, Web Bot Auth (RFC 9421 Ed25519), OTP-Sessions und Shop-Webhooks.
+- [OAuth Protected Resource Metadata (RFC 9728)](${baseUrl}/.well-known/oauth-protected-resource): Maschinenlesbare Auth- & Scope-Metadaten für Agenten.
+- [MCP Server Manifest](${baseUrl}/.well-known/mcp.json): Model Context Protocol Discovery für \`POST ${baseUrl}/api/mcp\`.
+- [WebMCP Browser Tools](${baseUrl}/.well-known/webmcp): Client-seitige Browser-Tools via \`navigator.modelContext\` plus deklarative Formulare (Human-in-the-loop).
+- [OpenAPI 3.1 Spezifikation](${baseUrl}/openapi.json): Vollständige REST-API-Beschreibung für \`/api/v1/*\`.
+- [A2A Agent Card](${baseUrl}/.well-known/agent-card.json): Agent-to-Agent-Protokollkarte für \`POST ${baseUrl}/a2a\`.
+- [Vollversion für LLMs (llms-full.txt)](${baseUrl}/llms-full.txt): Ausführliche Dokumentation aller Fakten, Endpunkte und Preisregeln.
 
-- Aktive Creator-Profile: ${activeCreators} (Stand ${standDate})
+## Optional
 
-## Für KI-Agenten
-
-- MCP: ${baseUrl}/api/mcp · REST: ${baseUrl}/openapi.json · Vollversion: ${baseUrl}/llms-full.txt
-- Öffentliche Suchergebnisse enthalten niemals private Kontaktdaten (E-Mail, Telefon, Klarname).
-- Achtung: request_outreach löst echte E-Mails aus und erfordert ein Brand-Konto.
-- WebMCP: ${baseUrl}/.well-known/webmcp
-
-## Wichtige Seiten
-
-- ${baseUrl}/brands
-- ${baseUrl}/creator
-- ${baseUrl}/preise
-- ${baseUrl}/faq
-- ${baseUrl}/wissen
-- ${baseUrl}/developers
-- ${baseUrl}/about
-- ${baseUrl}/impressum
-- ${baseUrl}/datenschutz
+- [Entwickler-Dokumentation](${baseUrl}/developers): Technische Übersicht zu MCP, WebMCP, REST, A2A und Web Bot Auth.
+- [Brand Kit & Presse](${baseUrl}/brandkit): Offizielle Logos, Farben, Produktfakten und Pressekontakt.
+- [Über UGC VZ](${baseUrl}/about): Team, Standort Berlin und Betreiberinformationen.
+- [Impressum](${baseUrl}/impressum): Rechtliche Anbieterkennzeichnung der track by track GmbH.
+- [Datenschutz](${baseUrl}/privacy): DSGVO-Informationen zur Datenverarbeitung.
 `;
 
   return new NextResponse(content, {

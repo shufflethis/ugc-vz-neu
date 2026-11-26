@@ -10,6 +10,9 @@ export async function GET() {
     'Allow: /api/v1/',
     'Allow: /.well-known/',
     'Allow: /a2a',
+    'Allow: /auth.md',
+    'Allow: /llms.txt',
+    'Allow: /llms-full.txt',
     'Allow: /_next/static/',
     'Allow: /_next/image',
     'Disallow: /api/',
@@ -18,6 +21,7 @@ export async function GET() {
     'Disallow: /kooperationen/',
     'Disallow: /demo/',
     'Disallow: /_next/webpack-hmr',
+    'Content-Signal: ai-train=no, search=yes, ai-input=yes',
   ].join('\n');
 
   const robotsTxt = [

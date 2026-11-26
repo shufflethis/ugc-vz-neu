@@ -34,6 +34,8 @@ const manifest = {
     })),
   ],
   related: {
+    auth: `${BASE}/auth.md`,
+    oauthProtectedResource: `${BASE}/.well-known/oauth-protected-resource`,
     mcp: `${BASE}/.well-known/mcp.json`,
     openapi: `${BASE}/openapi.json`,
     llms: `${BASE}/llms.txt`,

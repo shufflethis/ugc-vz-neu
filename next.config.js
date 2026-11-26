@@ -194,6 +194,10 @@ const nextConfig = {
             key: 'Strict-Transport-Security',
             value: 'max-age=63072000; includeSubDomains; preload',
           },
+          {
+            key: 'Content-Signal',
+            value: 'ai-train=no, search=yes, ai-input=yes',
+          },
         ],
       },
       {
@@ -243,7 +247,14 @@ const nextConfig = {
       },
       {
         source: '/',
-        headers: [{ key: 'Vary', value: 'Accept' }],
+        headers: [
+          { key: 'Vary', value: 'Accept' },
+          {
+            key: 'Link',
+            value:
+              '<https://ugc-vz.de/llms.txt>; rel="describedby"; type="text/markdown", <https://ugc-vz.de/.well-known/webmcp>; rel="webmcp"; type="application/json", <https://ugc-vz.de/.well-known/oauth-protected-resource>; rel="oauth-protected-resource"; type="application/json", <https://ugc-vz.de/auth.md>; rel="authenticate"; type="text/markdown"',
+          },
+        ],
       },
       {
         source: '/wissen/:slug',

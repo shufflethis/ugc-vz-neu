@@ -413,9 +413,30 @@ export default function SearchBox({ initialQuery = '', showFeatured = false, hid
           {NICHE_INDEX.map(({ chip: label, query }) => <button key={label} type="button" disabled={isLoading} onClick={() => { setSearchQuery(query); searchInputRef.current?.focus(); }} className="rounded-full border border-hairline bg-surface px-1 py-2 text-[11px] font-medium text-ink transition-colors hover:border-geo-violet hover:bg-white focus-visible:ring-2 focus-visible:ring-geo-violet disabled:opacity-50 min-[375px]:px-2 sm:px-3 sm:text-sm">{label}</button>)}
         </div>
       )}
-      {/* Search input */}
-      <div className={styles.searchInputContainer}>
+      {/* Search input (Declarative WebMCP form + ARIA error linkage) */}
+      <form
+        className={styles.searchInputContainer}
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleStartSearch();
+        }}
+        aria-label="Creator-Suche"
+        aria-describedby="creator-search-error"
+        {...({
+          toolname: 'search_creators_form',
+          tooldescription:
+            'Durchsucht verifizierte UGC-Creator im DACH-Raum in 20 Kategorien anhand eines freien Briefings zu Produkt, Zielgruppe und Format.',
+          toolautosubmit: 'true',
+        } as Record<string, string>)}
+      >
+        <label htmlFor="creator-search-query" className="sr-only">
+          Beschreibe dein Produkt und den gewünschten Content
+        </label>
         <textarea
+          id="creator-search-query"
+          name="query"
+          autoComplete="off"
+          required
           ref={searchInputRef}
           value={searchQuery}
           onChange={(e) => {
@@ -431,14 +452,24 @@ export default function SearchBox({ initialQuery = '', showFeatured = false, hid
             }
           }}
           aria-label="Beschreibe dein Produkt und den gewünschten Content"
+          aria-describedby="creator-search-hint"
+          aria-invalid={Boolean(searchError)}
+          aria-errormessage={searchError ? 'creator-search-error' : undefined}
           placeholder="Produkt, Zielgruppe, Videoformat – und ob bezahlt oder gegen Ware …"
           className={`${styles.searchInput} text-slate-900 bg-white placeholder-slate-500`}
           disabled={isLoading}
           rows={1}
+          {...({
+            toolparamdescription:
+              'Freitext-Briefing zu Produkt, Branche, Zielgruppe, Plattform (TikTok/Instagram/YouTube) und Format.',
+          } as Record<string, string>)}
         />
+        <p id="creator-search-hint" className="sr-only">
+          Beschreibe Produkt, Branche, Plattform und Format für passende Creator-Vorschläge aus dem DACH-Raum.
+        </p>
 
         <button
-          onClick={handleStartSearch}
+          type="submit"
           disabled={isLoading}
           aria-label="Suche starten"
           className="search-button-gradient shrink-0 px-5 py-3 rounded-xl flex items-center justify-center focus-visible:ring-2 focus-visible:ring-geo-violet focus-visible:ring-offset-2 transition-colors disabled:cursor-wait"
@@ -461,6 +492,7 @@ export default function SearchBox({ initialQuery = '', showFeatured = false, hid
 
         <div className={`relative group ${isIOSDeviceState || !browserSupportsSpeechRecognition ? 'hidden' : ''}`}>
           <button
+            type="button"
             onClick={toggleVoiceInput}
             disabled={isLoading || isIOSDeviceState || !browserSupportsSpeechRecognition}
             aria-label={isListening ? 'Sprachaufnahme beenden' : 'Sprachsuche starten'}
@@ -500,7 +532,7 @@ export default function SearchBox({ initialQuery = '', showFeatured = false, hid
             }
           </span>
         </div>
-      </div>
+      </form>
 
       {/* Privacy / KI-Hinweis – dezent unter der Eingabe */}
       <details className="mt-3 w-full text-xs leading-relaxed text-ink-soft">
@@ -535,7 +567,26 @@ export default function SearchBox({ initialQuery = '', showFeatured = false, hid
         </div>
       )}
 
-      {searchError && <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-ink"><p role="alert">{searchError}</p><button type="button" onClick={() => performSearch(submittedQuery, removedFilters)} className="mt-3 rounded-lg border border-hairline bg-white px-4 py-2 focus-visible:ring-2 focus-visible:ring-geo-violet">Suche erneut versuchen</button></div>}
+      <div
+        id="creator-search-error"
+        role="alert"
+        aria-live="assertive"
+        aria-atomic="true"
+        className={searchError ? 'mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-ink' : 'sr-only'}
+      >
+        {searchError && (
+          <>
+            <p>{searchError}</p>
+            <button
+              type="button"
+              onClick={() => performSearch(submittedQuery, removedFilters)}
+              className="mt-3 rounded-lg border border-hairline bg-white px-4 py-2 focus-visible:ring-2 focus-visible:ring-geo-violet"
+            >
+              Suche erneut versuchen
+            </button>
+          </>
+        )}
+      </div>
 
       {/* Chat container and Results display */}
       <div className="w-full">
