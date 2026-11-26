@@ -76,10 +76,11 @@ export default function RootLayout({
   return (
     <html lang="de" className={`${GeistSans.variable} ${GeistMono.variable}`}>
       <head>
-        {/* Favicon and App Icons */}
+        {/* Best-Practice Favicons & App Icons (SVG + Multi-Res ICO + PNG + Apple + PWA Manifest) */}
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
         <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
         <link rel="icon" type="image/png" href="/favicon-32x32.png" sizes="32x32" />
-        <link rel="shortcut icon" href="/favicon.ico" />
         <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
         <meta name="apple-mobile-web-app-title" content="UGC VZ" />
         <meta name="theme-color" content="#06458F" />

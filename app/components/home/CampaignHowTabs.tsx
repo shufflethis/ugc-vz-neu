@@ -93,9 +93,9 @@ function StepScreenGraphic({ tab, stepIndex, step }: { tab: AudienceTab; stepInd
   const Icon = icons[stepIndex] || FileText;
 
   return (
-    <div className="rounded-[20px] border border-[#DCE2EA] bg-[#F5F7FA] p-6 shadow-card">
+    <div className="rounded-[16px] border border-[#DCE2EA] bg-[#F5F7FA] p-6 shadow-[0_2px_4px_rgba(6,69,143,0.04),0_12px_32px_rgba(6,69,143,0.07)]">
       <div className="flex items-center justify-between gap-3">
-        <span className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold text-[#202124] shadow-sm">
+        <span className="inline-flex items-center gap-2 rounded-full border border-[#DCE2EA] bg-white px-3 py-1 text-xs font-semibold text-[#202124] shadow-sm">
           <Icon size={14} aria-hidden="true" className="text-[#06458F]" />
           {step.screenBadge}
         </span>
@@ -105,7 +105,7 @@ function StepScreenGraphic({ tab, stepIndex, step }: { tab: AudienceTab; stepInd
       </div>
 
       {/* Kompakte Inline-SVG Ablauf-Grafik (< 3 KB, kein Autoplay) */}
-      <div className="mt-5 rounded-[16px] border border-[#DCE2EA] bg-white p-5">
+      <div className="mt-5 rounded-[12px] border border-[#DCE2EA] bg-white p-5">
         <div className="flex items-center justify-between gap-2 border-b border-[#DCE2EA] pb-3.5">
           <p className="font-display text-lg font-bold text-[#202124]">{step.screenTitle}</p>
           <svg width="72" height="16" viewBox="0 0 72 16" fill="none" aria-hidden="true">
@@ -168,7 +168,7 @@ export default function CampaignHowTabs() {
           <div
             role="tablist"
             aria-label="Ablauf nach Zielgruppe"
-            className="mx-auto mt-7 inline-grid grid-cols-2 rounded-full border border-[#DCE2EA] bg-[#F5F7FA] p-1"
+            className="mx-auto mt-7 inline-grid grid-cols-2 rounded-[10px] border border-[#DCE2EA] bg-[#F5F7FA] p-1"
           >
             <button
               type="button"
@@ -177,9 +177,9 @@ export default function CampaignHowTabs() {
               aria-selected={activeTab === 'brand'}
               aria-controls="panel-how-brand"
               onClick={() => setActiveTab('brand')}
-              className={`min-h-[44px] rounded-full px-6 text-sm font-semibold transition-colors duration-150 ${
+              className={`min-h-[42px] rounded-[8px] px-6 text-sm font-semibold transition-all duration-150 ${
                 activeTab === 'brand'
-                  ? 'bg-[#06458F] text-white'
+                  ? 'bg-[#06458F] text-white shadow-[0_2px_8px_rgba(6,69,143,0.22)]'
                   : 'text-[#5C6470] hover:text-[#202124]'
               }`}
             >
@@ -192,9 +192,9 @@ export default function CampaignHowTabs() {
               aria-selected={activeTab === 'creator'}
               aria-controls="panel-how-creator"
               onClick={() => setActiveTab('creator')}
-              className={`min-h-[44px] rounded-full px-6 text-sm font-semibold transition-colors duration-150 ${
+              className={`min-h-[42px] rounded-[8px] px-6 text-sm font-semibold transition-all duration-150 ${
                 activeTab === 'creator'
-                  ? 'bg-[#06458F] text-white'
+                  ? 'bg-[#06458F] text-white shadow-[0_2px_8px_rgba(6,69,143,0.22)]'
                   : 'text-[#5C6470] hover:text-[#202124]'
               }`}
             >
@@ -221,9 +221,9 @@ export default function CampaignHowTabs() {
                     type="button"
                     onClick={() => setBrandStep(index)}
                     aria-current={selected ? 'step' : undefined}
-                    className={`w-full rounded-[20px] border p-5 text-left transition-colors duration-150 ${
+                    className={`w-full rounded-[12px] border p-5 text-left transition-all duration-150 ${
                       selected
-                        ? 'border-[#06458F] bg-[#F5F7FA]'
+                        ? 'border-[#06458F] bg-[#F5F7FA] shadow-[0_4px_16px_rgba(6,69,143,0.08)]'
                         : 'border-[#DCE2EA] bg-white hover:border-[#06458F]/40'
                     }`}
                   >
@@ -261,9 +261,9 @@ export default function CampaignHowTabs() {
                     type="button"
                     onClick={() => setCreatorStep(index)}
                     aria-current={selected ? 'step' : undefined}
-                    className={`w-full rounded-[20px] border p-5 text-left transition-colors duration-150 ${
+                    className={`w-full rounded-[12px] border p-5 text-left transition-all duration-150 ${
                       selected
-                        ? 'border-[#06458F] bg-[#F5F7FA]'
+                        ? 'border-[#06458F] bg-[#F5F7FA] shadow-[0_4px_16px_rgba(6,69,143,0.08)]'
                         : 'border-[#DCE2EA] bg-white hover:border-[#06458F]/40'
                     }`}
                   >

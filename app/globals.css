@@ -84,12 +84,24 @@ h1, h2, h3, .font-display {
   color: var(--ink-soft);
 }
 
-/* Quiet cloud canvas; the search & brief are the primary actions on the homepage. */
+/* Fresh editorial hero backdrop in ugcVZ Rot-Blau CI (70/20/10) */
 .home-hero {
-  background: radial-gradient(ellipse at 85% 0%, rgba(6, 69, 143, 0.06), transparent 52%), #F5F7FA;
+  background-color: #F5F7FA;
+  background-image:
+    radial-gradient(ellipse 65% 55% at 88% 4%, rgba(6, 69, 143, 0.09), transparent 65%),
+    radial-gradient(ellipse 45% 40% at 8% 92%, rgba(242, 7, 42, 0.05), transparent 62%),
+    radial-gradient(rgba(6, 69, 143, 0.075) 1px, transparent 1px);
+  background-size: auto, auto, 24px 24px;
 }
 .home-search-panel {
   box-shadow: 0 12px 36px rgba(6, 69, 143, 0.07);
+}
+.card-fresh {
+  transition: transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 180ms cubic-bezier(0.2, 0.8, 0.2, 1), border-color 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.card-fresh:hover {
+  border-color: rgba(6, 69, 143, 0.35);
+  box-shadow: 0 2px 4px rgba(6, 69, 143, 0.06), 0 14px 32px rgba(6, 69, 143, 0.09);
 }
 .home-page a:focus-visible, .home-page summary:focus-visible {
   outline: 2px solid var(--brand-primary);

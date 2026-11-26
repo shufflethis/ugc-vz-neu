@@ -11,10 +11,10 @@ export default function FloFounderCard() {
       className="bg-white px-5 py-16 sm:px-8 sm:py-24"
     >
       <div className="mx-auto max-w-[1200px]">
-        <div className="grid items-center gap-8 rounded-[24px] border border-[#DCE2EA] bg-[#F5F7FA] p-6 sm:p-10 lg:grid-cols-12 lg:gap-12">
+        <div className="grid items-center gap-8 rounded-[16px] border border-[#DCE2EA] bg-[#F5F7FA] p-6 shadow-[0_2px_4px_rgba(6,69,143,0.04)] sm:p-10 lg:grid-cols-12 lg:gap-12">
           {/* 4:5 Portrait-Slot: ehrlicher Platzhalter bis Originalfoto von Florian vorliegt */}
           <div className="lg:col-span-4">
-            <div className="flex aspect-[4/5] w-full max-w-[280px] flex-col items-center justify-center rounded-[20px] border border-[#DCE2EA] bg-white p-6 text-center shadow-card mx-auto lg:mx-0">
+            <div className="mx-auto flex aspect-[4/5] w-full max-w-[280px] flex-col items-center justify-center rounded-[14px] border border-[#DCE2EA] bg-white p-6 text-center shadow-card lg:mx-0">
               <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#062A59] font-display text-2xl font-bold text-[#F5F7FA]">
                 FR
               </div>
@@ -46,7 +46,7 @@ export default function FloFounderCard() {
                   href={bookingHref}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="btn-press inline-flex min-h-[48px] items-center gap-2 rounded-full bg-[#06458F] px-6 text-sm font-semibold text-white hover:bg-[#053673] hover:opacity-90"
+                  className="btn-press inline-flex min-h-[48px] items-center gap-2 rounded-[8px] bg-[#06458F] px-6 text-sm font-semibold text-white shadow-[0_4px_14px_rgba(6,69,143,0.22)] hover:-translate-y-[1px] hover:bg-[#053673]"
                 >
                   <Calendar size={16} aria-hidden="true" />
                   15 Minuten mit Flo sprechen
@@ -54,7 +54,7 @@ export default function FloFounderCard() {
               ) : (
                 <Link
                   href={bookingHref}
-                  className="btn-press inline-flex min-h-[48px] items-center gap-2 rounded-full bg-[#06458F] px-6 text-sm font-semibold text-white hover:bg-[#053673] hover:opacity-90"
+                  className="btn-press inline-flex min-h-[48px] items-center gap-2 rounded-[8px] bg-[#06458F] px-6 text-sm font-semibold text-white shadow-[0_4px_14px_rgba(6,69,143,0.22)] hover:-translate-y-[1px] hover:bg-[#053673]"
                 >
                   <Calendar size={16} aria-hidden="true" />
                   15 Minuten mit Flo sprechen

@@ -40,8 +40,8 @@ export default function Footer() {
   const [isContactPopupOpen, setIsContactPopupOpen] = useState(false);
 
   return (
-    <footer className="mt-20 border-t-[3px] border-[#F2072A] bg-[#062A59] pb-10 pt-16 text-white/80 sm:mt-24 sm:pt-20">
-      <div className="mx-auto max-w-[1200px] px-5 sm:px-8">
+    <footer className="mt-20 border-t-[3px] border-[#F2072A] bg-[#062A59] px-5 pb-10 pt-16 text-white/80 sm:mt-24 sm:px-8 sm:pt-20">
+      <div className="mx-auto max-w-[1200px]">
         {/* Oberer Claim- und CTA-Streifen */}
         <div className="mb-12 flex flex-col items-start justify-between gap-6 border-b border-white/15 pb-10 lg:flex-row lg:items-end">
           <div className="max-w-lg">

@@ -57,20 +57,20 @@ export default function SiteHeader() {
   }, []);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-[#DCE2EA] bg-white/95 backdrop-blur-md supports-[backdrop-filter]:bg-white/90">
-      <div className="mx-auto flex h-[64px] max-w-[1200px] items-center justify-between gap-2 px-4 sm:h-[72px] sm:gap-4 sm:px-8">
+    <header className="sticky top-0 z-40 border-b border-[#DCE2EA]/90 bg-white/95 px-5 shadow-[0_1px_2px_rgba(6,69,143,0.04)] backdrop-blur-md supports-[backdrop-filter]:bg-white/90 sm:px-8">
+      <div className="mx-auto flex h-[66px] max-w-[1200px] items-center justify-between gap-2 sm:h-[74px] sm:gap-4">
         <Link
           href="/"
           aria-label="UGC VZ Startseite"
-          className="shrink-0 rounded-[8px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#06458F] focus-visible:ring-offset-2"
+          className="inline-flex shrink-0 items-center rounded-[8px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#06458F] focus-visible:ring-offset-2"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/brand/ugcvz-logo-header.webp"
             alt="UGC VZ"
-            width={144}
-            height={48}
-            className="h-9 w-auto sm:h-10"
+            width={142}
+            height={46}
+            className="block h-9 w-auto sm:h-10"
           />
         </Link>
 
@@ -145,7 +145,7 @@ export default function SiteHeader() {
           {/* Primary Button: Directory Blue (#06458F) mit weisser Schrift */}
           <Link
             href={primaryCta.href}
-            className="btn-press inline-flex min-h-[40px] items-center whitespace-nowrap rounded-[8px] bg-[#06458F] px-3.5 text-xs font-semibold text-white hover:bg-[#053673] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#06458F] focus-visible:ring-offset-2 sm:min-h-[44px] sm:px-5 sm:text-sm"
+            className="btn-press inline-flex min-h-[40px] items-center whitespace-nowrap rounded-[8px] bg-[#06458F] px-4 text-xs font-semibold text-white shadow-[0_2px_10px_rgba(6,69,143,0.22)] hover:-translate-y-[0.5px] hover:bg-[#053673] hover:shadow-[0_6px_18px_rgba(6,69,143,0.28)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#06458F] focus-visible:ring-offset-2 sm:min-h-[44px] sm:px-5 sm:text-sm"
           >
             {primaryCta.label}
           </Link>

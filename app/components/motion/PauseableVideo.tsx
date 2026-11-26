@@ -144,7 +144,7 @@ export default function PauseableVideo({
   return (
     <div
       ref={containerRef}
-      className={`relative overflow-hidden rounded-[20px] border border-[#DCE2EA] bg-[#062A59] ${aspectClassName} ${className}`}
+      className={`relative overflow-hidden rounded-[16px] border border-[#DCE2EA] bg-[#062A59] shadow-[0_14px_38px_rgba(6,69,143,0.14)] ${aspectClassName} ${className}`}
     >
       {/* Static poster image guarantees fast LCP and zero CLS without JS */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -173,7 +173,8 @@ export default function PauseableVideo({
       )}
 
       {caption && (
-        <span className="pointer-events-none absolute left-3 top-3 rounded-full bg-[#062A59]/80 px-2.5 py-1 text-[11px] font-medium text-[#F5F7FA] backdrop-blur-sm">
+        <span className="pointer-events-none absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-[#062A59]/85 px-3 py-1 text-[11px] font-semibold text-white backdrop-blur-sm">
+          <span className="h-1.5 w-1.5 rounded-full bg-[#F2072A]" aria-hidden="true" />
           {caption}
         </span>
       )}
@@ -184,7 +185,7 @@ export default function PauseableVideo({
         onClick={togglePlay}
         aria-label={isPlaying ? `${label} pausieren` : `${label} abspielen`}
         aria-pressed={isPlaying}
-        className="absolute bottom-3 right-3 flex h-9 w-9 items-center justify-center rounded-full bg-[#062A59]/80 text-[#F5F7FA] backdrop-blur-sm transition-transform duration-150 hover:bg-[#053673] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C8F04B] focus-visible:ring-offset-2 focus-visible:ring-offset-[#202124]"
+        className="absolute bottom-3 right-3 flex h-9 w-9 items-center justify-center rounded-full bg-[#062A59]/85 text-white backdrop-blur-sm transition-transform duration-150 hover:bg-[#053673] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#062A59]"
       >
         {isPlaying ? <Pause size={15} aria-hidden="true" /> : <Play size={15} aria-hidden="true" />}
       </button>

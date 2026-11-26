@@ -114,9 +114,9 @@ export default function PromoBanner({ initialPromo }: { initialPromo: ActiveProm
     <div
       role="region"
       aria-label="Aktionsangebot"
-      className="border-b border-[#053673] bg-[#06458F] text-white"
+      className="border-b border-[#053673] bg-[#06458F] px-5 text-white sm:px-8"
     >
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-2.5 text-xs sm:px-8 sm:text-sm">
+      <div className="mx-auto flex max-w-[1200px] items-center justify-between gap-3 py-2.5 text-xs sm:text-sm">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
           <span className="inline-flex items-center rounded-[6px] bg-[#D10523] px-2.5 py-0.5 text-[11px] font-bold text-white">
             10 % Aktion

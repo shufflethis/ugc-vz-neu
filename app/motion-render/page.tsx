@@ -31,7 +31,7 @@ function Stage() {
   // globaler Header und Footer ueber der Buehne und landen im Video.
   if (!mounted) return null;
   return createPortal(
-    <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: '#F7F7F5', overflow: 'hidden' }}>
+    <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: '#F5F7FA', overflow: 'hidden' }}>
       <div data-frame={t} style={{ transform: `scale(${scale})`, transformOrigin: 'top left' }}>
         <HowItWorksFilm t={t} film={film} format={format} />
       </div>

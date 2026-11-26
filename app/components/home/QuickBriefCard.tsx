@@ -92,7 +92,7 @@ export default function QuickBriefCard() {
       className="bg-[#F5F7FA] px-5 py-16 sm:px-8 sm:py-24"
     >
       <div className="mx-auto max-w-[1200px]">
-        <div className="rounded-[24px] border border-[#DCE2EA] bg-white p-6 shadow-card sm:p-10">
+        <div className="rounded-[16px] border border-[#DCE2EA] bg-white p-6 shadow-[0_2px_4px_rgba(6,69,143,0.04),0_12px_32px_rgba(6,69,143,0.07)] sm:p-10">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <p className="text-sm font-medium text-[#06458F]">Unverbindlich testen</p>
@@ -117,7 +117,7 @@ export default function QuickBriefCard() {
           <form onSubmit={handleSubmit} className="mt-8">
             <div className="grid gap-6 lg:grid-cols-3">
               {/* Schritt 1 */}
-              <div className="rounded-[20px] border border-[#DCE2EA] bg-[#F5F7FA]/60 p-5">
+              <div className="rounded-[12px] border border-[#DCE2EA] bg-[#F5F7FA]/75 p-5">
                 <div className="flex items-center gap-2.5">
                   <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#06458F] font-mono text-xs font-bold text-white">
                     1
@@ -157,7 +157,7 @@ export default function QuickBriefCard() {
               {/* Schritt 2 (immer im DOM fuer SSR & Screenshots, visuell hervorgehoben nach Schritt 1) */}
               <div
                 onClick={() => setExpandedAll(true)}
-                className={`rounded-[20px] border border-[#DCE2EA] bg-[#F5F7FA]/60 p-5 transition-opacity duration-200 ${
+                className={`rounded-[12px] border border-[#DCE2EA] bg-[#F5F7FA]/75 p-5 transition-opacity duration-200 ${
                   stepsUnlocked ? 'opacity-100' : 'opacity-75'
                 }`}
               >
@@ -194,7 +194,7 @@ export default function QuickBriefCard() {
               {/* Schritt 3 */}
               <div
                 onClick={() => setExpandedAll(true)}
-                className={`rounded-[20px] border border-[#DCE2EA] bg-[#F5F7FA]/60 p-5 transition-opacity duration-200 ${
+                className={`rounded-[12px] border border-[#DCE2EA] bg-[#F5F7FA]/75 p-5 transition-opacity duration-200 ${
                   stepsUnlocked ? 'opacity-100' : 'opacity-75'
                 }`}
               >
@@ -288,7 +288,7 @@ export default function QuickBriefCard() {
               <div className="flex w-full flex-col items-stretch gap-1.5 lg:w-auto lg:items-end">
                 <button
                   type="submit"
-                  className="btn-press inline-flex min-h-[52px] items-center justify-center gap-2 whitespace-nowrap rounded-full bg-[#06458F] px-6 text-sm font-semibold text-white hover:bg-[#053673] hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#06458F] focus-visible:ring-offset-2"
+                  className="btn-press inline-flex min-h-[52px] items-center justify-center gap-2 whitespace-nowrap rounded-[8px] bg-[#06458F] px-6 text-sm font-semibold text-white shadow-[0_6px_18px_rgba(6,69,143,0.22)] hover:-translate-y-[1px] hover:bg-[#053673] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#06458F] focus-visible:ring-offset-2"
                 >
                   <span>Brief speichern und Konto anlegen</span>
                   <ArrowRight size={16} aria-hidden="true" />

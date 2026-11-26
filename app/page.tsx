@@ -79,40 +79,42 @@ export default async function Home() {
       <HomePageSchema />
       <JsonLdScript data={homeFaqSchema} />
 
-      {/* ---------- 1. Hero (Spec 8.2 home.hero, Paper #F5F7FA, kein Gradient) ---------- */}
+      {/* ---------- 1. Hero (ugcVZ Rot-Blau CI, luftig & klar) ---------- */}
       <section
         aria-labelledby="home-title"
-        className="bg-[#F5F7FA] px-5 pb-14 pt-10 sm:px-8 sm:pb-20 sm:pt-16"
+        className="home-hero border-b border-[#DCE2EA]/80 px-5 pb-14 pt-10 sm:px-8 sm:pb-20 sm:pt-14"
       >
         <div className="mx-auto grid max-w-[1200px] items-center gap-10 lg:grid-cols-12 lg:gap-12">
-          {/* Linke Spalte: klare Botschaft, 1 Primary Button, leiser Creator-Link */}
+          {/* Linke Spalte: buendig unter dem Header-Logo, klare Botschaft & Primary CTA */}
           <div className="max-w-[560px] lg:col-span-6">
-            <p className="text-sm font-medium text-[#5C6470]">
-              Für Marken in Deutschland, Österreich und der Schweiz
+            <p className="inline-flex items-center gap-2 rounded-full border border-[#DCE2EA] bg-white/90 px-3.5 py-1.5 text-xs font-semibold text-[#06458F] shadow-[0_1px_2px_rgba(6,69,143,0.05)] sm:py-1 sm:text-[13px]">
+              <span className="h-2 w-2 rounded-full bg-[#F2072A]" aria-hidden="true" />
+              <span>Für Marken in Deutschland, Österreich und der Schweiz</span>
             </p>
 
             <h1
               id="home-title"
-              className="mt-3 font-display text-[40px] font-bold leading-[44px] tracking-[-0.02em] text-[#202124] sm:text-6xl sm:leading-[1.06] lg:text-[68px] lg:leading-[74px]"
+              className="mt-4 font-display text-[40px] font-extrabold leading-[44px] tracking-[-0.03em] text-[#202124] sm:text-6xl sm:leading-[1.05] lg:text-[66px] lg:leading-[72px]"
             >
-              Echte Creator. Echte Views. Dein Budget.
+              Echte Creator. Echte Views.{' '}
+              <span className="text-[#06458F]">Dein Budget.</span>
             </h1>
 
-            <p className="mt-5 text-base leading-6 text-[#5C6470] sm:text-lg sm:leading-7">
+            <p className="mt-5 text-base leading-7 text-[#5C6470] sm:text-lg sm:leading-8">
               Du schreibst ein kurzes Briefing und legst fest, was dir 1.000 Views wert sind. Creator posten dein Produkt auf TikTok und Instagram. Du zahlst nur geprüfte Beiträge und nie mehr als dein Budget.
             </p>
 
             <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
               <Link
                 href="/brand?tab=signup"
-                className="btn-press inline-flex min-h-[48px] items-center justify-center gap-2 rounded-full bg-[#06458F] px-7 text-sm font-semibold text-white hover:bg-[#053673] hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#06458F] focus-visible:ring-offset-2 sm:min-h-[52px] sm:text-base"
+                className="btn-press inline-flex min-h-[48px] items-center justify-center gap-2 rounded-[8px] bg-[#06458F] px-7 text-sm font-semibold text-white shadow-[0_6px_20px_rgba(6,69,143,0.24)] hover:-translate-y-[1px] hover:bg-[#053673] hover:shadow-[0_10px_26px_rgba(6,69,143,0.3)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#06458F] focus-visible:ring-offset-2 sm:min-h-[52px] sm:text-base"
               >
                 <span>Kampagne starten</span>
                 <ArrowRight size={17} aria-hidden="true" />
               </Link>
               <Link
                 href="#so-funktionierts"
-                className="btn-press inline-flex min-h-[48px] items-center justify-center rounded-full border border-[#DCE2EA] bg-white px-6 text-sm font-semibold text-[#202124] hover:border-[#06458F] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#06458F] focus-visible:ring-offset-2 sm:min-h-[52px] sm:text-base"
+                className="btn-press inline-flex min-h-[48px] items-center justify-center rounded-[8px] border border-[#DCE2EA] bg-white px-6 text-sm font-semibold text-[#202124] shadow-[0_1px_2px_rgba(32,33,36,0.04)] hover:border-[#06458F] hover:text-[#06458F] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#06458F] focus-visible:ring-offset-2 sm:min-h-[52px] sm:text-base"
               >
                 So läuft eine Kampagne
               </Link>
@@ -121,33 +123,38 @@ export default async function Home() {
             <div className="mt-5">
               <Link
                 href="/creator"
-                className="inline-flex items-center gap-1.5 text-sm font-medium text-[#202124] underline decoration-[#DCE2EA] underline-offset-4 transition-colors hover:text-[#06458F] hover:decoration-[#06458F]"
+                className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#06458F] underline decoration-[#06458F]/30 underline-offset-4 transition-colors hover:text-[#053673] hover:decoration-[#F2072A]"
               >
                 <span>Du bist Creator? Hier verdienst du pro 1.000 Views</span>
                 <ArrowRight size={15} aria-hidden="true" />
               </Link>
             </div>
 
-            <p className="mt-6 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-medium text-[#5C6470] sm:text-sm">
-              <span>Kostenloses Konto</span>
-              <span aria-hidden="true">·</span>
-              <span>Kein Abo</span>
-              <span aria-hidden="true">·</span>
-              <span>Budget-Obergrenze in jeder Kampagne</span>
+            <div className="mt-7 flex flex-wrap items-center gap-2 text-xs font-medium text-[#5C6470]">
+              <span className="inline-flex items-center gap-1.5 rounded-[6px] border border-[#DCE2EA] bg-white/85 px-2.5 py-1">
+                <Check size={13} className="text-[#06458F]" aria-hidden="true" />
+                Kostenloses Konto
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-[6px] border border-[#DCE2EA] bg-white/85 px-2.5 py-1">
+                <Check size={13} className="text-[#06458F]" aria-hidden="true" />
+                Kein Abo
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-[6px] border border-[#DCE2EA] bg-white/85 px-2.5 py-1">
+                <Check size={13} className="text-[#06458F]" aria-hidden="true" />
+                Fester Budget-Deckel
+              </span>
               {stats.liveCreatorCount && (
-                <>
-                  <span aria-hidden="true">·</span>
-                  <span className="tabular-nums text-[#202124]">
-                    {stats.liveCreatorCount.toLocaleString('de-DE')} aktive Creator-Profile
-                  </span>
-                </>
+                <span className="inline-flex items-center gap-1.5 rounded-[6px] border border-[#06458F]/20 bg-[#EBF2FA] px-2.5 py-1 font-semibold tabular-nums text-[#06458F]">
+                  <span className="h-1.5 w-1.5 rounded-full bg-[#1F9D55]" aria-hidden="true" />
+                  {stats.liveCreatorCount.toLocaleString('de-DE')} aktive Creator
+                </span>
               )}
-            </p>
+            </div>
           </div>
 
           {/* Rechte Spalte: Hochkant-Video mit Poster-LCP & Pause-Button + Kampagnenkarte */}
           <div className="lg:col-span-6">
-            <div className="mx-auto max-w-[460px] lg:ml-auto lg:mr-0">
+            <div className="mx-auto max-w-[468px] lg:ml-auto lg:mr-0">
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-12 sm:items-end">
                 {/* Mobil nur ein Clip (Spec 8.10 hero_video_loop), Desktop mit statischer Zweitkarte */}
                 <div className="sm:col-span-7">
@@ -161,7 +168,7 @@ export default async function Home() {
                   />
                 </div>
                 <div className="hidden sm:col-span-5 sm:block">
-                  <div className="overflow-hidden rounded-[20px] border border-[#DCE2EA] bg-white shadow-card">
+                  <div className="card-fresh overflow-hidden rounded-[16px] border border-[#DCE2EA] bg-white shadow-[0_10px_28px_rgba(6,69,143,0.10)]">
                     {/* Statisches Posterbild der zweiten Perspektive (max. 1 aktives Video gleichzeitig) */}
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
@@ -175,7 +182,7 @@ export default async function Home() {
               </div>
 
               {/* Live-Kampagnenkarte oder klar markierte Beispielansicht */}
-              <div className="mt-4 rounded-[20px] border border-[#DCE2EA] bg-white p-4 shadow-card sm:p-5">
+              <div className="card-fresh mt-4 rounded-[12px] border border-[#DCE2EA] bg-white p-4 shadow-[0_8px_24px_rgba(6,69,143,0.08)] sm:p-5">
                 <div className="flex items-center justify-between gap-2">
                   <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#202124]">
                     <span
@@ -244,7 +251,7 @@ export default async function Home() {
             </Link>
           </div>
 
-          <div className="rounded-[24px] border border-[#DCE2EA] bg-[#F5F7FA]/60 p-4 shadow-card sm:p-8">
+          <div className="rounded-[16px] border border-[#DCE2EA] bg-[#F5F7FA]/75 p-4 shadow-card sm:p-8">
             <SearchBox showFeatured={false} hideNicheChips />
           </div>
         </div>
@@ -259,7 +266,7 @@ export default async function Home() {
       {/* ---------- 7. Creator-Band auf Directory Blue Navy (#062A59 + #F2072A Akzent) ---------- */}
       <section
         aria-labelledby="home-creator-title"
-        className="border-y-2 border-[#F2072A]/70 bg-[#062A59] px-5 py-16 text-white sm:px-8 sm:py-24"
+        className="relative overflow-hidden border-y-2 border-[#F2072A]/80 bg-[#062A59] bg-[radial-gradient(ellipse_60%_70%_at_90%_15%,rgba(10,91,184,0.45),transparent_70%),radial-gradient(ellipse_40%_45%_at_10%_90%,rgba(242,7,42,0.16),transparent_65%)] px-5 py-16 text-white sm:px-8 sm:py-24"
       >
         <div className="mx-auto grid max-w-[1200px] items-center gap-10 lg:grid-cols-12 lg:gap-12">
           <div className="lg:col-span-7">
@@ -400,7 +407,7 @@ export default async function Home() {
               <details
                 key={item.q}
                 open={idx === 0}
-                className="group rounded-[20px] border border-[#DCE2EA] bg-white px-5 transition-colors open:border-[#06458F]/30 sm:px-6"
+                className="group rounded-[12px] border border-[#DCE2EA] bg-white px-5 transition-colors open:border-[#06458F]/35 open:shadow-[0_6px_20px_rgba(6,69,143,0.06)] sm:px-6"
               >
                 <summary className="flex min-h-[64px] cursor-pointer list-none items-center justify-between gap-4 py-4 font-display text-base font-semibold text-[#202124] sm:text-lg [&::-webkit-details-marker]:hidden">
                   <span>{item.q}</span>
@@ -431,7 +438,7 @@ export default async function Home() {
       {/* ---------- 11. Abschluss-CTA (Spec 8.2 home.final_cta, Buttons in der Box) ---------- */}
       <section aria-labelledby="home-final-cta-title" className="bg-white px-5 pb-4 sm:px-8">
         <div className="mx-auto max-w-[1200px]">
-          <div className="rounded-[12px] border-t-[3px] border-[#F2072A] bg-[#06458F] px-6 py-14 text-center text-white sm:px-12 sm:py-16">
+          <div className="rounded-[16px] border-t-[3px] border-[#F2072A] bg-[#06458F] bg-[radial-gradient(ellipse_55%_80%_at_50%_0%,rgba(10,91,184,0.55),transparent_75%)] px-6 py-14 text-center text-white shadow-[0_18px_48px_rgba(6,69,143,0.22)] sm:px-12 sm:py-16">
             <h2
               id="home-final-cta-title"
               className="font-display text-[30px] font-bold leading-[34px] tracking-[-0.02em] sm:text-[44px] sm:leading-[48px]"
