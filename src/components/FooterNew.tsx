@@ -122,7 +122,7 @@ export default function Footer() {
               </li>
               <li>
                 <Link href="/brandkit" className="text-sm text-[#F7F6F2]/70 transition-colors duration-150 hover:text-[#F7F6F2]">
-                  Brand Kit
+                  Brand Kit &amp; Presse
                 </Link>
               </li>
             </ul>

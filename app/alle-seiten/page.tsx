@@ -41,7 +41,7 @@ const COMPANY_LINKS = [
   { href: '/faq', label: 'Häufige Fragen (FAQ)' },
   { href: '/contact', label: 'Kontakt' },
   { href: '/developers', label: 'API, MCP & KI-Agenten' },
-  { href: '/brandkit', label: 'Brand Kit' },
+  { href: '/brandkit', label: 'Brand Kit & Presse' },
   { href: '/impressum', label: 'Impressum' },
   { href: '/datenschutz', label: 'Datenschutz' },
   { href: '/agb', label: 'AGB' },
