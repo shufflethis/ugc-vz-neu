@@ -146,9 +146,6 @@ export default function BrandWalletPanel() {
   const isHighRiskBrand = billingProfile?.billingTier === 'high_risk_custom';
   const activeIndustryMeta =
     INDUSTRY_CATEGORIES[billingProfile?.industryCategory || 'standard'] || INDUSTRY_CATEGORIES.standard;
-  const activeHighRiskFeePct = Math.round(
-    (billingProfile?.highRiskFeeBps || activeIndustryMeta.defaultFeeBps || 2200) / 100,
-  );
   const selectedHrMeta = INDUSTRY_CATEGORIES[hrCategory] || INDUSTRY_CATEGORIES.other_high_risk;
 
   const amountCents = Math.max(0, Math.round(amountEur * 100));
@@ -288,7 +285,7 @@ export default function BrandWalletPanel() {
                   Sonderbranche / High-Risk ({activeIndustryMeta.shortLabel})
                 </span>
                 <span className="rounded-full bg-[#06458F]/10 px-2.5 py-0.5 text-[#06458F]">
-                  {activeHighRiskFeePct} % Servicegebühr · Creator 0 %
+                  Individuelle Sonderkonditionen · Creator 0 %
                 </span>
                 {billingProfile?.complianceStatus === 'custom_psp_active' && (
                   <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-emerald-800">
@@ -300,7 +297,7 @@ export default function BrandWalletPanel() {
                 Stripe akzeptiert Zahlungen für <strong>{activeIndustryMeta.shortLabel}</strong> nicht regulär. Um Kontosperren zu vermeiden, ist das Standard-Stripe-Checkout für dein Konto deaktiviert.
               </p>
               <p className="mt-1 text-xs leading-5 text-[#5C6470]">
-                Wir wickeln dein Kampagnenguthaben stattdessen sicher über <strong>SEPA-Vorkasse (Rechnung)</strong>, einen <strong>High-Risk-PSP</strong> oder <strong>USDC/Sonder-Settlement</strong> ab (inkl. transparenter {activeHighRiskFeePct} % High-Risk-Servicegebühr statt 15 % Standard). Starte unten einen kurzen Call oder E-Mail-Check – nach Zahlungseingang schalten wir dein Guthaben sofort im Wallet frei.
+                Wir wickeln dein Kampagnenguthaben stattdessen sicher über <strong>SEPA-Vorkasse (Rechnung)</strong>, einen <strong>High-Risk-PSP</strong> oder <strong>USDC/Sonder-Settlement</strong> ab (Konditionen &amp; ggf. Zahlungsanbieter-Zuschlag klären wir individuell statt 15 % Standard). Starte unten einen kurzen Call oder E-Mail-Check – nach Zahlungseingang schalten wir dein Guthaben sofort im Wallet frei.
               </p>
             </div>
           </div>
@@ -341,7 +338,7 @@ export default function BrandWalletPanel() {
         <div className="rounded-[16px] border border-[#DCE2EA] bg-white p-4">
           <p className="text-xs font-medium text-[#5C6470]">Abrechnungsweg</p>
           <p className="mt-2 text-sm font-semibold text-[#202124]">
-            {isHighRiskBrand ? `High-Risk / Sonder-PSP (${activeHighRiskFeePct} %)` : 'Stripe Connect (EUR)'}
+            {isHighRiskBrand ? 'High-Risk / Sonder-PSP (individuell)' : 'Stripe Connect (EUR)'}
           </p>
           <p className="mt-0.5 text-xs text-[#5C6470]">
             {isHighRiskBrand ? 'Vorkasse / Sonder-PSP / USDC' : 'Kein Kundengeld auf Agenturkonten'}
@@ -374,7 +371,7 @@ export default function BrandWalletPanel() {
               >
                 {HIGH_RISK_CATEGORIES.map((cat) => (
                   <option key={cat.id} value={cat.id}>
-                    {cat.shortLabel} ({Math.round(cat.defaultFeeBps / 100)} % Servicegebühr)
+                    {cat.shortLabel} (Sonderkonditionen nach Prüfung)
                   </option>
                 ))}
               </select>
@@ -474,8 +471,8 @@ export default function BrandWalletPanel() {
           </label>
 
           <div className="rounded-lg bg-[#F5F7FA] px-3.5 py-2.5 text-xs text-[#5C6470]">
-            <strong className="text-[#202124]">Transparente Kondition ({selectedHrMeta.shortLabel}):</strong>{' '}
-            {Math.round(selectedHrMeta.defaultFeeBps / 100)} % Servicegebühr inkl. Compliance &amp; Sonder-Abwicklung (statt 15 % Standard). Creator zahlen weiterhin 0 %.
+            <strong className="text-[#202124]">Konditionen ({selectedHrMeta.shortLabel}):</strong>{' '}
+            Individuelle Servicegebühr je nach Branche, Volumen &amp; Zahlungsanbieter (Klärung im kurzen Call oder per E-Mail). Creator zahlen weiterhin 0 %.
           </div>
 
           {hrSuccess && (

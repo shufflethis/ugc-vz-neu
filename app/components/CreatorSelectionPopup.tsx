@@ -95,12 +95,8 @@ export default function CreatorSelectionPopup({
     }
   }, [isVisible]);
 
-  useEffect(() => {
-    const suggested = searchQuery.trim().slice(0, 90);
-    if (suggested) {
-      setCampaignData((prev) => (prev.title ? prev : { ...prev, title: suggested }));
-    }
-  }, [searchQuery]);
+  // Suchbegriff bewusst nicht blind als Kampagnentitel übernehmen (sonst landen Creator-Handles wie "qa_test_creator" im Titel).
+  void searchQuery;
 
   const selectedCreatorDetails = creators.filter((creator) =>
     selectedCreators.includes(creator.id),

@@ -310,7 +310,7 @@ export default function CampaignDetailClient({ initialDetail }: { initialDetail:
                 {[
                   campaign.deliverables,
                   campaign.compensationModel === 'retainer' && campaign.retainerMonthlyEur
-                    ? `${campaign.retainerMonthlyEur.toLocaleString('de-DE')} € / Monat${campaign.retainerVideosPerMonth ? ` (${campaign.retainerVideosPerMonth} Videos/Monat)` : ''}`
+                    ? `${campaign.retainerMonthlyEur.toLocaleString('de-DE')} € / Monat${campaign.retainerVideosPerMonth ? ` (${campaign.retainerVideosPerMonth} Videos/Monat)` : ''}${campaign.retainerMinMonths ? ` · Mindestlaufzeit ${campaign.retainerMinMonths} ${campaign.retainerMinMonths === 1 ? 'Monat' : 'Monate'}` : ''}`
                     : '',
                   campaign.tkpEurCents ? `${(campaign.tkpEurCents / 100).toFixed(2).replace('.', ',')} € / 1.000 Views` : '',
                   campaign.budgetPerVideoEur ? `${campaign.budgetPerVideoEur} € / Video` : '',
@@ -438,7 +438,7 @@ export default function CampaignDetailClient({ initialDetail }: { initialDetail:
                   {campaign.tkpEurCents
                     ? `Performance-Budget · ${(campaign.tkpEurCents / 100).toFixed(2).replace('.', ',')} € / 1.000 Views`
                     : campaign.budgetPerVideoEur
-                      ? `Gesichertes Kampagnenbudget · ${campaign.budgetPerVideoEur} € / Video`
+                      ? `Kampagnenbudget-Limit · ${campaign.budgetPerVideoEur} € / Video`
                       : 'Kampagnen-Budget-Limit'}
                 </p>
                 <p className="mt-1 text-lg font-extrabold text-[#202124]">

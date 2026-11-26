@@ -428,7 +428,7 @@ export function buildHighRiskComplianceTeamNotification(input: {
         <div><strong>Marke:</strong> ${e(input.brandCompany)} (${e(input.brandContact)})</div>
         <div><strong>E-Mail:</strong> ${e(input.brandEmail)}</div>
         <div><strong>Branche:</strong> <span style="color:#D10523;font-weight:700;">${e(input.industryLabel)}</span></div>
-        <div><strong>Kondition:</strong> ${input.feePercent} % High-Risk-Servicegebühr</div>
+        <div><strong>Kondition:</strong> Individuell nach Prüfung (interner Richtwert ~${input.feePercent} %)</div>
         <div><strong>Gewünschter Kontakt:</strong> ${input.preferredContact === 'call' ? 'Kurzer Call' : 'E-Mail-Austausch'} ${input.phoneOrHandle ? `(${e(input.phoneOrHandle)})` : ''}</div>
         <div><strong>Zahlungsweg-Wunsch:</strong> ${e(input.preferredPsp)}</div>
         ${input.estimatedMonthlyBudgetEur ? `<div><strong>Geschätztes Monatsbudget:</strong> ${input.estimatedMonthlyBudgetEur.toLocaleString('de-DE')} €</div>` : ''}
@@ -448,7 +448,7 @@ export function buildHighRiskComplianceTeamNotification(input: {
       children: body,
       footerNote: 'Automatische Meldung des UGC VZ Stripe-Schutzschirms.',
     }),
-    text: `High-Risk Compliance-Anfrage:\nMarke: ${input.brandCompany} (${input.brandContact} / ${input.brandEmail})\nBranche: ${input.industryLabel}\nKondition: ${input.feePercent} % Servicegebühr\nKontaktwunsch: ${input.preferredContact} (${input.phoneOrHandle || '-'})\nZahlungsweg: ${input.preferredPsp}\nMonatsbudget: ${input.estimatedMonthlyBudgetEur || '-'} €\nWebsite: ${input.websiteUrl || '-'}\nNachricht: ${input.message || '-'}`,
+    text: `High-Risk Compliance-Anfrage:\nMarke: ${input.brandCompany} (${input.brandContact} / ${input.brandEmail})\nBranche: ${input.industryLabel}\nKondition: Individuell nach Prüfung (Richtwert ~${input.feePercent} %)\nKontaktwunsch: ${input.preferredContact} (${input.phoneOrHandle || '-'})\nZahlungsweg: ${input.preferredPsp}\nMonatsbudget: ${input.estimatedMonthlyBudgetEur || '-'} €\nWebsite: ${input.websiteUrl || '-'}\nNachricht: ${input.message || '-'}`,
   };
 }
 
@@ -474,7 +474,7 @@ export function buildHighRiskComplianceBrandConfirmation(input: {
         <div style="font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#06458F;">So geht es weiter</div>
         <ul style="margin:10px 0 0;padding-left:18px;color:#5C6470;">
           <li>Da Stripe reguläre Zahlungen in dieser Kategorie einschränkt, richten wir für euch den passenden Zahlungsweg ein (<strong>SEPA-Vorkasse auf Rechnung</strong>, <strong>High-Risk-PSP</strong> oder <strong>USDC/Sonder-Settlement</strong>).</li>
-          <li>Die transparente Servicegebühr inkl. Compliance &amp; Sonder-Abwicklung liegt bei <strong>${input.feePercent} %</strong> (Creator zahlen weiterhin <strong>0 %</strong>).</li>
+          <li>Die genauen Sonderkonditionen hängen von Branche, Volumen und Zahlungsweg ab und werden transparent vorab mit euch vereinbart (Creator zahlen weiterhin <strong>0 %</strong>).</li>
           <li>Unser Team meldet sich innerhalb von 24 Stunden per <strong>${input.preferredContact === 'call' ? 'kurzem Call' : 'E-Mail'}</strong> bei dir.</li>
         </ul>
       </div>
@@ -494,7 +494,7 @@ export function buildHighRiskComplianceBrandConfirmation(input: {
       children: body,
       footerNote: 'UGC VZ Compliance & Payment Operations · hi@ugc-vz.de',
     }),
-    text: `Hallo ${firstName},\n\ndanke für deine Anfrage zur Sonderbranchen-Abrechnung (${input.industryLabel}) für ${input.companyName}.\nKondition: ${input.feePercent} % High-Risk-Servicegebühr (Creator 0 %).\nUnser Team meldet sich innerhalb von 24h per ${input.preferredContact === 'call' ? 'Call' : 'E-Mail'}.\n\nUGC VZ · track by track GmbH · Berlin`,
+    text: `Hallo ${firstName},\n\ndanke für deine Anfrage zur Sonderbranchen-Abrechnung (${input.industryLabel}) für ${input.companyName}.\nDie genauen Sonderkonditionen klären wir transparent im Gespräch oder per E-Mail (Creator 0 %).\nUnser Team meldet sich innerhalb von 24h per ${input.preferredContact === 'call' ? 'Call' : 'E-Mail'}.\n\nUGC VZ · track by track GmbH · Berlin`,
   };
 }
 

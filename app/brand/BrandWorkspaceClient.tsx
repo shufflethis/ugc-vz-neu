@@ -410,7 +410,7 @@ function BrandLoginView({ initialTab }: { initialTab: 'login' | 'signup' }) {
                           <p className="font-bold text-[#D10523]">Sonderbranche / High-Risk-Abrechnung</p>
                           <p className="mt-0.5 text-[#5C6470]">
                             {isHighRiskCategory(industryCategory)
-                              ? `${INDUSTRY_CATEGORIES[industryCategory].description} Kondition: ${Math.round(INDUSTRY_CATEGORIES[industryCategory].defaultFeeBps / 100)} % Servicegebühr (Creator 0 %). Direkt nach dem Login kannst du einen kurzen Call oder E-Mail-Check starten.`
+                              ? `${INDUSTRY_CATEGORIES[industryCategory].description} Konditionen klären wir individuell nach Zahlungsweg & Umfang (Creator 0 %). Direkt nach dem Login kannst du einen kurzen Call oder E-Mail-Check starten.`
                               : detectHighRiskKeywords(company, email).summary}
                           </p>
                         </div>

@@ -69,7 +69,7 @@ export const INDUSTRY_CATEGORIES: Record<IndustryCategory, IndustryCategoryMeta>
     isHighRisk: true,
     defaultFeeBps: 2500,
     stripeAllowed: false,
-    description: 'Erhöhte Compliance- & Chargeback-Anforderungen: individuelle Freigabe + 25 % High-Risk-Servicegebühr.',
+    description: 'Erhöhte Compliance- & Chargeback-Anforderungen: individuelle Freigabe & Sonderkonditionen nach kurzem Call oder E-Mail-Check.',
     availableRails: ['SEPA-Vorkasse / Rechnung', 'High-Risk-PSP (nach Prüfung)'],
   },
   other_high_risk: {
@@ -189,8 +189,8 @@ export function detectHighRiskKeywords(...fields: Array<string | null | undefine
         && /\b(skincare|kosmetik|serum|creme|hautpflege)\b/i.test(combined);
       const feePercent = Math.round(meta.defaultFeeBps / 100);
       const summary = skincareNuance
-        ? `Hinweis (${matched.join(', ')}): Topische Skincare kann nach kurzem Produkt-Check regulär über Stripe laufen; Research-Peptide & Supplements fallen unter Stripe-Restricted (Sonder-Zahlungsweg mit ${feePercent} % Servicegebühr).`
-        : `Sonderbranche erkannt (${matched.join(', ')}): Stripe akzeptiert diese Branche nicht regulär. Abrechnung läuft über Vorkasse, High-Risk-PSP oder Sonder-Settlement (${feePercent} % Servicegebühr) nach kurzem Call oder E-Mail-Check.`;
+        ? `Hinweis (${matched.join(', ')}): Topische Skincare kann nach kurzem Produkt-Check regulär über Stripe laufen; Research-Peptide & Supplements fallen unter Stripe-Restricted (Sonder-Zahlungsweg zu individuellen Sonderkonditionen).`
+        : `Sonderbranche erkannt (${matched.join(', ')}): Stripe akzeptiert diese Branche nicht regulär. Abrechnung läuft über Vorkasse, High-Risk-PSP oder Sonder-Settlement zu individuellen Sonderkonditionen nach kurzem Call oder E-Mail-Check.`;
 
       return {
         flagged: true,

@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
           code: 'high_risk_stripe_blocked',
           industryCategory: brand.industryCategory,
           highRiskFeePercent: feePct,
-          error: `Dein Konto ist als Sonderbranche (${meta.shortLabel}) eingestuft. Stripe akzeptiert diese Branche nicht regulär – die Aufladung erfolgt über SEPA-Vorkasse, High-Risk-PSP oder Sonder-Settlement (${feePct} % Servicegebühr). Starte direkt im Wallet den kurzen Compliance-Check per Call oder E-Mail.`,
+          error: `Dein Konto ist als Sonderbranche (${meta.shortLabel}) eingestuft. Stripe akzeptiert diese Branche nicht regulär – die Aufladung erfolgt über SEPA-Vorkasse, High-Risk-PSP oder Sonder-Settlement zu individuellen Sonderkonditionen. Starte direkt im Wallet den kurzen Compliance-Check per Call oder E-Mail.`,
         },
         { status: 403 },
       );
