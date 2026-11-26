@@ -1,16 +1,20 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { Metadata } from 'next';
+import type { Metadata } from 'next';
+import { ArrowRight } from 'lucide-react';
 import BreadcrumbSchema from '../components/BreadcrumbSchema';
 import HomePageSchema from '../components/HomePageSchema';
+import FloFounderCard from '../components/home/FloFounderCard';
 
 export const metadata: Metadata = {
-  title: 'Über uns – Das kostenlose Creator-Verzeichnis',
-  description: 'UGC-VZ ist mehr als nur ein Verzeichnis – wir sind die Brücke zwischen talentierten UGC Creators und Unternehmen. Komplett kostenlos für beide Seiten.',
-  keywords: 'UGC VZ, Über uns, Creator Verzeichnis, famefact, Social Media Agentur, User Generated Content',
+  title: 'Über uns',
+  description:
+    'Wir kommen aus der Social-Media-Agentur famefact in Berlin. Deshalb haben wir UGC VZ gebaut: klare Abläufe für Creator-Kampagnen nach Views in DACH.',
+  keywords: 'UGC VZ, Über uns, famefact, track by track GmbH, Creator Kampagnen, Berlin',
   openGraph: {
-    title: 'Über uns – Das kostenlose Creator-Verzeichnis',
-    description: 'Wir demokratisieren User Generated Content. Jeder Creator verdient eine Chance, entdeckt zu werden.',
+    title: 'Über uns | UGC VZ',
+    description:
+      'Wir kommen aus der Agentur famefact. Deshalb haben wir UGC VZ gebaut: Brief, Posting, Prüfung, Abrechnung.',
     url: 'https://ugc-vz.de/about',
     siteName: 'UGC VZ',
     locale: 'de_DE',
@@ -20,255 +24,209 @@ export const metadata: Metadata = {
         url: 'https://ugc-vz.de/ugc-vz-logo.webp',
         width: 1200,
         height: 630,
-        alt: 'UGC VZ - Über uns',
+        alt: 'UGC VZ Team aus Berlin',
       },
     ],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Über UGC VZ - Das kostenlose Creator-Verzeichnis',
-    description: 'Wir demokratisieren User Generated Content. Komplett kostenlos für Creator und Unternehmen.',
-    images: ['https://ugc-vz.de/ugc-vz-logo.webp'],
-    creator: '@Ugc_Vz',
   },
   alternates: {
     canonical: 'https://ugc-vz.de/about',
   },
 };
 
-const team: Array<{ slug: string; name: string; role: string; bio: string; hasPhoto?: boolean; initials?: string }> = [
-  { slug: 'tobias', name: 'Tobias', role: 'Gründer & CEO', bio: 'Treibt die Vision von UGC-VZ voran: messbarer UGC aus dem DACH-Raum mit klarem Brand-Workspace und starken Creator-Partnerschaften.', hasPhoto: true },
-  { slug: 'gorden', name: 'Gorden', role: 'Co-Founder', bio: 'Verantwortet Produkt, Plattform-Architektur und Partnerschaften bei UGC-VZ.', hasPhoto: true },
-  { slug: 'florian', name: 'Florian', role: 'Brand Partnerships & Wachstum', bio: 'Erster Ansprechpartner für Pilotkampagnen, View-Modelle (TKP), TikTok Shop und laufende Creator-Programme.', hasPhoto: false, initials: 'FR' },
-  { slug: 'robert', name: 'Robert', role: 'Lead Creator Relations', bio: 'Betreut die Creator-Community und hilft Talenten, mit verifizierten Profilen passende Kampagnen zu gewinnen.', hasPhoto: true },
-  { slug: 'marcel', name: 'Marcel', role: 'Head of Performance & UGC-Ads', bio: 'Weiß, welcher Creator-Content auf Paid Social tatsächlich konvertiert – und welcher nur schön aussieht.', hasPhoto: true },
-  { slug: 'patrick', name: 'Patrick', role: 'Senior Campaign Manager', bio: 'Bringt Brands und Creator in Projekten zusammen und hält Kampagnen zuverlässig on track.', hasPhoto: true },
-  { slug: 'jan', name: 'Jan', role: 'Head of Tech & Plattform', bio: 'Hält Plattform, Tracking und Brand-Workspace schnell, stabil und für beide Seiten einfach bedienbar.', hasPhoto: true },
-  { slug: 'thomas', name: 'Thomas', role: 'Head of Sound', bio: 'Kümmert sich darum, dass UGC-Videos auch akustisch im Kopf hängen bleiben.', hasPhoto: true },
+const TEAM: Array<{
+  slug: string;
+  name: string;
+  role: string;
+  bio: string;
+  hasPhoto: boolean;
+  initials?: string;
+}> = [
+  {
+    slug: 'tobias',
+    name: 'Tobias Sander',
+    role: 'Gründer & Geschäftsführer',
+    bio: 'Führt die track by track GmbH und famefact in Berlin und verantwortet die strategische Entwicklung von UGC VZ.',
+    hasPhoto: true,
+  },
+  {
+    slug: 'gorden',
+    name: 'Gorden',
+    role: 'Co-Founder',
+    bio: 'Verantwortet Produkt, Plattform-Architektur und Partnerschaften bei UGC VZ.',
+    hasPhoto: true,
+  },
+  {
+    slug: 'florian',
+    name: 'Florian Runge',
+    role: 'Brand Partnerships',
+    bio: 'Direkter Ansprechpartner für Marken, Pilotkampagnen nach Views, TikTok Shop und laufende Creator-Programme.',
+    hasPhoto: false,
+    initials: 'FR',
+  },
+  {
+    slug: 'robert',
+    name: 'Robert',
+    role: 'Lead Creator Relations',
+    bio: 'Betreut die Creator-Community und unterstützt Profile bei Kampagnen, Verifizierung und Qualität.',
+    hasPhoto: true,
+  },
+  {
+    slug: 'marcel',
+    name: 'Marcel',
+    role: 'Head of Performance & UGC-Ads',
+    bio: 'Prüft, welche Hooks und Creator-Formate auf TikTok, Reels und Paid Social wirklich funktionieren.',
+    hasPhoto: true,
+  },
+  {
+    slug: 'patrick',
+    name: 'Patrick',
+    role: 'Senior Campaign Manager',
+    bio: 'Begleitet Marken und Creator bei Briefings, Abläufen und pünktlicher Kampagnen-Umsetzung.',
+    hasPhoto: true,
+  },
+  {
+    slug: 'jan',
+    name: 'Jan',
+    role: 'Head of Tech & Plattform',
+    bio: 'Hält Suche, Konten, Tracking und Reporting schnell, stabil und einfach bedienbar.',
+    hasPhoto: true,
+  },
+  {
+    slug: 'thomas',
+    name: 'Thomas',
+    role: 'Head of Sound',
+    bio: 'Kümmert sich darum, dass Videos auch bei Sprache, Ton und Sounddesign sauber sitzen.',
+    hasPhoto: true,
+  },
 ];
 
 export default function AboutPage() {
   const breadcrumbs = [
     { name: 'Home', url: 'https://ugc-vz.de' },
-    { name: 'Über uns', url: 'https://ugc-vz.de/about' }
+    { name: 'Über uns', url: 'https://ugc-vz.de/about' },
   ];
 
   return (
-    <div className="min-h-screen text-ink">
-      {/* Schema.org structured data */}
+    <div className="min-h-screen bg-white text-[#121212]">
       <HomePageSchema />
       <BreadcrumbSchema items={breadcrumbs} />
-      
-      {/* Header */}
 
-      {/* Main Content */}
-      <div className="px-4 sm:px-8 md:px-16 lg:px-24 pb-24 pt-10 sm:pt-14">
-        <div className="max-w-4xl mx-auto">
-          {/* Hero Section */}
-          <div className="text-center mb-16">
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6">
-              Das kostenlose <span className="gradient-text">Creator-Verzeichnis</span>, das echte Connections schafft
+      {/* Hero (Spec 8.2 about.page) */}
+      <section aria-labelledby="about-hero-title" className="bg-[#F7F6F2] px-5 py-16 sm:px-8 sm:py-24">
+        <div className="mx-auto max-w-[1200px]">
+          <div className="max-w-3xl">
+            <p className="text-sm font-medium text-[#6C2BD9]">Über UGC VZ · Berlin</p>
+            <h1
+              id="about-hero-title"
+              className="mt-2 font-display text-[38px] font-bold leading-[42px] tracking-[-0.02em] text-[#121212] sm:text-5xl sm:leading-[1.08] lg:text-[60px] lg:leading-[66px]"
+            >
+              Wir kommen aus der Agentur. Deshalb haben wir UGC VZ gebaut.
             </h1>
-            <p className="text-xl text-ink-soft max-w-3xl mx-auto leading-relaxed">
-              Wir glauben: Authentischer Content entsteht, wenn die richtigen Menschen zusammenfinden.
+            <p className="mt-5 text-base leading-7 text-[#5C5A55] sm:text-lg sm:leading-8">
+              Bei famefact arbeiten wir seit Jahren mit Marken und Creatorn. Wir haben gesehen, wie viel Zeit für Mails, Absprachen und Link-Sammeln draufgeht. UGC VZ macht daraus einen klaren Ablauf: Brief, Posting, Prüfung, Abrechnung.
             </p>
           </div>
 
-          {/* Introduction */}
-          <div className="surface-card rounded-2xl p-8 mb-12">
-            <p className="text-lg text-ink-soft leading-relaxed">
-              UGC-VZ ist mehr als nur ein Verzeichnis – wir sind die Brücke zwischen talentierten UGC Creators und Unternehmen,
-              die echte Geschichten erzählen wollen. <span className="text-geo-violet font-semibold">Komplett kostenlos. Für beide Seiten.</span>
+          <div className="mt-10 rounded-[20px] border border-[#E4E1D8] bg-white p-6 shadow-card sm:p-8">
+            <h2 className="font-display text-xl font-bold text-[#121212]">Wie wir arbeiten</h2>
+            <p className="mt-3 max-w-3xl text-sm leading-7 text-[#5C5A55] sm:text-base">
+              UGC VZ ist ein Produkt der track by track GmbH in Berlin, dem Team hinter der Social-Media-Agentur{' '}
+              <a
+                href="https://famefact.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-semibold text-[#121212] underline underline-offset-4 hover:text-[#6C2BD9]"
+              >
+                famefact
+              </a>
+              . Marken starten ohne Abo und mit fester Budget-Obergrenze. Creator zahlen 0 % Gebühr und sehen vor jedem Dreh, was eine Kampagne pro 1.000 Views zahlt. Wenn ein Team darüber hinaus strategische Agentur-Begleitung braucht, sind wir direkt ansprechbar.
             </p>
           </div>
-
-          {/* Mission Section */}
-          <section className="mb-16">
-            <h2 className="text-3xl font-bold mb-6 text-center">
-              <span className="gradient-text">Unsere Mission</span>
-            </h2>
-            <div className="surface-card rounded-2xl p-8">
-              <p className="text-lg text-ink-soft leading-relaxed">
-                Wir demokratisieren User Generated Content. Jeder Creator verdient eine Chance, entdeckt zu werden.
-                Jedes Unternehmen – egal ob Startup oder etablierte Marke – sollte Zugang zu authentischem Content haben,
-                ohne Umwege über teure Agenturen oder komplizierte Plattformen.
-              </p>
-            </div>
-          </section>
-
-          {/* Why UGC-VZ Section */}
-          <section className="mb-16">
-            <h2 className="text-3xl font-bold mb-8 text-center">
-              Warum <span className="gradient-text">UGC-VZ</span>?
-            </h2>
-            <div className="grid md:grid-cols-2 gap-8">
-              {/* For Creators */}
-              <div className="surface-card rounded-2xl p-8">
-                <div className="flex items-center mb-4">
-                  <div className="w-12 h-12 bg-geo-violet rounded-full flex items-center justify-center mr-4">
-                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                  </div>
-                  <h3 className="text-xl font-semibold text-geo-violet">Für Creators</h3>
-                </div>
-                <p className="text-ink-soft leading-relaxed">
-                  Zeig dich, wie du bist. Erstelle dein kostenloses Profil, präsentiere dein Portfolio und werde von Unternehmen entdeckt,
-                  die genau nach deinem Style suchen. Kein Algorithmus, keine versteckten Kosten – nur echte Opportunities.
-                </p>
-              </div>
-
-              {/* For Companies */}
-              <div className="surface-card rounded-2xl p-8">
-                <div className="flex items-center mb-4">
-                  <div className="w-12 h-12 bg-geo-violet rounded-full flex items-center justify-center mr-4">
-                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                    </svg>
-                  </div>
-                  <h3 className="text-xl font-semibold text-geo-violet">Für Unternehmen</h3>
-                </div>
-                <p className="text-ink-soft leading-relaxed">
-                  Finde den perfekten Creator für dein Projekt. Durchstöbere Profile, entdecke verschiedene Styles und knüpfe direkte Kontakte.
-                  Ob du ein kleines Budget oder große Kampagnen planst – hier findest du den richtigen Match.
-                </p>
-              </div>
-            </div>
-          </section>
-
-          {/* Background Section */}
-          <section className="mb-16">
-            <h2 className="text-3xl font-bold mb-6 text-center">
-              Unser <span className="gradient-text">Background</span>
-            </h2>
-            <div className="surface-card rounded-2xl p-8">
-              <p className="text-lg text-ink-soft leading-relaxed mb-4">
-                UGC-VZ wurde von <span className="text-geo-violet font-semibold">famefact</span> ins Leben gerufen – einer der führenden Social Media Agenturen Deutschlands mit über 15 Jahren Erfahrung.
-                Wir wissen aus erster Hand, wie kraftvoll authentischer User Generated Content ist.
-              </p>
-              <p className="text-lg text-ink-soft leading-relaxed">
-                Gleichzeitig sehen wir täglich, dass viele großartige Projekte an unserem Agentur-Desk vorbeigehen, weil sie &ldquo;zu klein&rdquo; erscheinen.
-                <span className="text-geo-violet font-semibold"> Das wollten wir ändern.</span>
-              </p>
-            </div>
-          </section>
-
-          {/* Team Section */}
-          <section className="mb-16">
-            <h2 className="text-3xl font-bold mb-4 text-center">
-              Das Team hinter <span className="gradient-text">UGC-VZ</span>
-            </h2>
-            <p className="text-lg text-ink-soft leading-relaxed text-center max-w-3xl mx-auto mb-10">
-              Menschen aus der famefact-Agentur, die täglich mit Creators und Brands arbeiten – und genau wissen,
-              was authentischen User Generated Content ausmacht.
-            </p>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
-              {team.map((member) => (
-                <div key={member.slug} className="surface-card rounded-2xl overflow-hidden flex flex-col">
-                  <div className="relative aspect-[4/5] w-full bg-geo-violet/5">
-                    {member.hasPhoto ? (
-                      <Image
-                        src={`/team/${member.slug}.webp`}
-                        alt={`${member.name} – ${member.role} bei UGC-VZ`}
-                        fill
-                        sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                        className="object-cover object-top"
-                      />
-                    ) : (
-                      <div
-                        className="flex h-full w-full items-center justify-center text-4xl font-extrabold tracking-tight text-white"
-                        style={{ background: 'linear-gradient(152deg, #0396F8 0%, #3F58F2 50%, #9131EF 100%)' }}
-                        aria-label={`${member.name} – ${member.role}`}
-                      >
-                        {member.initials || member.name.slice(0, 2).toUpperCase()}
-                      </div>
-                    )}
-                  </div>
-                  <div className="p-4 flex flex-col flex-1">
-                    <h3 className="text-lg font-bold text-ink">{member.name}</h3>
-                    <p className="text-sm font-semibold text-geo-violet mb-2">{member.role}</p>
-                    <p className="text-sm text-ink-soft leading-relaxed">{member.bio}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          {/* Philosophy Section */}
-          <section className="mb-16">
-            <h2 className="text-3xl font-bold mb-8 text-center">
-              Unsere <span className="gradient-text">Philosophie</span>
-            </h2>
-            <div className="grid md:grid-cols-2 gap-8">
-              {/* Free Forever */}
-              <div className="surface-card rounded-2xl p-8">
-                <div className="flex items-center mb-4">
-                  <div className="w-12 h-12 bg-geo-violet rounded-full flex items-center justify-center mr-4">
-                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                    </svg>
-                  </div>
-                  <h3 className="text-xl font-semibold text-geo-violet">Fair, transparent &amp; ohne Pflicht-Abo</h3>
-                </div>
-                <p className="text-ink-soft leading-relaxed">
-                  Für Creator ist das Profil bei UGC VZ dauerhaft kostenlos. Brands starten ohne monatliches Pflicht-Abo im Brand-Workspace,
-                  steuern View-Kampagnen oder Produkt-Tests mit voller Kostenkontrolle und können bei Bedarf direkt auf die Agentur-Expertise von famefact zurückgreifen.
-                </p>
-              </div>
-
-              {/* Quality over Quantity */}
-              <div className="surface-card rounded-2xl p-8">
-                <div className="flex items-center mb-4">
-                  <div className="w-12 h-12 bg-geo-violet rounded-full flex items-center justify-center mr-4">
-                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
-                  <h3 className="text-xl font-semibold text-geo-violet">Qualität vor Quantität</h3>
-                </div>
-                <p className="text-ink-soft leading-relaxed">
-                  Wir glauben an echte Connections, nicht an oberflächliche Matches. Jedes Profil wird gepflegt,
-                  jede Anfrage hat das Potenzial für eine langfristige Partnerschaft.
-                </p>
-              </div>
-            </div>
-          </section>
-
-          {/* Join the Movement Section */}
-          <section className="mb-16">
-            <div className="surface-card rounded-2xl p-12 text-center">
-              <h2 className="text-3xl font-bold mb-6">
-                Join the <span className="gradient-text">Movement</span>
-              </h2>
-              <p className="text-lg text-ink-soft leading-relaxed mb-8 max-w-3xl mx-auto">
-                UGC-VZ ist mehr als eine Plattform – es ist eine Community von Creators und Brands, die authentische Geschichten schätzen.
-                Hier entstehen Partnerships auf Augenhöhe, wo kreative Visionen auf unternehmerische Ziele treffen.
-              </p>
-              <p className="text-xl text-ink-soft leading-relaxed mb-8">
-                <span className="text-geo-violet font-semibold">Ready to connect?</span> Dann bist du hier richtig.
-              </p>
-              <p className="text-2xl font-bold gradient-text">
-                Willkommen bei UGC-VZ – wo authentischer Content zuhause ist.
-              </p>
-
-              <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
-                <Link
-                  href="/"
-                  className="bg-geo-violet hover:bg-geo-violet-soft text-white font-semibold py-3 px-8 rounded-lg transition-all transform hover:scale-105"
-                >
-                  Creator finden
-                </Link>
-                <Link
-                  href="/creator#creator-form"
-                  className="border border-geo-violet text-geo-violet hover:bg-geo-violet hover:text-white font-semibold py-3 px-8 rounded-lg transition-all transform hover:scale-105"
-                >
-                  Creator werden
-                </Link>
-              </div>
-            </div>
-          </section>
         </div>
-      </div>
+      </section>
+
+      {/* Prominenter Ansprechpartner: Florian Runge */}
+      <FloFounderCard />
+
+      {/* Team-Raster */}
+      <section aria-labelledby="about-team-title" className="bg-[#F7F6F2] px-5 py-16 sm:px-8 sm:py-24">
+        <div className="mx-auto max-w-[1200px]">
+          <div className="max-w-2xl">
+            <p className="text-sm font-medium text-[#5C5A55]">track by track GmbH · famefact</p>
+            <h2
+              id="about-team-title"
+              className="mt-1 font-display text-[30px] font-bold leading-[34px] tracking-[-0.02em] text-[#121212] sm:text-[44px] sm:leading-[48px]"
+            >
+              Die Menschen dahinter
+            </h2>
+            <p className="mt-3 text-base leading-7 text-[#5C5A55]">
+              Das Team aus Berlin, das täglich mit Marken, Performance-Teams und Creatorn in Deutschland, Österreich und der Schweiz arbeitet.
+            </p>
+          </div>
+
+          <div className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {TEAM.map((member) => (
+              <article
+                key={member.slug}
+                className="flex flex-col overflow-hidden rounded-[20px] border border-[#E4E1D8] bg-white shadow-card"
+              >
+                <div className="relative aspect-[4/5] w-full bg-[#F7F6F2]">
+                  {member.hasPhoto ? (
+                    <Image
+                      src={`/team/${member.slug}.webp`}
+                      alt={`${member.name}, ${member.role} bei UGC VZ`}
+                      fill
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                      className="object-cover object-top"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full flex-col items-center justify-center bg-[#121212] p-6 text-center text-[#F7F6F2]">
+                      <span className="font-display text-4xl font-bold">{member.initials}</span>
+                      <span className="mt-3 rounded-lg border border-white/20 px-2.5 py-1 text-[11px] text-[#F7F6F2]/75">
+                        [PLATZHALTER: Foto Florian Runge 4:5]
+                      </span>
+                    </div>
+                  )}
+                </div>
+                <div className="flex flex-1 flex-col p-5">
+                  <h3 className="font-display text-lg font-bold text-[#121212]">{member.name}</h3>
+                  <p className="mt-0.5 text-xs font-semibold uppercase tracking-wide text-[#6C2BD9]">
+                    {member.role}
+                  </p>
+                  <p className="mt-2.5 text-sm leading-6 text-[#5C5A55]">{member.bio}</p>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Abschluss-CTA */}
+      <section className="bg-white px-5 py-16 sm:px-8">
+        <div className="mx-auto max-w-[1200px] rounded-[24px] bg-[#121212] px-6 py-14 text-center text-[#F7F6F2] sm:px-12">
+          <h2 className="font-display text-3xl font-bold tracking-[-0.02em] sm:text-4xl">
+            Fragen zu einer ersten Kampagne?
+          </h2>
+          <p className="mx-auto mt-3 max-w-lg text-base text-[#F7F6F2]/75">
+            Schreib uns direkt nach Berlin oder starte dein kostenloses Marken-Konto in einer Minute.
+          </p>
+          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <Link
+              href="/contact"
+              className="btn-press inline-flex min-h-[52px] items-center gap-2 rounded-full bg-[#F7F6F2] px-7 text-sm font-semibold text-[#121212] hover:opacity-90"
+            >
+              <span>Sprich mit uns</span>
+              <ArrowRight size={16} aria-hidden="true" />
+            </Link>
+            <Link
+              href="/brand?tab=signup"
+              className="btn-press inline-flex min-h-[52px] items-center rounded-full border border-white/25 px-7 text-sm font-semibold text-[#F7F6F2] hover:border-white/60"
+            >
+              Kampagne starten
+            </Link>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import PreferredSourceBadge from '../components/PreferredSourceBadge';
+import { ArrowRight } from 'lucide-react';
 import BreadcrumbSchema from '../components/BreadcrumbSchema';
 import JsonLdScript from './[slug]/JsonLdScript';
 import ClientWissenContent from './ClientWissenContent';
@@ -35,58 +35,83 @@ export default function WissenListingPage({ page }: { page: number }) {
   };
 
   return (
-    <div className="min-h-screen text-ink">
+    <div className="min-h-screen bg-white text-[#121212]">
       <JsonLdScript data={schema} />
-      <BreadcrumbSchema items={[
-        { name: 'Home', url: 'https://ugc-vz.de' },
-        { name: 'Wissen', url: 'https://ugc-vz.de/wissen' },
-        ...(page > 1 ? [{ name: `Seite ${page}`, url: `https://ugc-vz.de${pageHref(page)}` }] : []),
-      ]} />
+      <BreadcrumbSchema
+        items={[
+          { name: 'Home', url: 'https://ugc-vz.de' },
+          { name: 'Wissen', url: 'https://ugc-vz.de/wissen' },
+          ...(page > 1 ? [{ name: `Seite ${page}`, url: `https://ugc-vz.de${pageHref(page)}` }] : []),
+        ]}
+      />
 
-
-      <div className="px-4 sm:px-8 md:px-16 lg:px-24 pb-24 pt-10 sm:pt-14">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6">
-              <span className="gradient-text">Wissen</span> für UGC Creators
-            </h1>
-            <p className="text-xl text-ink-soft max-w-3xl mx-auto leading-relaxed">
-              Fundierte Guides für Creator, Brands und Marketing-Teams. Von Strategie und Preisen bis zu Briefing, Rechten und Kampagnenpraxis.
+      <section className="bg-[#F7F6F2] px-5 py-14 sm:px-8 sm:py-20">
+        <div className="mx-auto max-w-[1200px]">
+          <p className="text-sm font-medium text-[#6C2BD9]">Ratgeber &amp; Praxiswissen</p>
+          <h1 className="mt-2 font-display text-4xl font-bold leading-tight tracking-[-0.02em] sm:text-5xl">
+            Wissen rund um Creator-Kampagnen
+          </h1>
+          <p className="mt-4 max-w-2xl text-base leading-7 text-[#5C5A55] sm:text-lg">
+            Praxisnahe Guides für Marken und Creator zu View-Kampagnen, Preisen, Verträgen, Rechten und Briefings.
+          </p>
+          {page > 1 && (
+            <p className="mt-3 text-sm font-medium text-[#5C5A55]">
+              Seite {page} von {pageCount}
             </p>
-            {page > 1 && <p className="mt-4 text-sm text-ink-soft">Seite {page} von {pageCount}</p>}
-            <div className="mt-8 flex justify-center">
-              <PreferredSourceBadge variant="dark" />
-            </div>
-          </div>
-
-          <ClientWissenContent posts={posts} />
-
-          {pageCount > 1 && (
-            <nav aria-label="Seitennavigation Wissen" className="mt-12 flex flex-wrap justify-center gap-2">
-              {Array.from({ length: pageCount }, (_, index) => index + 1).map((number) => (
-                <Link
-                  key={number}
-                  href={pageHref(number)}
-                  aria-current={number === page ? 'page' : undefined}
-                  className={`rounded-lg border px-4 py-2 text-sm font-semibold ${number === page ? 'border-geo-violet bg-geo-violet text-white' : 'border-hairline text-ink hover:border-geo-violet'}`}
-                >
-                  {number}
-                </Link>
-              ))}
-            </nav>
           )}
-
-          <section className="mt-20 grid md:grid-cols-2 gap-6">
-            <Link href="/brands" className="surface-card rounded-lg p-6 hover:border-geo-violet transition-colors">
-              <h2 className="text-2xl font-bold text-geo-violet mb-3">UGC Creator finden</h2>
-              <p className="text-ink-soft leading-relaxed">Demand eingeben, passende Creator ansehen und kostenlos Kontaktinformationen anfordern.</p>
-            </Link>
-            <Link href="/creator" className="surface-card rounded-lg p-6 hover:border-geo-violet transition-colors">
-              <h2 className="text-2xl font-bold text-geo-violet mb-3">Als UGC Creator anmelden</h2>
-              <p className="text-ink-soft leading-relaxed">Kostenlos Profil, Portfolio, Themen, Preise und Social-Links hinterlegen.</p>
-            </Link>
-          </section>
         </div>
+      </section>
+
+      <div className="mx-auto max-w-[1200px] px-5 py-12 sm:px-8 sm:py-16">
+        <ClientWissenContent posts={posts} />
+
+        {pageCount > 1 && (
+          <nav aria-label="Seitennavigation Wissen" className="mt-12 flex flex-wrap justify-center gap-2">
+            {Array.from({ length: pageCount }, (_, index) => index + 1).map((number) => (
+              <Link
+                key={number}
+                href={pageHref(number)}
+                aria-current={number === page ? 'page' : undefined}
+                className={`inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full border px-4 text-sm font-semibold transition-colors ${
+                  number === page
+                    ? 'border-[#121212] bg-[#121212] text-[#F7F6F2]'
+                    : 'border-[#E4E1D8] bg-white text-[#121212] hover:border-[#121212]'
+                }`}
+              >
+                {number}
+              </Link>
+            ))}
+          </nav>
+        )}
+
+        <section className="mt-16 grid gap-6 md:grid-cols-2">
+          <Link
+            href="/brands"
+            className="group rounded-[20px] border border-[#E4E1D8] bg-[#F7F6F2] p-7 transition-colors hover:border-[#121212]"
+          >
+            <h2 className="font-display text-2xl font-bold text-[#121212]">Für Marken</h2>
+            <p className="mt-2 text-sm leading-6 text-[#5C5A55]">
+              Starte Creator-Kampagnen nach geprüften Views mit fester Budget-Obergrenze und ohne Abo.
+            </p>
+            <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-[#121212] group-hover:text-[#6C2BD9]">
+              <span>Mehr erfahren</span>
+              <ArrowRight size={15} aria-hidden="true" />
+            </span>
+          </Link>
+          <Link
+            href="/creator"
+            className="group rounded-[20px] border border-[#E4E1D8] bg-[#F7F6F2] p-7 transition-colors hover:border-[#121212]"
+          >
+            <h2 className="font-display text-2xl font-bold text-[#121212]">Für Creator</h2>
+            <p className="mt-2 text-sm leading-6 text-[#5C5A55]">
+              Suche dir passende Kampagnen aus, poste auf deinem Profil und verdiene pro 1.000 Views bei 0 % Gebühr.
+            </p>
+            <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-[#121212] group-hover:text-[#6C2BD9]">
+              <span>Kostenlos mitmachen</span>
+              <ArrowRight size={15} aria-hidden="true" />
+            </span>
+          </Link>
+        </section>
       </div>
     </div>
   );

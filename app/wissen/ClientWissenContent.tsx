@@ -1,188 +1,224 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import ContactButton from '../components/ContactButton';
-
+import { ArrowRight, Search } from 'lucide-react';
 import type { ContentPostSummary } from '../lib/content-repository';
 
 export type ContentPostCard = ContentPostSummary & { authorName: string };
 
-interface ClientWissenContentProps {
-  posts: ContentPostCard[];
+type WissenFilter = 'alle' | 'marken' | 'creator' | 'recht' | 'preise';
+
+const FILTER_OPTIONS: Array<{ id: WissenFilter; label: string }> = [
+  { id: 'alle', label: 'Alle' },
+  { id: 'marken', label: 'Marken' },
+  { id: 'creator', label: 'Creator' },
+  { id: 'recht', label: 'Recht' },
+  { id: 'preise', label: 'Preise' },
+];
+
+function classifyPost(post: ContentPostCard): WissenFilter[] {
+  const haystack = `${post.slug} ${post.title} ${post.excerpt} ${post.categories.join(' ')}`.toLowerCase();
+  const buckets: WissenFilter[] = [];
+  if (/(recht|vertrag|nutzungsrecht|kennzeichnung|werbung|dsgvo|datenschutz|steuer|gewerbe|buyout)/.test(haystack)) {
+    buckets.push('recht');
+  }
+  if (/(preis|kosten|honorar|budget|tkp|verdien|geld|bezahl|tarif|rechner)/.test(haystack)) {
+    buckets.push('preise');
+  }
+  if (/(creator werden|portfolio|jobs|bewerb|auftraege|aufträge|anfangen|starter|equipment|skript)/.test(haystack)) {
+    buckets.push('creator');
+  }
+  if (/(brand|marke|unternehmen|kampagne|agentur|ad|roas|e-commerce|performance|briefing|finden)/.test(haystack)) {
+    buckets.push('marken');
+  }
+  return buckets.length > 0 ? buckets : ['marken'];
 }
 
+function formatDateDe(dateString: string): string {
+  const date = new Date(dateString);
+  if (Number.isNaN(date.getTime())) return '';
+  return date.toLocaleDateString('de-DE', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
+}
 
-
-export default function ClientWissenContent({ posts }: ClientWissenContentProps) {
-  // Formatierungsfunktion für Datum
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('de-DE', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  };
+export default function ClientWissenContent({ posts }: { posts: ContentPostCard[] }) {
   const [searchTerm, setSearchTerm] = useState('');
+  const [activeFilter, setActiveFilter] = useState<WissenFilter>('alle');
 
-  // Filter posts: nur Posts mit echten Bildern zeigen (keine Platzhalter)
-  const postsWithImages = posts.filter(post => 
-    post.featuredImage &&
-    post.featuredImage !== '/placeholder-blog.svg' &&
-    !post.featuredImage.includes('placeholder')
+  const postsWithImages = useMemo(
+    () =>
+      posts.filter(
+        (post) =>
+          post.featuredImage &&
+          post.featuredImage !== '/placeholder-blog.svg' &&
+          !post.featuredImage.includes('placeholder'),
+      ),
+    [posts],
   );
 
-  const filteredPosts = postsWithImages.filter(post =>
-    post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    post.excerpt.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filterCounts = useMemo(() => {
+    const counts: Record<WissenFilter, number> = {
+      alle: postsWithImages.length,
+      marken: 0,
+      creator: 0,
+      recht: 0,
+      preise: 0,
+    };
+    for (const post of postsWithImages) {
+      for (const bucket of classifyPost(post)) {
+        counts[bucket] += 1;
+      }
+    }
+    return counts;
+  }, [postsWithImages]);
+
+  const filteredPosts = useMemo(() => {
+    const q = searchTerm.trim().toLowerCase();
+    return postsWithImages.filter((post) => {
+      if (activeFilter !== 'alle' && !classifyPost(post).includes(activeFilter)) {
+        return false;
+      }
+      if (!q) return true;
+      return (
+        post.title.toLowerCase().includes(q) ||
+        post.excerpt.toLowerCase().includes(q) ||
+        post.authorName.toLowerCase().includes(q)
+      );
+    });
+  }, [postsWithImages, activeFilter, searchTerm]);
 
   return (
     <>
-      {/* Search Bar */}
-      <div className="mb-12">
-        <div className="max-w-2xl mx-auto">
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Artikel durchsuchen..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-6 py-4 bg-surface text-ink rounded-xl border border-hairline focus:border-geo-violet/50 focus:ring-2 focus:ring-geo-violet/20 focus:outline-none placeholder-ink-soft"
-            />
-            <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
-              <svg className="w-5 h-5 text-ink-soft" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            </div>
-          </div>
+      {/* Filter-Chips (Marken / Creator / Recht / Preise) + Suche */}
+      <div className="mb-10 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div role="group" aria-label="Artikel nach Thema filtern" className="flex flex-wrap gap-2">
+          {FILTER_OPTIONS.map((opt) => {
+            const active = activeFilter === opt.id;
+            return (
+              <button
+                key={opt.id}
+                type="button"
+                aria-pressed={active}
+                onClick={() => setActiveFilter(opt.id)}
+                className={`min-h-[42px] rounded-full border px-4 text-sm font-semibold transition-colors ${
+                  active
+                    ? 'border-[#121212] bg-[#121212] text-[#F7F6F2]'
+                    : 'border-[#E4E1D8] bg-white text-[#121212] hover:border-[#121212]'
+                }`}
+              >
+                <span>{opt.label}</span>
+                <span className={`ml-1.5 font-mono text-xs tabular-nums ${active ? 'text-[#C8F04B]' : 'text-[#5C5A55]'}`}>
+                  {filterCounts[opt.id]}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="relative w-full lg:max-w-sm">
+          <input
+            type="search"
+            aria-label="Artikel durchsuchen"
+            placeholder="Artikel durchsuchen..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="min-h-[44px] w-full rounded-full border border-[#E4E1D8] bg-[#F7F6F2] pl-4 pr-11 text-sm text-[#121212] placeholder-[#5C5A55] outline-none transition-colors focus:border-[#6C2BD9] focus:bg-white focus:ring-4 focus:ring-[#6C2BD9]/15"
+          />
+          <Search
+            size={17}
+            aria-hidden="true"
+            className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-[#5C5A55]"
+          />
         </div>
       </div>
 
-      {/* No Results */}
-      {filteredPosts.length === 0 && searchTerm && (
-        <div className="text-center py-16">
-          <div className="surface-card rounded-xl p-8 max-w-md mx-auto">
-            <p className="text-ink-soft">Keine Artikel gefunden für &ldquo;{searchTerm}&rdquo;</p>
-            <button
-              onClick={() => setSearchTerm('')}
-              className="mt-4 text-geo-violet hover:text-geo-violet-soft transition-colors"
-            >
-              Alle Artikel anzeigen
-            </button>
-          </div>
+      {/* Leerer Zustand */}
+      {filteredPosts.length === 0 && (
+        <div className="rounded-[20px] border border-[#E4E1D8] bg-[#F7F6F2] p-10 text-center">
+          <p className="text-base font-medium text-[#121212]">
+            Keine passenden Artikel für diese Auswahl gefunden.
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              setSearchTerm('');
+              setActiveFilter('alle');
+            }}
+            className="mt-4 inline-flex min-h-[44px] items-center rounded-full bg-[#121212] px-5 text-sm font-semibold text-[#F7F6F2]"
+          >
+            Filter zurücksetzen
+          </button>
         </div>
       )}
 
-      {/* Blog Posts Grid */}
+      {/* Artikel-Grid mit Autor und Pruefdatum */}
       {filteredPosts.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filteredPosts.map((post) => (
-            <article
-              key={post.slug}
-              className="surface-card rounded-2xl overflow-hidden hover:border-geo-violet/30 transition-all duration-300 group"
-            >
-              {/* Featured Image */}
-              <div className="relative h-48 overflow-hidden">
-                <Image
-                  src={post.featuredImage}
-                  alt={post.title}
-                  fill
-                  className="object-cover group-hover:scale-105 transition-transform duration-300"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.src = '/placeholder-blog.svg';
-                  }}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-              </div>
-
-              {/* Content */}
-              <div className="p-6">
-                {/* Categories */}
-                <div className="flex flex-wrap gap-2 mb-3">
-                  {post.categories.map((category) => (
-                    <span
-                      key={category}
-                      className="px-3 py-1 bg-geo-green/10 text-geo-violet text-xs rounded-full border border-hairline"
-                    >
-                      {category}
-                    </span>
-                  ))}
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {filteredPosts.map((post) => {
+            const reviewedDate = formatDateDe(post.modifiedAt || post.publishedAt);
+            return (
+              <article
+                key={post.slug}
+                className="group flex flex-col overflow-hidden rounded-[20px] border border-[#E4E1D8] bg-white shadow-card transition-colors hover:border-[#121212]/40"
+              >
+                <div className="relative aspect-[16/9] overflow-hidden bg-[#F7F6F2]">
+                  <Image
+                    src={post.featuredImage}
+                    alt={post.title}
+                    fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.src = '/placeholder-blog.svg';
+                    }}
+                  />
                 </div>
 
-                {/* Title */}
-                <h2 className="text-xl font-bold mb-3 text-ink group-hover:text-geo-violet transition-colors line-clamp-2">
-                  <Link href={`/wissen/${post.slug}`}>
-                    {post.title}
-                  </Link>
-                </h2>
+                <div className="flex flex-1 flex-col p-6">
+                  <div className="mb-3 flex flex-wrap gap-1.5">
+                    {post.categories.slice(0, 2).map((category) => (
+                      <span
+                        key={category}
+                        className="rounded-full border border-[#E4E1D8] bg-[#F7F6F2] px-2.5 py-0.5 text-xs font-medium text-[#5C5A55]"
+                      >
+                        {category}
+                      </span>
+                    ))}
+                  </div>
 
-                {/* Excerpt */}
-                <p className="text-ink-soft text-sm leading-relaxed mb-4 line-clamp-3">
-                  {post.excerpt}
-                </p>
+                  <h2 className="font-display text-xl font-bold leading-snug text-[#121212] line-clamp-2 group-hover:text-[#6C2BD9]">
+                    <Link href={`/wissen/${post.slug}`}>{post.title}</Link>
+                  </h2>
 
-                {/* Meta */}
-                <div className="flex items-center justify-between text-xs text-ink-soft">
-                  <span>{post.authorName}</span>
-                  <span>{formatDate(post.publishedAt)}</span>
-                </div>
+                  <p className="mt-2.5 flex-1 text-sm leading-6 text-[#5C5A55] line-clamp-3">
+                    {post.excerpt}
+                  </p>
 
-                {/* Read More Button */}
-                <div className="mt-4">
+                  <div className="mt-5 flex flex-wrap items-center justify-between gap-2 border-t border-[#E4E1D8] pt-4 text-xs text-[#5C5A55]">
+                    <span className="font-medium text-[#121212]">{post.authorName}</span>
+                    {reviewedDate && <span>Geprüft: {reviewedDate}</span>}
+                  </div>
+
                   <Link
                     href={`/wissen/${post.slug}`}
-                    aria-label={`${post.title} – weiterlesen`}
-                    className="inline-flex items-center text-geo-violet hover:text-geo-violet-soft transition-colors text-sm font-medium"
+                    aria-label={`${post.title} lesen`}
+                    className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-[#121212] hover:text-[#6C2BD9]"
                   >
-                    Weiterlesen
-                    <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
+                    <span>Artikel lesen</span>
+                    <ArrowRight size={14} aria-hidden="true" />
                   </Link>
                 </div>
-              </div>
-            </article>
-          ))}
+              </article>
+            );
+          })}
         </div>
       )}
-
-      {/* CTA Section */}
-      <section className="mt-20">
-        <div className="surface-card rounded-2xl p-12 text-center">
-          <h2 className="text-3xl font-bold mb-6">
-            Hast du <span className="gradient-text">Fragen</span> zu UGC?
-          </h2>
-          <p className="text-lg text-ink-soft leading-relaxed mb-8 max-w-2xl mx-auto">
-            Unser Team steht dir gerne zur Verfügung. Egal ob du Creator bist oder eine Brand –
-            wir helfen dir dabei, das Beste aus User Generated Content herauszuholen.
-          </p>
-
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <ContactButton
-              title="Kontakt aufnehmen"
-              subtitle="Haben Sie Fragen zu UGC oder Creator Marketing? Schreiben Sie uns!"
-            >
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-              </svg>
-              Kontakt aufnehmen
-            </ContactButton>
-            <Link
-              href="/"
-              className="bg-geo-violet hover:bg-geo-violet-soft text-white font-semibold py-3 px-8 rounded-lg transition-all transform hover:scale-105 inline-flex items-center justify-center"
-            >
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-              Creator finden
-            </Link>
-          </div>
-        </div>
-      </section>
     </>
   );
 }

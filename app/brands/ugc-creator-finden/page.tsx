@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { ArrowRight } from 'lucide-react';
 import { pageMetadata } from '@/utils/seo-metadata';
 import SearchBox from '../../components/SearchBox';
 import BreadcrumbSchema from '../../components/BreadcrumbSchema';
@@ -13,30 +14,30 @@ export const revalidate = 3600;
 
 export const metadata: Metadata = pageMetadata({
   path: '/brands/ugc-creator-finden',
-  title: 'UGC Creator finden – kostenlos im DACH-Verzeichnis',
-  description: `UGC Creator finden ohne Agentur & Abo: Durchsuche ${CREATOR_COUNT_LABEL} echte Profile mit Portfolio und Preisvorstellung und erhalte direkte Kontaktdaten kostenlos per E-Mail.`,
+  title: 'UGC Creator finden: DACH-Pool-Vorschau für Marken',
+  description: `Durchsuche ${CREATOR_COUNT_LABEL} echte Creator-Profile in 20 Kategorien nach Arbeitsproben, Stil und Thema. Kampagnen-Briefings und Zusammenarbeit laufen gesammelt über dein kostenloses Marken-Konto.`,
 });
 
 const faqs = [
   {
     question: 'Wie finde ich schnell passende UGC Creator für mein Produkt?',
     answer:
-      'Beschreibe oben kurz Produkt, Zielgruppe, Plattform (z. B. TikTok, Instagram Reels, Meta Ads) und deinen Budgetrahmen. Du siehst sofort passende Profile mit Arbeitsproben und Preisvorstellungen, markierst 3–5 Favoriten und forderst ihre Kontaktdaten kostenlos per E-Mail an.',
+      'Beschreibe oben kurz Produkt, Zielgruppe und Plattform wie TikTok, Instagram Reels oder YouTube Shorts. Die Suche filtert in 20 Kategorien nach echten Profilen und Arbeitsproben.',
+  },
+  {
+    question: 'Warum brauche ich für Kontakt und Kampagnen ein Marken-Konto?',
+    answer:
+      'Die Pool-Vorschau ist ohne Login nutzbar. Für Kampagnen-Briefings, Einladungen und geprüfte Abrechnungen schützt das kostenlose Marken-Konto Creator vor Spam und bündelt alle Beiträge an einem Ort.',
   },
   {
     question: 'Worauf sollte ich beim Prüfen eines Creator-Profils achten?',
     answer:
-      'Schau zuerst in die verlinkten Arbeitsproben: Spricht der Creator natürlich vor der Kamera, passen Licht und Ton, wirken Hooks glaubwürdig? Danach prüfst du Preisvorstellung, Themen-Fit und ob E-Mail-Kontakt direkt hinterlegt ist.',
+      'Schau zuerst in die Arbeitsproben: Spricht der Creator natürlich vor der Kamera, passen Licht und Ton und greifen die ersten drei Sekunden? Danach prüfst du Themenkategorie und Stil.',
   },
   {
-    question: 'Wie viele Creator sollte ich pro Kampagne anfragen?',
+    question: 'Wie funktioniert die Abrechnung bei View-Kampagnen?',
     answer:
-      'Für eine typische Test-Kampagne mit 2–3 finalen Creatorn empfehlen wir, 5 bis 8 passende Profile anzufragen. So kannst du Verfügbarkeit, Paketpreise und Stil direkt vergleichen.',
-  },
-  {
-    question: 'Entstehen bei UGC VZ versteckte Kosten oder Provisionen?',
-    answer:
-      'Nein. Suche, Auswahl und Kontaktanfrage sind für Brands kostenlos (0 % Provision). Du bezahlst ausschließlich das Honorar, das du direkt mit dem jeweiligen Creator vereinbarst.',
+      'Du legst Preis pro 1.000 geprüfte Views und deine feste Budget-Obergrenze selbst fest. Im Kampagnenbudget sind regulär 15 % Servicegebühr enthalten, Creator zahlen 0 %.',
   },
 ];
 
@@ -55,122 +56,178 @@ export default async function UGCCreatorFindenPage() {
   const serviceSchema = {
     '@context': 'https://schema.org',
     '@type': 'Service',
-    name: 'UGC Creator finden',
-    description: `Kostenlose UGC-Creator-Suche für Brands in Deutschland, Österreich und der Schweiz (${CREATOR_COUNT_LABEL} Profile, ohne Provision).`,
+    name: 'UGC Creator Pool-Vorschau',
+    description: `Creator-Suche in 20 Kategorien für Marken in Deutschland, Österreich und der Schweiz (${CREATOR_COUNT_LABEL} Profile).`,
     provider: { '@type': 'Organization', '@id': 'https://ugc-vz.de/#organization' },
-    areaServed: { '@type': 'Country', name: 'Deutschland' },
-    offers: { '@type': 'Offer', price: '0', priceCurrency: 'EUR' },
+    areaServed: ['DE', 'AT', 'CH'],
   };
 
   return (
-    <div className="min-h-screen bg-white text-ink px-4 sm:px-8 md:px-16 lg:px-24 py-14">
+    <div className="min-h-screen bg-white text-[#121212]">
       <BreadcrumbSchema
         items={[
           { name: 'Home', url: 'https://ugc-vz.de' },
-          { name: 'Für Brands', url: 'https://ugc-vz.de/brands' },
-          { name: 'UGC Creator finden', url: 'https://ugc-vz.de/brands/ugc-creator-finden' },
+          { name: 'Für Marken', url: 'https://ugc-vz.de/brands' },
+          { name: 'Creator-Pool', url: 'https://ugc-vz.de/brands/ugc-creator-finden' },
         ]}
       />
       <JsonLdScript data={serviceSchema} />
       <FAQSchema faqItems={faqs} />
 
-      <div className="max-w-5xl mx-auto">
-        <Link href="/brands" className="text-sm text-ink-soft hover:text-ink">
-          ← UGC VZ für Brands
-        </Link>
+      {/* Header & Suchbereich */}
+      <section className="bg-[#F7F6F2] px-5 py-12 sm:px-8 sm:py-16">
+        <div className="mx-auto max-w-[1200px]">
+          <Link href="/brands" className="text-sm font-medium text-[#5C5A55] hover:text-[#121212]">
+            ← Zurück zu Für Marken
+          </Link>
 
-        <section className="py-10 sm:py-14 text-center">
-          <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#dce9d1] bg-[#edf5e5] px-3 py-1.5 text-xs font-semibold text-[#385523]">
-            {poolCount > 0 ? `${poolCount} aktive Profile` : `${CREATOR_COUNT_LABEL} Profile`}
-            {medianPrice ? ` · Einstiegs-Median ${medianPrice.toLocaleString('de-DE')} €` : ''} · 0 € Vermittlung
-          </p>
-          <h1 className="text-4xl sm:text-5xl font-bold mb-6 text-ink">UGC Creator finden – direkt &amp; ohne Provision</h1>
-          <p className="text-lg sm:text-xl text-ink-soft max-w-3xl mx-auto mb-10 leading-relaxed">
-            Suche passende UGC Creator für Produktvideos, Social Ads, Testimonials und Launches im DACH-Raum. Beschreibe kurz deinen Bedarf, vergleiche Portfolios und Preisvorstellungen und erhalte direkte Kontaktdaten kostenlos per E-Mail.
-          </p>
-          <div className="rounded-3xl border border-hairline bg-white p-4 text-left shadow-[0_24px_70px_rgba(35,22,47,0.08)] sm:p-8">
-            <SearchBox initialQuery="UGC Creator für Produktvideos auf TikTok und Instagram Reels" />
+          <div className="mt-6 max-w-3xl">
+            <p className="inline-flex flex-wrap items-center gap-2 rounded-full border border-[#E4E1D8] bg-white px-3.5 py-1 text-xs font-semibold text-[#121212]">
+              <span>{poolCount > 0 ? `${poolCount} aktive Profile` : `${CREATOR_COUNT_LABEL} Profile`}</span>
+              {medianPrice ? <span>· Richtwert-Median {medianPrice.toLocaleString('de-DE')} €</span> : null}
+              <span>· Pool-Vorschau</span>
+            </p>
+            <h1 className="mt-4 font-display text-4xl font-bold leading-tight tracking-[-0.02em] sm:text-5xl">
+              UGC Creator im DACH-Pool finden
+            </h1>
+            <p className="mt-4 text-base leading-7 text-[#5C5A55] sm:text-lg">
+              Durchsuche echte Profile nach Branche, Stil und Arbeitsproben. Für Kampagnen-Briefings, Einladungen und direkte Zusammenarbeit startest du danach in einer Minute im kostenlosen Marken-Konto.
+            </p>
           </div>
-        </section>
 
-        {/* 4 Schritte */}
-        <section className="py-8">
-          <h2 className="text-2xl sm:text-3xl font-bold mb-6 text-ink">So findest du in 4 Schritten den richtigen Creator</h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
+          <div className="mt-8 rounded-[24px] border border-[#E4E1D8] bg-white p-4 shadow-card sm:p-8">
+            <SearchBox
+              initialQuery="UGC Creator für Produktvideos auf TikTok und Instagram Reels"
+              showFeatured
+              hideNicheChips
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* 4 Schritte */}
+      <section className="bg-white px-5 py-16 sm:px-8">
+        <div className="mx-auto max-w-[1200px]">
+          <h2 className="font-display text-2xl font-bold tracking-[-0.02em] sm:text-3xl">
+            Vom ersten Treffer zur laufenden Kampagne
+          </h2>
+          <div className="mt-7 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
             {[
-              ['1. Bedarf beschreiben', 'Nenne Produkt, Zielgruppe, Video-Format (z. B. Unboxing, Testimonial, Hook-Ad) und deinen groben Budgetrahmen.'],
-              ['2. Portfolios prüfen', 'Öffne die verlinkten Arbeitsproben im Profil und achte auf Kamera-Präsenz, Tonqualität und authentischen Stil.'],
-              ['3. Favoriten anfragen', 'Wähle bis zu 10 Creator aus und fordere ihre Kontaktdaten kostenlos per E-Mail an; bei regulären bezahlten Anfragen können erreichbare Creator zusätzlich über dein Interesse informiert werden.'],
-              ['4. Direkt vereinbaren', 'Kläre Verfügbarkeit, Preis, Deliverables und Nutzungsrechte direkt – ohne Plattformgebühr und ohne Abo.'],
+              ['1. Bedarf beschreiben', 'Nenne Produkt, Zielgruppe und Format wie TikTok, Instagram Reel, Unboxing oder Produktdemo.'],
+              ['2. Profile & Proben prüfen', 'Filtere nach 20 Kategorien, Plattform und Stil. Öffne Arbeitsproben direkt im Profil.'],
+              ['3. Marken-Konto öffnen', 'Lege dein kostenloses Konto per 6-stelligem Code an und speichere dein Kampagnen-Briefing.'],
+              ['4. Nach Views oder Paket starten', 'Lade Favoriten ein oder öffne deine View-Kampagne mit fester Budget-Obergrenze.'],
             ].map(([title, copy]) => (
-              <div key={title} className="surface-card rounded-2xl p-6">
-                <h3 className="font-bold text-geo-violet mb-2">{title}</h3>
-                <p className="text-sm leading-6 text-ink-soft">{copy}</p>
+              <div key={title} className="rounded-[20px] border border-[#E4E1D8] bg-[#F7F6F2] p-6">
+                <h3 className="font-display text-lg font-bold text-[#121212]">{title}</h3>
+                <p className="mt-2 text-sm leading-6 text-[#5C5A55]">{copy}</p>
               </div>
             ))}
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* Qualitaetscheck & Fehler vermeiden */}
-        <section className="py-10 grid gap-6 md:grid-cols-2">
-          <div className="surface-card rounded-2xl p-6 sm:p-8">
-            <h2 className="text-2xl font-bold text-ink mb-4">Worauf Performance-Teams bei der Auswahl achten</h2>
-            <ul className="list-disc space-y-2.5 pl-5 text-sm leading-6 text-ink-soft">
-              <li><strong className="text-ink">Erste 3 Sekunden:</strong> Schafft es der Creator im Portfolio, sofort Aufmerksamkeit ohne gekünstelten Werbeton aufzubauen?</li>
-              <li><strong className="text-ink">Zielgruppen-Passung:</strong> Alter, Wohnumgebung und Sprache sollten zur echten Käufergruppe passen – nicht zu generischen Hochglanz-Stockclips.</li>
-              <li><strong className="text-ink">Klare Rechte &amp; Hooks:</strong> Frage immer direkt nach 2–3 Hook-Varianten pro Video und bezifferten Paid-Ads-Nutzungsrechten.</li>
+      {/* Qualitaetscheck & Brand Tools */}
+      <section className="bg-[#F7F6F2] px-5 py-16 sm:px-8">
+        <div className="mx-auto grid max-w-[1200px] gap-6 md:grid-cols-2">
+          <div className="rounded-[20px] border border-[#E4E1D8] bg-white p-6 shadow-card sm:p-8">
+            <h2 className="font-display text-2xl font-bold text-[#121212]">
+              Worauf Performance-Teams achten
+            </h2>
+            <ul className="mt-4 list-disc space-y-2.5 pl-5 text-sm leading-6 text-[#5C5A55]">
+              <li>
+                <strong className="text-[#121212]">Erste 3 Sekunden:</strong> Baut der Creator im Portfolio sofort Aufmerksamkeit ohne gekünstelten Werbeton auf?
+              </li>
+              <li>
+                <strong className="text-[#121212]">Zielgruppen-Passung:</strong> Passen Alltag, Umgebung und Sprache zur echten Käufergruppe deines Produkts?
+              </li>
+              <li>
+                <strong className="text-[#121212]">Klare Rechte und Hooks:</strong> Halte gewünschte Hook-Varianten und Nutzungsrechte direkt im Brief fest.
+              </li>
             </ul>
           </div>
-          <div className="surface-card rounded-2xl p-6 sm:p-8 flex flex-col justify-between">
+
+          <div className="flex flex-col justify-between rounded-[20px] border border-[#E4E1D8] bg-white p-6 shadow-card sm:p-8">
             <div>
-              <h2 className="text-2xl font-bold text-ink mb-4">Direkt starten mit kostenlosen Brand-Tools</h2>
-              <p className="text-sm leading-6 text-ink-soft mb-5">
-                Bevor du Creator anschreibst, kannst du Budget und Nutzungsrechte in zwei Minuten sauber vorbereiten – das beschleunigt Angebote spürbar.
+              <h2 className="font-display text-2xl font-bold text-[#121212]">
+                Nächste Schritte für Marken
+              </h2>
+              <p className="mt-2 text-sm leading-6 text-[#5C5A55]">
+                Kalkuliere dein Budget, prüfe transparente Konditionen oder starte direkt mit deiner ersten Kampagne.
               </p>
             </div>
-            <div className="space-y-2.5">
-              <Link href="/brands/ugc-kosten-rechner" className="flex items-center justify-between rounded-xl border border-hairline bg-white px-4 py-3 text-sm font-semibold text-geo-violet hover:border-geo-violet">
-                <span>UGC Kosten &amp; Nutzungsrechte kalkulieren</span>
-                <span>→</span>
-              </Link>
-              <Link href="/brands/ugc-vertrag-vorlage" className="flex items-center justify-between rounded-xl border border-hairline bg-white px-4 py-3 text-sm font-semibold text-geo-violet hover:border-geo-violet">
-                <span>Vertrags-Vorlage &amp; Anfrage-Text generieren</span>
-                <span>→</span>
-              </Link>
-              <Link href="/vergleich" className="flex items-center justify-between rounded-xl border border-hairline bg-white px-4 py-3 text-sm font-semibold text-ink hover:border-geo-violet">
-                <span>UGC-Plattformen sachlich vergleichen</span>
-                <span>→</span>
-              </Link>
+            <div className="mt-5 space-y-2.5">
+              {[
+                { href: '/brand?tab=signup', label: 'Kampagne im Marken-Konto starten' },
+                { href: '/preise', label: 'Preise & Servicegebühr ansehen' },
+                { href: '/brands/ugc-kosten-rechner', label: 'UGC Kosten & Nutzungsrechte kalkulieren' },
+                { href: '/brands/ugc-vertrag-vorlage', label: 'Vertragsvorlage erstellen' },
+              ].map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="flex min-h-[46px] items-center justify-between rounded-xl border border-[#E4E1D8] bg-[#F7F6F2] px-4 text-sm font-semibold text-[#121212] transition-colors hover:border-[#121212]"
+                >
+                  <span>{link.label}</span>
+                  <ArrowRight size={15} aria-hidden="true" />
+                </Link>
+              ))}
             </div>
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* Branchen */}
-        <section className="py-10" aria-labelledby="branchen-heading">
-          <h2 id="branchen-heading" className="text-2xl font-bold mb-6">UGC Creator nach Branche finden</h2>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {NICHE_INDEX.map((niche) => (
-              <Link key={niche.slug} href={nichePath(niche)} className="surface-card rounded-2xl p-5 hover:border-geo-violet transition-colors">
-                <h3 className="font-bold text-geo-violet mb-1">{niche.chip}</h3>
-                <p className="text-ink-soft text-sm">Creator, echte Preis-Mediane und Kampagnen-Ideen ansehen.</p>
-              </Link>
-            ))}
+      {/* Branchen: einmalige kompakte Chip-Leiste */}
+      <section aria-labelledby="branchen-heading" className="bg-white px-5 py-14 sm:px-8">
+        <div className="mx-auto max-w-[1200px]">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <h2 id="branchen-heading" className="font-display text-2xl font-bold text-[#121212]">
+              Beliebte Branchen
+            </h2>
+            <Link href="/alle-seiten#branchen" className="text-sm font-semibold text-[#121212] hover:text-[#6C2BD9]">
+              Alle Branchen ansehen →
+            </Link>
           </div>
-        </section>
+          <ul className="mt-5 flex gap-2.5 overflow-x-auto pb-2 [scrollbar-width:thin]">
+            {NICHE_INDEX.map((niche) => (
+              <li key={niche.slug} className="shrink-0">
+                <Link
+                  href={nichePath(niche)}
+                  className="inline-flex min-h-[44px] items-center rounded-full border border-[#E4E1D8] bg-[#F7F6F2] px-4 text-sm font-medium text-[#121212] hover:border-[#121212]"
+                >
+                  {niche.chip}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
 
-        {/* FAQ */}
-        <section className="py-10 max-w-3xl">
-          <h2 className="text-2xl font-bold mb-5 text-ink">Häufige Fragen zur Creator-Suche</h2>
-          <div className="space-y-3">
-            {faqs.map((item) => (
-              <details key={item.question} className="surface-card rounded-2xl p-5">
-                <summary className="cursor-pointer font-semibold text-ink">{item.question}</summary>
-                <p className="mt-3 text-sm leading-6 text-ink-soft">{item.answer}</p>
+      {/* FAQ */}
+      <section className="bg-white px-5 pb-20 pt-6 sm:px-8">
+        <div className="mx-auto max-w-[720px]">
+          <h2 className="font-display text-2xl font-bold text-[#121212] sm:text-3xl">
+            Häufige Fragen zur Creator-Suche
+          </h2>
+          <div className="mt-6 space-y-3">
+            {faqs.map((item, idx) => (
+              <details
+                key={item.question}
+                open={idx === 0}
+                className="group rounded-[20px] border border-[#E4E1D8] bg-white px-5"
+              >
+                <summary className="flex min-h-[58px] cursor-pointer list-none items-center justify-between gap-4 py-3 font-semibold text-[#121212] [&::-webkit-details-marker]:hidden">
+                  <span>{item.question}</span>
+                  <span className="shrink-0 text-xl text-[#5C5A55] transition-transform group-open:rotate-45" aria-hidden="true">
+                    +
+                  </span>
+                </summary>
+                <p className="pb-4 text-sm leading-6 text-[#5C5A55]">{item.answer}</p>
               </details>
             ))}
           </div>
-        </section>
-      </div>
+        </div>
+      </section>
     </div>
   );
 }

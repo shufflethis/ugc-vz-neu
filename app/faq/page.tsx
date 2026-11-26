@@ -1,26 +1,19 @@
 import Link from 'next/link';
-import { Metadata } from 'next';
-import ContactButton from '../components/ContactButton';
+import type { Metadata } from 'next';
+import { ArrowRight } from 'lucide-react';
 import FAQSchema from '../components/FAQSchema';
 import BreadcrumbSchema from '../components/BreadcrumbSchema';
-
-interface FAQItem {
-  question: string;
-  answer: string;
-}
-
-interface FAQSection {
-  title: string;
-  items: FAQItem[];
-}
+import FaqTabsClient from './FaqTabsClient';
+import { FAQ_GROUPS } from './faq-data';
 
 export const metadata: Metadata = {
-  title: 'FAQ – Häufig gestellte Fragen',
-  description: 'Antworten auf die wichtigsten Fragen rund um UGC-VZ: Kostenlose Creator-Vermittlung, Registrierung, Ablauf für Creator und Unternehmen.',
-  keywords: 'UGC VZ FAQ, UGC Creator Fragen, Creator Vermittlung FAQ, UGC Kosten, Creator registrieren',
+  title: 'Häufige Fragen (FAQ)',
+  description:
+    'Klare Antworten zu UGC VZ: View-Kampagnen, Budget-Obergrenze, Gebühren, Auszahlungen für Creator, Werbekennzeichnung und Datenschutz.',
+  keywords: 'UGC VZ FAQ, View Kampagne Kosten, UGC Creator Auszahlung, Gewerbe UGC, Datenschutz UGC VZ',
   openGraph: {
-    title: 'FAQ – Häufig gestellte Fragen | UGC VZ',
-    description: 'Antworten auf die wichtigsten Fragen rund um UGC-VZ.',
+    title: 'Häufige Fragen (FAQ) | UGC VZ',
+    description: 'Antworten für Marken und Creator zu Kampagnen nach Views, Abrechnung und Technik.',
     url: 'https://ugc-vz.de/faq',
     siteName: 'UGC VZ',
     locale: 'de_DE',
@@ -31,220 +24,60 @@ export const metadata: Metadata = {
   },
 };
 
-const faqData: FAQSection[] = [
-  {
-    title: "Allgemeine Fragen zu UGC-VZ",
-    items: [
-      {
-        question: "Was ist UGC-VZ?",
-        answer: "UGC-VZ ist die DACH-Plattform für messbaren User Generated Content: Brands entdecken über 750 aktive Creator-Profile, starten View-Kampagnen (TKP) mit optionalem Budget-Limit oder gezielte Produkt-Tests im Brand-Workspace und prüfen alle Beiträge samt Live-Reporting an einem Ort."
-      },
-      {
-        question: "Gibt es ein monatliches Pflicht-Abo?",
-        answer: "Nein. Für Creator ist das Profil dauerhaft kostenlos. Brands brauchen kein Pflicht-Abo: Du legst ein kostenloses Brand-Konto an, definierst dein Kampagnenbudget und zahlst nur für geprüfte Ergebnisse oder vereinbarte Produktionen."
-      },
-      {
-        question: "Wer steckt hinter UGC-VZ?",
-        answer: "UGC-VZ wurde vom Team hinter famefact aufgebaut, einer der erfahrensten Social-Media-Agenturen im deutschsprachigen Raum. Auf Wunsch begleiten wir Pilotkampagnen, Creator-Auswahl und Strategie direkt aus der Agenturpraxis heraus."
-      }
-    ]
-  },
-  {
-    title: "Für UGC Creators",
-    items: [
-      {
-        question: "Wer kann sich als Creator registrieren?",
-        answer: "Jeder, der authentischen User Generated Content erstellt! Du brauchst keine Millionen Follower oder professionelle Ausrüstung. Wichtig ist, dass du ehrliche, ansprechende Inhalte produzierst – egal ob mit dem Smartphone oder einer Profi-Kamera."
-      },
-      {
-        question: "Was muss ich in mein Creator-Profil einfügen?",
-        answer: "Am besten zeigst du eine Auswahl deiner besten UGC-Arbeiten, beschreibst deinen Style und gibst an, in welchen Bereichen du am liebsten arbeitest (Fashion, Food, Tech, etc.). Je authentischer dein Profil, desto besser die Matches!"
-      },
-      {
-        question: "Wie werde ich von Unternehmen gefunden?",
-        answer: "Unternehmen durchsuchen das Verzeichnis nach passenden Creators für ihre Projekte. Ein vollständiges Profil mit verschiedenen Content-Beispielen erhöht deine Sichtbarkeit erheblich."
-      },
-      {
-        question: "Muss ich über UGC-VZ abrechnen?",
-        answer: "Nein! Sobald ein Match zustande kommt, wickelt ihr alles direkt miteinander ab. UGC-VZ ist nur die Vermittlungsplattform – Preise, Vertragsbedingungen und Zahlungen regelt ihr selbst."
-      }
-    ]
-  },
-  {
-    title: "Für Unternehmen",
-    items: [
-      {
-        question: "Welche Art von Unternehmen nutzt UGC-VZ?",
-        answer: "Von kleinen Startups bis zu etablierten Brands – jeder, der authentischen Content braucht! Besonders beliebt ist die Plattform bei Unternehmen, die direkte Partnerships mit Creators eingehen möchten, ohne über große Agenturen zu gehen."
-      },
-      {
-        question: "Sind die Projekte hier nicht zu klein für eine professionelle Agentur?",
-        answer: "Genau das ist der Punkt! Viele großartige Projekte finden bei großen Agenturen keinen Platz, weil sie \"zu klein\" erscheinen. UGC-VZ gibt diesen Projekten eine Heimat und ermöglicht direkte Connections zwischen Brands und Creators."
-      },
-      {
-        question: "Wie kontaktiere ich einen Creator?",
-        answer: "Einfach das gewünschte Creator-Profil öffnen und die angegebenen Kontaktdaten nutzen. Die meisten Creators sind über E-Mail, Instagram oder andere soziale Kanäle erreichbar."
-      },
-      {
-        question: "Was ist, wenn ich größere Kampagnen plane?",
-        answer: "Perfekt! Für umfangreichere Projekte kannst du optional die Expertise von famefact nutzen – aber das ist völlig freiwillig. Viele erfolgreiche Kooperationen entstehen auch komplett eigenständig."
-      }
-    ]
-  },
-  {
-    title: "Technische Fragen",
-    items: [
-      {
-        question: "Brauche ich ein Brand-Konto, um Kampagnen zu starten?",
-        answer: "Ja. Stöbern im Creator-Pool geht direkt als Vorschau. Für Kampagnen-Briefings, Creator-Einladungen, Beitragsprüfung und Live-Reporting legst du in einer Minute ein kostenloses Brand-Konto per 6-stelligem E-Mail-Code an. So schützen wir Creator vor Spam und bündeln alle Ergebnisse an einem Ort."
-      },
-      {
-        question: "Wie funktioniert die Vergütung pro 1.000 Views (TKP)?",
-        answer: "Du legst deinen Satz je 1.000 Views und auf Wunsch ein maximales Budget-Limit fest. Gezählt werden geprüfte Beiträge in vollen 1.000er-Schritten. Im Brand-Workspace siehst du Views, effektiven TKP, Restbudget und kannst den Report als CSV oder teilbaren Link exportieren."
-      },
-      {
-        question: "Kann ich mein Profil später bearbeiten?",
-        answer: "Ja, Creator können ihre Profile jederzeit aktualisieren und neue Arbeiten hinzufügen."
-      },
-      {
-        question: "Was passiert bei Problemen oder Streitigkeiten?",
-        answer: "Da alle Geschäfte direkt zwischen Creators und Unternehmen abgewickelt werden, sind diese auch für die Konfliktlösung verantwortlich. Wir empfehlen immer, klare Vereinbarungen zu treffen."
-      }
-    ]
-  },
-  {
-    title: "Über famefact",
-    items: [
-      {
-        question: "Was ist famefact?",
-        answer: "famefact ist eine der führenden Social Media Agenturen Deutschlands mit über 15 Jahren Expertise. Wir sind spezialisiert auf Social Media Marketing und UGC-Kampagnen und betreuen über 300 zufriedene Kunden."
-      },
-      {
-        question: "Muss ich famefact beauftragen, wenn ich UGC-VZ nutze?",
-        answer: "Absolut nicht! UGC-VZ ist ein eigenständiges, kostenloses Service. Falls du später professionelle Agentur-Unterstützung brauchst, sind wir gerne da – aber das ist völlig optional."
-      },
-      {
-        question: "Kann famefact bei größeren Projekten helfen?",
-        answer: "Gerne! Wenn aus einem kleinen UGC-Projekt eine größere Kampagne wird oder du strategische Unterstützung brauchst, stehen wir zur Verfügung. Aber der erste Schritt funktioniert auch komplett ohne uns."
-      }
-    ]
-  }
-];
-
-// Flatten all FAQ items for schema
-const allFAQItems = faqData.flatMap(section => section.items);
+const allFaqItems = FAQ_GROUPS.flatMap((group) => group.items);
 
 export default function FAQPage() {
   const breadcrumbs = [
     { name: 'Home', url: 'https://ugc-vz.de' },
-    { name: 'FAQ', url: 'https://ugc-vz.de/faq' }
+    { name: 'FAQ', url: 'https://ugc-vz.de/faq' },
   ];
 
   return (
-    <div className="min-h-screen text-ink">
-      {/* FAQ Schema for rich snippets */}
-      <FAQSchema faqItems={allFAQItems} />
+    <div className="min-h-screen bg-white text-[#121212]">
+      <FAQSchema faqItems={allFaqItems} />
       <BreadcrumbSchema items={breadcrumbs} />
 
-      {/* Header */}
-
-      {/* Breadcrumb Navigation */}
-      <nav className="px-4 sm:px-8 md:px-16 lg:px-24 mb-8">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex items-center space-x-2 text-sm text-ink-soft">
-            <Link href="/" className="hover:text-geo-violet transition-colors">Home</Link>
-            <span>/</span>
-            <span className="text-ink-soft">FAQ</span>
-          </div>
+      <section className="bg-[#F7F6F2] px-5 py-14 sm:px-8 sm:py-20">
+        <div className="mx-auto max-w-[880px] text-center">
+          <p className="text-sm font-medium text-[#6C2BD9]">Hilfe &amp; Antworten</p>
+          <h1 className="mt-2 font-display text-4xl font-bold leading-tight tracking-[-0.02em] sm:text-5xl">
+            Häufige Fragen zu UGC VZ
+          </h1>
+          <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-[#5C5A55] sm:text-lg">
+            Kurze, klare Antworten für Marken und Creator zu View-Kampagnen, Abrechnung und Datenschutz.
+          </p>
         </div>
-      </nav>
+      </section>
 
-      {/* Main Content */}
-      <div className="px-4 sm:px-8 md:px-16 lg:px-24 pb-24 pt-10 sm:pt-14">
-        <div className="max-w-4xl mx-auto">
-          {/* Hero Section */}
-          <div className="text-center mb-16">
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6">
-              <span className="gradient-text">FAQ</span> - Häufig gestellte Fragen
-            </h1>
-            <p className="text-xl text-ink-soft max-w-3xl mx-auto leading-relaxed">
-              Hier findest du Antworten auf die wichtigsten Fragen rund um UGC-VZ.
-              Falls deine Frage nicht dabei ist, kontaktiere uns gerne!
+      <section className="bg-white px-5 py-14 sm:px-8 sm:py-20">
+        <div className="mx-auto max-w-[820px]">
+          <FaqTabsClient groups={FAQ_GROUPS} />
+
+          <div className="mt-14 rounded-[24px] bg-[#121212] p-8 text-center text-[#F7F6F2] sm:p-10">
+            <h2 className="font-display text-2xl font-bold sm:text-3xl">
+              Deine Frage war nicht dabei?
+            </h2>
+            <p className="mx-auto mt-2.5 max-w-md text-sm leading-6 text-[#F7F6F2]/75 sm:text-base">
+              Schreib uns kurz an hi@ugc-vz.de oder buche direkt 15 Minuten mit unserem Team in Berlin.
             </p>
-          </div>
-
-          {/* FAQ Sections - SSR-compatible with details/summary */}
-          {faqData.map((section, sectionIndex) => (
-            <section key={sectionIndex} className="mb-12">
-              <h2 className="text-2xl font-bold mb-8 text-center">
-                <span className="gradient-text">{section.title}</span>
-              </h2>
-
-              <div className="space-y-4">
-                {section.items.map((item, itemIndex) => (
-                  <details
-                    key={itemIndex}
-                    className="group surface-card rounded-2xl overflow-hidden"
-                  >
-                    <summary className="w-full p-6 text-left flex justify-between items-center hover:bg-surface transition-colors cursor-pointer list-none [&::-webkit-details-marker]:hidden">
-                      <h3 className="text-lg font-semibold text-ink pr-4">
-                        {item.question}
-                      </h3>
-                      <div className="transform transition-transform duration-200 group-open:rotate-180 flex-shrink-0">
-                        <svg className="w-5 h-5 text-geo-violet" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        </svg>
-                      </div>
-                    </summary>
-
-                    <div className="px-6 pb-6">
-                      <div className="border-t border-hairline pt-4">
-                        <p className="text-ink-soft leading-relaxed">
-                          {item.answer}
-                        </p>
-                      </div>
-                    </div>
-                  </details>
-                ))}
-              </div>
-            </section>
-          ))}
-
-          {/* Contact Section */}
-          <section className="mt-16">
-            <div className="surface-card rounded-2xl p-12 text-center">
-              <h2 className="text-3xl font-bold mb-6">
-                Noch <span className="gradient-text">Fragen</span>?
-              </h2>
-              <p className="text-lg text-ink-soft leading-relaxed mb-8 max-w-2xl mx-auto">
-                Du findest deine Frage nicht? Schreib uns einfach eine E-Mail oder kontaktiere uns über unsere Social Media Kanäle.
-                Wir helfen gerne weiter!
-              </p>
-
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <ContactButton
-                  title="Kontakt aufnehmen"
-                  subtitle="Haben Sie eine Frage zu UGC-VZ? Schreiben Sie uns!"
-                >
-                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                  </svg>
-                  Kontakt aufnehmen
-                </ContactButton>
-                <Link
-                  href="/"
-                  className="border border-geo-violet text-geo-violet hover:bg-geo-violet hover:text-white font-semibold py-3 px-8 rounded-lg transition-all transform hover:scale-105 inline-flex items-center justify-center"
-                >
-                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                  Creator suchen
-                </Link>
-              </div>
+            <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
+              <Link
+                href="/contact"
+                className="btn-press inline-flex min-h-[48px] items-center gap-2 rounded-full bg-[#F7F6F2] px-6 text-sm font-semibold text-[#121212] hover:opacity-90"
+              >
+                <span>Kontakt aufnehmen</span>
+                <ArrowRight size={15} aria-hidden="true" />
+              </Link>
+              <Link
+                href="/brand?tab=signup"
+                className="btn-press inline-flex min-h-[48px] items-center rounded-full border border-white/25 px-6 text-sm font-semibold text-[#F7F6F2] hover:border-white/60"
+              >
+                Kampagne starten
+              </Link>
             </div>
-          </section>
+          </div>
         </div>
-      </div>
+      </section>
     </div>
   );
 }

@@ -140,10 +140,15 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
               ))}
             </div>
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 leading-tight">{post.title}</h1>
-            <div className="flex flex-wrap items-center gap-5 text-ink-soft mb-8 text-sm">
-              <Link href={author.url} className="font-semibold text-geo-violet hover:text-geo-violet-soft">{author.name}</Link>
-              <time dateTime={post.publishedAt}>{formatDate(post.publishedAt)}</time>
-              {post.modifiedAt !== post.publishedAt && <span>Überarbeitet: <time dateTime={post.modifiedAt}>{formatDate(post.modifiedAt)}</time></span>}
+            <div className="flex flex-wrap items-center gap-4 text-ink-soft mb-8 text-sm">
+              <Link href={author.url} className="font-semibold text-[#121212] underline decoration-[#E4E1D8] underline-offset-4 hover:text-[#6C2BD9]">
+                Autor: {author.name}
+              </Link>
+              <span>·</span>
+              <span>Veröffentlicht: <time dateTime={post.publishedAt}>{formatDate(post.publishedAt)}</time></span>
+              <span>·</span>
+              <span>Geprüft: <time dateTime={post.modifiedAt || post.publishedAt}>{formatDate(post.modifiedAt || post.publishedAt)}</time></span>
+              <span>·</span>
               <span>{readingTime} Min. Lesezeit</span>
             </div>
             {quickStart && <section className="mb-8 rounded-2xl border border-hairline bg-surface p-5 sm:p-7" aria-labelledby="article-quick-start">
@@ -151,7 +156,7 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
               <p className="mt-3 leading-7 text-ink-soft">{quickStart.answer}</p>
               <ul className="my-5 list-disc space-y-2 pl-5 text-ink-soft">{quickStart.checklist.map((item) => <li key={item}>{item}</li>)}</ul>
               <ArticleAction slug={post.slug} target={quickStart.target} placement="quick_start" href={quickStart.href}>{quickStart.label}</ArticleAction>
-              {quickStart.target === 'brand' && <p className="mt-3 text-sm text-ink-soft">Die Suche ist kostenlos. Das Creator-Honorar vereinbart ihr direkt.</p>}
+              {quickStart.target === 'brand' && <p className="mt-3 text-sm text-ink-soft">Kostenloses Marken-Konto, kein Abo, feste Budget-Obergrenze in jeder View-Kampagne.</p>}
             </section>}
             {post.featuredImage !== '/placeholder-blog.svg' && (
               <div className="relative aspect-video w-full rounded-xl overflow-hidden mb-12">
@@ -201,13 +206,13 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
 
       <section className="px-4 sm:px-8 md:px-16 lg:px-24 pb-20 bg-surface">
         <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-6">
-          <Link href="/brands" className="surface-card rounded-lg p-6 hover:border-geo-violet transition-colors">
-            <h2 className="text-xl font-bold text-geo-violet mb-3">UGC Creator für eine Kampagne finden</h2>
-            <p className="text-ink-soft leading-relaxed">Demand eingeben, passende Profile auswählen und Kontaktdaten kostenlos anfordern.</p>
+          <Link href="/brands" className="surface-card rounded-lg p-6 hover:border-[#121212] transition-colors">
+            <h2 className="text-xl font-bold text-[#121212] mb-3">Creator-Kampagne starten</h2>
+            <p className="text-ink-soft leading-relaxed">Bezahle nach geprüften Views mit fester Budget-Obergrenze und ohne Abo.</p>
           </Link>
-          <Link href="/creator" className="surface-card rounded-lg p-6 hover:border-geo-violet transition-colors">
-            <h2 className="text-xl font-bold text-geo-violet mb-3">Als UGC Creator anmelden</h2>
-            <p className="text-ink-soft leading-relaxed">Kostenloses Profil mit Portfolio, Themen und Social-Links hinterlegen.</p>
+          <Link href="/creator" className="surface-card rounded-lg p-6 hover:border-[#121212] transition-colors">
+            <h2 className="text-xl font-bold text-[#121212] mb-3">Als Creator mitmachen</h2>
+            <p className="text-ink-soft leading-relaxed">Kostenlos anmelden, Kampagnen auswählen und pro 1.000 Views verdienen bei 0 % Gebühr.</p>
           </Link>
         </div>
       </section>

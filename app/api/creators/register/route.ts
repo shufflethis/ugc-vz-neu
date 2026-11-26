@@ -7,6 +7,7 @@ import {
   CREATOR_CONSENT_TEXT_VERSION,
   normalizeImageUrl,
   normalizeWebUrls,
+  socialHandle,
   type CreatorRegistrationPayload,
 } from '@/app/lib/creator-registration';
 
@@ -16,6 +17,7 @@ export const maxDuration = 30;
 
 const MAX_BODY_BYTES = 30_000;
 const WINDOW_MS = 60 * 60 * 1000;
+const OTP_TTL_MS = 20 * 60 * 1000;
 const rateLimits = new Map<string, number[]>();
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i;
 
@@ -64,6 +66,22 @@ const isTrustedRequest = (request: NextRequest) => {
   }
 };
 
+const normalizeSocialInput = (body: Record<string, unknown>): string[] => {
+  const direct = normalizeWebUrls(body.socialLinks, 8);
+  if (direct.length > 0) return direct;
+
+  const rawHandle = text(body.socialHandle, 120).replace(/^@+/, '').replace(/\s+/g, '');
+  if (!rawHandle) return [];
+  if (/^https?:\/\//i.test(rawHandle) || /^(?:www\.|tiktok\.|instagram\.)/i.test(rawHandle)) {
+    return normalizeWebUrls([rawHandle], 8);
+  }
+  const platform = text(body.socialPlatform, 20).toLowerCase() === 'instagram' ? 'instagram' : 'tiktok';
+  const built = platform === 'instagram'
+    ? `https://instagram.com/${encodeURIComponent(rawHandle)}`
+    : `https://tiktok.com/@${encodeURIComponent(rawHandle)}`;
+  return normalizeWebUrls([built], 8);
+};
+
 const normalizePayload = (body: Record<string, unknown>): CreatorRegistrationPayload | null => {
   const now = new Date().getFullYear();
   const birthYearRaw = Number(body.birthYear || 0);
@@ -71,19 +89,21 @@ const normalizePayload = (body: Record<string, unknown>): CreatorRegistrationPay
     ? birthYearRaw
     : null;
   const email = text(body.email, 254).toLowerCase();
-  const socialLinks = normalizeWebUrls(body.socialLinks, 8);
+  const socialLinks = normalizeSocialInput(body);
   const portfolioLinks = normalizeWebUrls(body.portfolioLinks, 15);
-  const name = text(body.name, 120);
+  const stageName = text(body.stageName, 120);
+  const derivedHandle = socialLinks[0] ? socialHandle(socialLinks[0]) : null;
+  const name = text(body.name, 120) || stageName || derivedHandle || '';
   const topics = multiline(body.topics, 1_200);
   const preferredContent = multiline(body.preferredContent, 1_200);
-  const rateText = multiline(body.rateText, 500);
+  // Spec 8.2 creator.signup: Preis für Videos ist in Schritt 3 optional.
+  const rateText = multiline(body.rateText, 500) || 'Nach Absprache';
 
   if (
     !name
     || !emailRegex.test(email)
     || !topics
     || !preferredContent
-    || !rateText
     || socialLinks.length === 0
     || body.platformConsent !== true
     || body.projectConsent !== true
@@ -91,7 +111,7 @@ const normalizePayload = (body: Record<string, unknown>): CreatorRegistrationPay
 
   return {
     name,
-    stageName: text(body.stageName, 120),
+    stageName: stageName || derivedHandle || '',
     email,
     birthYear,
     gender: text(body.gender, 80),
@@ -149,17 +169,17 @@ export async function POST(request: NextRequest) {
     if (!payload) {
       return NextResponse.json({
         success: false,
-        error: 'Bitte fülle alle Pflichtfelder aus, gib mindestens einen gültigen Social-Link an und bestätige die Einwilligungen.',
+        error: 'Bitte gib E-Mail, TikTok- oder Instagram-Name, mindestens ein Thema und Format sowie die beiden Pflicht-Einwilligungen an.',
       }, { status: 400 });
     }
 
     const ipAllowed = consumeRateLimit(`ip:${rateLimitKey(getIp(request))}`, 8);
-    const emailAllowed = consumeRateLimit(`email:${rateLimitKey(payload.email)}`, 3);
+    const emailAllowed = consumeRateLimit(`email:${rateLimitKey(payload.email)}`, 5);
     if (!ipAllowed || !emailAllowed) {
       return NextResponse.json({
         success: false,
-        error: 'Zu viele Versuche. Bitte probiere es später erneut.',
-      }, { status: 429, headers: { 'Retry-After': '3600' } });
+        error: 'Du hast gerade mehrere Codes angefordert. Warte bitte kurz, dann kannst du es erneut versuchen.',
+      }, { status: 429, headers: { 'Retry-After': '60' } });
     }
 
     const resendApiKey = process.env.RESEND_API_KEY;
@@ -169,6 +189,9 @@ export async function POST(request: NextRequest) {
 
     const token = crypto.randomBytes(32).toString('base64url');
     const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+    const otpCode = String(crypto.randomInt(100000, 1000000));
+    const otpHash = crypto.createHash('sha256').update(`${payload.email}:${otpCode}`).digest('hex');
+    const otpExpiresAt = new Date(Date.now() + OTP_TTL_MS).toISOString();
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
     const sql = getDatabase();
 
@@ -178,17 +201,27 @@ export async function POST(request: NextRequest) {
       WHERE lower(email) = lower($1) AND verified_at IS NULL AND expires_at > now()
     `, [payload.email]);
 
+    const storedPayload = {
+      ...payload,
+      _otpHash: otpHash,
+      _otpExpiresAt: otpExpiresAt,
+    };
+
     const [submission] = await sql.query(`
       INSERT INTO creator_registration_submissions (email, token_hash, payload, expires_at)
       VALUES ($1, $2, $3::jsonb, $4::timestamptz)
       RETURNING id
-    `, [payload.email, tokenHash, JSON.stringify(payload), expiresAt]);
+    `, [payload.email, tokenHash, JSON.stringify(storedPayload), expiresAt]);
 
     const verificationUrl = new URL('/api/creators/verify', request.nextUrl.origin);
     verificationUrl.searchParams.set('token', token);
-    const email = buildCreatorVerificationEmail({ name: payload.name, verificationUrl: verificationUrl.toString() });
+    const email = buildCreatorVerificationEmail({
+      name: payload.name,
+      verificationUrl: verificationUrl.toString(),
+      otpCode,
+    });
     const resend = new Resend(resendApiKey);
-    const response = await resend.emails.send({
+    const sendMail = () => resend.emails.send({
       from: process.env.RESEND_FROM || 'UGC VZ <hi@ugc-vz.de>',
       to: payload.email,
       replyTo: process.env.UGC_INTERNAL_EMAIL || 'hi@ugc-vz.de',
@@ -201,16 +234,30 @@ export async function POST(request: NextRequest) {
       ],
     }, { idempotencyKey: `ugc-vz/creator-verification/${submission.id}` });
 
+    let response = await sendMail();
+    if (response.error && (response.error.name === 'application_error' || response.error.name === 'internal_server_error')) {
+      await new Promise((resolve) => setTimeout(resolve, 600));
+      response = await sendMail();
+    }
+
     if (response.error) {
       await sql.query(`DELETE FROM creator_registration_submissions WHERE id = $1`, [submission.id]);
       console.error('Creator verification email rejected by Resend', response.error.name);
+      const isRateLimit = response.error.name === 'rate_limit_exceeded';
       return NextResponse.json({
         success: false,
-        error: 'Die Bestätigungs-E-Mail konnte nicht versendet werden. Bitte erneut versuchen.',
-      }, { status: 502 });
+        error: isRateLimit
+          ? 'Du hast gerade mehrere Codes angefordert. Warte bitte 60 Sekunden, dann kannst du einen neuen anfordern.'
+          : 'Gerade klappt der Versand bei uns nicht. Versuch es in ein paar Minuten noch mal oder schreib uns an hi@ugc-vz.de.',
+      }, { status: isRateLimit ? 429 : 503 });
     }
 
-    return NextResponse.json({ success: true, message: 'Bitte bestätige jetzt deine E-Mail-Adresse.' });
+    return NextResponse.json({
+      success: true,
+      otpSent: true,
+      email: payload.email,
+      message: 'Fertig. Wir haben dir einen Code geschickt. Bestätige ihn, dann siehst du alle Kampagnen.',
+    });
   } catch (error) {
     console.error('Creator registration failed', error instanceof Error ? error.message : 'unknown error');
     return NextResponse.json({ success: false, error: 'Anmeldung konnte nicht gespeichert werden.' }, { status: 500 });

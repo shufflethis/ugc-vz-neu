@@ -1,73 +1,87 @@
 'use client';
 
 import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
-import { trackUGCEvents } from '../lib/analytics';
 import Link from 'next/link';
-import { ArrowLeft, ArrowRight, Check, Mail, ShieldCheck, Sparkles } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, Mail } from 'lucide-react';
+import { trackUGCEvents } from '../lib/analytics';
+import { CREATOR_TAXONOMY } from '../lib/creator-taxonomy';
+import OtpInput from '../components/auth/OtpInput';
+import ResendTimer from '../components/auth/ResendTimer';
+import InlineError from '../components/auth/InlineError';
+
+type SocialPlatformChoice = 'tiktok' | 'instagram';
 
 type CreatorFormState = {
-  name: string;
-  stageName: string;
   email: string;
-  birthYear: string;
-  gender: string;
+  socialPlatform: SocialPlatformChoice;
+  socialHandle: string;
+  selectedTopics: string[];
+  selectedFormats: string[];
   city: string;
-  profileImageUrl: string;
-  topics: string;
-  preferredContent: string;
-  industries: string;
-  rateText: string;
-  reachText: string;
-  equipment: string;
-  specialTraits: string;
-  childrenContext: string;
-  petContext: string;
-  socialLinks: string;
   portfolioLinks: string;
+  rateText: string;
   platformConsent: boolean;
   projectConsent: boolean;
   newsletterConsent: boolean;
   website: string;
 };
 
+const DRAFT_KEY = 'ugc-vz-creator-draft-v2';
+
 const initialState: CreatorFormState = {
-  name: '',
-  stageName: '',
   email: '',
-  birthYear: '',
-  gender: '',
+  socialPlatform: 'tiktok',
+  socialHandle: '',
+  selectedTopics: [],
+  selectedFormats: ['TikTok', 'Instagram Reels'],
   city: '',
-  profileImageUrl: '',
-  topics: '',
-  preferredContent: '',
-  industries: '',
-  rateText: '',
-  reachText: '',
-  equipment: '',
-  specialTraits: '',
-  childrenContext: '',
-  petContext: '',
-  socialLinks: '',
   portfolioLinks: '',
+  rateText: '',
   platformConsent: false,
   projectConsent: false,
   newsletterConsent: false,
   website: '',
 };
 
-const steps = [
-  { title: 'Über dich', description: 'Die Grundlagen für dein Profil' },
-  { title: 'Dein Angebot', description: 'Themen, Formate und Preise' },
-  { title: 'Links & Freigabe', description: 'Socials, Portfolio und Einwilligung' },
+const STEPS = [
+  { title: "Los geht's", description: 'Deine E-Mail und dein Kanalname reichen für den Start.' },
+  { title: 'Was du machst', description: 'Wähle bis zu 3 Themen, deine Formate und optional deine Stadt.' },
+  { title: 'Fast fertig', description: 'Portfolio und Video-Preis sind optional. Danach kommt dein 6-stelliger Code.' },
 ];
 
-const fieldClass = 'w-full rounded-xl border border-hairline bg-white px-4 py-3 text-ink outline-none transition focus:border-geo-violet focus:ring-4 focus:ring-geo-violet/10';
-const labelClass = 'mb-2 block text-sm font-semibold text-ink';
+const FORMAT_CHIPS = [
+  'TikTok',
+  'Instagram Reels',
+  'YouTube Shorts',
+  'Produktdemo',
+  'Unboxing',
+  'Testimonial',
+  'Voiceover',
+  'Fotos',
+];
 
-const splitLinks = (value: string) => value
-  .split(/[\n,]+/)
-  .map((link) => link.trim())
-  .filter(Boolean);
+const fieldClass =
+  'min-h-[48px] w-full rounded-[12px] border border-[#E4E1D8] bg-white px-4 py-3 text-sm text-[#121212] outline-none transition-colors focus:border-[#6C2BD9] focus:ring-4 focus:ring-[#6C2BD9]/15';
+const labelClass = 'mb-1.5 block text-sm font-semibold text-[#121212]';
+
+const splitLinks = (value: string) =>
+  value
+    .split(/[\n,]+/)
+    .map((link) => link.trim())
+    .filter(Boolean);
+
+function buildSocialUrl(platform: SocialPlatformChoice, rawHandle: string): string {
+  const trimmed = rawHandle.trim();
+  if (!trimmed) return '';
+  if (/^https?:\/\//i.test(trimmed) || /^(?:www\.|tiktok\.|instagram\.)/i.test(trimmed)) {
+    return trimmed;
+  }
+  const clean = trimmed.replace(/^@+/, '').replace(/\s+/g, '');
+  if (!clean) return '';
+  return platform === 'instagram'
+    ? `https://instagram.com/${clean}`
+    : `https://tiktok.com/@${clean}`;
+}
 
 export default function CreatorRegistrationForm({
   verified: verifiedProp = false,
@@ -84,7 +98,11 @@ export default function CreatorRegistrationForm({
   const [form, setForm] = useState<CreatorFormState>(initialState);
   const [hydrated, setHydrated] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
+  const [submittedEmail, setSubmittedEmail] = useState('');
+  const [otpCode, setOtpCode] = useState('');
+  const [verifying, setVerifying] = useState(false);
+  const [shakeKey, setShakeKey] = useState(0);
+  const [resendKey, setResendKey] = useState(0);
   const [message, setMessage] = useState('');
   const [urlFlags, setUrlFlags] = useState({ verified: false, newlyVerified: false, invalid: false, failed: false });
   const startedRef = useRef(false);
@@ -106,7 +124,7 @@ export default function CreatorRegistrationForm({
         setUrlFlags({ verified: isVerified, newlyVerified: isConfirmed, invalid: isInvalid, failed: isFailed });
       }
     } catch {
-      // Ignore malformed URLs.
+      // ignore
     }
   }, []);
 
@@ -114,7 +132,6 @@ export default function CreatorRegistrationForm({
     if (!newlyVerified || confirmedRef.current) return;
     confirmedRef.current = true;
     trackUGCEvents.registrationConfirmed();
-    // A refresh of the success page is not another confirmation.
     const url = new URL(window.location.href);
     url.searchParams.delete('confirmed');
     window.history.replaceState(window.history.state, '', url);
@@ -122,21 +139,25 @@ export default function CreatorRegistrationForm({
 
   useEffect(() => {
     try {
-      const draft = window.localStorage.getItem('ugc-vz-creator-draft-v1');
+      const draft = window.localStorage.getItem(DRAFT_KEY);
       if (draft) setForm({ ...initialState, ...JSON.parse(draft) });
     } catch {
-      // A draft is a convenience only; registration works without local storage.
+      // ignore
     } finally {
       setHydrated(true);
     }
   }, []);
 
   useEffect(() => {
-    if (!hydrated || submitted) return;
-    try { window.localStorage.setItem('ugc-vz-creator-draft-v1', JSON.stringify(form)); } catch { /* Storage is optional. */ }
-  }, [form, hydrated, submitted]);
+    if (!hydrated || submittedEmail) return;
+    try {
+      window.localStorage.setItem(DRAFT_KEY, JSON.stringify(form));
+    } catch {
+      // ignore
+    }
+  }, [form, hydrated, submittedEmail]);
 
-  const progress = useMemo(() => Math.round(((step + 1) / steps.length) * 100), [step]);
+  const progressPct = useMemo(() => Math.round(((step + 1) / STEPS.length) * 100), [step]);
 
   const update = <K extends keyof CreatorFormState>(key: K, value: CreatorFormState[K]) => {
     if (!startedRef.current) {
@@ -148,24 +169,54 @@ export default function CreatorRegistrationForm({
     if (message) setMessage('');
   };
 
+  const toggleTopic = (label: string) => {
+    setMessage('');
+    setForm((current) => {
+      if (current.selectedTopics.includes(label)) {
+        return { ...current, selectedTopics: current.selectedTopics.filter((item) => item !== label) };
+      }
+      if (current.selectedTopics.length >= 3) {
+        setMessage('Wähle bitte maximal 3 Themenkategorien aus.');
+        return current;
+      }
+      return { ...current, selectedTopics: [...current.selectedTopics, label] };
+    });
+  };
+
+  const toggleFormat = (label: string) => {
+    setMessage('');
+    setForm((current) => ({
+      ...current,
+      selectedFormats: current.selectedFormats.includes(label)
+        ? current.selectedFormats.filter((item) => item !== label)
+        : [...current.selectedFormats, label],
+    }));
+  };
+
   const validateStep = () => {
     if (step === 0) {
-      if (!form.name.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i.test(form.email.trim())) {
-        setMessage('Bitte gib deinen Namen und eine gültige E-Mail-Adresse an.');
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i.test(form.email.trim())) {
+        setMessage('Bitte gib eine gültige E-Mail-Adresse an.');
+        return false;
+      }
+      if (!buildSocialUrl(form.socialPlatform, form.socialHandle)) {
+        setMessage('Bitte gib deinen TikTok- oder Instagram-Namen an.');
         return false;
       }
     }
-    if (step === 1 && (!form.topics.trim() || !form.preferredContent.trim() || !form.rateText.trim())) {
-      setMessage('Bitte ergänze Themen, bevorzugte Content-Formate und deine Preisvorstellung.');
-      return false;
+    if (step === 1) {
+      if (form.selectedTopics.length === 0) {
+        setMessage('Bitte wähle mindestens ein Thema aus.');
+        return false;
+      }
+      if (form.selectedFormats.length === 0) {
+        setMessage('Bitte wähle mindestens ein Format aus.');
+        return false;
+      }
     }
     if (step === 2) {
-      if (splitLinks(form.socialLinks).length === 0) {
-        setMessage('Bitte hinterlege mindestens einen vollständigen Social-Link.');
-        return false;
-      }
       if (!form.platformConsent || !form.projectConsent) {
-        setMessage('Für die Aufnahme ins Verzeichnis sind die beiden Pflicht-Einwilligungen nötig.');
+        setMessage('Bitte bestätige die beiden Pflicht-Einwilligungen.');
         return false;
       }
     }
@@ -174,35 +225,50 @@ export default function CreatorRegistrationForm({
 
   const next = () => {
     if (!validateStep()) return;
-    trackUGCEvents.registrationStep(Math.min(step + 2, steps.length));
-    setStep((current) => Math.min(current + 1, steps.length - 1));
-    document.getElementById('creator-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    trackUGCEvents.registrationStep(Math.min(step + 2, STEPS.length));
+    setStep((current) => Math.min(current + 1, STEPS.length - 1));
   };
 
-  const submit = async (event: FormEvent) => {
-    event.preventDefault();
-    if (!validateStep()) return;
+  const sendRegistration = async () => {
     setSubmitting(true);
     setMessage('');
-
     try {
+      const socialUrl = buildSocialUrl(form.socialPlatform, form.socialHandle);
+      const cleanHandle = form.socialHandle.trim().replace(/^@+/, '');
       const response = await fetch('/api/creators/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ...form,
-          birthYear: form.birthYear ? Number(form.birthYear) : null,
-          socialLinks: splitLinks(form.socialLinks),
+          name: cleanHandle,
+          stageName: cleanHandle,
+          email: form.email.trim(),
+          socialPlatform: form.socialPlatform,
+          socialHandle: form.socialHandle.trim(),
+          socialLinks: socialUrl ? [socialUrl] : [],
+          topics: form.selectedTopics.join(', '),
+          preferredContent: form.selectedFormats.join(', '),
+          city: form.city.trim(),
           portfolioLinks: splitLinks(form.portfolioLinks),
+          rateText: form.rateText.trim(),
+          platformConsent: form.platformConsent,
+          projectConsent: form.projectConsent,
+          newsletterConsent: form.newsletterConsent,
+          website: form.website,
         }),
       });
       const result = await response.json();
-      if (!response.ok || !result.success) throw new Error(result.error || 'Anmeldung fehlgeschlagen.');
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || 'Anmeldung fehlgeschlagen.');
+      }
 
-      setSubmitted(true);
+      setSubmittedEmail(form.email.trim().toLowerCase());
+      setResendKey((k) => k + 1);
       trackUGCEvents.registrationSubmitted();
-      setForm(initialState);
-      try { window.localStorage.removeItem('ugc-vz-creator-draft-v1'); } catch { /* Storage is optional. */ }
+      try {
+        window.localStorage.removeItem(DRAFT_KEY);
+      } catch {
+        // ignore
+      }
     } catch (error) {
       trackUGCEvents.registrationError();
       setMessage(error instanceof Error ? error.message : 'Anmeldung fehlgeschlagen. Bitte versuche es erneut.');
@@ -211,123 +277,433 @@ export default function CreatorRegistrationForm({
     }
   };
 
+  const handleSubmit = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!validateStep()) return;
+    await sendRegistration();
+  };
+
+  const verifyOtpCode = async (rawCode: string) => {
+    setMessage('');
+    const cleanCode = rawCode.replace(/\D/g, '');
+    if (cleanCode.length !== 6) {
+      setMessage('Bitte gib den 6-stelligen Code aus deiner E-Mail ein.');
+      setShakeKey((k) => k + 1);
+      return;
+    }
+    setVerifying(true);
+    try {
+      const res = await fetch('/api/creators/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: submittedEmail, code: cleanCode }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setShakeKey((k) => k + 1);
+        throw new Error(data.error || 'Code ungültig oder abgelaufen.');
+      }
+      trackUGCEvents.registrationConfirmed();
+      window.location.assign(data.redirectTo || '/konto/kampagnen');
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Bestätigung fehlgeschlagen.');
+      setVerifying(false);
+    }
+  };
+
+  const handleVerifyForm = async (event: FormEvent) => {
+    event.preventDefault();
+    await verifyOtpCode(otpCode);
+  };
+
   return (
-    <section id="creator-form" className="scroll-mt-6 max-w-6xl mx-auto mb-20">
-      {verified && (
-        <div className="mb-6 rounded-2xl border border-geo-green/60 bg-geo-green/15 p-5 text-left" role="status">
-          <div className="flex gap-3">
-            <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-geo-green text-ink"><Check size={18} /></span>
-            <div><h2 className="font-bold text-ink">Dein Profil ist bestätigt</h2><p className="mt-1 text-sm text-ink-soft">Du bist jetzt im UGC-Verzeichnis sichtbar und kannst bei passenden Brand-Anfragen berücksichtigt werden.</p></div>
-          </div>
-        </div>
-      )}
-      {(invalid || failed) && (
-        <div className="mb-6 rounded-2xl border border-amber-300 bg-amber-50 p-5 text-sm text-amber-900" role="alert">
-          {invalid ? 'Der Bestätigungslink ist ungültig oder abgelaufen. Fülle das Formular bitte erneut aus, um einen neuen Link zu erhalten.' : 'Die Bestätigung konnte gerade nicht abgeschlossen werden. Bitte versuche den Link noch einmal oder schreibe an hi@ugc-vz.de.'}
-        </div>
-      )}
-
-      <div className="overflow-hidden rounded-3xl border border-hairline bg-white shadow-[0_24px_80px_rgba(35,22,47,0.10)]">
-        <div className="grid lg:grid-cols-[0.72fr_1.28fr]">
-          <aside className="relative overflow-hidden bg-[#17121d] p-7 text-white sm:p-10">
-            <div className="absolute -right-16 -top-16 h-52 w-52 rounded-full bg-geo-violet/30 blur-3xl" />
-            <div className="absolute -bottom-20 -left-12 h-52 w-52 rounded-full bg-geo-green/20 blur-3xl" />
-            <div className="relative">
-              <p className="text-xs font-bold uppercase tracking-[0.18em] text-geo-green">Dein kostenloses Profil</p>
-              <h2 className="mt-4 text-3xl font-bold leading-tight">Von Brands gefunden werden – ohne Provision.</h2>
-              <p className="mt-4 text-sm leading-6 text-white/70">In etwa 5 Minuten. Deine privaten Kontaktdaten bleiben geschützt und werden nur bei konkreten Anfragen genutzt.</p>
-
-              <div className="mt-9 hidden space-y-5 lg:block">
-                {steps.map((item, index) => (
-                  <div key={item.title} className="flex gap-3">
-                    <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border text-sm font-bold ${index < step ? 'border-geo-green bg-geo-green text-ink' : index === step ? 'border-white bg-white text-ink' : 'border-white/25 text-white/50'}`}>
-                      {index < step ? <Check size={16} /> : index + 1}
-                    </span>
-                    <div><p className={index <= step ? 'font-semibold text-white' : 'font-semibold text-white/45'}>{item.title}</p><p className="mt-0.5 text-xs text-white/45">{item.description}</p></div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="mt-10 hidden rounded-2xl border border-white/10 bg-white/5 p-4 text-xs leading-5 text-white/60 lg:block">
-                <ShieldCheck className="mb-2 text-geo-green" size={20} />
-                Brands sehen deine öffentlichen Profilangaben, Preisvorstellung und Portfolio-Links. Deine E-Mail-Adresse erscheint nicht im öffentlichen Profil. Keine vollständige Anschrift. Newsletter nur mit eigener, freiwilliger Einwilligung.
+    <section id="creator-form" className="scroll-mt-20 bg-white px-5 py-16 sm:px-8 sm:py-20">
+      <div className="mx-auto max-w-[680px]">
+        {verified && (
+          <div className="mb-6 rounded-[20px] border border-[#1F9D55]/30 bg-[#C8F04B]/25 p-5" role="status">
+            <div className="flex items-start gap-3">
+              <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#121212] text-[#C8F04B]">
+                <Check size={15} aria-hidden="true" />
+              </span>
+              <div>
+                <p className="font-display font-bold text-[#121212]">Dein Konto ist bestätigt</p>
+                <p className="mt-1 text-sm text-[#5C5A55]">
+                  Du kannst dich jetzt direkt in deinem Konto anmelden und offene Kampagnen ansehen.
+                </p>
+                <Link
+                  href="/konto"
+                  className="mt-3 inline-flex min-h-[40px] items-center rounded-full bg-[#121212] px-4 text-xs font-semibold text-[#F7F6F2]"
+                >
+                  Zum Creator-Konto
+                </Link>
               </div>
             </div>
-          </aside>
-
-          <div className="p-6 sm:p-10">
-            {submitted ? (
-              <div className="flex min-h-[520px] flex-col items-center justify-center text-center">
-                <span className="flex h-16 w-16 items-center justify-center rounded-full bg-geo-violet/10 text-geo-violet"><Mail size={30} /></span>
-                <p className="mt-6 text-sm font-bold uppercase tracking-[0.15em] text-geo-violet">Fast geschafft</p>
-                <h2 className="mt-3 text-3xl font-bold">Prüfe jetzt dein Postfach</h2>
-                <p className="mt-4 max-w-md leading-7 text-ink-soft">Wir haben dir einen Bestätigungslink geschickt. Ein Klick aktiviert dein kostenloses Creator-Profil.</p>
-                <p className="mt-5 rounded-xl bg-surface px-4 py-3 text-sm text-ink-soft">Keine E-Mail? Prüfe bitte auch Spam und Werbung. Der Link ist 24 Stunden gültig.</p>
-              </div>
-            ) : (
-              <form onSubmit={submit} noValidate>
-                <div className="mb-8">
-                  <div className="flex items-center justify-between text-xs font-semibold text-ink-soft"><span>Schritt {step + 1} von {steps.length}</span><span>{progress}%</span></div>
-                  <div className="mt-2 h-2 overflow-hidden rounded-full bg-surface-2"><div className="h-full rounded-full bg-gradient-to-r from-[#1F6FF4] via-[#5B46F0] to-[#9131EF] transition-all duration-300" style={{ width: `${progress}%` }} /></div>
-                  <h2 className="mt-6 text-2xl font-bold sm:text-3xl">{steps[step].title}</h2>
-                  <p className="mt-2 text-ink-soft">{steps[step].description}</p>
-                  {step === 0 && <p className="mt-3 text-xs leading-5 text-ink-soft">Brands sehen deine öffentlichen Profilangaben und Arbeitsproben. Deine E-Mail bleibt im öffentlichen Profil verborgen. Du bestätigst die Anmeldung anschließend per E-Mail.</p>}
-                </div>
-
-                {step === 0 && (
-                  <div className="grid gap-5 sm:grid-cols-2">
-                    <label><span className={labelClass}>Vor- und Nachname *</span><input className={fieldClass} value={form.name} onChange={(e) => update('name', e.target.value)} autoComplete="name" maxLength={120} required /></label>
-                    <label><span className={labelClass}>Künstlername</span><input className={fieldClass} value={form.stageName} onChange={(e) => update('stageName', e.target.value)} maxLength={120} placeholder="Optional" /></label>
-                    <label className="sm:col-span-2"><span className={labelClass}>E-Mail-Adresse *</span><input type="email" className={fieldClass} value={form.email} onChange={(e) => update('email', e.target.value)} autoComplete="email" maxLength={254} placeholder="du@beispiel.de" required /><span className="mt-2 block text-xs text-ink-soft">Wir senden dir einmalig einen Link zur Bestätigung.</span></label>
-                    <label><span className={labelClass}>Geburtsjahr</span><input type="number" min="1930" max={new Date().getFullYear() - 16} className={fieldClass} value={form.birthYear} onChange={(e) => update('birthYear', e.target.value)} inputMode="numeric" placeholder="z. B. 1995" /></label>
-                    <label><span className={labelClass}>Geschlecht</span><select className={fieldClass} value={form.gender} onChange={(e) => update('gender', e.target.value)}><option value="">Keine Angabe</option><option>Weiblich</option><option>Männlich</option><option>Divers</option><option>Selbstbeschreibung</option></select></label>
-                    <label className="sm:col-span-2"><span className={labelClass}>Stadt / Region</span><input className={fieldClass} value={form.city} onChange={(e) => update('city', e.target.value)} autoComplete="address-level2" maxLength={120} placeholder="z. B. Berlin oder Rhein-Main" /><span className="mt-2 block text-xs text-ink-soft">Keine Straße oder vollständige Privatanschrift nötig. Viele Marken suchen regional: Ohne Stadt wirst du dort nicht vorgeschlagen.</span></label>
-                  </div>
-                )}
-
-                {step === 1 && (
-                  <div className="grid gap-5 sm:grid-cols-2">
-                    <label className="sm:col-span-2"><span className={labelClass}>Themen und Interessen *</span><textarea className={`${fieldClass} min-h-28`} value={form.topics} onChange={(e) => update('topics', e.target.value)} maxLength={1200} placeholder="Beauty, Food, Family, Fitness, Tech …" required /><span className="mt-2 block text-xs text-ink-soft">Je konkreter, desto besser: „Skincare, Haarpflege“ wird öfter gefunden als „Beauty“.</span></label>
-                    <label className="sm:col-span-2"><span className={labelClass}>Welche Inhalte erstellst du am liebsten? *</span><textarea className={`${fieldClass} min-h-28`} value={form.preferredContent} onChange={(e) => update('preferredContent', e.target.value)} maxLength={1200} placeholder="Produktdemo, Testimonial, Voiceover, Reels, Fotos …" required /></label>
-                    <label><span className={labelClass}>Branchen / Erfahrung</span><textarea className={`${fieldClass} min-h-24`} value={form.industries} onChange={(e) => update('industries', e.target.value)} maxLength={1200} /></label>
-                    <label><span className={labelClass}>Preisvorstellung *</span><textarea className={`${fieldClass} min-h-24`} value={form.rateText} onChange={(e) => update('rateText', e.target.value)} maxLength={500} placeholder="z. B. Video ab 180 €, Paket nach Absprache" required /></label>
-                    <label><span className={labelClass}>Reichweite pro Netzwerk</span><textarea className={`${fieldClass} min-h-24`} value={form.reachText} onChange={(e) => update('reachText', e.target.value)} maxLength={500} placeholder="Instagram 2.400, TikTok 5.100" /></label>
-                    <label><span className={labelClass}>Ausrüstung</span><textarea className={`${fieldClass} min-h-24`} value={form.equipment} onChange={(e) => update('equipment', e.target.value)} maxLength={1000} placeholder="Smartphone, Licht, Mikrofon …" /></label>
-                    <label><span className={labelClass}>Besondere Merkmale</span><textarea className={`${fieldClass} min-h-24`} value={form.specialTraits} onChange={(e) => update('specialTraits', e.target.value)} maxLength={1000} /></label>
-                    <label><span className={labelClass}>Kinder / Family-Content</span><textarea className={`${fieldClass} min-h-24`} value={form.childrenContext} onChange={(e) => update('childrenContext', e.target.value)} maxLength={700} placeholder="Optional, keine Namen nötig" /></label>
-                    <label><span className={labelClass}>Tiere / Pet-Content</span><textarea className={`${fieldClass} min-h-24`} value={form.petContext} onChange={(e) => update('petContext', e.target.value)} maxLength={700} /></label>
-                  </div>
-                )}
-
-                {step === 2 && (
-                  <div className="space-y-5">
-                    <label><span className={labelClass}>Social-Links *</span><textarea className={`${fieldClass} min-h-32`} value={form.socialLinks} onChange={(e) => update('socialLinks', e.target.value)} placeholder={'https://instagram.com/deinprofil\nhttps://tiktok.com/@deinprofil'} required /><span className="mt-2 block text-xs text-ink-soft">Ein vollständiger Link pro Zeile, maximal 8.</span></label>
-                    <label><span className={labelClass}>Profilbild-URL</span><input type="url" className={fieldClass} value={form.profileImageUrl} onChange={(e) => update('profileImageUrl', e.target.value)} maxLength={500} placeholder="https://… (optional)" /><span className="mt-2 block text-xs leading-5 text-ink-soft">Du musst hier nichts eintragen: Wir übernehmen dein Instagram-/TikTok-Profilbild automatisch aus deinen Social-Links. Nur ausfüllen, wenn du ein anderes Bild möchtest — dann bitte einen direkten Link zu einer Bilddatei (endet z. B. auf .jpg oder .png), keinen Instagram-Link.</span></label>
-                    <label><span className={labelClass}>Portfolio und Arbeitsproben</span><textarea className={`${fieldClass} min-h-28`} value={form.portfolioLinks} onChange={(e) => update('portfolioLinks', e.target.value)} placeholder={'Canva-, Drive-, Website- oder Video-Link\nEin Link pro Zeile'} /><span className="mt-2 block text-xs text-ink-soft">Maximal 15 Links. Bitte nur Inhalte teilen, die Brands sehen dürfen. Mit Arbeitsproben wirst du öfter vorgeschlagen.</span></label>
-
-                    <div className="rounded-2xl border border-hairline bg-surface p-5 space-y-4">
-                      <label className="flex cursor-pointer items-start gap-3"><input type="checkbox" className="mt-1 h-4 w-4 accent-geo-violet" checked={form.platformConsent} onChange={(e) => update('platformConsent', e.target.checked)} /><span className="text-sm leading-6 text-ink-soft"><strong className="text-ink">Pflicht:</strong> Ich stimme der Verarbeitung meiner Angaben zur Erstellung und Darstellung meines UGC-VZ-Profils gemäß der <Link href="/datenschutz" className="font-semibold text-geo-violet underline">Datenschutzerklärung</Link> zu. Öffentliche Profilangaben umfassen unter anderem Name/Künstlername, Region, Themen, Portfolio, Social-Links, Reichweite und Preisangaben.</span></label>
-                      <label className="flex cursor-pointer items-start gap-3"><input type="checkbox" className="mt-1 h-4 w-4 accent-geo-violet" checked={form.projectConsent} onChange={(e) => update('projectConsent', e.target.checked)} /><span className="text-sm leading-6 text-ink-soft"><strong className="text-ink">Pflicht:</strong> UGC VZ darf mich bei konkreten passenden Brand-Anfragen per E-Mail informieren und meine hinterlegten Kontaktdaten an die anfragende Brand übermitteln. Ich kann dies jederzeit widerrufen.</span></label>
-                      <label className="flex cursor-pointer items-start gap-3"><input type="checkbox" className="mt-1 h-4 w-4 accent-geo-violet" checked={form.newsletterConsent} onChange={(e) => update('newsletterConsent', e.target.checked)} /><span className="text-sm leading-6 text-ink-soft"><strong className="text-ink">Optional:</strong> Ich möchte gelegentliche UGC-VZ-Updates per E-Mail erhalten. Diese Einwilligung ist unabhängig vom Profil und jederzeit widerrufbar.</span></label>
-                    </div>
-
-                    <label className="absolute left-[-10000px] top-auto h-px w-px overflow-hidden" aria-hidden="true">Website<input tabIndex={-1} autoComplete="off" value={form.website} onChange={(e) => update('website', e.target.value)} /></label>
-                  </div>
-                )}
-
-                {message && <div className="mt-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">{message}</div>}
-
-                <div className="mt-8 flex items-center justify-between gap-4">
-                  {step > 0 ? <button type="button" onClick={() => setStep((current) => current - 1)} className="inline-flex items-center gap-2 rounded-xl border border-hairline px-5 py-3 font-semibold text-ink transition hover:bg-surface"><ArrowLeft size={18} /> Zurück</button> : <span />}
-                  {step < steps.length - 1 ? (
-                    <button type="button" onClick={next} className="inline-flex items-center gap-2 rounded-xl bg-geo-violet px-6 py-3 font-semibold text-white transition hover:bg-geo-violet-soft">Weiter <ArrowRight size={18} /></button>
-                  ) : (
-                    <button type="submit" disabled={submitting} className="inline-flex items-center gap-2 rounded-xl bg-geo-violet px-6 py-3 font-semibold text-white transition hover:bg-geo-violet-soft disabled:cursor-not-allowed disabled:opacity-60">{submitting ? 'Wird gespeichert …' : 'Kostenloses Profil anlegen'} <Sparkles size={18} /></button>
-                  )}
-                </div>
-              </form>
-            )}
           </div>
+        )}
+
+        {(invalid || failed) && (
+          <div className="mb-6 rounded-[20px] border border-[#E8A317]/40 bg-amber-50 p-5 text-sm text-[#121212]" role="alert">
+            {invalid
+              ? 'Der Bestätigungslink ist ungültig oder abgelaufen. Melde dich unten einfach erneut an, um einen frischen Code zu erhalten.'
+              : 'Die Bestätigung konnte gerade nicht abgeschlossen werden. Versuch es erneut oder schreib uns an hi@ugc-vz.de.'}
+          </div>
+        )}
+
+        <div className="rounded-[24px] border border-[#E4E1D8] bg-[#F7F6F2] p-6 shadow-card sm:p-10">
+          {submittedEmail ? (
+            <div className="space-y-6 text-center">
+              <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#EFE8FD] text-[#6C2BD9]">
+                <Mail size={22} aria-hidden="true" />
+              </span>
+              <div>
+                <h2 className="font-display text-2xl font-bold text-[#121212] sm:text-3xl">
+                  Code eingeben
+                </h2>
+                <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-[#5C5A55]">
+                  Fertig. Wir haben dir einen Code an <strong className="text-[#121212]">{submittedEmail}</strong> geschickt. Bestätige ihn, dann siehst du alle Kampagnen.
+                </p>
+              </div>
+
+              <form onSubmit={handleVerifyForm} className="mx-auto max-w-sm space-y-4">
+                <OtpInput
+                  value={otpCode}
+                  onChange={(val) => {
+                    setOtpCode(val);
+                    if (message) setMessage('');
+                  }}
+                  onComplete={(code) => {
+                    if (!verifying) void verifyOtpCode(code);
+                  }}
+                  disabled={verifying}
+                  hasError={Boolean(message)}
+                  shakeKey={shakeKey}
+                  idPrefix="creator-signup-otp"
+                />
+                <button
+                  type="submit"
+                  disabled={verifying}
+                  className="btn-press min-h-[48px] w-full rounded-full bg-[#121212] px-6 text-sm font-semibold text-[#F7F6F2] hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {verifying ? 'Code wird geprüft...' : 'Code bestätigen und Kampagnen ansehen'}
+                </button>
+                <InlineError message={message} />
+              </form>
+
+              <p className="text-xs text-[#5C5A55]">
+                Nichts da? Schau im Spam oder im Gmail-Tab „Benachrichtigungen“.
+              </p>
+
+              <div className="flex flex-wrap items-center justify-center gap-4 border-t border-[#E4E1D8] pt-4 text-xs text-[#5C5A55]">
+                <ResendTimer
+                  initialSeconds={60}
+                  resetTrigger={resendKey}
+                  disabled={submitting || verifying}
+                  onResend={async () => {
+                    await sendRegistration();
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSubmittedEmail('');
+                    setOtpCode('');
+                    setMessage('');
+                  }}
+                  className="font-medium text-[#121212] underline underline-offset-2"
+                >
+                  E-Mail korrigieren
+                </button>
+              </div>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} noValidate>
+              {/* Onboarding Progress Bar (Spec 8.10: scaleX, aria-valuenow) */}
+              <div className="mb-7">
+                <div className="flex items-center justify-between text-xs font-semibold text-[#5C5A55]">
+                  <span>Schritt {step + 1} von {STEPS.length}</span>
+                  <span className="font-mono tabular-nums">{progressPct} %</span>
+                </div>
+                <div
+                  role="progressbar"
+                  aria-label="Fortschritt der Anmeldung"
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-valuenow={progressPct}
+                  className="mt-2 h-2 w-full overflow-hidden rounded-full bg-[#E4E1D8]"
+                >
+                  <div
+                    className="h-full w-full origin-left rounded-full bg-[#121212] transition-transform duration-200 ease-[cubic-bezier(.2,.8,.2,1)] motion-reduce:transition-none"
+                    style={{ transform: `scaleX(${progressPct / 100})` }}
+                  />
+                </div>
+                <h2 className="mt-5 font-display text-2xl font-bold text-[#121212] sm:text-3xl">
+                  {STEPS[step].title}
+                </h2>
+                <p className="mt-1.5 text-sm leading-6 text-[#5C5A55]">{STEPS[step].description}</p>
+              </div>
+
+              {/* Schritt 1: maximal 2 Pflichtfelder (E-Mail + TikTok/Instagram-Name) */}
+              {step === 0 && (
+                <div className="space-y-5">
+                  <div>
+                    <label htmlFor="creator-email" className={labelClass}>
+                      E-Mail *
+                    </label>
+                    <input
+                      id="creator-email"
+                      type="email"
+                      required
+                      autoComplete="email"
+                      value={form.email}
+                      onChange={(e) => update('email', e.target.value)}
+                      placeholder="du@beispiel.de"
+                      className={fieldClass}
+                    />
+                  </div>
+
+                  <div>
+                    <span className={labelClass}>TikTok- oder Instagram-Name *</span>
+                    <div className="mb-2.5 inline-grid grid-cols-2 rounded-full border border-[#E4E1D8] bg-white p-1">
+                      {(['tiktok', 'instagram'] as const).map((platform) => (
+                        <button
+                          key={platform}
+                          type="button"
+                          onClick={() => update('socialPlatform', platform)}
+                          aria-pressed={form.socialPlatform === platform}
+                          className={`min-h-[36px] rounded-full px-4 text-xs font-semibold transition-colors ${
+                            form.socialPlatform === platform
+                              ? 'bg-[#121212] text-[#F7F6F2]'
+                              : 'text-[#5C5A55] hover:text-[#121212]'
+                          }`}
+                        >
+                          {platform === 'tiktok' ? 'TikTok' : 'Instagram'}
+                        </button>
+                      ))}
+                    </div>
+                    <input
+                      id="creator-handle"
+                      type="text"
+                      required
+                      value={form.socialHandle}
+                      onChange={(e) => update('socialHandle', e.target.value)}
+                      placeholder={form.socialPlatform === 'tiktok' ? '@dein.tiktok' : '@dein.instagram'}
+                      className={fieldClass}
+                    />
+                    <p className="mt-1.5 text-xs text-[#5C5A55]">
+                      Direkt danach kannst du deinen Kanal im Konto per Verifizierung verbinden. Geburtsjahr und weitere Angaben sind später optional im Profil möglich.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Schritt 2: Themen (Chips), Formate (Chips), Stadt */}
+              {step === 1 && (
+                <div className="space-y-6">
+                  <div>
+                    <div className="flex items-center justify-between gap-2">
+                      <span className={labelClass}>Themen (bis zu 3 wählen) *</span>
+                      <span className="font-mono text-xs tabular-nums text-[#5C5A55]">
+                        {form.selectedTopics.length} / 3
+                      </span>
+                    </div>
+                    <div className="mt-2 flex flex-wrap gap-2" role="group" aria-label="Themen wählen">
+                      {CREATOR_TAXONOMY.map((cat) => {
+                        const active = form.selectedTopics.includes(cat.label);
+                        return (
+                          <button
+                            key={cat.label}
+                            type="button"
+                            aria-pressed={active}
+                            onClick={() => toggleTopic(cat.label)}
+                            className={`min-h-[40px] rounded-full border px-3.5 text-xs font-semibold transition-colors ${
+                              active
+                                ? 'border-[#121212] bg-[#121212] text-[#F7F6F2]'
+                                : 'border-[#E4E1D8] bg-white text-[#121212] hover:border-[#121212]'
+                            }`}
+                          >
+                            {cat.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div>
+                    <span className={labelClass}>Formate *</span>
+                    <div className="mt-2 flex flex-wrap gap-2" role="group" aria-label="Formate wählen">
+                      {FORMAT_CHIPS.map((fmt) => {
+                        const active = form.selectedFormats.includes(fmt);
+                        return (
+                          <button
+                            key={fmt}
+                            type="button"
+                            aria-pressed={active}
+                            onClick={() => toggleFormat(fmt)}
+                            className={`min-h-[40px] rounded-full border px-3.5 text-xs font-semibold transition-colors ${
+                              active
+                                ? 'border-[#121212] bg-[#121212] text-[#F7F6F2]'
+                                : 'border-[#E4E1D8] bg-white text-[#121212] hover:border-[#121212]'
+                            }`}
+                          >
+                            {fmt}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label htmlFor="creator-city" className={labelClass}>
+                      Stadt (optional)
+                    </label>
+                    <input
+                      id="creator-city"
+                      type="text"
+                      value={form.city}
+                      onChange={(e) => update('city', e.target.value)}
+                      placeholder="z. B. Berlin, Wien oder Zürich"
+                      className={fieldClass}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Schritt 3: Portfolio-Links, Preis (optional), Einwilligung */}
+              {step === 2 && (
+                <div className="space-y-5">
+                  <div>
+                    <label htmlFor="creator-portfolio" className={labelClass}>
+                      Portfolio-Links (optional)
+                    </label>
+                    <textarea
+                      id="creator-portfolio"
+                      rows={3}
+                      value={form.portfolioLinks}
+                      onChange={(e) => update('portfolioLinks', e.target.value)}
+                      placeholder="Canva-, Drive-, Website- oder Video-Links (ein Link pro Zeile)"
+                      className={fieldClass}
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="creator-rate" className={labelClass}>
+                      Preis für Videos (optional)
+                    </label>
+                    <input
+                      id="creator-rate"
+                      type="text"
+                      value={form.rateText}
+                      onChange={(e) => update('rateText', e.target.value)}
+                      placeholder="z. B. ab 180 € pro Produktvideo"
+                      className={fieldClass}
+                    />
+                  </div>
+
+                  <div className="space-y-3 rounded-[16px] border border-[#E4E1D8] bg-white p-4">
+                    <label className="flex cursor-pointer items-start gap-3">
+                      <input
+                        type="checkbox"
+                        checked={form.platformConsent}
+                        onChange={(e) => update('platformConsent', e.target.checked)}
+                        className="mt-1 h-4 w-4 accent-[#121212]"
+                      />
+                      <span className="text-xs leading-5 text-[#5C5A55]">
+                        <strong className="text-[#121212]">Pflicht:</strong> Ich stimme der Verarbeitung meiner Angaben für mein UGC VZ Profil gemäß{' '}
+                        <Link href="/datenschutz" className="font-semibold text-[#121212] underline">
+                          Datenschutzerklärung
+                        </Link>{' '}
+                        zu.
+                      </span>
+                    </label>
+                    <label className="flex cursor-pointer items-start gap-3">
+                      <input
+                        type="checkbox"
+                        checked={form.projectConsent}
+                        onChange={(e) => update('projectConsent', e.target.checked)}
+                        className="mt-1 h-4 w-4 accent-[#121212]"
+                      />
+                      <span className="text-xs leading-5 text-[#5C5A55]">
+                        <strong className="text-[#121212]">Pflicht:</strong> UGC VZ darf mich per E-Mail über passende Kampagnen und Anfragen informieren. Widerruf jederzeit möglich.
+                      </span>
+                    </label>
+                    <label className="flex cursor-pointer items-start gap-3">
+                      <input
+                        type="checkbox"
+                        checked={form.newsletterConsent}
+                        onChange={(e) => update('newsletterConsent', e.target.checked)}
+                        className="mt-1 h-4 w-4 accent-[#121212]"
+                      />
+                      <span className="text-xs leading-5 text-[#5C5A55]">
+                        <strong className="text-[#121212]">Optional:</strong> Gelegentliche Tipps zu neuen Kampagnen per E-Mail erhalten.
+                      </span>
+                    </label>
+                  </div>
+
+                  <label className="sr-only" aria-hidden="true">
+                    Website
+                    <input
+                      tabIndex={-1}
+                      autoComplete="off"
+                      value={form.website}
+                      onChange={(e) => update('website', e.target.value)}
+                    />
+                  </label>
+                </div>
+              )}
+
+              {message && (
+                <div className="mt-5">
+                  <InlineError message={message} />
+                </div>
+              )}
+
+              <div className="mt-7 flex items-center justify-between gap-3">
+                {step > 0 ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMessage('');
+                      setStep((current) => current - 1);
+                    }}
+                    className="btn-press inline-flex min-h-[48px] items-center gap-2 rounded-full border border-[#E4E1D8] bg-white px-5 text-sm font-semibold text-[#121212] hover:border-[#121212]"
+                  >
+                    <ArrowLeft size={16} aria-hidden="true" />
+                    <span>Zurück</span>
+                  </button>
+                ) : (
+                  <span />
+                )}
+
+                {step < STEPS.length - 1 ? (
+                  <button
+                    type="button"
+                    onClick={next}
+                    className="btn-press inline-flex min-h-[48px] items-center gap-2 rounded-full bg-[#121212] px-6 text-sm font-semibold text-[#F7F6F2] hover:opacity-90"
+                  >
+                    <span>Weiter</span>
+                    <ArrowRight size={16} aria-hidden="true" />
+                  </button>
+                ) : (
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="btn-press inline-flex min-h-[48px] items-center gap-2 rounded-full bg-[#121212] px-7 text-sm font-semibold text-[#F7F6F2] hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    <span>{submitting ? 'Code wird gesendet...' : 'Kostenlos anmelden'}</span>
+                    <ArrowRight size={16} aria-hidden="true" />
+                  </button>
+                )}
+              </div>
+
+              <p className="mt-5 text-center text-xs text-[#5C5A55]">
+                Deine E-Mail bleibt privat und erscheint nie öffentlich. Mehr im{' '}
+                <Link href="/datenschutz" className="underline hover:text-[#121212]">
+                  Datenschutz
+                </Link>
+                .
+              </p>
+            </form>
+          )}
         </div>
       </div>
     </section>
