@@ -77,13 +77,15 @@ export function buildAiHeaders(
 }
 
 export function resolveEmbeddingModel(resolved: ResolvedAiProvider, configured?: string): string {
-  const raw = (configured || process.env.SEARCH_EMBEDDING_MODEL || 'openai/text-embedding-3-small').trim();
+  const envConfigured = (configured || process.env.SEARCH_EMBEDDING_MODEL || '').trim();
   if (resolved.provider === 'openai') {
-    if (raw.startsWith('openai/')) return raw.slice('openai/'.length);
-    if (raw.includes('/')) return 'text-embedding-3-small';
-    return raw;
+    if (!envConfigured) return 'text-embedding-3-small';
+    if (envConfigured.startsWith('openai/')) return envConfigured.slice('openai/'.length);
+    if (envConfigured.includes('/')) return 'text-embedding-3-small';
+    return envConfigured;
   }
-  return raw;
+  // Default to baai/bge-m3 on OpenRouter: top multilingual/German 1024-dim model without OpenAI BYOK dependency.
+  return envConfigured || 'baai/bge-m3';
 }
 
 export function resolveChatModels(
@@ -101,8 +103,11 @@ export function resolveChatModels(
   }
 
   if (override) return [override];
-  if (task === 'query_analysis' || task === 'rerank') {
-    return ['deepseek/deepseek-v4-flash-0731', 'deepseek/deepseek-v4-flash'];
+  if (task === 'query_analysis') {
+    return ['google/gemini-2.5-flash-lite', 'deepseek/deepseek-v4-flash'];
+  }
+  if (task === 'rerank') {
+    return ['google/gemini-2.5-flash-lite', 'google/gemini-2.5-flash'];
   }
   return ['google/gemini-2.5-flash'];
 }

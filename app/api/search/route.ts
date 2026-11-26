@@ -85,7 +85,7 @@ const MAX_QUERY_CHARS = 500;
 const RATE_LIMIT_WINDOW_MS = 5 * 60 * 1000;
 const RATE_LIMIT_MAX_REQUESTS = 30;
 const CACHE_DURATION = 300_000; // 5 minutes
-const MAX_RERANK_CANDIDATES = 28;
+const MAX_RERANK_CANDIDATES = 20;
 
 type RateLimitEntry = { count: number; resetAt: number };
 

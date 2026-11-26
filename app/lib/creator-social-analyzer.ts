@@ -56,33 +56,33 @@ export type ExtractedChannelSnapshot = {
 };
 
 export const VisualSignalSchema = z.object({
-  signal: z.string().min(2).max(100),
-  category: z.string().min(2).max(40).default('general'),
-  evidence: z.string().min(2).max(220),
-  sourceUrl: z.string().max(400).optional(),
+  signal: z.string().min(2).transform((s) => s.slice(0, 100)),
+  category: z.string().min(1).default('general').transform((s) => s.slice(0, 40)),
+  evidence: z.string().min(2).transform((s) => s.slice(0, 220)),
+  sourceUrl: z.string().transform((s) => s.slice(0, 400)).optional(),
 });
 
 export const ContentStyleSchema = z.object({
-  formats: z.array(z.string().min(1).max(60)).max(8).default([]),
-  tone: z.string().max(120).default(''),
-  setting: z.string().max(140).default(''),
-  productionQuality: z.string().max(120).default(''),
+  formats: z.array(z.string().min(1).transform((s) => s.slice(0, 60))).default([]).transform((arr) => arr.slice(0, 8)),
+  tone: z.string().default('').transform((s) => s.slice(0, 120)),
+  setting: z.string().default('').transform((s) => s.slice(0, 140)),
+  productionQuality: z.string().default('').transform((s) => s.slice(0, 120)),
 });
 
 export const AiProfileDraftSchema = z.object({
-  draft_summary: z.string().min(20).max(1_500),
-  inferred_niches: z.array(z.string().min(2).max(60)).max(15).default([]),
-  visual_signals: z.array(VisualSignalSchema).max(12).default([]),
+  draft_summary: z.string().min(20).transform((s) => s.slice(0, 1_500)),
+  inferred_niches: z.array(z.string().min(2).transform((s) => s.slice(0, 60))).default([]).transform((arr) => arr.slice(0, 15)),
+  visual_signals: z.array(VisualSignalSchema).default([]).transform((arr) => arr.slice(0, 12)),
   content_style: ContentStyleSchema.default({ formats: [], tone: '', setting: '', productionQuality: '' }),
 });
 
 export type AiProfileDraftOutput = z.infer<typeof AiProfileDraftSchema>;
 
 export const VoiceRefineSchema = z.object({
-  transcript: z.string().max(2_500).default(''),
-  updatedSummary: z.string().min(20).max(1_500),
-  updatedNiches: z.array(z.string().min(2).max(60)).max(15).default([]),
-  changesSummary: z.string().max(300).default(''),
+  transcript: z.string().default('').transform((s) => s.slice(0, 2_500)),
+  updatedSummary: z.string().min(20).transform((s) => s.slice(0, 1_500)),
+  updatedNiches: z.array(z.string().min(2).transform((s) => s.slice(0, 60))).default([]).transform((arr) => arr.slice(0, 15)),
+  changesSummary: z.string().default('').transform((s) => s.slice(0, 300)),
 });
 
 export type VoiceRefineOutput = z.infer<typeof VoiceRefineSchema>;

@@ -70,7 +70,7 @@ async function runUnitChecks() {
   // 5. Dual AI provider resolution (OpenRouter sk-or- vs OpenAI sk-proj-)
   const openRouterProv = resolveAiProvider('sk-or-v1-test123');
   assert.equal(openRouterProv?.provider, 'openrouter');
-  assert.equal(resolveEmbeddingModel(openRouterProv!), 'openai/text-embedding-3-small');
+  assert.equal(resolveEmbeddingModel(openRouterProv!), 'baai/bge-m3');
 
   const openAiProv = resolveAiProvider('sk-proj-test123');
   assert.equal(openAiProv?.provider, 'openai');
