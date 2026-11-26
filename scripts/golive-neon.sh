@@ -3,7 +3,7 @@ set -euo pipefail
 
 # UGC VZ Go-Live Datenbank-Skript fuer Neon (ausfuehren hier auf dem VPS)
 # Fuehrt idempotent aus:
-#   1. SQL-Migrationen (inkl. 022 Pricing, 023 Taxonomie/Consent, 024 Payments/Wallets/DAC7)
+#   1. SQL-Migrationen (inkl. 022 Pricing, 023 Taxonomie/Consent, 024 Payments/Wallets/DAC7, 025 View-Sync)
 #   2. Neon Sicherheits- & PII-Audit
 #   3. 20er-Kategorien-Klassifizierung fuer bestehende aktive Creator-Profile
 
@@ -26,7 +26,7 @@ if [[ -z "${DATABASE_URL_UNPOOLED:-}" && -z "${DATABASE_URL:-}" ]]; then
   exit 1
 fi
 
-echo "==> [1/3] Fuehre Neon SQL-Migrationen (001 bis 024) aus..."
+echo "==> [1/3] Fuehre Neon SQL-Migrationen (001 bis 025) aus..."
 npm run db:migrate
 
 echo ""
@@ -38,4 +38,4 @@ echo "==> [3/3] Ordne bestehende aktive Creator den 20 Kategorien zu..."
 node --import tsx scripts/migrate-creator-categories.mjs --apply
 
 echo ""
-echo "FERTIG: Neon-Migrationen (022-024), Audit und 20er-Kategorien sind live!"
+echo "FERTIG: Neon-Migrationen (022-025), Audit und 20er-Kategorien sind live!"

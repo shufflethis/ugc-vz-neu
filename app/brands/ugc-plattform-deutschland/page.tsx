@@ -10,29 +10,29 @@ export const metadata: Metadata = pageMetadata({
   path: '/brands/ugc-plattform-deutschland',
   title: 'UGC Plattform Deutschland',
   description:
-    `UGC VZ ist eine kostenlose UGC Plattform für Deutschland: ${CREATOR_COUNT_LABEL} Creator durchsuchen, passende Profile auswählen und direkt Kontakt aufnehmen — ohne Agenturgebühr und ohne Abo.`,
+    `UGC VZ ist die UGC Plattform für Deutschland: ${CREATOR_COUNT_LABEL} DACH-Creator finden, View-Kampagnen mit Budget-Deckel im Workspace starten oder direkt anfragen. Ohne Monatsabo.`,
 });
 
 const faqs = [
   {
     question: 'Was kostet eine UGC Plattform?',
     answer:
-      'Das hängt vom Modell ab. Marktplätze rechnen pro Video ab oder verlangen ein Monatsabo plus Vermittlungsgebühr. UGC VZ ist ein Verzeichnis und für Marken kostenlos: Es fällt keine Plattform- oder Vermittlungsgebühr an. Bezahlt wird ausschließlich das Honorar, das du direkt mit dem Creator vereinbarst.',
+      'Das hängt vom Modell ab. Viele Marktplätze verlangen ein Monatsabo oder Stückpreise pro Video. Bei UGC VZ gibt es kein Monatsabo: Für View-Kampagnen im Brand-Workspace setzt du ein festes Budget-Limit (15 % Servicegebühr im Marken-Budget enthalten, 0 % für Creator). Für direkte Einzelproduktionen fragst du Profile direkt an und vereinbarst das Honorar frei mit dem Creator.',
   },
   {
     question: 'Wie schnell bekomme ich passende Creator vorgeschlagen?',
     answer:
-      'Du beschreibst deine Kampagne in eigenen Worten, ein Sprachmodell strukturiert die Anfrage und du bekommst dazu passende Profile angezeigt. Die Auswahl triffst du selbst. Die Kontaktdaten der ausgewählten Creator gehen dir per E-Mail zu, nachdem du die Anfrage bewusst abgeschickt hast.',
+      'Du beschreibst deine Kampagne in eigenen Worten, ein Sprachmodell strukturiert die Anfrage und du bekommst dazu passende Profile angezeigt. Die Auswahl triffst du selbst. Du kannst direkt im Brand-Workspace eine View-Kampagne starten oder Kontaktdaten ausgewählter Creator per E-Mail anfragen.',
   },
   {
     question: 'Brauche ich eine Agentur, um UGC zu produzieren?',
     answer:
-      'Nein. Die Vermittlung über UGC VZ funktioniert ohne Agentur und ist kostenlos. Wer Kampagnenmanagement abgeben möchte, kann das als kostenpflichtige Leistung über die Agentur famefact dazubuchen — verpflichtend ist das nicht.',
+      'Nein. Suche, Direktkontakt und der Brand-Workspace auf UGC VZ funktionieren komplett im Self-Service ohne Agentur. Wer Kampagnenmanagement abgeben möchte, kann das optional als kostenpflichtige Agenturleistung dazubuchen.',
   },
   {
     question: 'Wem gehören die Nutzungsrechte an einem UGC Video?',
     answer:
-      'Zunächst dem Creator, der es produziert hat. Welche Rechte auf die Marke übergehen, regelt ihr in eurer Vereinbarung: Laufzeit, Kanäle, Märkte und ob Paid Ads eingeschlossen sind. Weil UGC VZ nicht Vertragspartei ist, klärst du diese Punkte direkt mit dem Creator — was mehr Spielraum, aber auch mehr Eigenverantwortung bedeutet.',
+      'Zunächst dem Creator, der es produziert hat. Welche Rechte auf die Marke übergehen, regelt ihr vor Drehbeginn: Laufzeit, Kanäle, Märkte und ob Paid Ads eingeschlossen sind. Bei Direktvereinbarungen klärst du das individuell mit dem Creator (z. B. mit unserer kostenlosen Vertrags-Vorlage); bei Workspace-Kampagnen legst du den Rechteumfang direkt im Briefing fest.',
   },
   {
     question: 'Was unterscheidet UGC von Influencer Marketing?',
@@ -96,12 +96,7 @@ export default function UGCPlattformDeutschlandPage() {
               Creator im Auftrag einer Marke erstellen, der aber die visuelle Sprache organischer Beiträge übernimmt.
             </p>
             <p className="text-ink-soft leading-relaxed">
-              Technisch lösen UGC-Plattformen dabei zwei verschiedene Probleme, und genau hier trennen sich die Modelle.
-              Die einen sind <strong className="text-ink">Marktplätze</strong>: Du schreibst einen Auftrag aus, Creator
-              bewerben sich, die Plattform wickelt Vertrag und Zahlung ab und liefert dir ein fertiges Video. Die anderen
-              sind <strong className="text-ink">Verzeichnisse</strong>: Sie lösen das Auffinden, nicht die Abwicklung. Du
-              suchst, filterst, wählst aus und arbeitest danach direkt mit dem Creator. UGC VZ gehört in die zweite
-              Kategorie.
+              Technisch lösen UGC-Plattformen dabei verschiedene Aufgaben. Klassische <strong className="text-ink">Festpreis-Marktplätze</strong> verkaufen fertige Einzelclips nach Stückpreis. <strong className="text-ink">Abo-Plattformen</strong> binden Marken über monatliche Grundgebühren. UGC VZ verbindet zwei flexible Wege ohne Monatsabo: einen <strong className="text-ink">Brand-Workspace für View-Kampagnen mit festem Budget-Deckel</strong> sowie <strong className="text-ink">direkten Creator-Kontakt</strong> aus einem kuratierten DACH-Pool.
             </p>
           </section>
 
@@ -130,20 +125,23 @@ export default function UGCPlattformDeutschlandPage() {
           <section>
             <h2 className="text-3xl font-bold text-ink mb-4">Was kostet UGC über diese Plattform?</h2>
             <p className="text-ink-soft leading-relaxed mb-4">
-              Die Nutzung ist für Marken und für Creator kostenlos. Es gibt kein Abo, keine Freischaltgebühr und keine
-              Provision auf das Creator-Honorar. Das ist der zentrale Unterschied zu Marktplätzen, die entweder pro Video
-              abrechnen oder ein Monatsabo plus prozentuale Vermittlungsgebühr verlangen — bei denen fließt ein Teil
-              deines Budgets in die Plattform statt in die Produktion.
+              Es gibt kein Monatsabo und keine versteckte Freischaltgebühr. Für View-Kampagnen im Brand-Workspace lädst du
+              ein festes Maximalbudget auf: 15 % Servicegebühr sind im Marken-Budget enthalten, 85 % fließen direkt in die
+              Creator-Auszahlungen (0 % Abzug für Creator). Einzahlungen per SEPA / DE-IBAN sind kostenfrei, bei Karte fallen
+              3 % Kartengebühr an. Alle Details stehen transparent auf{' '}
+              <Link href="/preise" className="underline hover:text-geo-violet">
+                ugc-vz.de/preise
+              </Link>
+              .
             </p>
             <p className="text-ink-soft leading-relaxed">
-              Bezahlt wird also nur das, was der Creator für seine Arbeit aufruft. Was ein UGC Video realistisch kostet,
-              hängt vom Format, vom Aufwand und vor allem von den Nutzungsrechten ab; eine ausführliche Einordnung dazu
-              findest du unter{' '}
+              Für klassische Einzelproduktionen über die Creator-Suche zahlst du 0 % Vermittlungsprovision und vereinbarst das
+              Honorar direkt mit dem Creator. Was ein einzelnes UGC Video realistisch kostet, hängt von Format, Aufwand und
+              Nutzungsrechten ab; eine ausführliche Einordnung findest du unter{' '}
               <Link href="/brands/ugc-creator-preise" className="underline hover:text-geo-violet">
                 UGC Creator Preise
               </Link>
-              . Optional lässt sich das Kampagnenmanagement als bezahlte Agenturleistung über famefact dazubuchen. Das
-              ist ein Zusatzangebot, keine Voraussetzung.
+              . Optional lässt sich Kampagnenmanagement als bezahlte Agenturleistung dazubuchen.
             </p>
           </section>
 
@@ -278,33 +276,29 @@ export default function UGCPlattformDeutschlandPage() {
             <h2 className="text-2xl font-bold text-ink mb-4">Das Wichtigste in Kürze</h2>
             <ul className="space-y-3 text-ink-soft leading-relaxed list-disc list-inside">
               <li>
-                UGC VZ ist ein <strong className="text-ink">kostenloses Verzeichnis</strong>, kein Marktplatz: keine
-                Plattformgebühr, kein Abo, keine Provision auf das Honorar.
+                UGC VZ funktioniert <strong className="text-ink">ohne Monatsabo</strong>: View-Kampagnen mit festem Budget-Deckel im Brand-Workspace (15 % Servicegebühr im Marken-Budget enthalten, 0 % für Creator) oder direkte Creator-Anfrage.
               </li>
               <li>
-                Du bekommst die <strong className="text-ink">direkten Kontaktdaten</strong> der ausgewählten Creator,
-                erst nach einer bewussten Anfrage und nie ungefragt aus der öffentlichen Suche.
+                Du bekommst bei Direkt-Anfragen die <strong className="text-ink">Kontaktdaten</strong> ausgewählter Creator erst nach bewusster Anfrage und nie ungefragt aus der öffentlichen Suche.
               </li>
               <li>
-                {CREATOR_COUNT_LABEL} kuratierte Creator im deutschsprachigen Raum — deutlich weniger als internationale Marktplätze,
-                dafür auf den DACH-Markt zugeschnitten.
+                {CREATOR_COUNT_LABEL} kuratierte Creator im deutschsprachigen Raum: kleiner als internationale Großpools, dafür gezielt auf den DACH-Markt ausgerichtet.
               </li>
               <li>
-                Wir sind nicht Vertragspartei. Abwicklung, Zahlung und Nutzungsrechte klärst du direkt mit dem Creator.
+                Im Workspace rechnest du zentral mit Budget-Deckel, Beitragsprüfung und Live-Reporting ab; bei Direkt-Produktionen regelst du Vertrag und Rechte unmittelbar mit dem Creator.
               </li>
               <li>
-                Nutzungsrechte vor dem Dreh schriftlich festhalten: Laufzeit, Kanäle, Märkte und ob Paid Ads
-                eingeschlossen sind.
+                Nutzungsrechte vor dem Dreh schriftlich festhalten: Laufzeit, Kanäle, Märkte und ob Paid Ads eingeschlossen sind.
               </li>
               <li>
-                Für Paid Social lohnen mehrere Hooks pro Video — die ersten Sekunden entscheiden über den Rest.
+                Für Paid Social lohnen mehrere Hooks pro Video, denn die ersten drei Sekunden entscheiden über die Aufmerksamkeit.
               </li>
               <li>
-                Wer Abwicklung und Qualitätssicherung abgeben möchte, fährt mit einer Buchungsplattform besser; der{' '}
+                Wer feste Einzelvideo-Stückpreise oder internationalen Full-Service sucht, findet alle Alternativen im{' '}
                 <Link href="/vergleich" className="underline hover:text-geo-violet">
                   Anbietervergleich
                 </Link>{' '}
-                ordnet die Optionen mit Quellen ein.
+                mit Quellen und Prüfdatum.
               </li>
             </ul>
           </section>

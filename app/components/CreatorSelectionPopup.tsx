@@ -938,7 +938,7 @@ export default function CreatorSelectionPopup({
                         <ol className="mt-2 list-decimal space-y-1 pl-5 text-ink-soft">
                           <li>Du erhältst die verfügbaren Kontaktdaten und Social-Links deiner Auswahl direkt per E-Mail.</li>
                           <li>Bei regulären bezahlten Projektanfragen können erreichbare Creator zusätzlich über dein Interesse informiert werden – Antworten gehen immer direkt an dich. Reine Barter-/Affiliate-Modelle klären wir kurz persönlich mit dir.</li>
-                          <li>Kostenlos, ohne Provision, keine automatische Buchung. Bitte nur echte, eigene Anfragen stellen (<a href="/datenschutz" className="underline">Datenschutz</a>).</li>
+                          <li>Keine automatische Buchung und kein Monatsabo. Für View-Kampagnen mit Budget-Deckel steht zusätzlich der <a href="/brands/workspace" className="underline">Brand-Workspace</a> bereit (<a href="/preise" className="underline">Preise</a> · <a href="/datenschutz" className="underline">Datenschutz</a>).</li>
                         </ol>
                       </div>
 

@@ -257,14 +257,14 @@ function BrandsFilm({ t, v }: { t: number; v: boolean }) {
                   </div>
                 );
               })}
-              <div style={{ marginTop: 26, fontSize: 14 * k, color: '#5A5A5A' }}>Kostenlos · ohne Provision · ihr vereinbart alles direkt</div>
+              <div style={{ marginTop: 26, fontSize: 14 * k, color: '#5A5A5A' }}>Kein Abo · klare Konditionen · direkter Start</div>
             </div>
           </div>
         )}
 
         <Cursor x={cur.x} y={cur.y} t={t} clicks={[2.6, 6.7, 7.6, 9.1]} opacity={cursorOp} />
       </div>
-      <CloseScene t={t} v={v} url="ugc-vz.de" line={<>Kostenlos.<br /><span style={{ color: VIOLET }}>Ohne Provision.</span></>} />
+      <CloseScene t={t} v={v} url="ugc-vz.de" line={<>Kein Abo.<br /><span style={{ color: VIOLET }}>Klare Regeln.</span></>} />
     </>
   );
 }

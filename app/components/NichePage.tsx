@@ -65,7 +65,7 @@ export default async function NichePage({ niche }: { niche: Niche }) {
   const extras = NICHE_EXTRAS[niche.slug];
   const faq = [
     { question: `Was kostet UGC für ${niche.chip}?`, answer: priceAnswer },
-    { question: 'Was kostet die Vermittlung über UGC VZ?', answer: 'Nichts. UGC VZ ist für Brands kostenlos und nimmt keine Provision. Das Honorar wird direkt mit dem Creator vereinbart.' },
+    { question: 'Wie funktioniert die Abrechnung über UGC VZ?', answer: 'Kein Monatsabo: Für View-Kampagnen im Brand-Workspace setzt du ein festes Budget-Limit (15 % Servicegebühr im Marken-Budget enthalten, 0 % für Creator). Alternativ kannst du Creator für individuelle Produktvideos direkt anfragen und das Honorar frei vereinbaren.' },
     ...niche.faq,
     ...(extras?.faq || []),
   ];
@@ -89,9 +89,9 @@ export default async function NichePage({ niche }: { niche: Niche }) {
             {niche.intro}
             {stats.count > 0 && (
               <>
-                {' '}Im UGC-VZ-Verzeichnis gibt es <strong className="text-ink">{stats.count} Creator</strong> mit diesem Schwerpunkt
+                {' '}Auf UGC VZ findest du <strong className="text-ink">{stats.count} Creator</strong> mit diesem Schwerpunkt
                 {price ? <>, der Einstieg liegt meist bei <strong className="text-ink">{euro(price.p25)} bis {euro(price.p75)}</strong> pro Video (Median {euro(price.median)})</> : null}
-                . Die Vermittlung ist kostenlos und ohne Provision.
+                . Starte ohne Monatsabo als View-Kampagne mit Budget-Deckel oder per direkter Anfrage.
               </>
             )}
           </p>
@@ -99,7 +99,7 @@ export default async function NichePage({ niche }: { niche: Niche }) {
             <ul className="mb-8 flex flex-wrap justify-center gap-2 text-xs font-semibold sm:text-sm">
               <li className="rounded-full border border-[#dce9d1] bg-[#edf5e5] px-3 py-1.5 text-[#385523]">{stats.count} Creator</li>
               {price && <li className="rounded-full border border-hairline bg-white px-3 py-1.5">Median {euro(price.median)} pro Video</li>}
-              <li className="rounded-full border border-hairline bg-white px-3 py-1.5">Kostenlos · ohne Provision</li>
+              <li className="rounded-full border border-hairline bg-white px-3 py-1.5">Kein Abo · Budget-Deckel oder Direktkontakt</li>
             </ul>
           )}
           <div className="rounded-3xl border border-hairline bg-white p-4 text-left shadow-[0_30px_90px_rgba(35,22,47,0.10)] sm:p-8">
@@ -186,7 +186,7 @@ export default async function NichePage({ niche }: { niche: Niche }) {
           <ol className="list-decimal space-y-2 pl-6 text-ink-soft leading-7">
             <li><strong className="text-ink">Creator auswählen:</strong> Oben das Briefing beschreiben oder einen Beispiel-Chip anklicken, Profile vergleichen und passende Creator markieren.</li>
             <li><strong className="text-ink">Anfrage senden:</strong> Name, E-Mail und Projektbeschreibung eintragen, optional Vergütung, Budget, Frist und Nutzungsrechte. Du erhältst die verfügbaren Kontaktdaten direkt per E-Mail; bei regulären bezahlten Anfragen können erreichbare Creator zusätzlich über dein Interesse informiert werden.</li>
-            <li><strong className="text-ink">Direkt abstimmen:</strong> Verfügbarkeit, Preis, Umfang und Nutzungsrechte vereinbarst du direkt mit dem Creator – ohne Provision für UGC VZ.</li>
+            <li><strong className="text-ink">Umsetzen &amp; abrechnen:</strong> Vereinbare Umfang und Rechte direkt mit dem Creator oder starte im Brand-Workspace eine View-Kampagne mit fester Budget-Obergrenze (<Link href="/preise" className="underline text-geo-violet">Konditionen</Link>).</li>
           </ol>
         </section>
 

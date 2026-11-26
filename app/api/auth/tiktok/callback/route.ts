@@ -48,7 +48,13 @@ export async function GET(request: NextRequest) {
       }),
       signal: AbortSignal.timeout(8_000),
     });
-    const tokenData = (await tokenRes.json()) as { access_token?: string; open_id?: string; scope?: string };
+    const tokenData = (await tokenRes.json()) as {
+      access_token?: string;
+      refresh_token?: string;
+      expires_in?: number;
+      open_id?: string;
+      scope?: string;
+    };
     if (!tokenRes.ok || !tokenData.access_token || !tokenData.open_id) {
       return redirectWithStatus(request, 'tiktok_error');
     }
@@ -74,7 +80,10 @@ export async function GET(request: NextRequest) {
       url: profileUrl,
       providerAccountId: String(user?.open_id || tokenData.open_id),
       followers: typeof user?.follower_count === 'number' ? user.follower_count : null,
-      scope: tokenData.scope || 'user.info.basic',
+      scope: tokenData.scope || 'user.info.basic,video.list',
+      accessToken: tokenData.access_token,
+      refreshToken: tokenData.refresh_token || null,
+      expiresInSeconds: typeof tokenData.expires_in === 'number' ? tokenData.expires_in : 86400,
     });
 
     return redirectWithStatus(request, 'tiktok_ok');

@@ -25,7 +25,7 @@ export function generateMetadata({ params }: { params: { slug: string } }): Meta
   if (!c) return { title: 'Vergleich nicht gefunden', robots: { index: false, follow: false } };
   const url = `https://ugc-vz.de/vergleich/${params.slug}`;
   const title = `${c.name} Alternative: UGC Creator direkt finden`;
-  const description = `${c.name}: ${c.model}, Creator-Pool: ${c.creatorCount.value}. UGC VZ ist ein kostenloses Verzeichnis mit Direktkontakt statt Plattform-Abwicklung. Alle Angaben mit Quelle, Stand ${VERIFIED_AT_LABEL}.`;
+  const description = `${c.name}: ${c.model}, Creator-Pool: ${c.creatorCount.value}. Vergleich mit UGC VZ (Pay-per-View mit Budget-Deckel oder Direktkontakt, ohne Abo). Alle Angaben mit Quelle, Stand ${VERIFIED_AT_LABEL}.`;
   return {
     title,
     description,
@@ -68,9 +68,10 @@ export default function VergleichDetailPage({ params }: { params: { slug: string
             {c.name} Alternative: <span className="gradient-text">UGC Creator direkt finden</span>
           </h1>
           <p className="text-lg text-ink-soft">
-            {c.name} ist ein {c.model}: Die Abwicklung läuft über die Plattform. UGC VZ ist ein kostenloses Verzeichnis —
-            du bekommst die Kontaktdaten der Creator und verhandelst direkt, ohne Plattformgebühr. Welche Variante besser
-            passt, hängt davon ab, wie viel Abwicklung du abgeben willst.
+            {c.name} ist ein {c.model}: Die Abwicklung läuft über die Plattform. UGC VZ kombiniert ohne Monatsabo zwei Wege
+            im DACH-Raum: View-Kampagnen nach geprüften Aufrufen mit festem Budget-Deckel (15 % Servicegebühr im Marken-Budget
+            enthalten, 0 % für Creator) sowie direkten Kontakt zu ausgewählten Creatorn für individuelle Produktionen. Welche
+            Variante besser passt, hängt von deinem Kampagnenziel ab.
           </p>
         </section>
 
@@ -99,8 +100,8 @@ export default function VergleichDetailPage({ params }: { params: { slug: string
           </ul>
           <p className="text-sm text-ink-soft/80 mt-4">
             {c.creatorCount.isPublic
-              ? `Fairerweise: Der Creator-Pool von ${c.name} ist größer als unser kuratiertes Verzeichnis, und wir übernehmen weder Verträge noch Zahlungsabwicklung. Wer das braucht, ist bei ${c.name} besser aufgehoben.`
-              : `Fairerweise: Bei UGC VZ übernimmst du Briefing, Vertrag und Zahlungsabwicklung selbst. Wer diese Schritte komplett an eine Plattform abgeben möchte, ist bei ${c.name} besser aufgehoben.`}
+              ? `Fairerweise: Der internationale Creator-Pool von ${c.name} ist größer als unser kuratierter DACH-Pool. Wenn du hohe Stückzahlen über viele Länder oder fest betreuten Full-Service suchst, ist ${c.name} die passendere Wahl.`
+              : `Fairerweise: Wenn du eine standardisierte Rundum-Abwicklung inklusive festem Video-Stückpreis oder Full-Service-Betreuung bevorzugst, kann ${c.name} je nach Setup besser zu deinem Team passen.`}
           </p>
         </section>
 
@@ -175,12 +176,20 @@ export default function VergleichDetailPage({ params }: { params: { slug: string
         </section>
 
         <section className="max-w-3xl mx-auto mb-16 text-center">
-          <Link
-            href="/brands"
-            className="inline-block px-8 py-4 rounded-full bg-geo-violet text-white font-semibold hover:opacity-90 transition-opacity"
-          >
-            Creator kostenlos finden
-          </Link>
+          <div className="flex flex-wrap justify-center gap-3">
+            <Link
+              href="/brands"
+              className="inline-block px-8 py-4 rounded-full bg-geo-violet text-white font-semibold hover:opacity-90 transition-opacity"
+            >
+              Creator finden &amp; starten
+            </Link>
+            <Link
+              href="/preise"
+              className="inline-block px-8 py-4 rounded-full border border-hairline bg-white text-ink font-semibold hover:border-geo-violet transition-colors"
+            >
+              Preise im Detail
+            </Link>
+          </div>
         </section>
 
         <section className="max-w-3xl mx-auto">

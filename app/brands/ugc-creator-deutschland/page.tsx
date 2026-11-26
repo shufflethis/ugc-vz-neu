@@ -14,8 +14,8 @@ export const revalidate = 3600;
 
 export const metadata: Metadata = pageMetadata({
   path: '/brands/ugc-creator-deutschland',
-  title: 'UGC Creator Deutschland finden – kostenlos & direkt',
-  description: `Über ${CREATOR_COUNT_LABEL} echte UGC Creator in Deutschland & DACH: Profile mit Portfolio und Preisvorstellung vergleichen, Kontaktdaten kostenlos anfragen – 0 % Provision.`,
+  title: 'UGC Creator Deutschland finden: View-Kampagnen & Direktkontakt',
+  description: `Über ${CREATOR_COUNT_LABEL} echte UGC Creator in Deutschland & DACH: Profile mit Portfolio und Preisvorstellung vergleichen, View-Kampagnen mit Budget-Deckel starten oder direkt anfragen. Ohne Monatsabo.`,
 });
 
 const euro = (value: number) => `${value.toLocaleString('de-DE')} €`;
@@ -98,7 +98,7 @@ export default async function UGCCreatorDeutschlandPage() {
     {
       question: 'Worin unterscheidet sich UGC VZ von Festpreis-Plattformen wie Noovid oder Speekly?',
       answer:
-        'Festpreis-Plattformen bündeln Briefing, Zahlung und Standard-Nutzungsrechte gegen feste Videopreise oder Plattformgebühren – der Kontakt bleibt dabei innerhalb der Plattform. UGC VZ ist ein kostenloses Verzeichnis: Du zahlst 0 € Gebühr und 0 % Provision, erhältst direkte Kontaktdaten und verhandelst Honorar, Hooks und Nutzungsrechte frei mit dem Creator.',
+        'Festpreis-Plattformen verkaufen standardisierte Einzelvideos zum Stückpreis, wobei der Kontakt innerhalb der Plattform bleibt. UGC VZ funktioniert ohne Monatsabo flexibel: Du kannst im Brand-Workspace View-Kampagnen mit festem Budget-Deckel starten (15 % Servicegebühr im Marken-Budget enthalten, 0 % für Creator) oder Creator direkt für individuelle Produktvideos und Paid-Ads-Pakete anfragen.',
     },
     {
       question: 'Muss der Creator in derselben Stadt wie meine Brand sitzen?',
@@ -120,8 +120,8 @@ export default async function UGCCreatorDeutschlandPage() {
   const serviceSchema = {
     '@context': 'https://schema.org',
     '@type': 'Service',
-    name: 'UGC Creator Verzeichnis Deutschland',
-    description: `Kostenlose Suche nach geprüften deutschsprachigen UGC Creatorn in Deutschland und dem DACH-Raum (${CREATOR_COUNT_LABEL} Profile, 0 % Provision).`,
+    name: 'UGC Creator Plattform Deutschland',
+    description: `Creator-Kampagnen nach geprüften Views mit Budget-Deckel und direkte Suche nach deutschsprachigen UGC Creatorn in Deutschland und dem DACH-Raum (${CREATOR_COUNT_LABEL} Profile, kein Monatsabo).`,
     provider: { '@type': 'Organization', '@id': 'https://ugc-vz.de/#organization' },
     areaServed: [
       { '@type': 'Country', name: 'Deutschland' },
@@ -151,14 +151,14 @@ export default async function UGCCreatorDeutschlandPage() {
         {/* Hero + direkte Suche */}
         <section className="py-10 sm:py-14 text-center">
           <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#dce9d1] bg-[#edf5e5] px-3 py-1.5 text-xs font-semibold text-[#385523]">
-            {CREATOR_COUNT_LABEL} echte DACH-Profile · 0 € Gebühr · 0 % Provision
+            {CREATOR_COUNT_LABEL} echte DACH-Profile · Kein Monatsabo · View-Kampagnen &amp; Direktkontakt
           </p>
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 text-ink leading-tight">
             UGC Creator in <span className="gradient-text">Deutschland</span> finden
           </h1>
           <p className="text-lg sm:text-xl text-ink-soft max-w-3xl mx-auto mb-8 leading-relaxed">
             Finde authentische deutschsprachige UGC Creator für TikTok, Instagram Reels, YouTube Shorts und Meta Ads.
-            Vergleiche echte Arbeitsproben und Preisvorstellungen direkt im Verzeichnis und erhalte die Kontaktdaten deiner Favoriten kostenlos per E-Mail – ohne Abo und ohne Agenturaufschlag.
+            Vergleiche echte Arbeitsproben und Preisvorstellungen direkt im Pool, starte View-Kampagnen mit festem Budget-Deckel im Brand-Workspace oder frage deine Favoriten direkt an. Ohne Monatsabo.
           </p>
           {stats.count > 0 && (
             <ul className="mb-8 flex flex-wrap justify-center gap-2 text-xs font-semibold sm:text-sm">
@@ -267,10 +267,10 @@ export default async function UGCCreatorDeutschlandPage() {
           </p>
           <div className="grid gap-5 md:grid-cols-3">
             <div className="rounded-2xl border-2 border-geo-violet/30 bg-[#FBF8FE] p-6">
-              <p className="font-mono text-xs font-bold uppercase tracking-wider text-geo-violet">Direktverzeichnis</p>
-              <h3 className="mt-2 text-lg font-bold text-ink">UGC VZ (0 % Provision)</h3>
+              <p className="font-mono text-xs font-bold uppercase tracking-wider text-geo-violet">Pay-per-View &amp; Direktkontakt</p>
+              <h3 className="mt-2 text-lg font-bold text-ink">UGC VZ (ohne Monatsabo)</h3>
               <p className="mt-2 text-sm leading-6 text-ink-soft">
-                Du wählst Creator anhand echter Portfolios selbst aus, erhältst direkte Kontaktdaten und verhandelst Honorar, Hooks und Nutzungsrechte frei. Ideal für Teams, die eigene Stamm-Creator aufbauen und 100 % des Budgets in Content stecken wollen.
+                Starte im Brand-Workspace View-Kampagnen mit fester Budget-Obergrenze (15 % Servicegebühr im Marken-Budget enthalten, 0 % für Creator) oder wähle Creator anhand echter Portfolios direkt aus und verhandle individuelle Ad-Pakete frei.
               </p>
             </div>
             <div className="surface-card rounded-2xl p-6">

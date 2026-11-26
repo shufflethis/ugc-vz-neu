@@ -51,7 +51,7 @@ export default function HeroVisual() {
         <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#edf5e5] font-bold text-[#385523]">✓</span>
         <div>
           <p className="text-xs font-bold text-ink sm:text-sm">2 Creator in deiner Auswahl</p>
-          <p className="text-[11px] text-ink-soft sm:text-xs">Kontaktinfos kostenlos per E-Mail</p>
+          <p className="text-[11px] text-ink-soft sm:text-xs">Kein Monatsabo · sofort startklar</p>
         </div>
       </div>
     </div>

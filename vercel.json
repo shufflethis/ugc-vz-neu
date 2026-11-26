@@ -5,5 +5,8 @@
   }, {
     "path": "/api/cron/mcp-events",
     "schedule": "*/5 * * * *"
+  }, {
+    "path": "/api/cron/sync-views",
+    "schedule": "0 * * * *"
   }]
 }

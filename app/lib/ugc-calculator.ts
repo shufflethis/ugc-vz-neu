@@ -249,7 +249,7 @@ export function buildBudgetSummaryText(input: CalculatorInput, result: Calculato
     `Richtwert pro Video: ca. ${fmt(result.perVideoMid)} (Spanne ${fmt(result.perVideoLow)} – ${fmt(result.perVideoHigh)})`,
     `Geschätztes Gesamtbudget: ca. ${fmt(result.totalMid)} netto (Spanne ${fmt(result.totalLow)} – ${fmt(result.totalHigh)})`,
     result.bundleDiscountPct > 0 ? `Inkl. Paket-Rabattannahme: −${result.bundleDiscountPct} % (−${fmt(result.bundleDiscountEuro)})` : '',
-    'UGC VZ Vermittlungsgebühr: 0 € (Direktkontakt ohne Provision)',
+    'UGC VZ Konditionen: Kein Monatsabo (Direktkontakt ohne Vermittlungsprovision; View-Kampagnen im Workspace mit 15 % Servicegebühr im Marken-Budget enthalten, 0 % für Creator)',
     '',
     'Hinweis: Richtwerte auf Basis deutscher Markt- und Verzeichnisdaten, keine verbindlichen Festpreise.',
   ].filter(Boolean).join('\n');

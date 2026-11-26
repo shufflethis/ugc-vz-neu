@@ -29,9 +29,9 @@ const faqs = [
       'Bei rein organischer Nutzung spielt die Brand das Video nur auf eigenen Profilen aus. Bei Paid Social (Meta/TikTok Ads) oder Whitelisting wird das Gesicht des Creators gegen Mediabudget skaliert – dafür veranschlagen professionelle Creator je nach Laufzeit typischerweise 30 bis 110 % Aufschlag.',
   },
   {
-    question: 'Welche Gebühr nimmt UGC VZ zusätzlich zum Creator-Honorar?',
+    question: 'Wie rechnet UGC VZ gegenüber klassischen Marktplätzen ab?',
     answer:
-      'Keine. Suche, Profilprüfung und Kontaktanfrage über UGC VZ sind kostenlos und provisionsfrei (0 %). Du vereinbarst Honorar und Rechte direkt mit dem Creator.',
+      'UGC VZ verlangt kein Monatsabo. Für View-Kampagnen im Brand-Workspace gilt ein festes Budget-Limit (15 % Servicegebühr im Marken-Budget enthalten, 0 % für Creator). Bei direkten Einzelproduktionen über die Creator-Suche zahlst du 0 % Vermittlungsprovision und vereinbarst Honorar und Rechte direkt mit dem Creator.',
   },
 ];
 
@@ -91,7 +91,7 @@ export default async function UgcKostenRechnerPage() {
           </h1>
           <p className="mt-4 max-w-3xl text-lg leading-relaxed text-ink-soft">
             Plane dein UGC-Budget in 60 Sekunden: Wähle Branche, Video-Format, Zusatz-Hooks, Rohmaterial und Paid-Ads-Nutzungsrechte
-            und vergleiche direkt, wie viel Budget bei 0 % Provision wirklich beim Creator ankommt.
+            und vergleiche direkt, wie sich Einzelproduktionen gegenüber View-Kampagnen und Abo-Marktplätzen rechnen.
           </p>
         </div>
 

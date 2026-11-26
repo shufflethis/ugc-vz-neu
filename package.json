@@ -19,6 +19,7 @@
     "test:etappe4-ui": "node --import tsx scripts/test-etappe4-ui.ts",
     "test:etappe5-subpages": "node --import tsx scripts/test-etappe5-subpages.ts",
     "test:payments-flow": "node --import tsx scripts/test-payments-flow.ts",
+    "test:view-sync": "node --import tsx scripts/test-view-sync.ts",
     "test:ai-profile": "node --import tsx scripts/test-ai-profile.ts",
     "test:auth-flows": "node --import tsx scripts/test-auth-flows.ts",
     "test:platform-pricing": "node --import tsx scripts/test-platform-pricing.ts",

@@ -30,8 +30,8 @@ export interface Competitor {
 }
 
 const V = '2026-08-14';
-// Eigener Creator-Count: gegen die Live-Suche (/api/v1/creators/search) nachgezaehlt.
-const V_OWN = '2026-08-26';
+// Eigene Plattform-Angaben & Creator-Count: gegen Live-Suche und /preise geprueft.
+const V_OWN = '2026-11-26';
 // Creator Pool und LikeGroup: Angaben von den Anbieterseiten am 08.10.2026 gelesen.
 const V_OCT = '2026-10-08';
 // Noovid und Contentmarkt: Angaben von den Anbieterseiten am 25.11.2026 gelesen.
@@ -55,20 +55,20 @@ export const competitors: Competitor[] = [
     slug: 'ugc-vz',
     name: 'UGC VZ',
     url: 'https://ugc-vz.de',
-    model: 'Verzeichnis mit Direktkontakt',
+    model: 'Creator-Plattform (Pay-per-View & Direktkontakt)',
     isOwn: true,
     hasOwnPage: false,
-    pricing: { value: 'kostenlos', source: 'https://ugc-vz.de/brands', verifiedAt: V, isPublic: true },
+    pricing: { value: 'Kein Abo; View-Kampagnen mit festem Budget-Deckel (15 % Servicegebühr im Marken-Budget enthalten) oder Direktkontakt', source: 'https://ugc-vz.de/preise', verifiedAt: V_OWN, isPublic: true },
     creatorCount: { value: `${CREATOR_COUNT_LABEL} (DACH, kuratiert)`, source: 'https://ugc-vz.de/brands', verifiedAt: V_OWN, isPublic: true },
-    directContact: { value: 'Ja, Kontaktdaten der Creator', source: 'https://ugc-vz.de/brands', verifiedAt: V, isPublic: true },
-    commission: { value: 'keine', source: 'https://ugc-vz.de/brands', verifiedAt: V, isPublic: true },
-    markets: { value: 'DACH', source: 'https://ugc-vz.de/brands', verifiedAt: V, isPublic: true },
+    directContact: { value: 'Ja, Direktkontakt oder Kampagnen-Workspace', source: 'https://ugc-vz.de/brands', verifiedAt: V_OWN, isPublic: true },
+    commission: { value: '15 % im Marken-Budget bei View-Kampagnen; 0 % für Creator; 0 % bei Direktkontakt', source: 'https://ugc-vz.de/preise', verifiedAt: V_OWN, isPublic: true },
+    markets: { value: 'DACH', source: 'https://ugc-vz.de/brands', verifiedAt: V_OWN, isPublic: true },
     strengths: [
-      'Kostenlos, keine Plattform- oder Vermittlungsgebühr',
-      'Direkte Kontaktdaten der Creator statt Kommunikation über eine Plattform',
-      `${CREATOR_COUNT_LABEL} kuratierte Creator im deutschsprachigen Raum`,
+      'Kein Monatsabo: View-Kampagnen nach geprüften Aufrufen mit festem Budget-Deckel (15 % im Marken-Budget enthalten, 0 % für Creator)',
+      'Zusätzlich direkter Creator-Kontakt für individuelle Produktvideos und Paid-Ads-Pakete ohne Vermittlungsprovision',
+      `${CREATOR_COUNT_LABEL} kuratierte Creator im deutschsprachigen Raum mit offenen Portfolios`,
     ],
-    bestFor: 'Brands, die Creator direkt ansprechen, selbst verhandeln und ohne Zwischenstelle zusammenarbeiten wollen.',
+    bestFor: 'Brands im DACH-Raum, die ohne Monatsabo entweder nach geprüften Views mit festem Budget-Limit abrechnen oder Creator direkt für individuelle Produktvideos buchen wollen.',
     faqs: [],
   },
   {
@@ -91,9 +91,9 @@ export const competitors: Competitor[] = [
     bestFor: 'Brands, die planbare Fixpreise pro Video wollen und die komplette Abwicklung abgeben möchten.',
     faqs: [
       { question: 'Was kostet Speekly?', answer: `Laut Preisseite von Speekly kosten fertig geschnittene UGC-Videos 99 € (15 Sekunden), 119 € (30 Sekunden) und 139 € (60 Sekunden), jeweils zzgl. MwSt. Ein Paket mit ungeschnittenem Rohmaterial beginnt bei 59 €. Stand: ${VERIFIED_AT_LABEL}.` },
-      { question: 'Gibt es eine kostenlose Alternative zu Speekly?', answer: 'UGC VZ ist ein kostenloses Creator-Verzeichnis. Du zahlst keine Plattformgebühr und verhandelst das Honorar direkt mit dem Creator. Dafür übernimmt UGC VZ auch keine Abwicklung, keine Verträge und keine Zahlungsabwicklung — das ist der Unterschied zum Marktplatzmodell von Speekly.' },
-      { question: 'Kann ich Creator bei Speekly direkt kontaktieren?', answer: 'Die Kommunikation läuft über den Chat der Speekly-Plattform. Bei UGC VZ bekommst du die Kontaktdaten der Creator und schreibst direkt.' },
-      { question: 'Worin unterscheiden sich Speekly und UGC VZ?', answer: 'Speekly ist ein Marktplatz: Du erstellst einen Auftrag, Creator bewerben sich, Speekly wickelt Vertrag und Zahlung ab und liefert ein fertiges Video zum Festpreis. UGC VZ ist ein Verzeichnis: Du suchst Creator, bekommst deren Kontaktdaten und regelst alles Weitere selbst.' },
+      { question: 'Gibt es eine Alternative zu Speekly ohne feste Videopreise?', answer: 'Bei UGC VZ gibt es kein Abo: Du kannst entweder im Brand-Workspace View-Kampagnen mit fester Budget-Obergrenze starten (15 % Servicegebühr im Marken-Budget enthalten, 0 % für Creator) oder Creator im Verzeichnis direkt ohne Vermittlungsgebühr für individuelle Produktvideos anfragen.' },
+      { question: 'Kann ich Creator bei Speekly direkt kontaktieren?', answer: 'Die Kommunikation läuft über den Chat der Speekly-Plattform. Bei UGC VZ kannst du Creator direkt kontaktieren oder über den Brand-Workspace einladen.' },
+      { question: 'Worin unterscheiden sich Speekly und UGC VZ?', answer: 'Speekly ist ein Festpreis-Marktplatz pro fertigem Video inklusive Revisionen. UGC VZ verbindet View-Kampagnen nach geprüften Aufrufen mit festem Budget-Deckel und direkten Creator-Kontakt für individuelle Produktionen ohne Monatsabo.' },
     ],
   },
   {
@@ -116,7 +116,7 @@ export const competitors: Competitor[] = [
     bestFor: 'Brands mit hohem, kontinuierlichem Content-Volumen und internationalen Märkten, für die sich ein Monatsabo rechnet.',
     faqs: [
       { question: 'Was kostet Influee wirklich?', answer: `Die Startseite wirbt mit UGC-Videos „ab 76 €". Das ist der Creator-Anteil. Laut Preisseite kommt ein Pflicht-Abo von $229, $529 oder $999 pro Monat hinzu, dazu eine Marketplace-Fee von 10 % auf die Creator-Zahlungen. Die Creator-Honorare sind im Abo nicht enthalten. Stand: ${VERIFIED_AT_LABEL}.` },
-      { question: 'Gibt es eine Influee-Alternative ohne Monatsabo?', answer: 'UGC VZ verlangt weder Abo noch Provision — es ist ein kostenloses Verzeichnis, über das du Creator direkt kontaktierst. Auch Speekly kommt ohne Abo aus und rechnet pro Video ab.' },
+      { question: 'Gibt es eine Influee-Alternative ohne Monatsabo?', answer: 'UGC VZ verlangt kein Monatsabo: Du steuerst View-Kampagnen mit festem Budget-Deckel (15 % Servicegebühr im Marken-Budget enthalten, 0 % für Creator) oder fragst Creator direkt ohne Vermittlungsprovision an. Auch Speekly und Noovid kommen ohne Abo aus und rechnen pro Video ab.' },
       { question: 'Wie viele deutsche Creator hat Influee?', answer: `Influee gibt über 10.000 Creator in Deutschland an, bei 140.000+ weltweit. Das ist deutlich mehr als das kuratierte Verzeichnis von UGC VZ mit ${CREATOR_COUNT_LABEL} Creatorn im DACH-Raum.` },
       { question: 'Wann lohnt sich Influee gegenüber UGC VZ?', answer: 'Wenn du regelmäßig viel Content in mehreren Ländern produzierst und die Abwicklung samt Nutzungsrechten und Videoschnitt an eine Plattform abgeben willst. Bei einzelnen Kampagnen im DACH-Raum trägt das Monatsabo diese Kosten nicht.' },
     ],
@@ -142,7 +142,7 @@ export const competitors: Competitor[] = [
     faqs: [
       { question: 'Was kostet stylink UGC für Brands?', answer: `stylink UGC veröffentlicht auf der eigenen Website keine Preise für Brands. Angegeben ist nur die Creator-Vergütung von „bis zu 200 € pro Video". In Vergleichsartikeln kursierende Zahlen lassen sich auf der Anbieterseite nicht belegen, deshalb führen wir hier keine. Stand: ${VERIFIED_AT_LABEL}.` },
       { question: 'Wie funktioniert stylink UGC?', answer: 'Brands erstellen einen Auftrag, Creator bewerben sich darauf, stylink führt einen Content-Check durch und die Brand zahlt nach Annahme des Videos.' },
-      { question: 'Gibt es eine Alternative zu stylink UGC ohne Plattformgebühr?', answer: 'UGC VZ ist ein kostenloses Verzeichnis: Du findest Creator, bekommst deren Kontaktdaten und verhandelst direkt. Es gibt keine Plattformgebühr und keine Provision — dafür auch keinen Content-Check und keine Abwicklung durch uns.' },
+      { question: 'Gibt es eine Alternative zu stylink UGC mit transparenten Konditionen?', answer: 'Bei UGC VZ sind alle Konditionen öffentlich auf ugc-vz.de/preise einsehbar: kein Monatsabo, 15 % Servicegebühr im Marken-Budget bei View-Kampagnen (0 % für Creator) sowie direkter Creator-Kontakt für individuelle Produktionen.' },
     ],
   },
   {
@@ -166,7 +166,7 @@ export const competitors: Competitor[] = [
     faqs: [
       { question: 'Was kostet Boksi?', answer: `Boksi veröffentlicht keine Preisliste. Die Website führt zu einer kostenlosen Demo, ein individuelles Angebot wird laut Anbieter innerhalb eines Werktags erstellt. Stand: ${VERIFIED_AT_LABEL}.` },
       { question: 'Für wen eignet sich Boksi?', answer: 'Für Brands, die Kampagnen mit Reporting und Betreuung einkaufen wollen, statt einzelne Videos zu bestellen. Boksi nennt Branchen wie Food, Fashion, Beauty, Retail, Pet Care und Travel.' },
-      { question: 'Gibt es eine Boksi-Alternative mit transparenten Kosten?', answer: 'UGC VZ ist kostenlos und verlangt keine Provision; du verhandelst das Honorar direkt mit dem Creator. Wer feste Videopreise sucht, findet sie bei Speekly öffentlich ausgewiesen.' },
+      { question: 'Gibt es eine Boksi-Alternative mit transparenten Kosten?', answer: 'UGC VZ weist alle Konditionen offen auf ugc-vz.de/preise aus: kein Abo, View-Kampagnen mit fester Budget-Obergrenze (15 % Servicegebühr im Marken-Budget enthalten, 0 % für Creator) oder direkter Creator-Kontakt. Wer feste Stückpreise pro Video sucht, findet sie bei Speekly und Noovid öffentlich.' },
     ],
   },
   {
@@ -274,7 +274,7 @@ export const competitors: Competitor[] = [
       },
       {
         question: 'Worin unterscheiden sich Noovid und UGC VZ?',
-        answer: 'Noovid ist ein Festpreis-Marktplatz: Du erstellst ein Online-Briefing, erhältst Bewerbungen und wickelst Lieferung, Revisionen und Rechte über die Plattform ab. UGC VZ ist ein kostenloses Verzeichnis im DACH-Raum: Du prüfst Profile selbst, bekommst die direkten Kontaktdaten und verhandelst Honorar, Hooks und langfristige Zusammenarbeit direkt mit dem Creator.',
+        answer: 'Noovid ist ein Festpreis-Marktplatz pro fertigem Video inklusive Standard-Nutzungsrechten. UGC VZ kombiniert im DACH-Raum zwei Wege ohne Abo: View-Kampagnen mit festem Budget-Deckel im Brand-Workspace (15 % Servicegebühr im Marken-Budget enthalten, 0 % für Creator) sowie direkten Kontakt zu ausgewählten Creatorn für individuelle Ad-Pakete.',
       },
       {
         question: 'Kann ich bei Noovid Creator direkt außerhalb der Plattform kontaktieren?',
@@ -311,15 +311,15 @@ export const competitors: Competitor[] = [
       },
       {
         question: 'Was ist der Unterschied zwischen Contentmarkt und UGC VZ?',
-        answer: 'Contentmarkt zielt auf Reichweite über fremde TikTok- und Instagram-Profile (Clipping und Creator-Postings mit View-Vergütung). UGC VZ ist ein kostenloses Verzeichnis für klassische UGC-Produktion: Du findest deutschsprachige Creator, erhältst ihre direkten Kontaktdaten und kaufst Videos gezielt für deine eigenen Paid Ads, Produktseiten und Brand-Kanäle ein.',
+        answer: 'Beide Plattformen ermöglichen View-Kampagnen mit Budget-Obergrenze. UGC VZ weist die Konditionen öffentlich aus (15 % Servicegebühr im Marken-Budget enthalten, 0 % Abzug für Creator, kein Abo) und kombiniert den Kampagnen-Workspace zusätzlich mit einem kuratierten DACH-Creator-Pool für direkte Paid-Ads-Produktionen.',
       },
       {
         question: 'Bekomme ich bei Contentmarkt direkte Creator-Kontakte für Paid Ads?',
-        answer: 'Kampagnen-Briefing, Einreichung, View-Prüfung und Auszahlung laufen bei Contentmarkt über Plattform und App. Wer stattdessen Rohmaterial, mehrere Ad-Hooks und individuelle Paid-Social-Nutzungsrechte direkt mit einem Creator verhandeln will, arbeitet über UGC VZ im Direktkontakt.',
+        answer: 'Kampagnen-Briefing, Einreichung, View-Prüfung und Auszahlung laufen bei Contentmarkt über Plattform und App. Bei UGC VZ kannst du neben View-Kampagnen im Brand-Workspace auch Profile direkt anfragen, wenn du Rohmaterial, mehrere Ad-Hooks und individuelle Paid-Social-Nutzungsrechte vereinbaren willst.',
       },
       {
         question: 'Wann passt Contentmarkt besser und wann UGC VZ?',
-        answer: 'Contentmarkt passt, wenn du organische Distribution und Clipping nach Views auf TikTok und Instagram skalieren willst. UGC VZ passt, wenn du echte Gesichter für konversionsstarke Produktvideos und Performance-Ads suchst und 0 % Plattformgebühr zahlen möchtest.',
+        answer: 'Contentmarkt passt, wenn du Clipping-Distribution über eine eigene Creator-App und Agentur-Zugänge suchst. UGC VZ passt, wenn du transparente Konditionen (15 % im Marken-Budget, 0 % für Creator, kein Abo) für View-Kampagnen im DACH-Raum möchtest und zusätzlich direkten Zugang zu Creatorn für eigene Performance-Ads brauchst.',
       },
     ],
   },

@@ -18,7 +18,7 @@ const faqs = [
   {
     question: 'Wie kommen UGC Creator Jobs über UGC VZ zustande?',
     answer:
-      'Marken und Agenturen beschreiben ihr Produktbriefing in der Suche, vergleichen passende Profile inklusive Portfolio und Preisvorstellung und fordern die Kontaktdaten ihrer Favoriten an. Honorar, Briefing und Nutzungsrechte klärst du direkt mit der Brand – ohne Provision.',
+      'Auf zwei Wegen, beide mit 0 % Gebühr für Creator: Entweder bewirbst du dich im Creator-Konto auf offene View-Kampagnen mit festem TKP und automatischer Abrechnung, oder Marken entdecken dein Profil in der Suche und fragen dich direkt für einzelne Produktvideos an.',
   },
   {
     question: 'Garantiert ein Eintrag bei UGC VZ feste Aufträge?',

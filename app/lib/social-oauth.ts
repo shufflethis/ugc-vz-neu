@@ -5,12 +5,15 @@ type DatabaseClient = ReturnType<typeof getDatabase>;
 
 export const SOCIAL_OAUTH_STATE_COOKIE = 'ugcvz_social_oauth_state';
 const STATE_TTL_MS = 10 * 60 * 1000;
+const TOKEN_CIPHER_VERSION = 'v1';
+const TOKEN_AAD = Buffer.from('ugcvz-social-token-v1', 'utf8');
 
 export type SocialOAuthProvider = 'tiktok' | 'instagram';
 
 export interface SocialOAuthAvailability {
   tiktok: boolean;
   instagram: boolean;
+  youtube?: boolean;
 }
 
 export const isTikTokOAuthConfigured = () =>
@@ -19,10 +22,20 @@ export const isTikTokOAuthConfigured = () =>
 export const isInstagramOAuthConfigured = () =>
   Boolean(process.env.INSTAGRAM_APP_ID?.trim() && process.env.INSTAGRAM_APP_SECRET?.trim());
 
+export const isYouTubeApiConfigured = () =>
+  Boolean(process.env.YOUTUBE_API_KEY?.trim());
+
 export const getSocialOAuthAvailability = (): SocialOAuthAvailability => ({
   tiktok: isTikTokOAuthConfigured(),
   instagram: isInstagramOAuthConfigured(),
+  youtube: isYouTubeApiConfigured(),
 });
+
+export const getTikTokOAuthScopes = (): string =>
+  (process.env.TIKTOK_OAUTH_SCOPES || 'user.info.basic,user.info.profile,user.info.stats,video.list').trim();
+
+export const getInstagramOAuthScopes = (): string =>
+  (process.env.INSTAGRAM_OAUTH_SCOPES || 'instagram_business_basic,instagram_business_manage_insights').trim();
 
 const getOAuthStateSecret = () => {
   const secret = process.env.BRAND_SESSION_SECRET || process.env.CREATOR_SESSION_SECRET;
@@ -31,6 +44,54 @@ const getOAuthStateSecret = () => {
   }
   return secret;
 };
+
+const getTokenEncryptionKey = (): Buffer => {
+  const secret =
+    process.env.SOCIAL_TOKEN_ENCRYPTION_KEY?.trim()
+    || process.env.CREATOR_SESSION_SECRET?.trim()
+    || process.env.BRAND_SESSION_SECRET?.trim();
+  if (!secret || secret.length < 16) {
+    throw new Error('SOCIAL_TOKEN_ENCRYPTION_KEY (or CREATOR_SESSION_SECRET / BRAND_SESSION_SECRET) must be set.');
+  }
+  return crypto.createHash('sha256').update(secret, 'utf8').digest();
+};
+
+export function encryptSocialToken(plaintext: string): string {
+  const trimmed = plaintext.trim();
+  if (!trimmed) throw new Error('Cannot encrypt empty social token.');
+  const key = getTokenEncryptionKey();
+  const iv = crypto.randomBytes(12);
+  const cipher = crypto.createCipheriv('aes-256-gcm', key, iv);
+  cipher.setAAD(TOKEN_AAD);
+  const encrypted = Buffer.concat([cipher.update(trimmed, 'utf8'), cipher.final()]);
+  const tag = cipher.getAuthTag();
+  return [
+    TOKEN_CIPHER_VERSION,
+    iv.toString('base64url'),
+    tag.toString('base64url'),
+    encrypted.toString('base64url'),
+  ].join('.');
+}
+
+export function decryptSocialToken(ciphertext: string | null | undefined): string | null {
+  if (!ciphertext || typeof ciphertext !== 'string') return null;
+  const parts = ciphertext.split('.');
+  if (parts.length !== 4 || parts[0] !== TOKEN_CIPHER_VERSION) return null;
+  try {
+    const key = getTokenEncryptionKey();
+    const iv = Buffer.from(parts[1], 'base64url');
+    const tag = Buffer.from(parts[2], 'base64url');
+    const encrypted = Buffer.from(parts[3], 'base64url');
+    if (iv.length !== 12 || tag.length !== 16 || encrypted.length === 0) return null;
+    const decipher = crypto.createDecipheriv('aes-256-gcm', key, iv);
+    decipher.setAAD(TOKEN_AAD);
+    decipher.setAuthTag(tag);
+    const decrypted = Buffer.concat([decipher.update(encrypted), decipher.final()]);
+    return decrypted.toString('utf8');
+  } catch {
+    return null;
+  }
+}
 
 export function createPkcePair(): { codeVerifier: string; codeChallenge: string } {
   const codeVerifier = crypto.randomBytes(32).toString('base64url');
@@ -80,6 +141,14 @@ export function verifyOAuthState(raw: string | undefined, expectedProvider: Soci
   }
 }
 
+function isUndefinedColumnError(err: unknown): boolean {
+  if (!err || typeof err !== 'object') return false;
+  const code = (err as { code?: string }).code;
+  if (code === '42703') return true;
+  const message = (err as { message?: string }).message || '';
+  return message.includes('oauth_access_token_enc') || message.includes('does not exist');
+}
+
 export async function upsertVerifiedOAuthSocialAccount(
   sql: DatabaseClient,
   input: {
@@ -90,6 +159,9 @@ export async function upsertVerifiedOAuthSocialAccount(
     providerAccountId: string;
     followers?: number | null;
     scope?: string;
+    accessToken?: string | null;
+    refreshToken?: string | null;
+    expiresInSeconds?: number | null;
   },
 ): Promise<void> {
   const canonical = input.handle.toLowerCase().replace(/^@/, '').replace(/[^a-z0-9._-]/g, '').slice(0, 60);
@@ -97,6 +169,12 @@ export async function upsertVerifiedOAuthSocialAccount(
   const followers = typeof input.followers === 'number' && Number.isFinite(input.followers) && input.followers >= 0
     ? Math.round(input.followers)
     : null;
+  const accessTokenEnc = input.accessToken?.trim() ? encryptSocialToken(input.accessToken) : null;
+  const refreshTokenEnc = input.refreshToken?.trim() ? encryptSocialToken(input.refreshToken) : null;
+  const tokenExpiresAt =
+    typeof input.expiresInSeconds === 'number' && Number.isFinite(input.expiresInSeconds) && input.expiresInSeconds > 0
+      ? new Date(Date.now() + Math.round(input.expiresInSeconds) * 1000).toISOString()
+      : null;
 
   const [existing] = (await sql.query(
     `SELECT id FROM creator_social_accounts
@@ -107,28 +185,86 @@ export async function upsertVerifiedOAuthSocialAccount(
   )) as unknown as Array<{ id: string }>;
 
   if (existing) {
-    await sql.query(
-      `UPDATE creator_social_accounts
-       SET handle = $2,
-           canonical_handle = NULLIF($3, ''),
-           url = $4,
-           provider_account_id = $5,
-           followers = COALESCE($6, followers),
-           oauth_scope = $7,
-           verification_method = 'oauth',
-           verified_at = now(),
-           last_synced_at = now()
-       WHERE id = $1`,
-      [existing.id, displayHandle, canonical, input.url, input.providerAccountId, followers, input.scope || ''],
-    );
-    return;
+    try {
+      await sql.query(
+        `UPDATE creator_social_accounts
+         SET handle = $2,
+             canonical_handle = NULLIF($3, ''),
+             url = $4,
+             provider_account_id = $5,
+             followers = COALESCE($6, followers),
+             oauth_scope = $7,
+             oauth_access_token_enc = COALESCE($8, oauth_access_token_enc),
+             oauth_refresh_token_enc = COALESCE($9, oauth_refresh_token_enc),
+             oauth_token_expires_at = COALESCE($10::timestamptz, oauth_token_expires_at),
+             oauth_last_error = '',
+             verification_method = 'oauth',
+             verified_at = now(),
+             last_synced_at = now()
+         WHERE id = $1`,
+        [
+          existing.id,
+          displayHandle,
+          canonical,
+          input.url,
+          input.providerAccountId,
+          followers,
+          input.scope || '',
+          accessTokenEnc,
+          refreshTokenEnc,
+          tokenExpiresAt,
+        ],
+      );
+      return;
+    } catch (err) {
+      if (!isUndefinedColumnError(err)) throw err;
+      await sql.query(
+        `UPDATE creator_social_accounts
+         SET handle = $2,
+             canonical_handle = NULLIF($3, ''),
+             url = $4,
+             provider_account_id = $5,
+             followers = COALESCE($6, followers),
+             oauth_scope = $7,
+             verification_method = 'oauth',
+             verified_at = now(),
+             last_synced_at = now()
+         WHERE id = $1`,
+        [existing.id, displayHandle, canonical, input.url, input.providerAccountId, followers, input.scope || ''],
+      );
+      return;
+    }
   }
 
-  await sql.query(
-    `INSERT INTO creator_social_accounts (
-       creator_id, platform, handle, canonical_handle, url, provider_account_id,
-       followers, oauth_scope, verification_method, verified_at, last_synced_at
-     ) VALUES ($1, $2, $3, NULLIF($4, ''), $5, $6, $7, $8, 'oauth', now(), now())`,
-    [input.creatorId, input.platform, displayHandle, canonical, input.url, input.providerAccountId, followers, input.scope || ''],
-  );
+  try {
+    await sql.query(
+      `INSERT INTO creator_social_accounts (
+         creator_id, platform, handle, canonical_handle, url, provider_account_id,
+         followers, oauth_scope, oauth_access_token_enc, oauth_refresh_token_enc,
+         oauth_token_expires_at, oauth_last_error, verification_method, verified_at, last_synced_at
+       ) VALUES ($1, $2, $3, NULLIF($4, ''), $5, $6, $7, $8, $9, $10, $11::timestamptz, '', 'oauth', now(), now())`,
+      [
+        input.creatorId,
+        input.platform,
+        displayHandle,
+        canonical,
+        input.url,
+        input.providerAccountId,
+        followers,
+        input.scope || '',
+        accessTokenEnc,
+        refreshTokenEnc,
+        tokenExpiresAt,
+      ],
+    );
+  } catch (err) {
+    if (!isUndefinedColumnError(err)) throw err;
+    await sql.query(
+      `INSERT INTO creator_social_accounts (
+         creator_id, platform, handle, canonical_handle, url, provider_account_id,
+         followers, oauth_scope, verification_method, verified_at, last_synced_at
+       ) VALUES ($1, $2, $3, NULLIF($4, ''), $5, $6, $7, $8, 'oauth', now(), now())`,
+      [input.creatorId, input.platform, displayHandle, canonical, input.url, input.providerAccountId, followers, input.scope || ''],
+    );
+  }
 }

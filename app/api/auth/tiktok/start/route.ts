@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { CREATOR_SESSION_COOKIE, verifySession } from '@/app/lib/creator-session';
 import {
   createPkcePair,
+  getTikTokOAuthScopes,
   isTikTokOAuthConfigured,
   signOAuthState,
   SOCIAL_OAUTH_STATE_COOKIE,
@@ -28,7 +29,7 @@ export async function GET(request: NextRequest) {
 
   const authorizeUrl = new URL('https://www.tiktok.com/v2/auth/authorize/');
   authorizeUrl.searchParams.set('client_key', process.env.TIKTOK_CLIENT_KEY!.trim());
-  authorizeUrl.searchParams.set('scope', 'user.info.basic,user.info.profile,user.info.stats');
+  authorizeUrl.searchParams.set('scope', getTikTokOAuthScopes());
   authorizeUrl.searchParams.set('response_type', 'code');
   authorizeUrl.searchParams.set('redirect_uri', redirectUri);
   authorizeUrl.searchParams.set('state', nonce);

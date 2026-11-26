@@ -30,12 +30,13 @@ export const maxDuration = 60;
 const FALLBACK_ORIGIN = 'https://ugc-vz.de';
 
 const SERVER_INSTRUCTIONS = [
-  'UGC VZ ist ein kostenloses Verzeichnis realer UGC-Creator (DACH) mit Portfolio- und',
-  'Social-Nachweisen - kein KI-Avatar-Content. Brands suchen kostenlos, waehlen bewusst aus',
-  'und erhalten Kontaktdaten per E-Mail; UGC VZ nimmt keine Provision.',
+  'UGC VZ ist die deutsche Creator-Kampagnen-Plattform (DACH) fuer echte UGC-Creator mit Portfolio- und',
+  'Social-Nachweisen, kein KI-Avatar-Content. Brands finden passende Creator ohne Monatsabo, starten',
+  'View-Kampagnen mit fester Budget-Obergrenze (15 % Servicegebuehr im Marken-Budget enthalten, 0 % fuer Creator)',
+  'oder fragen Profile direkt fuer individuelle UGC-Produktionen an.',
   'Typischer Ablauf: search_creators -> get_creator -> request_outreach -> get_outreach_status.',
   'get_vocab liefert Themen, Staedte und die Definition der human_verification-Stufen.',
-  'Nutzungsbedingungen: https://ugc-vz.de/agb (Ziffer 10 regelt den maschinellen Zugriff).',
+  'Preise & Konditionen: https://ugc-vz.de/preise. Nutzungsbedingungen: https://ugc-vz.de/agb (Ziffer 10 regelt den maschinellen Zugriff).',
   'Verantwortlich fuer Aufrufe ist, wer den Agenten betreibt.',
 ].join(' ');
 

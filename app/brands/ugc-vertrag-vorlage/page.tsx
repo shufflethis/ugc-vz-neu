@@ -132,7 +132,7 @@ export default function UGCVertragVorlagePage() {
           </Link>
           <Link href="/brands" className="surface-card rounded-2xl p-6 hover:border-geo-violet transition-colors">
             <h2 className="font-bold text-geo-violet">Passende Creator direkt anfragen →</h2>
-            <p className="mt-1 text-sm text-ink-soft">Durchsuche echte Profile im DACH-Raum ohne Provision.</p>
+            <p className="mt-1 text-sm text-ink-soft">Durchsuche echte Profile im DACH-Raum ohne Monatsabo.</p>
           </Link>
         </section>
       </div>

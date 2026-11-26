@@ -41,7 +41,7 @@ const quickStarts: Record<string, ArticleQuickStart> = {
   },
   'ugc-video-preise-2026-was-kostet-user-generated-content-wirklich': {
     answer: 'Ein einzelnes UGC-Video liegt in Deutschland meist zwischen 150 und 2.500 € – entscheidend sind Format, Zusatz-Hooks und Nutzungsrechte für Paid Ads.',
-    checklist: ['Kalkuliere Produktion und Paid-Ads-Rechte getrennt.', 'Plane ab 3 Videos mit Paketpreisen und mehreren Hooks.', 'Vergleiche Direktkontakt (0 % Provision) gegen Marktplatz-Gebühren.'],
+    checklist: ['Kalkuliere Produktion und Paid-Ads-Rechte getrennt.', 'Plane ab 3 Videos mit Paketpreisen und mehreren Hooks.', 'Vergleiche budgetgedeckelte View-Kampagnen und Direktkontakt gegen Abo-Marktplätze.'],
     target: 'brand',
     href: '/brands/ugc-kosten-rechner',
     label: 'Budget im UGC Kosten Rechner kalkulieren',
@@ -68,8 +68,8 @@ const quickStarts: Record<string, ArticleQuickStart> = {
     label: 'Schnell-Briefing starten & Creator finden',
   },
   'ugc-plattformen-vergleich-2024-auswahl-nach-budget-branche': {
-    answer: 'Marktplätze nehmen dir Abwicklung ab und kosten Abo oder Provision – ein kostenloses Verzeichnis wie UGC VZ gibt dir direkten Kontakt bei 0 % Gebühr.',
-    checklist: ['Vergleiche Gesamtkosten inkl. Abo, Fee und Nutzungsrechten.', 'Prüfe, ob du direkten Creator-Kontakt oder feste Abwicklung brauchst.', 'Teste die Creator-Suche kostenlos ohne Brand-Login.'],
+    answer: 'Viele Marktplätze binden dich mit Abo oder starren Stückpreisen. UGC VZ kombiniert ohne Monatsabo View-Kampagnen mit Budget-Deckel (15 % im Marken-Budget, 0 % für Creator) und direkten Creator-Kontakt.',
+    checklist: ['Vergleiche Gesamtkosten inkl. Abo, Fee und Nutzungsrechten.', 'Prüfe, ob du View-Kampagnen mit Budget-Deckel oder feste Einzelvideos brauchst.', 'Sieh dir alle Konditionen transparent auf ugc-vz.de/preise an.'],
     target: 'brand',
     href: '/vergleich',
     label: 'Aktuellen Plattform-Vergleich 2026 ansehen',

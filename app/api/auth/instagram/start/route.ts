@@ -2,6 +2,7 @@ import crypto from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { CREATOR_SESSION_COOKIE, verifySession } from '@/app/lib/creator-session';
 import {
+  getInstagramOAuthScopes,
   isInstagramOAuthConfigured,
   signOAuthState,
   SOCIAL_OAUTH_STATE_COOKIE,
@@ -28,7 +29,7 @@ export async function GET(request: NextRequest) {
   authorizeUrl.searchParams.set('client_id', process.env.INSTAGRAM_APP_ID!.trim());
   authorizeUrl.searchParams.set('redirect_uri', redirectUri);
   authorizeUrl.searchParams.set('response_type', 'code');
-  authorizeUrl.searchParams.set('scope', 'instagram_business_basic');
+  authorizeUrl.searchParams.set('scope', getInstagramOAuthScopes());
   authorizeUrl.searchParams.set('state', nonce);
 
   const response = NextResponse.redirect(authorizeUrl.toString(), 303);

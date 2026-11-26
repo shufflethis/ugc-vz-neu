@@ -107,18 +107,27 @@ const manifest = {
     url: baseUrl,
     logo: `${baseUrl}/ugc-vz-logo.webp`,
     description:
-      'Kostenloses Verzeichnis realer UGC-Creator im deutschsprachigen Raum. Vermittlung von Creator-Dienstleistungen mit direktem Kontakt; keine Provision, kein Checkout.',
+      'Deutsche Creator-Kampagnen-Plattform (DACH) fuer echte UGC-Creator: View-Kampagnen mit fester Budget-Obergrenze (15 % Servicegebuehr im Marken-Budget enthalten, 0 % fuer Creator, kein Abo) sowie direkte Creator-Suche.',
   },
   commerce: {
     checkout: {
       supported: false,
-      reason: 'Vermittlung von Dienstleistungen; Vertrag und Zahlung laufen direkt zwischen Brand und Creator.',
+      reason: 'Kein autonomer Agenten-Checkout ueber UCP; Kampagnen-Budgets werden von Brands im Workspace (https://ugc-vz.de/brands/workspace) verwaltet, direkte Anfragen laufen per E-Mail-Outreach.',
     },
     services: [
       {
-        name: 'UGC-Creator-Vermittlung',
+        name: 'UGC VZ Creator-Kampagnen (Pay-per-View / TKP)',
         price_range: {
-          for_brands: 'kostenlos',
+          for_brands: 'Kein Monatsabo; 15 % Servicegebuehr im Kampagnen-Budget enthalten (SEPA 0 %, Karte +3 %)',
+          for_creators: '0 % Gebuehr (100 % Auszahlung des Creator-Anteils)',
+          currency: 'EUR',
+        },
+        fulfillment: 'Briefing & Budget-Limit im Brand-Workspace (https://ugc-vz.de/preise)',
+      },
+      {
+        name: 'UGC-Creator-Suche & Direkt-Outreach',
+        price_range: {
+          for_brands: 'Suche & Kontaktanfrage kostenfrei ohne Abo',
           creator_fees: 'individuell, Richtwerte im Creator-Profil (rate_text)',
           currency: 'EUR',
         },

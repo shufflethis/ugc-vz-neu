@@ -16,7 +16,7 @@ export default function UGCAgenturMuenchenPage() {
         <section className="py-14">
           <h1 className="text-4xl sm:text-5xl font-bold mb-6 text-ink">UGC Agentur München oder Creator direkt finden?</h1>
           <p className="text-xl text-ink-soft max-w-3xl leading-relaxed mb-8">
-            Für Münchner Brands, DTC-Teams und Agenturen ist UGC VZ ein schneller Einstieg: Bedarf beschreiben, Creator-Vorschläge ansehen und Kontaktinfos kostenlos anfragen.
+            Für Münchner Brands, DTC-Teams und Agenturen ist UGC VZ ein schneller Einstieg ohne Monatsabo: Bedarf beschreiben, passende Creator-Profile prüfen, View-Kampagne mit Budget-Deckel im Workspace starten oder direkt anfragen.
           </p>
           <Link href="/brands#q=UGC+Creator+M%C3%BCnchen" className="inline-flex bg-geo-violet hover:bg-geo-violet-soft text-white font-semibold py-3 px-6 rounded-full">
             Creator für München suchen

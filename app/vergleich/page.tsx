@@ -52,13 +52,14 @@ export default function VergleichPage() {
             UGC-Plattformen <span className="gradient-text">im Vergleich</span>
           </h1>
           <p className="text-lg text-ink-soft mb-4">
-            Die meisten Anbieter in diesem Markt sind vermittelte Marktplätze: Du erstellst einen Auftrag, die Plattform
-            wickelt Vertrag und Zahlung ab. UGC VZ ist ein Verzeichnis — du bekommst die Kontaktdaten der Creator und
-            verhandelst direkt. Beides hat seine Berechtigung, und diese Tabelle zeigt, wann was passt.
+            Die meisten Anbieter in diesem Markt arbeiten entweder als Festpreis-Marktplatz, als Abo-Plattform oder als Agentur.
+            UGC VZ verbindet beide Welten ohne Monatsabo: Du kannst im Brand-Workspace View-Kampagnen mit festem Budget-Deckel starten
+            (15 % Servicegebühr im Marken-Budget enthalten, 0 % für Creator) oder Creator direkt für einzelne Produktvideos anfragen.
+            Diese Tabelle zeigt sachlich, welches Modell zu deinem Bedarf passt.
           </p>
           <p className="text-sm text-ink-soft/80">
             Alle Zahlen stammen von den Websites der Anbieter, mit Quelle und Prüfdatum. Wo ein Anbieter keine Preise
-            veröffentlicht, steht &bdquo;nicht öffentlich&quot; — wir schätzen nichts.
+            veröffentlicht, steht &bdquo;nicht öffentlich&quot;. Wir schätzen nichts.
           </p>
         </section>
 
@@ -94,18 +95,26 @@ export default function VergleichPage() {
         </section>
 
         <section className="max-w-5xl mx-auto text-center mb-16">
-          <h2 className="text-3xl font-bold mb-4 text-ink">Creator direkt finden</h2>
+          <h2 className="text-3xl font-bold mb-4 text-ink">Creator finden oder Kampagne starten</h2>
           <p className="text-ink-soft mb-6">
-            {CREATOR_COUNT_LABEL} kuratierte Creator im deutschsprachigen Raum, kostenlos, mit direkten Kontaktdaten.
+            {CREATOR_COUNT_LABEL} kuratierte Creator im deutschsprachigen Raum: ohne Monatsabo, nach geprüften Views mit festem Budget-Deckel oder im Direktkontakt.
           </p>
-          <Link
-            href="/brands"
-            className="inline-block px-8 py-4 rounded-full bg-geo-violet text-white font-semibold hover:opacity-90 transition-opacity"
-          >
-            Zur Creator-Suche
-          </Link>
+          <div className="flex flex-wrap justify-center gap-3">
+            <Link
+              href="/brands"
+              className="inline-block px-8 py-4 rounded-full bg-geo-violet text-white font-semibold hover:opacity-90 transition-opacity"
+            >
+              Zur Creator-Suche
+            </Link>
+            <Link
+              href="/preise"
+              className="inline-block px-8 py-4 rounded-full border border-hairline bg-white text-ink font-semibold hover:border-geo-violet transition-colors"
+            >
+              Preise &amp; Modell ansehen
+            </Link>
+          </div>
           <p className="text-sm text-ink-soft/80 mt-6">
-            Wie das Verzeichnis-Modell funktioniert und wo seine Grenzen liegen, steht auf der Seite{' '}
+            Wie UGC VZ funktioniert und wo die Grenzen liegen, steht auf der Seite{' '}
             <Link href="/brands/ugc-plattform-deutschland" className="underline hover:text-geo-violet">
               UGC Plattform für Deutschland
             </Link>

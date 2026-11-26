@@ -31,9 +31,9 @@ const faqs = [
       'Wer dauerhaft mit Gewinnerzielungsabsicht bezahlte Videos für Marken erstellt, übt in der Regel eine gewerbliche Tätigkeit aus und braucht eine Gewerbeanmeldung (oft zunächst mit Kleinunternehmerregelung nach § 19 UStG). Lass deinen Einzelfall kurz vom Steuerberater oder Gewerbeamt klären.',
   },
   {
-    question: 'Was kostet der Eintrag bei UGC VZ?',
+    question: 'Was kostet der Eintrag bei UGC VZ für Creator?',
     answer:
-      'Nichts. Das Creator-Profil ist dauerhaft kostenlos, ohne Bewerbungshürde, ohne Provision auf deine Honorare und ohne Exklusivität.',
+      'Für Creator ist UGC VZ dauerhaft kostenlos, ohne Bewerbungshürde, mit 0 % Gebühr auf deine Auszahlungen (bei View-Kampagnen im Workspace wie bei Direkt-Anfragen) und ohne Exklusivität.',
   },
 ];
 

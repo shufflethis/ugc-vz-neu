@@ -466,7 +466,7 @@ export default function UgcCostCalculator({ benchmarks = [], defaultNiche = 'all
             <p className="font-semibold text-ink">Einordnung gegenüber anderen Modellen</p>
             <ul className="mt-2.5 space-y-2">
               <li>
-                <strong className="text-ink">UGC VZ Direkt (0 % Provision):</strong> 100 % des Budgets geht direkt an die Creator. Kein Abo, direkte Verhandlung.
+                <strong className="text-ink">UGC VZ (ohne Monatsabo):</strong> View-Kampagnen im Workspace mit festem Budget-Deckel (15 % Servicegebühr im Marken-Budget enthalten, 0 % für Creator) oder direkter Creator-Kontakt für individuelle Produktionen ohne Vermittlungsprovision.
               </li>
               <li>
                 <strong className="text-ink">Abo-Marktplätze (z. B. Influee):</strong> Zusätzlich zum Honorar fallen typischerweise ~{euro(result.comparison.influeeExtraFeesEurApprox)} an (Monatsabo ab $229 + 10 % Marketplace-Fee).

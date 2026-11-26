@@ -70,6 +70,7 @@ const forbidden = [
   'postal_code',
   'iban',
   'stripe_connect',
+  'oauth_',
 ];
 // Bewusst freigegeben: abgeleitete Booleans ohne private Werte (Migration 010).
 const allowed = ['contact_reachable'];

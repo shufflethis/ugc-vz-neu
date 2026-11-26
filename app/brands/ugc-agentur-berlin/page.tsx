@@ -5,7 +5,7 @@ import Link from 'next/link';
 export const metadata: Metadata = pageMetadata({
   path: '/brands/ugc-agentur-berlin',
   title: 'UGC Agentur Berlin oder Creator-Plattform?',
-  description: 'UGC Agentur Berlin gesucht? UGC VZ hilft beim Einstieg: Creator kostenlos finden, Anfrage senden und optional Kampagnen-Support nutzen.',
+  description: 'UGC Agentur Berlin gesucht? UGC VZ hilft beim Einstieg ohne Abo: Creator finden, View-Kampagne mit Budget-Deckel starten oder direkt anfragen.',
 });
 
 export default function UGCAgenturBerlinPage() {
