@@ -54,7 +54,23 @@ const viewColumns = await sql.query(`
   ORDER BY ordinal_position
 `);
 const columnNames = viewColumns.map((row) => String(row.column_name));
-const forbidden = ['email', 'phone', 'contact', 'consent', 'token', 'address', 'birth_date'];
+const forbidden = [
+  'email',
+  'phone',
+  'contact',
+  'consent',
+  'token',
+  'address',
+  'birth_date',
+  'date_of_birth',
+  'tax_id',
+  'tax_number',
+  'vat_id',
+  'street',
+  'postal_code',
+  'iban',
+  'stripe_connect',
+];
 // Bewusst freigegeben: abgeleitete Booleans ohne private Werte (Migration 010).
 const allowed = ['contact_reachable'];
 const leakedColumns = columnNames.filter((column) => !allowed.includes(column)

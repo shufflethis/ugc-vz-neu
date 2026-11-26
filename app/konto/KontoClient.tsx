@@ -9,6 +9,7 @@ import type { SocialOAuthAvailability } from '../lib/social-oauth';
 import type { CreatorAiProfileRecord } from '../lib/creator-social-analyzer';
 import SocialVerifySection from './SocialVerifySection';
 import AiProfileReviewCard from './AiProfileReviewCard';
+import CreatorPayoutPanel from './CreatorPayoutPanel';
 import OtpInput from '@/app/components/auth/OtpInput';
 import ResendTimer from '@/app/components/auth/ResendTimer';
 import InlineError from '@/app/components/auth/InlineError';
@@ -447,6 +448,7 @@ function EditView({
   return (
     <div className="px-4 sm:px-8 md:px-16 lg:px-24 pb-24 pt-10 sm:pt-14">
       <div className="max-w-4xl mx-auto py-10">
+        <CreatorPayoutPanel />
         <ProjectRequests profile={profile} />
         <div className="mb-8 grid gap-4 sm:grid-cols-2">
           <Link href="/konto/kampagnen" className="block rounded-2xl border border-geo-violet/40 bg-geo-violet/5 p-6 transition hover:bg-geo-violet/10">

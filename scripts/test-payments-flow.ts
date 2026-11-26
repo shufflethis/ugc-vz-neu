@@ -1,0 +1,414 @@
+import assert from 'node:assert/strict';
+import crypto from 'node:crypto';
+import fs from 'node:fs';
+import path from 'node:path';
+import { PGlite } from '@electric-sql/pglite';
+import {
+  calculateCreatorPayoutPreview,
+  calculatePayInSurchargeCents,
+  closeCampaignReservation,
+  createPendingTopup,
+  ensureBrandWallet,
+  ensureCreatorBalance,
+  finalizeCreatorPayoutPaid,
+  recordWebhookEventOnce,
+  reserveCampaignBudget,
+  reserveCreatorPayout,
+  revertCreatorPayoutFailed,
+  settleCountedSubmission,
+  settleTopupIdempotently,
+  upsertCreatorTaxProfile,
+} from '../app/lib/payments-ledger';
+import {
+  calculateCreditNoteTax,
+  generateBrandTopupInvoicePdf,
+  generateCreditNotePdfWithZugferd,
+  issueCreditNoteForPayout,
+} from '../app/lib/credit-note-generator';
+
+function createPgliteSqlAdapter(db: PGlite) {
+  const queryFn = async (text: string, params: unknown[] = []) => {
+    const res = await db.query(text, params);
+    return res.rows as Record<string, unknown>[];
+  };
+  const tagged = (strings: TemplateStringsArray, ...values: unknown[]) => {
+    let text = '';
+    strings.forEach((s, i) => {
+      text += s + (i < values.length ? `$${i + 1}` : '');
+    });
+    return queryFn(text, values);
+  };
+  (tagged as unknown as { query: typeof queryFn }).query = queryFn;
+  return tagged as unknown as Parameters<typeof ensureBrandWallet>[0];
+}
+
+async function applyMigrations(db: PGlite) {
+  const migrationsDir = path.join(process.cwd(), 'db/migrations');
+  const files = fs
+    .readdirSync(migrationsDir)
+    .filter((f) => f.endsWith('.sql'))
+    .sort();
+
+  for (const file of files) {
+    // 020 uses pgvector extension which is not bundled in vanilla PGlite
+    if (file.startsWith('020_')) continue;
+    const raw = fs.readFileSync(path.join(migrationsDir, file), 'utf8');
+    const statements = raw
+      .split('-- statement-breakpoint')
+      .map((s) => s.trim())
+      .filter(Boolean);
+    for (const stmt of statements) {
+      if (/\bvector\b/i.test(stmt)) continue;
+      try {
+        await db.exec(stmt);
+      } catch (err) {
+        // Ignore optional pgvector or RLS role issues in PGlite while strictly failing on 024
+        if (file.startsWith('024_')) throw err;
+      }
+    }
+  }
+}
+
+async function run() {
+  // 1. Pure Surcharge Policy Tests (Spec 8.9)
+  assert.deepEqual(calculatePayInSurchargeCents(100_000, 'sepa_debit'), {
+    surchargeCents: 0,
+    surchargeLabel: '',
+    totalChargedCents: 100_000,
+  });
+  assert.deepEqual(calculatePayInSurchargeCents(100_000, 'bank_transfer'), {
+    surchargeCents: 0,
+    surchargeLabel: '',
+    totalChargedCents: 100_000,
+  });
+  assert.deepEqual(calculatePayInSurchargeCents(100_000, 'card'), {
+    surchargeCents: 3_000,
+    surchargeLabel: 'Kartengebühr',
+    totalChargedCents: 103_000,
+  });
+  assert.equal(calculatePayInSurchargeCents(50_000, 'apple_pay').surchargeCents, 1_500);
+  assert.equal(calculatePayInSurchargeCents(50_000, 'google_pay').surchargeCents, 1_500);
+
+  // 2. Creator Payout Preview Tests (0 % Plattformgebühr, 1 % Instant DE/AT)
+  const stdPreview = calculateCreatorPayoutPreview(10_000, 'standard', 'DE');
+  assert.equal(stdPreview.platformFeeCents, 0);
+  assert.equal(stdPreview.instantFeeCents, 0);
+  assert.equal(stdPreview.netPayoutCents, 10_000);
+
+  const instantPreview = calculateCreatorPayoutPreview(10_000, 'instant', 'AT');
+  assert.equal(instantPreview.platformFeeCents, 0);
+  assert.equal(instantPreview.instantFeeCents, 100);
+  assert.equal(instantPreview.netPayoutCents, 9_900);
+
+  assert.throws(() => calculateCreatorPayoutPreview(10_000, 'instant', 'CH'), /Deutschland und Österreich/);
+
+  // 3. PGlite Integration & Concurrency Tests
+  const db = new PGlite();
+  await applyMigrations(db);
+  const sql = createPgliteSqlAdapter(db);
+
+  // Seed brand + 5 creators + 2 campaigns + applications + 5 submissions
+  const [brand] = await sql.query(
+    `INSERT INTO brand_accounts (email, contact_name, company_name)
+     VALUES ('finance@marke.de', 'Max', 'Marke GmbH') RETURNING id`,
+  );
+  const brandId = String(brand.id);
+
+  const [camp1] = await sql.query(
+    `INSERT INTO brand_campaigns (public_id, brand_id, title, brand_display_name, compensation_model, total_budget_eur, tkp_eur_cents, platforms)
+     VALUES ('CMP-1111AAAA', $1, 'Concurrency Camp', 'Marke GmbH', 'tkp', 1000, 200, ARRAY['tiktok']) RETURNING id`,
+    [brandId],
+  );
+  const camp1Id = String(camp1.id);
+
+  const [camp2] = await sql.query(
+    `INSERT INTO brand_campaigns (public_id, brand_id, title, brand_display_name, compensation_model, total_budget_eur, tkp_eur_cents, platforms)
+     VALUES ('CMP-2222BBBB', $1, 'Partial Camp', 'Marke GmbH', 'tkp', 500, 200, ARRAY['instagram']) RETURNING id`,
+    [brandId],
+  );
+  const camp2Id = String(camp2.id);
+
+  const creatorIds: string[] = [];
+  const submissionIds: string[] = [];
+  for (let i = 1; i <= 5; i++) {
+    const [c] = await sql.query(
+      `INSERT INTO creator_profiles (id, public_id, status, display_name)
+       VALUES ($1, $2, 'active', $3) RETURNING id`,
+      [crypto.randomUUID(), `UGC-PAYTEST00${i}`, `Creator ${i}`],
+    );
+    const creatorId = String(c.id);
+    creatorIds.push(creatorId);
+
+    const [app] = await sql.query(
+      `INSERT INTO brand_campaign_applications (campaign_id, creator_id, status)
+       VALUES ($1, $2, 'selected') RETURNING id`,
+      [camp1Id, creatorId],
+    );
+    const [sub] = await sql.query(
+      `INSERT INTO brand_campaign_submissions (campaign_id, application_id, creator_id, platform, content_url, status)
+       VALUES ($1, $2, $3, 'tiktok', $4, 'approved') RETURNING id`,
+      [camp1Id, app.id, creatorId, `https://tiktok.com/@c${i}/video/${i}`],
+    );
+    submissionIds.push(String(sub.id));
+  }
+
+  // 3a. Top-up + Idempotent Webhook (100 % Schutz vor Doppelbuchung)
+  assert.equal(await recordWebhookEventOnce(sql, 'evt_test_1', 'checkout.session.completed'), true);
+  assert.equal(await recordWebhookEventOnce(sql, 'evt_test_1', 'checkout.session.completed'), false);
+
+  const pending = await createPendingTopup(sql, {
+    brandId,
+    amountCents: 150_000, // 1.500 EUR
+    method: 'card',
+    providerRef: 'cs_test_1',
+  });
+  assert.equal(pending.surchargeCents, 4_500); // 3 % Kartengebühr
+  assert.equal(pending.totalChargedCents, 154_500);
+
+  const firstSettle = await settleTopupIdempotently(sql, { providerRef: 'cs_test_1' });
+  const duplicateSettle = await settleTopupIdempotently(sql, { providerRef: 'cs_test_1' });
+  assert.equal(firstSettle.settledNow, true);
+  assert.equal(duplicateSettle.settledNow, false);
+
+  let wallet = await ensureBrandWallet(sql, brandId);
+  assert.equal(wallet.availableCents, 150_000, 'Duplicate webhook must not credit twice');
+
+  // 3b. Reservation Guard: available < budget_cap must fail
+  await assert.rejects(
+    () =>
+      reserveCampaignBudget(sql, {
+        brandId,
+        campaignId: camp1Id,
+        budgetCapCents: 200_000,
+        platformFeeBps: 1500,
+      }),
+    /Nicht genügend verfügbares Guthaben/,
+  );
+
+  // Valid reservation: 1.000 EUR (850 EUR creator pool + 150 EUR platform fee)
+  const res1 = await reserveCampaignBudget(sql, {
+    brandId,
+    campaignId: camp1Id,
+    budgetCapCents: 100_000,
+    platformFeeBps: 1500,
+  });
+  assert.equal(res1.creatorPoolCapCents, 85_000);
+  assert.equal(res1.reservedCents, 100_000);
+
+  wallet = await ensureBrandWallet(sql, brandId);
+  assert.equal(wallet.availableCents, 50_000);
+  assert.equal(wallet.reservedCents, 100_000);
+
+  // 3c. CONCURRENCY TEST: 5 simultaneous settlements each claiming 30.000 Cent (= 150.000 > 85.000 cap!)
+  const concurrentResults = await Promise.all(
+    submissionIds.map((subId, idx) =>
+      settleCountedSubmission(sql, {
+        campaignId: camp1Id,
+        submissionId: subId,
+        creatorId: creatorIds[idx],
+        viewsAtCutoff: 150_499, // floor = 150 * 200 cents = 30.000 cents each
+        ratePer1000Cents: 200,
+      }),
+    ),
+  );
+
+  const totalGrantedCreator = concurrentResults.reduce((s, r) => s + r.grantedCreatorCents, 0);
+  const totalGrantedFee = concurrentResults.reduce((s, r) => s + r.grantedFeeCents, 0);
+
+  assert.equal(totalGrantedCreator, 85_000, 'Concurrent settlements must cap creator payouts at exact creator_pool_cap');
+  assert.ok(
+    totalGrantedCreator + totalGrantedFee <= 100_000,
+    `Sum of creator + fee (${totalGrantedCreator + totalGrantedFee}) must NEVER exceed budget_cap (100.000)`,
+  );
+
+  const [camp1Row] = await sql.query(
+    `SELECT released_creator_cents, released_fee_cents, reserved_cents FROM campaign_reservations WHERE campaign_id = $1`,
+    [camp1Id],
+  );
+  assert.equal(Number(camp1Row.released_creator_cents), 85_000);
+  assert.equal(Number(camp1Row.released_fee_cents), 15_000);
+  assert.equal(Number(camp1Row.reserved_cents), 0);
+
+  // 3d. Partial Campaign Close returns exact unused reservation back to brand_wallet.available_cents
+  await reserveCampaignBudget(sql, {
+    brandId,
+    campaignId: camp2Id,
+    budgetCapCents: 50_000,
+    platformFeeBps: 1000, // 10 % Black Friday promo -> 45.000 creator pool / 5.000 fee
+  });
+  const [app2] = await sql.query(
+    `INSERT INTO brand_campaign_applications (campaign_id, creator_id, status)
+     VALUES ($1, $2, 'selected') RETURNING id`,
+    [camp2Id, creatorIds[0]],
+  );
+  const [sub2] = await sql.query(
+    `INSERT INTO brand_campaign_submissions (campaign_id, application_id, creator_id, platform, content_url, status)
+     VALUES ($1, $2, $3, 'instagram', 'https://instagram.com/reel/abc', 'approved') RETURNING id`,
+    [camp2Id, app2.id, creatorIds[0]],
+  );
+  const partialSettle = await settleCountedSubmission(sql, {
+    campaignId: camp2Id,
+    submissionId: String(sub2.id),
+    creatorId: creatorIds[0],
+    viewsAtCutoff: 45_000, // 45 * 200 = 9.000 cents creator + 1.000 cents fee = 10.000 cents total
+    ratePer1000Cents: 200,
+  });
+  assert.equal(partialSettle.grantedCreatorCents, 9_000);
+  assert.equal(partialSettle.grantedFeeCents, 1_000);
+
+  const closeRes = await closeCampaignReservation(sql, camp2Id);
+  assert.equal(closeRes.closedNow, true);
+  assert.equal(closeRes.returnedCents, 40_000);
+
+  wallet = await ensureBrandWallet(sql, brandId);
+  assert.equal(wallet.availableCents, 40_000, 'Unused reservation must flow back to available_cents');
+  assert.equal(wallet.reservedCents, 0);
+
+  // 4. Creator Payout Guardrails + DAC7 + Credit Note Issuance
+  const payoutCreatorId = creatorIds[0];
+  const balBefore = await ensureCreatorBalance(sql, payoutCreatorId);
+  assert.ok(balBefore.availableCents >= 9_000, 'Creator should have earned balance from settled campaigns');
+
+  // Guard 1: Blocked without Stripe KYC
+  await assert.rejects(
+    () => reserveCreatorPayout(sql, { creatorId: payoutCreatorId, amountCents: 5_000 }),
+    /Verifizierung \(KYC\)/,
+  );
+
+  // Simulate Stripe account.updated -> verified
+  await sql.query(
+    `UPDATE creator_balances
+     SET stripe_connect_account_id = 'acct_test_123', stripe_onboarding_status = 'verified'
+     WHERE creator_id = $1`,
+    [payoutCreatorId],
+  );
+
+  // Guard 2: Blocked without DAC7 tax profile & Self-Billing agreement
+  await assert.rejects(
+    () => reserveCreatorPayout(sql, { creatorId: payoutCreatorId, amountCents: 5_000 }),
+    /Steuerprofil unvollständig/,
+  );
+
+  // Save complete DAC7 & UStG tax profile
+  const taxProfile = await upsertCreatorTaxProfile(sql, {
+    creatorId: payoutCreatorId,
+    legalName: 'Anna Muster',
+    country: 'DE',
+    smallBusiness: true,
+    taxNumber: '12/345/67890',
+    vatId: '',
+    taxId: '12345678901',
+    dateOfBirth: '1997-04-12',
+    street: 'Musterstr. 10',
+    postalCode: '10115',
+    city: 'Berlin',
+    agreeSelfBilling: true,
+  });
+
+  // Guard 3: Blocked below minimum payout (25 EUR)
+  await assert.rejects(
+    () => reserveCreatorPayout(sql, { creatorId: payoutCreatorId, amountCents: 1_000 }),
+    /Mindestauszahlungsbetrag/,
+  );
+
+  // Valid payout reservation + failed revert test + successful paid finalization
+  const failedAttempt = await reserveCreatorPayout(sql, {
+    creatorId: payoutCreatorId,
+    amountCents: 5_000,
+    payoutSpeed: 'standard',
+  });
+  assert.equal(failedAttempt.preview.platformFeeCents, 0);
+  assert.equal(await revertCreatorPayoutFailed(sql, failedAttempt.payoutId), true);
+  assert.equal((await ensureCreatorBalance(sql, payoutCreatorId)).availableCents, balBefore.availableCents);
+
+  const reservedPayout = await reserveCreatorPayout(sql, {
+    creatorId: payoutCreatorId,
+    amountCents: 5_000,
+    payoutSpeed: 'standard',
+  });
+  const paid = await finalizeCreatorPayoutPaid(sql, {
+    payoutId: reservedPayout.payoutId,
+    providerTransferRef: 'tr_test_1',
+    providerPayoutRef: 'po_test_1',
+  });
+  assert.equal(paid.transitionedNow, true);
+
+  const issued = await issueCreditNoteForPayout(sql, {
+    payoutId: reservedPayout.payoutId,
+    creatorId: payoutCreatorId,
+    amountCents: 5_000,
+    taxProfile,
+    period: '2026-11',
+  });
+  assert.match(issued.number, /^GS-\d{4}-000001$/);
+  assert.equal(Buffer.from(issued.pdfBytes).subarray(0, 5).toString('ascii'), '%PDF-');
+  assert.ok(issued.xml.includes('<ram:TypeCode>389</ram:TypeCode>'), 'ZUGFeRD XML must use TypeCode 389 (Self-billed Gutschrift)');
+  assert.ok(issued.xml.includes('DE814954842'), 'ZUGFeRD XML must contain buyer VAT ID');
+
+  // 5. All 4 DACH VAT Tax Cases for Gutschriften
+  const deSmall = calculateCreditNoteTax(10_000, { country: 'DE', smallBusiness: true });
+  assert.equal(deSmall.vatRateType, '0');
+  assert.equal(deSmall.vatCents, 0);
+  assert.equal(deSmall.grossCents, 10_000);
+  assert.ok(deSmall.legalNote.includes('§ 19 UStG'));
+
+  const deRegular = calculateCreditNoteTax(10_000, { country: 'DE', smallBusiness: false });
+  assert.equal(deRegular.vatRateType, '19');
+  assert.equal(deRegular.vatCents, 1_900);
+  assert.equal(deRegular.grossCents, 11_900);
+
+  const atReverse = calculateCreditNoteTax(10_000, { country: 'AT', smallBusiness: false });
+  assert.equal(atReverse.vatRateType, 'reverse_charge');
+  assert.equal(atReverse.vatCents, 0);
+  assert.equal(atReverse.taxCategoryCode, 'AE');
+  assert.ok(atReverse.legalNote.includes('Reverse Charge'));
+
+  const chThird = calculateCreditNoteTax(10_000, { country: 'CH', smallBusiness: false });
+  assert.equal(chThird.vatRateType, '0');
+  assert.equal(chThird.vatCents, 0);
+  assert.equal(chThird.taxCategoryCode, 'O');
+
+  const regPdf = await generateCreditNotePdfWithZugferd({
+    number: 'GS-2026-000002',
+    issuedAtIso: '2026-11-26T12:00:00Z',
+    period: '2026-11',
+    creator: {
+      legalName: 'Max Regelbesteuert',
+      street: 'Hauptstr. 1',
+      postalCode: '80331',
+      city: 'München',
+      country: 'DE',
+      smallBusiness: false,
+      taxNumber: '143/123/45678',
+      vatId: 'DE299999999',
+    },
+    netCents: 10_000,
+  });
+  assert.equal(regPdf.tax.grossCents, 11_900);
+  assert.equal(Buffer.from(regPdf.pdfBytes).subarray(0, 5).toString('ascii'), '%PDF-');
+
+  // 6. Brand Invoice PDF with separate Kartengebühr line
+  const brandInvoicePdf = await generateBrandTopupInvoicePdf({
+    invoiceNumber: 'RE-2026-123456',
+    issuedAtIso: '2026-11-26T12:00:00Z',
+    brandCompany: 'Marke GmbH',
+    brandEmail: 'finance@marke.de',
+    amountCents: 100_000,
+    surchargeCents: 3_000,
+    surchargeLabel: 'Kartengebühr',
+    totalChargedCents: 103_000,
+    methodLabel: 'Kreditkarte',
+    platformFeePercent: 15,
+  });
+  assert.equal(Buffer.from(brandInvoicePdf).subarray(0, 5).toString('ascii'), '%PDF-');
+
+  await db.close();
+  console.log(
+    'OK: Etappe 6 Payments Flow (0% SEPA / 3% Karte, idempotent Webhooks, 5x Concurrency Cap-Safety, Close Refund, KYC+DAC7 Guardrails, 4x DACH ZUGFeRD Gutschrift PDFs, Brand Invoice PDF).',
+  );
+}
+
+run().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});

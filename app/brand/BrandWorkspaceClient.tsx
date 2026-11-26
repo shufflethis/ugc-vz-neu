@@ -8,6 +8,7 @@ import { clearQuickBriefDraft, loadQuickBriefDraft } from '@/app/lib/quick-brief
 import OtpInput from '@/app/components/auth/OtpInput';
 import ResendTimer from '@/app/components/auth/ResendTimer';
 import InlineError from '@/app/components/auth/InlineError';
+import BrandWalletPanel from './BrandWalletPanel';
 
 const fieldClass =
   'min-h-[48px] w-full rounded-xl border border-[#E4E1D8] bg-white px-4 py-3 text-sm text-[#121212] outline-none transition-colors focus:border-[#6C2BD9] focus:ring-4 focus:ring-[#6C2BD9]/15';
@@ -666,6 +667,9 @@ function BrandDashboard({
             </div>
           ))}
         </div>
+
+        {/* Kampagnen-Wallet, Aufladen (SEPA / DE-IBAN / Karte +3 %) & Rechnungen */}
+        <BrandWalletPanel />
 
         {/* Neue Kampagne anlegen */}
         {showCreate && (

@@ -18,6 +18,7 @@
     "test:search-benchmark": "node --import tsx scripts/test-search-benchmark.ts",
     "test:etappe4-ui": "node --import tsx scripts/test-etappe4-ui.ts",
     "test:etappe5-subpages": "node --import tsx scripts/test-etappe5-subpages.ts",
+    "test:payments-flow": "node --import tsx scripts/test-payments-flow.ts",
     "test:ai-profile": "node --import tsx scripts/test-ai-profile.ts",
     "test:auth-flows": "node --import tsx scripts/test-auth-flows.ts",
     "test:platform-pricing": "node --import tsx scripts/test-platform-pricing.ts",
@@ -63,6 +64,7 @@
     "lucide-react": "^1.34.0",
     "mcp-handler": "2.1.1",
     "next": "14.2.35",
+    "pdf-lib": "^1.17.1",
     "react": "^18",
     "react-dom": "^18",
     "react-speech-recognition": "^4.0.1",
@@ -70,6 +72,7 @@
     "resend": "^6.24.0",
     "shadcn-ui": "^0.9.5",
     "sonner": "^2.0.8",
+    "stripe": "^23.2.0",
     "turndown": "^7.2.4",
     "zod": "^4.4.3"
   },
