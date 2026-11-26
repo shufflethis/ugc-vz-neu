@@ -25,6 +25,8 @@ import {
   generateCreditNotePdfWithZugferd,
   issueCreditNoteForPayout,
 } from '../app/lib/credit-note-generator';
+import Stripe from 'stripe';
+import { constructVerifiedStripeEvent } from '../app/lib/stripe-connect';
 
 function createPgliteSqlAdapter(db: PGlite) {
   const queryFn = async (text: string, params: unknown[] = []) => {
@@ -402,9 +404,32 @@ async function run() {
   });
   assert.equal(Buffer.from(brandInvoicePdf).subarray(0, 5).toString('ascii'), '%PDF-');
 
+  // 7. Dual Stripe Webhook Secrets (Account + Connect webhook on same endpoint)
+  process.env.STRIPE_SECRET_KEY = 'sk_test_dummy_for_webhook_verification_only';
+  process.env.STRIPE_WEBHOOK_SECRET = 'whsec_test_account_secret_12345';
+  process.env.STRIPE_CONNECT_WEBHOOK_SECRET = 'whsec_test_connect_secret_67890';
+  const dummyStripe = new Stripe('sk_test_dummy_for_webhook_verification_only');
+  const acctPayload = JSON.stringify({ id: 'evt_acct_1', type: 'checkout.session.async_payment_succeeded', data: { object: {} } });
+  const connPayload = JSON.stringify({ id: 'evt_conn_1', type: 'account.updated', data: { object: {} } });
+  const acctSig = dummyStripe.webhooks.generateTestHeaderString({
+    payload: acctPayload,
+    secret: process.env.STRIPE_WEBHOOK_SECRET,
+  });
+  const connSig = dummyStripe.webhooks.generateTestHeaderString({
+    payload: connPayload,
+    secret: process.env.STRIPE_CONNECT_WEBHOOK_SECRET,
+  });
+  const badSig = dummyStripe.webhooks.generateTestHeaderString({
+    payload: connPayload,
+    secret: 'whsec_wrong_secret',
+  });
+  assert.equal(constructVerifiedStripeEvent(acctPayload, acctSig).id, 'evt_acct_1');
+  assert.equal(constructVerifiedStripeEvent(connPayload, connSig).id, 'evt_conn_1');
+  assert.throws(() => constructVerifiedStripeEvent(connPayload, badSig));
+
   await db.close();
   console.log(
-    'OK: Etappe 6 Payments Flow (0% SEPA / 3% Karte, idempotent Webhooks, 5x Concurrency Cap-Safety, Close Refund, KYC+DAC7 Guardrails, 4x DACH ZUGFeRD Gutschrift PDFs, Brand Invoice PDF).',
+    'OK: Etappe 6 Payments Flow (0% SEPA / 3% Karte, Dual-Secret Webhooks, idempotent Webhooks, 5x Concurrency Cap-Safety, Close Refund, KYC+DAC7 Guardrails, 4x DACH ZUGFeRD Gutschrift PDFs, Brand Invoice PDF).',
   );
 }
 

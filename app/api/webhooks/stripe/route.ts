@@ -45,9 +45,10 @@ export async function POST(request: NextRequest) {
 
   try {
     switch (event.type) {
-      case 'checkout.session.completed': {
+      case 'checkout.session.completed':
+      case 'checkout.session.async_payment_succeeded': {
         const session = event.data.object as Stripe.Checkout.Session;
-        if (session.payment_status === 'paid') {
+        if (event.type === 'checkout.session.async_payment_succeeded' || session.payment_status === 'paid') {
           const brandId = session.metadata?.ugc_vz_brand_id;
           const amountCents = Number(session.metadata?.topup_amount_cents || 0);
           const method = (session.metadata?.topup_method || 'sepa_debit') as PayInMethod;
@@ -58,6 +59,17 @@ export async function POST(request: NextRequest) {
             method,
           });
         }
+        break;
+      }
+
+      case 'checkout.session.async_payment_failed': {
+        const session = event.data.object as Stripe.Checkout.Session;
+        await sql.query(
+          `UPDATE brand_wallet_topups
+           SET status = 'failed'
+           WHERE provider_ref = $1 AND status = 'pending'`,
+          [session.id],
+        );
         break;
       }
 

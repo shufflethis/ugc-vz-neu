@@ -280,14 +280,36 @@ export async function executeCreatorStripePayout(input: {
   return { transferId: transfer.id, payoutRef: payout.id };
 }
 
+export function getConfiguredStripeWebhookSecrets(): string[] {
+  const raw = [
+    process.env.STRIPE_WEBHOOK_SECRET || '',
+    process.env.STRIPE_CONNECT_WEBHOOK_SECRET || '',
+  ];
+  const secrets = raw
+    .flatMap((entry) => entry.split(','))
+    .map((s) => s.trim())
+    .filter(Boolean);
+  return Array.from(new Set(secrets));
+}
+
 export function constructVerifiedStripeEvent(
   rawBody: string,
   signature: string | null,
 ): Stripe.Event {
-  const secret = process.env.STRIPE_WEBHOOK_SECRET || process.env.STRIPE_CONNECT_WEBHOOK_SECRET;
-  if (!secret || !signature) {
+  const secrets = getConfiguredStripeWebhookSecrets();
+  if (secrets.length === 0 || !signature) {
     throw new Error('Stripe Webhook Signatur oder Secret fehlt.');
   }
   const stripe = getStripeClient();
-  return stripe.webhooks.constructEvent(rawBody, signature, secret);
+  let lastError: unknown;
+  for (const secret of secrets) {
+    try {
+      return stripe.webhooks.constructEvent(rawBody, signature, secret);
+    } catch (err) {
+      lastError = err;
+    }
+  }
+  throw lastError instanceof Error
+    ? lastError
+    : new Error('Ungültige Stripe Webhook Signatur.');
 }
