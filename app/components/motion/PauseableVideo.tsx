@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef, useState } from 'react';
 import { Pause, Play } from 'lucide-react';
+import { trackUGCEvents } from '@/app/lib/analytics';
 
 // Global registry ensuring max 1 PauseableVideo plays simultaneously (Spec 8.10).
 const PLAY_EVENT = 'ugcvz:video-play';
@@ -30,6 +31,9 @@ export default function PauseableVideo({
   const instanceId = useId();
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const playTrackedRef = useRef(false);
+  const halfTrackedRef = useRef(false);
+  const videoTrackingKey = caption || src.split('/').pop() || 'video';
   const [reducedMotion, setReducedMotion] = useState(false);
   const [hydrated, setHydrated] = useState(false);
   const [inView, setInView] = useState(false);
@@ -166,7 +170,21 @@ export default function PauseableVideo({
           loop
           preload="none"
           aria-label={label}
-          onPlay={() => setIsPlaying(true)}
+          onPlay={() => {
+            setIsPlaying(true);
+            if (!playTrackedRef.current) {
+              playTrackedRef.current = true;
+              trackUGCEvents.videoPlay(videoTrackingKey);
+            }
+          }}
+          onTimeUpdate={(e) => {
+            if (halfTrackedRef.current) return;
+            const v = e.currentTarget;
+            if (v.duration > 0 && v.currentTime / v.duration >= 0.5) {
+              halfTrackedRef.current = true;
+              trackUGCEvents.videoHalfway(videoTrackingKey);
+            }
+          }}
           onPause={() => setIsPlaying(false)}
           className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-200 ${isPlaying ? 'opacity-100' : 'opacity-0'}`}
         />

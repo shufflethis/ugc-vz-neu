@@ -12,6 +12,7 @@ import {
   type IndustryCategory,
 } from '@/app/lib/high-risk-compliance';
 import { clearQuickBriefDraft, loadQuickBriefDraft } from '@/app/lib/quick-brief';
+import { trackUGCEvents } from '@/app/lib/analytics';
 import OtpInput from '@/app/components/auth/OtpInput';
 import ResendTimer from '@/app/components/auth/ResendTimer';
 import InlineError from '@/app/components/auth/InlineError';
@@ -122,6 +123,18 @@ function BrandLoginView({ initialTab }: { initialTab: 'login' | 'signup' }) {
       setCooldownSec(typeof data.resendCooldownSec === 'number' ? data.resendCooldownSec : 60);
       setResendKey((k) => k + 1);
       setSent(true);
+      if (targetMode === 'signup' && !data.switchedToLogin) {
+        const hrDetect = detectHighRiskKeywords(company, trimmedEmail);
+        const effCat = isHighRiskCategory(industryCategory)
+          ? industryCategory
+          : hrDetect.flagged
+            ? hrDetect.suggestedCategory
+            : 'standard';
+        trackUGCEvents.brandSignup({ industryCategory: effCat, source: 'brand_page' });
+        if (effCat !== 'standard') {
+          trackUGCEvents.highRiskDetected({ category: effCat, surface: 'brand_signup' });
+        }
+      }
       return true;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Anmeldung fehlgeschlagen.');
@@ -156,6 +169,7 @@ function BrandLoginView({ initialTab }: { initialTab: 'login' | 'signup' }) {
         setShakeKey((k) => k + 1);
         throw new Error(data.error || 'Code ungültig oder abgelaufen.');
       }
+      trackUGCEvents.brandOtpVerified('brand_page');
       window.location.assign(data.redirectTo || '/brand');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Code konnte nicht bestätigt werden.');
@@ -709,6 +723,16 @@ function BrandDashboard({
       });
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.error || 'Kampagne konnte nicht angelegt werden.');
+      const hrDetected = detectHighRiskKeywords(title, brandDisplayName, niche, description, retainerPerks);
+      trackUGCEvents.campaignCreated({
+        model: compensationModel,
+        affiliate: compensationModel === 'affiliate' || affiliateEnabled,
+        highRisk: brand.billingTier === 'high_risk_custom' || hrDetected.flagged,
+        source: 'brand_workspace',
+      });
+      if (hrDetected.flagged) {
+        trackUGCEvents.highRiskDetected({ category: hrDetected.suggestedCategory, surface: 'campaign_builder' });
+      }
       clearQuickBriefDraft();
       window.location.href = `/brand/kampagnen/${data.campaign.publicId}`;
     } catch (err) {

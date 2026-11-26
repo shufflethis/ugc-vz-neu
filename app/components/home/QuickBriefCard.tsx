@@ -13,6 +13,7 @@ import {
   calculateCampaignBudgetBreakdown,
   formatEuroFromCents,
 } from '@/app/lib/platform-pricing';
+import { trackUGCEvents } from '@/app/lib/analytics';
 
 const QUICK_EXAMPLES = [
   'Unsere Cap im Alltag, 20 % Rabatt im Shop',
@@ -101,6 +102,12 @@ export default function QuickBriefCard() {
       affiliatePercent: 10,
     });
 
+    trackUGCEvents.quickBriefSubmit({
+      model,
+      affiliate: affiliateBonus,
+      budgetEur: Math.round(rawBudget),
+    });
+
     router.push('/brand?tab=signup&from=brief');
   };
 
@@ -129,6 +136,7 @@ export default function QuickBriefCard() {
                   setModel('tkp');
                   setBudgetCapInput('500');
                   setExpandedAll(true);
+                  trackUGCEvents.quickBriefMode('tkp');
                 }}
                 className={`min-h-[38px] rounded-[8px] px-3.5 text-xs font-semibold transition-all sm:text-sm ${
                   model === 'tkp'
@@ -144,6 +152,7 @@ export default function QuickBriefCard() {
                   setModel('fixed');
                   setBudgetCapInput('1000');
                   setExpandedAll(true);
+                  trackUGCEvents.quickBriefMode('fixed');
                 }}
                 className={`min-h-[38px] rounded-[8px] px-3.5 text-xs font-semibold transition-all sm:text-sm ${
                   model === 'fixed'

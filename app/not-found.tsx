@@ -4,6 +4,7 @@
 // von Next selbst; die Markdown-Variante liefert app/md/[[...path]]/route.ts.
 import Link from 'next/link';
 import type { Metadata } from 'next';
+import NotFoundTracker from './components/NotFoundTracker';
 
 export const metadata: Metadata = {
   title: 'Seite nicht gefunden – UGC VZ',
@@ -13,6 +14,7 @@ export const metadata: Metadata = {
 export default function NotFound() {
   return (
     <div className="min-h-screen bg-white text-ink px-6 py-24">
+      <NotFoundTracker />
       <div className="max-w-2xl mx-auto">
         <p className="text-sm font-bold uppercase tracking-[0.15em] text-geo-violet">Fehler 404</p>
         <h1 className="mt-3 text-4xl font-bold">Diese Seite gibt es nicht (mehr)</h1>

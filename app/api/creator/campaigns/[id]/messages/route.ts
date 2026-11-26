@@ -7,6 +7,7 @@ import {
   buildPortalMessageNotification,
   sendCampaignNotificationEmail,
 } from '@/app/lib/campaign-notification-email';
+import { sendPlausibleServerEvent } from '@/app/lib/plausible-server';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -129,6 +130,14 @@ export async function POST(
         audience: 'brand',
       });
     }
+
+    await sendPlausibleServerEvent({
+      name: 'portal_message_sent',
+      path: '/konto/kampagnen',
+      props: { role: 'creator' },
+      userAgent: request.headers.get('user-agent'),
+      clientIp: request.headers.get('x-forwarded-for'),
+    });
 
     return NextResponse.json(
       {

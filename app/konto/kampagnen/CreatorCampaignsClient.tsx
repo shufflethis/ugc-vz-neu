@@ -17,6 +17,7 @@ import {
   ShieldAlert,
 } from 'lucide-react';
 import type { CreatorCampaignItem, SubmissionStatus } from '@/app/lib/brand-workspace';
+import { trackUGCEvents } from '@/app/lib/analytics';
 
 const fieldClass =
   'w-full rounded-lg border border-[#DCE2EA] bg-white px-3.5 py-2.5 text-sm text-[#202124] outline-none transition focus:border-[#06458F] focus:ring-4 focus:ring-[#06458F]/10';
@@ -385,6 +386,12 @@ function CampaignCard({
     try {
       await navigator.clipboard.writeText(val);
       onNotice(`${label} in die Zwischenablage kopiert!`);
+      if (/affiliate|tracking-link/i.test(label)) {
+        trackUGCEvents.affiliateCodeCopied({
+          role: 'creator',
+          kind: /link/i.test(label) ? 'link' : 'code',
+        });
+      }
     } catch {
       onError('Kopieren nicht möglich. Bitte markiere den Text manuell.');
     }

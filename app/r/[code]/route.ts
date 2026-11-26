@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDatabase, isDatabaseConfigured } from '@/app/lib/database';
+import { sendPlausibleServerEvent } from '@/app/lib/plausible-server';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -10,7 +11,7 @@ export const dynamic = 'force-dynamic';
  * und leitet per 302 mit sauberen UTM-Parametern zur Ziel-URL der Marke weiter.
  */
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: { code: string } },
 ) {
   const code = String(params.code || '').trim().toUpperCase().replace(/[^A-Z0-9_-]/g, '');
@@ -47,6 +48,14 @@ export async function GET(
     if (!parsed.searchParams.has('utm_medium')) parsed.searchParams.set('utm_medium', 'creator_affiliate');
     if (!parsed.searchParams.has('utm_campaign')) parsed.searchParams.set('utm_campaign', String(rows[0].public_id || ''));
     if (!parsed.searchParams.has('utm_content')) parsed.searchParams.set('utm_content', String(rows[0].affiliate_code || code));
+
+    await sendPlausibleServerEvent({
+      name: 'affiliate_link_click',
+      path: `/r/${encodeURIComponent(code)}`,
+      props: { campaign: String(rows[0].public_id || '') },
+      userAgent: request.headers.get('user-agent'),
+      clientIp: request.headers.get('x-forwarded-for'),
+    });
 
     return NextResponse.redirect(parsed.toString(), {
       status: 302,

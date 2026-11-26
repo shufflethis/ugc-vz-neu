@@ -8,6 +8,7 @@ import {
   buildCreatorRevisionNotification,
   sendCampaignNotificationEmail,
 } from '@/app/lib/campaign-notification-email';
+import { sendPlausibleServerEvent } from '@/app/lib/plausible-server';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -179,6 +180,19 @@ export async function PATCH(
         audience: 'creator',
       });
     }
+  }
+
+  if (nextStatus === 'approved' && existing.status !== 'approved') {
+    await sendPlausibleServerEvent({
+      name: 'clip_approved',
+      path: '/brand/kampagnen',
+      props: {
+        model: String(existing.compensation_model || 'fixed'),
+        settled: Boolean(settlement?.settledNow),
+      },
+      userAgent: request.headers.get('user-agent'),
+      clientIp: request.headers.get('x-forwarded-for'),
+    });
   }
 
   return NextResponse.json({

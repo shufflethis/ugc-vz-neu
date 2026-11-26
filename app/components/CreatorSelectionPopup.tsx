@@ -205,11 +205,26 @@ export default function CreatorSelectionPopup({
         throw new Error(result.error || 'Kampagne konnte nicht angelegt werden.');
       }
 
+      trackUGCEvents.campaignCreated({
+        model: campaignData.compensationModel,
+        affiliate: affiliateActive,
+        highRisk: detectedHr.flagged,
+        source: 'creator_popup',
+      });
+      if (detectedHr.flagged) {
+        trackUGCEvents.highRiskDetected({ category: detectedHr.suggestedCategory, surface: 'creator_popup' });
+      }
+
       if (result.authenticated && typeof result.redirectTo === 'string') {
         toast.success(`Kampagne ${result.campaignPublicId} angelegt! Weiter zum Brand-Workspace ...`);
         window.location.assign(result.redirectTo);
         return;
       }
+
+      trackUGCEvents.brandSignup({
+        industryCategory: detectedHr.flagged ? detectedHr.suggestedCategory : 'standard',
+        source: 'creator_popup',
+      });
 
       setCampaignCreated({
         publicId: String(result.campaignPublicId || ''),
@@ -243,6 +258,7 @@ export default function CreatorSelectionPopup({
       if (!res.ok || !data.success) {
         throw new Error(data.error || 'Code ungültig oder abgelaufen.');
       }
+      trackUGCEvents.brandOtpVerified('creator_popup');
       window.location.assign(data.redirectTo || `/brand/kampagnen/${campaignCreated.publicId}`);
     } catch (err) {
       setOtpError(err instanceof Error ? err.message : 'Code konnte nicht bestätigt werden.');

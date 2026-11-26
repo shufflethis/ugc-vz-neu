@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { ShieldCheck } from 'lucide-react';
+import { trackUGCEvents } from '@/app/lib/analytics';
 
 export default function VerifyClient({ token }: { token: string }) {
   const [submitting, setSubmitting] = useState(false);
@@ -23,6 +24,7 @@ export default function VerifyClient({ token }: { token: string }) {
       });
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.error || 'Anmeldung fehlgeschlagen.');
+      trackUGCEvents.brandOtpVerified('magic_link');
       window.location.href = data.redirectTo || '/brand';
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Anmeldung fehlgeschlagen.');

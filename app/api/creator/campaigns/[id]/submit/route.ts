@@ -8,6 +8,7 @@ import {
   buildBrandSubmissionNotification,
   sendCampaignNotificationEmail,
 } from '@/app/lib/campaign-notification-email';
+import { sendPlausibleServerEvent } from '@/app/lib/plausible-server';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -108,6 +109,14 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       // non-fatal
     }
   }
+
+  await sendPlausibleServerEvent({
+    name: 'clip_submitted',
+    path: '/konto/kampagnen',
+    props: { platform, model: String(app.compensation_model || 'fixed') },
+    userAgent: request.headers.get('user-agent'),
+    clientIp: request.headers.get('x-forwarded-for'),
+  });
 
   return NextResponse.json({ success: true, submission: created }, { status: 201 });
 }

@@ -12,6 +12,7 @@ import {
 } from '@/app/lib/payments-ledger';
 import { issueCreditNoteForPayout } from '@/app/lib/credit-note-generator';
 import { constructVerifiedStripeEvent } from '@/app/lib/stripe-connect';
+import { sendPlausibleServerEvent } from '@/app/lib/plausible-server';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -52,12 +53,20 @@ export async function POST(request: NextRequest) {
           const brandId = session.metadata?.ugc_vz_brand_id;
           const amountCents = Number(session.metadata?.topup_amount_cents || 0);
           const method = (session.metadata?.topup_method || 'sepa_debit') as PayInMethod;
-          await settleTopupIdempotently(sql, {
+          const settled = await settleTopupIdempotently(sql, {
             providerRef: session.id,
             brandId,
             amountCents: amountCents > 0 ? amountCents : undefined,
             method,
           });
+          if (settled.settledNow && settled.creditedCents > 0) {
+            await sendPlausibleServerEvent({
+              name: 'wallet_topup_paid',
+              path: '/brand',
+              props: { method },
+              revenue: { currency: 'EUR', amount: settled.creditedCents / 100 },
+            });
+          }
         }
         break;
       }
@@ -79,12 +88,20 @@ export async function POST(request: NextRequest) {
         const amountCents = Number(pi.metadata?.topup_amount_cents || pi.amount_received || 0);
         const method = (pi.metadata?.topup_method || 'sepa_debit') as PayInMethod;
         if (brandId && amountCents > 0) {
-          await settleTopupIdempotently(sql, {
+          const settled = await settleTopupIdempotently(sql, {
             providerRef: pi.id,
             brandId,
             amountCents,
             method,
           });
+          if (settled.settledNow && settled.creditedCents > 0) {
+            await sendPlausibleServerEvent({
+              name: 'wallet_topup_paid',
+              path: '/brand',
+              props: { method },
+              revenue: { currency: 'EUR', amount: settled.creditedCents / 100 },
+            });
+          }
         }
         break;
       }
@@ -97,12 +114,20 @@ export async function POST(request: NextRequest) {
             [tx.customer],
           );
           if (wallet?.brand_id) {
-            await settleTopupIdempotently(sql, {
+            const settled = await settleTopupIdempotently(sql, {
               providerRef: tx.id,
               brandId: String(wallet.brand_id),
               amountCents: tx.net_amount,
               method: 'bank_transfer',
             });
+            if (settled.settledNow && settled.creditedCents > 0) {
+              await sendPlausibleServerEvent({
+                name: 'wallet_topup_paid',
+                path: '/brand',
+                props: { method: 'bank_transfer' },
+                revenue: { currency: 'EUR', amount: settled.creditedCents / 100 },
+              });
+            }
           }
         }
         break;

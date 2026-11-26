@@ -27,6 +27,7 @@ import type {
   SubmissionStatus,
 } from '@/app/lib/brand-workspace';
 import type { AffiliateConversionView } from '@/app/lib/payments-ledger';
+import { trackUGCEvents } from '@/app/lib/analytics';
 
 const APP_STATUS_LABEL: Record<ApplicationStatus, { text: string; tone: string }> = {
   invited: { text: 'Eingeladen', tone: 'bg-[#F5F7FA] text-[#5C6470]' },
@@ -254,6 +255,12 @@ export default function CampaignDetailClient({ initialDetail }: { initialDetail:
     try {
       await navigator.clipboard.writeText(value);
       toast.success(`${label} kopiert!`);
+      if (/tracking-link|affiliate/i.test(label)) {
+        trackUGCEvents.affiliateCodeCopied({
+          role: 'brand',
+          kind: /link/i.test(label) ? 'link' : 'code',
+        });
+      }
     } catch {
       toast.error('Konnte nicht in die Zwischenablage kopiert werden.');
     }

@@ -26,6 +26,7 @@ import {
   type IndustryCategory,
   type PreferredHighRiskPsp,
 } from '@/app/lib/high-risk-compliance';
+import { trackUGCEvents } from '@/app/lib/analytics';
 
 interface WalletResponse {
   success: boolean;
@@ -215,6 +216,11 @@ export default function BrandWalletPanel() {
       if (!res.ok || !json.success) {
         throw new Error(json.error || 'Anfrage konnte nicht gesendet werden.');
       }
+      trackUGCEvents.highRiskComplianceRequested({
+        category: hrCategory,
+        contact: hrContact,
+        psp: hrPreferredPsp,
+      });
       setHrSuccess(json.message || 'Anfrage eingegangen! Wir melden uns kurzfristig.');
       setHrMessage('');
       await loadWallet();
