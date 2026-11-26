@@ -1338,7 +1338,7 @@ export async function listCreatorSocialConnections(
     [creatorId],
   )) as unknown as Array<any>;
 
-  return rows.map((row) => ({
+  const mapped: CreatorSocialConnection[] = rows.map((row) => ({
     id: String(row.id),
     platform: String(row.platform || 'other'),
     handle: String(row.handle || ''),
@@ -1349,6 +1349,21 @@ export async function listCreatorSocialConnections(
     verificationMethod: row.verification_method ? String(row.verification_method) : null,
     verifiedAt: row.verified_at ? new Date(row.verified_at).toISOString() : null,
   }));
+
+  // Deduplicate same (platform, normalizedHandle) preferring verified > open code > first entry.
+  const score = (acc: CreatorSocialConnection) =>
+    (acc.verifiedAt ? 4 : 0) + (acc.verificationMethod === 'oauth' ? 2 : 0) + (acc.verificationCode ? 1 : 0);
+  const byKey = new Map<string, CreatorSocialConnection>();
+  for (const acc of mapped) {
+    const plat = acc.platform.toLowerCase();
+    const norm = normalizeSocialHandle(plat, acc.canonicalHandle || acc.handle || acc.url);
+    const key = norm ? `${plat}:${norm.handle}` : `${plat}:${acc.url.toLowerCase().replace(/\/+$/, '')}`;
+    const prev = byKey.get(key);
+    if (!prev || score(acc) > score(prev)) {
+      byKey.set(key, acc);
+    }
+  }
+  return Array.from(byKey.values());
 }
 
 export interface PublicCampaignReport {

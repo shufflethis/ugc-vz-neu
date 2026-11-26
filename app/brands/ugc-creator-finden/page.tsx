@@ -63,7 +63,7 @@ export default async function UGCCreatorFindenPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white text-[#121212]">
+    <div className="min-h-screen bg-white text-[#202124]">
       <BreadcrumbSchema
         items={[
           { name: 'Home', url: 'https://ugc-vz.de' },
@@ -75,14 +75,14 @@ export default async function UGCCreatorFindenPage() {
       <FAQSchema faqItems={faqs} />
 
       {/* Header & Suchbereich */}
-      <section className="bg-[#F7F6F2] px-5 py-12 sm:px-8 sm:py-16">
+      <section className="bg-[#F5F7FA] px-5 py-12 sm:px-8 sm:py-16">
         <div className="mx-auto max-w-[1200px]">
-          <Link href="/brands" className="text-sm font-medium text-[#5C5A55] hover:text-[#121212]">
+          <Link href="/brands" className="text-sm font-medium text-[#5C6470] hover:text-[#202124]">
             ← Zurück zu Für Marken
           </Link>
 
           <div className="mt-6 max-w-3xl">
-            <p className="inline-flex flex-wrap items-center gap-2 rounded-full border border-[#E4E1D8] bg-white px-3.5 py-1 text-xs font-semibold text-[#121212]">
+            <p className="inline-flex flex-wrap items-center gap-2 rounded-full border border-[#DCE2EA] bg-white px-3.5 py-1 text-xs font-semibold text-[#202124]">
               <span>{poolCount > 0 ? `${poolCount} aktive Profile` : `${CREATOR_COUNT_LABEL} Profile`}</span>
               {medianPrice ? <span>· Richtwert-Median {medianPrice.toLocaleString('de-DE')} €</span> : null}
               <span>· Pool-Vorschau</span>
@@ -90,12 +90,12 @@ export default async function UGCCreatorFindenPage() {
             <h1 className="mt-4 font-display text-4xl font-bold leading-tight tracking-[-0.02em] sm:text-5xl">
               UGC Creator im DACH-Pool finden
             </h1>
-            <p className="mt-4 text-base leading-7 text-[#5C5A55] sm:text-lg">
+            <p className="mt-4 text-base leading-7 text-[#5C6470] sm:text-lg">
               Durchsuche echte Profile nach Branche, Stil und Arbeitsproben. Für Kampagnen-Briefings, Einladungen und direkte Zusammenarbeit startest du danach in einer Minute im kostenlosen Marken-Konto.
             </p>
           </div>
 
-          <div className="mt-8 rounded-[24px] border border-[#E4E1D8] bg-white p-4 shadow-card sm:p-8">
+          <div className="mt-8 rounded-[24px] border border-[#DCE2EA] bg-white p-4 shadow-card sm:p-8">
             <SearchBox
               initialQuery="UGC Creator für Produktvideos auf TikTok und Instagram Reels"
               showFeatured
@@ -118,9 +118,9 @@ export default async function UGCCreatorFindenPage() {
               ['3. Marken-Konto öffnen', 'Lege dein kostenloses Konto per 6-stelligem Code an und speichere dein Kampagnen-Briefing.'],
               ['4. Nach Views oder Paket starten', 'Lade Favoriten ein oder öffne deine View-Kampagne mit fester Budget-Obergrenze.'],
             ].map(([title, copy]) => (
-              <div key={title} className="rounded-[20px] border border-[#E4E1D8] bg-[#F7F6F2] p-6">
-                <h3 className="font-display text-lg font-bold text-[#121212]">{title}</h3>
-                <p className="mt-2 text-sm leading-6 text-[#5C5A55]">{copy}</p>
+              <div key={title} className="rounded-[20px] border border-[#DCE2EA] bg-[#F5F7FA] p-6">
+                <h3 className="font-display text-lg font-bold text-[#202124]">{title}</h3>
+                <p className="mt-2 text-sm leading-6 text-[#5C6470]">{copy}</p>
               </div>
             ))}
           </div>
@@ -128,31 +128,31 @@ export default async function UGCCreatorFindenPage() {
       </section>
 
       {/* Qualitaetscheck & Brand Tools */}
-      <section className="bg-[#F7F6F2] px-5 py-16 sm:px-8">
+      <section className="bg-[#F5F7FA] px-5 py-16 sm:px-8">
         <div className="mx-auto grid max-w-[1200px] gap-6 md:grid-cols-2">
-          <div className="rounded-[20px] border border-[#E4E1D8] bg-white p-6 shadow-card sm:p-8">
-            <h2 className="font-display text-2xl font-bold text-[#121212]">
+          <div className="rounded-[20px] border border-[#DCE2EA] bg-white p-6 shadow-card sm:p-8">
+            <h2 className="font-display text-2xl font-bold text-[#202124]">
               Worauf Performance-Teams achten
             </h2>
-            <ul className="mt-4 list-disc space-y-2.5 pl-5 text-sm leading-6 text-[#5C5A55]">
+            <ul className="mt-4 list-disc space-y-2.5 pl-5 text-sm leading-6 text-[#5C6470]">
               <li>
-                <strong className="text-[#121212]">Erste 3 Sekunden:</strong> Baut der Creator im Portfolio sofort Aufmerksamkeit ohne gekünstelten Werbeton auf?
+                <strong className="text-[#202124]">Erste 3 Sekunden:</strong> Baut der Creator im Portfolio sofort Aufmerksamkeit ohne gekünstelten Werbeton auf?
               </li>
               <li>
-                <strong className="text-[#121212]">Zielgruppen-Passung:</strong> Passen Alltag, Umgebung und Sprache zur echten Käufergruppe deines Produkts?
+                <strong className="text-[#202124]">Zielgruppen-Passung:</strong> Passen Alltag, Umgebung und Sprache zur echten Käufergruppe deines Produkts?
               </li>
               <li>
-                <strong className="text-[#121212]">Klare Rechte und Hooks:</strong> Halte gewünschte Hook-Varianten und Nutzungsrechte direkt im Brief fest.
+                <strong className="text-[#202124]">Klare Rechte und Hooks:</strong> Halte gewünschte Hook-Varianten und Nutzungsrechte direkt im Brief fest.
               </li>
             </ul>
           </div>
 
-          <div className="flex flex-col justify-between rounded-[20px] border border-[#E4E1D8] bg-white p-6 shadow-card sm:p-8">
+          <div className="flex flex-col justify-between rounded-[20px] border border-[#DCE2EA] bg-white p-6 shadow-card sm:p-8">
             <div>
-              <h2 className="font-display text-2xl font-bold text-[#121212]">
+              <h2 className="font-display text-2xl font-bold text-[#202124]">
                 Nächste Schritte für Marken
               </h2>
-              <p className="mt-2 text-sm leading-6 text-[#5C5A55]">
+              <p className="mt-2 text-sm leading-6 text-[#5C6470]">
                 Kalkuliere dein Budget, prüfe transparente Konditionen oder starte direkt mit deiner ersten Kampagne.
               </p>
             </div>
@@ -166,7 +166,7 @@ export default async function UGCCreatorFindenPage() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="flex min-h-[46px] items-center justify-between rounded-xl border border-[#E4E1D8] bg-[#F7F6F2] px-4 text-sm font-semibold text-[#121212] transition-colors hover:border-[#121212]"
+                  className="flex min-h-[46px] items-center justify-between rounded-xl border border-[#DCE2EA] bg-[#F5F7FA] px-4 text-sm font-semibold text-[#202124] transition-colors hover:border-[#06458F]"
                 >
                   <span>{link.label}</span>
                   <ArrowRight size={15} aria-hidden="true" />
@@ -181,10 +181,10 @@ export default async function UGCCreatorFindenPage() {
       <section aria-labelledby="branchen-heading" className="bg-white px-5 py-14 sm:px-8">
         <div className="mx-auto max-w-[1200px]">
           <div className="flex flex-wrap items-end justify-between gap-4">
-            <h2 id="branchen-heading" className="font-display text-2xl font-bold text-[#121212]">
+            <h2 id="branchen-heading" className="font-display text-2xl font-bold text-[#202124]">
               Beliebte Branchen
             </h2>
-            <Link href="/alle-seiten#branchen" className="text-sm font-semibold text-[#121212] hover:text-[#6C2BD9]">
+            <Link href="/alle-seiten#branchen" className="text-sm font-semibold text-[#202124] hover:text-[#06458F]">
               Alle Branchen ansehen →
             </Link>
           </div>
@@ -193,7 +193,7 @@ export default async function UGCCreatorFindenPage() {
               <li key={niche.slug} className="shrink-0">
                 <Link
                   href={nichePath(niche)}
-                  className="inline-flex min-h-[44px] items-center rounded-full border border-[#E4E1D8] bg-[#F7F6F2] px-4 text-sm font-medium text-[#121212] hover:border-[#121212]"
+                  className="inline-flex min-h-[44px] items-center rounded-full border border-[#DCE2EA] bg-[#F5F7FA] px-4 text-sm font-medium text-[#202124] hover:border-[#06458F]"
                 >
                   {niche.chip}
                 </Link>
@@ -206,7 +206,7 @@ export default async function UGCCreatorFindenPage() {
       {/* FAQ */}
       <section className="bg-white px-5 pb-20 pt-6 sm:px-8">
         <div className="mx-auto max-w-[720px]">
-          <h2 className="font-display text-2xl font-bold text-[#121212] sm:text-3xl">
+          <h2 className="font-display text-2xl font-bold text-[#202124] sm:text-3xl">
             Häufige Fragen zur Creator-Suche
           </h2>
           <div className="mt-6 space-y-3">
@@ -214,15 +214,15 @@ export default async function UGCCreatorFindenPage() {
               <details
                 key={item.question}
                 open={idx === 0}
-                className="group rounded-[20px] border border-[#E4E1D8] bg-white px-5"
+                className="group rounded-[20px] border border-[#DCE2EA] bg-white px-5"
               >
-                <summary className="flex min-h-[58px] cursor-pointer list-none items-center justify-between gap-4 py-3 font-semibold text-[#121212] [&::-webkit-details-marker]:hidden">
+                <summary className="flex min-h-[58px] cursor-pointer list-none items-center justify-between gap-4 py-3 font-semibold text-[#202124] [&::-webkit-details-marker]:hidden">
                   <span>{item.question}</span>
-                  <span className="shrink-0 text-xl text-[#5C5A55] transition-transform group-open:rotate-45" aria-hidden="true">
+                  <span className="shrink-0 text-xl text-[#5C6470] transition-transform group-open:rotate-45" aria-hidden="true">
                     +
                   </span>
                 </summary>
-                <p className="pb-4 text-sm leading-6 text-[#5C5A55]">{item.answer}</p>
+                <p className="pb-4 text-sm leading-6 text-[#5C6470]">{item.answer}</p>
               </details>
             ))}
           </div>

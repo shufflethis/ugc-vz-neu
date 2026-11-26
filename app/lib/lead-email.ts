@@ -118,13 +118,13 @@ const reachSummary = (creator: SelectedCreator) => {
 };
 
 const socialButtonsHtml = (creator: SelectedCreator) => creatorUrls(creator)
-  .map((url) => `<a href="${htmlEscape(url)}" style="display:inline-block;margin:5px 6px 0 0;padding:7px 10px;border:1px solid #ddd2e5;border-radius:8px;background:#ffffff;color:#6f2fa9;font-size:12px;font-weight:800;text-decoration:none;">${htmlEscape(platformLabel(url))} öffnen</a>`)
+  .map((url) => `<a href="${htmlEscape(url)}" style="display:inline-block;margin:5px 6px 0 0;padding:7px 10px;border:1px solid #ddd2e5;border-radius:8px;background:#ffffff;color:#06458F;font-size:12px;font-weight:800;text-decoration:none;">${htmlEscape(platformLabel(url))} öffnen</a>`)
   .join('');
 
 const creatorCardHtml = (creator: SelectedCreator) => {
   const contactRows = [
     creator.contactEmail
-      ? `<a href="mailto:${htmlEscape(creator.contactEmail)}" style="color:#6f2fa9;font-weight:700;text-decoration:none;">E-Mail: ${htmlEscape(creator.contactEmail)}</a>`
+      ? `<a href="mailto:${htmlEscape(creator.contactEmail)}" style="color:#06458F;font-weight:700;text-decoration:none;">E-Mail: ${htmlEscape(creator.contactEmail)}</a>`
       : '',
     socialButtonsHtml(creator),
   ].filter(Boolean);
@@ -132,36 +132,36 @@ const creatorCardHtml = (creator: SelectedCreator) => {
   return `
     <tr>
       <td style="padding:0 0 14px;">
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e8e1ed;border-radius:16px;background:#ffffff;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #DCE2EA;border-radius:16px;background:#ffffff;">
           <tr>
             <td style="padding:20px;">
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                 <tr>
                   <td width="58" valign="top" style="width:58px;">
-                    <div class="creator-avatar" style="width:46px;height:46px;line-height:46px;border-radius:50%;background:#8b3fca;color:#ffffff;text-align:center;font-size:15px;font-weight:800;">${getInitials(creator.name)}</div>
+                    <div class="creator-avatar" style="width:46px;height:46px;line-height:46px;border-radius:50%;background:#06458F;color:#ffffff;text-align:center;font-size:15px;font-weight:800;">${getInitials(creator.name)}</div>
                   </td>
                   <td valign="middle">
-                    <div style="font-size:19px;line-height:25px;font-weight:800;color:#21172a;">${htmlEscape(creator.name || 'UGC Creator')}</div>
-                    <div style="margin-top:3px;font-size:13px;line-height:19px;color:#746b7c;">Profil-ID ${htmlEscape(creator.id)}</div>
+                    <div style="font-size:19px;line-height:25px;font-weight:800;color:#202124;">${htmlEscape(creator.name || 'UGC Creator')}</div>
+                    <div style="margin-top:3px;font-size:13px;line-height:19px;color:#5C6470;">Profil-ID ${htmlEscape(creator.id)}</div>
                   </td>
                   <td align="right" valign="middle" style="padding-left:10px;">
-                    <span style="display:inline-block;padding:7px 10px;border-radius:999px;background:#f0e8f7;color:#6f2fa9;font-size:12px;font-weight:800;">${htmlEscape(creator.priceRange || 'Preis auf Anfrage')}</span>
+                    <span style="display:inline-block;padding:7px 10px;border-radius:999px;background:#EBF2FA;color:#06458F;font-size:12px;font-weight:800;">${htmlEscape(creator.priceRange || 'Preis auf Anfrage')}</span>
                   </td>
                 </tr>
               </table>
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:16px;">
                 <tr>
                   <td class="stack-cell" width="50%" valign="top" style="width:50%;padding-right:10px;">
-                    <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:#9a8fa2;">Netzwerke</div>
-                    <div style="margin-top:4px;font-size:14px;line-height:20px;color:#31283a;">${htmlEscape(networkSummary(creator))}</div>
+                    <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:#5C6470;">Netzwerke</div>
+                    <div style="margin-top:4px;font-size:14px;line-height:20px;color:#202124;">${htmlEscape(networkSummary(creator))}</div>
                   </td>
                   <td class="stack-cell" width="50%" valign="top" style="width:50%;padding-left:10px;">
-                    <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:#9a8fa2;">Reichweite</div>
-                    <div style="margin-top:4px;font-size:14px;line-height:20px;color:#31283a;">${htmlEscape(reachSummary(creator))}</div>
+                    <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:#5C6470;">Reichweite</div>
+                    <div style="margin-top:4px;font-size:14px;line-height:20px;color:#202124;">${htmlEscape(reachSummary(creator))}</div>
                   </td>
                 </tr>
               </table>
-              <div style="margin-top:16px;padding:12px 14px;border-radius:10px;background:#f8f6fa;font-size:13px;line-height:20px;color:#31283a;">
+              <div style="margin-top:16px;padding:12px 14px;border-radius:10px;background:#F5F7FA;font-size:13px;line-height:20px;color:#202124;">
                 <strong>Direkter Kontakt:</strong><br />
                 ${contactRows.length ? contactRows.join('<br />') : 'Keine direkte Kontaktangabe hinterlegt – antworte auf diese E-Mail, dann helfen wir weiter.'}
               </div>
@@ -221,11 +221,11 @@ export function renderBrandMatchEmail({
   const children = `
     <tr>
       <td class="email-pad" style="padding:8px 42px 26px;">
-        <p style="margin:0;font-size:17px;line-height:27px;color:#4a4052;">Hallo ${htmlEscape(clientInfo.name || '')},</p>
-        <p style="margin:12px 0 0;font-size:17px;line-height:27px;color:#4a4052;">hier kommen die Kontaktdaten deiner Auswahl. Die Vermittlung über UGC VZ kostet dich <strong style="color:#21172a;">0 €</strong> – du kannst die Creator direkt ansprechen.</p>
-        <div style="margin-top:20px;padding:15px 17px;border-left:4px solid #c8ff45;border-radius:8px;background:#17121f;color:#ffffff;font-size:14px;line-height:21px;">
+        <p style="margin:0;font-size:17px;line-height:27px;color:#374151;">Hallo ${htmlEscape(clientInfo.name || '')},</p>
+        <p style="margin:12px 0 0;font-size:17px;line-height:27px;color:#374151;">hier kommen die Kontaktdaten deiner Auswahl. Die Vermittlung über UGC VZ kostet dich <strong style="color:#202124;">0 €</strong> – du kannst die Creator direkt ansprechen.</p>
+        <div style="margin-top:20px;padding:15px 17px;border-left:4px solid #F2072A;border-radius:8px;background:#062A59;color:#ffffff;font-size:14px;line-height:21px;">
           <strong>Deine Suche:</strong> ${htmlEscape(searchQuery)}<br />
-          <span style="color:#cfc5d8;">Referenz: ${htmlEscape(leadId)}</span>
+          <span style="color:#C4D7EF;">Referenz: ${htmlEscape(leadId)}</span>
         </div>
       </td>
     </tr>
@@ -234,42 +234,42 @@ export function renderBrandMatchEmail({
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
           ${selectedCreators.map(creatorCardHtml).join('')}
         </table>
-        <p style="margin:4px 0 0;font-size:12px;line-height:19px;color:#817688;">Die Profil-, Preis- und Reichweitenangaben wurden von den Creatorn selbst hinterlegt. Bitte Verfügbarkeit, Leistungsumfang, Nutzungsrechte und finalen Preis direkt bestätigen.</p>
+        <p style="margin:4px 0 0;font-size:12px;line-height:19px;color:#5C6470;">Die Profil-, Preis- und Reichweitenangaben wurden von den Creatorn selbst hinterlegt. Bitte Verfügbarkeit, Leistungsumfang, Nutzungsrechte und finalen Preis direkt bestätigen.</p>
       </td>
     </tr>
     <tr>
       <td class="email-pad" style="padding:6px 42px 30px;">
-        <h2 style="margin:0 0 13px;font-size:22px;line-height:29px;color:#21172a;">So geht es weiter</h2>
+        <h2 style="margin:0 0 13px;font-size:22px;line-height:29px;color:#202124;">So geht es weiter</h2>
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-          <tr><td width="30" valign="top" style="font-weight:800;color:#8b3fca;">1.</td><td style="padding-bottom:8px;font-size:14px;line-height:21px;color:#4a4052;">Creator direkt kontaktieren und Verfügbarkeit klären.</td></tr>
-          <tr><td width="30" valign="top" style="font-weight:800;color:#8b3fca;">2.</td><td style="padding-bottom:8px;font-size:14px;line-height:21px;color:#4a4052;">Briefing, Deliverables, Timing, Korrekturen und Nutzungsrechte schriftlich festhalten.</td></tr>
-          <tr><td width="30" valign="top" style="font-weight:800;color:#8b3fca;">3.</td><td style="font-size:14px;line-height:21px;color:#4a4052;">Produktion starten – oder die komplette Abwicklung an uns geben.</td></tr>
+          <tr><td width="30" valign="top" style="font-weight:800;color:#06458F;">1.</td><td style="padding-bottom:8px;font-size:14px;line-height:21px;color:#374151;">Creator direkt kontaktieren und Verfügbarkeit klären.</td></tr>
+          <tr><td width="30" valign="top" style="font-weight:800;color:#06458F;">2.</td><td style="padding-bottom:8px;font-size:14px;line-height:21px;color:#374151;">Briefing, Deliverables, Timing, Korrekturen und Nutzungsrechte schriftlich festhalten.</td></tr>
+          <tr><td width="30" valign="top" style="font-weight:800;color:#06458F;">3.</td><td style="font-size:14px;line-height:21px;color:#374151;">Produktion starten – oder die komplette Abwicklung an uns geben.</td></tr>
         </table>
-        <p style="margin:17px 0 0;"><a href="https://ugc-vz.de/brands/ugc-vertrag-vorlage?utm_source=email&amp;utm_medium=transactional&amp;utm_campaign=brand-match" style="color:#6f2fa9;font-size:14px;font-weight:800;">Kostenlose Briefing- und Vertragsvorlage ansehen →</a></p>
-        <p style="margin:12px 0 0;font-size:14px;line-height:21px;color:#4a4052;"><a href="${htmlEscape(selectionUrl)}" style="color:#6f2fa9;font-weight:800;">Auswahl als Profilseite ansehen und weiterleiten →</a></p>
-        ${feedbackUrl ? `<p style="margin:12px 0 0;font-size:14px;line-height:21px;color:#4a4052;">Ein paar Tage später: <a href="${htmlEscape(feedbackUrl)}" style="color:#6f2fa9;font-weight:800;">Hat sich ein Creator gemeldet? Kurze Rückmeldung (1 Klick) →</a></p>` : ''}
+        <p style="margin:17px 0 0;"><a href="https://ugc-vz.de/brands/ugc-vertrag-vorlage?utm_source=email&amp;utm_medium=transactional&amp;utm_campaign=brand-match" style="color:#06458F;font-size:14px;font-weight:800;">Kostenlose Briefing- und Vertragsvorlage ansehen →</a></p>
+        <p style="margin:12px 0 0;font-size:14px;line-height:21px;color:#374151;"><a href="${htmlEscape(selectionUrl)}" style="color:#06458F;font-weight:800;">Auswahl als Profilseite ansehen und weiterleiten →</a></p>
+        ${feedbackUrl ? `<p style="margin:12px 0 0;font-size:14px;line-height:21px;color:#374151;">Ein paar Tage später: <a href="${htmlEscape(feedbackUrl)}" style="color:#06458F;font-weight:800;">Hat sich ein Creator gemeldet? Kurze Rückmeldung (1 Klick) →</a></p>` : ''}
       </td>
     </tr>
     <tr>
       <td class="email-pad" style="padding:0 42px 24px;">
-        <div style="padding:24px;border-radius:16px;background:#efe7f6;border:1px solid #dfd0eb;">
-          <div style="font-size:12px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#6f2fa9;">Optionaler Full Service</div>
-          <h2 style="margin:7px 0 9px;font-size:22px;line-height:29px;color:#21172a;">Du willst die Kontakte – aber nicht den ganzen Overhead?</h2>
-          <p style="margin:0;font-size:14px;line-height:22px;color:#4a4052;">famefact kann Auswahl, Verhandlung, Briefing, Rechteklärung, Produktion und Feedbackschleifen übernehmen – auf Wunsch inklusive Paid-Social-Aussteuerung und Community Management unter den Ads.</p>
+        <div style="padding:24px;border-radius:16px;background:#EBF2FA;border:1px solid #C4D7EF;">
+          <div style="font-size:12px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#06458F;">Optionaler Full Service</div>
+          <h2 style="margin:7px 0 9px;font-size:22px;line-height:29px;color:#202124;">Du willst die Kontakte – aber nicht den ganzen Overhead?</h2>
+          <p style="margin:0;font-size:14px;line-height:22px;color:#374151;">famefact kann Auswahl, Verhandlung, Briefing, Rechteklärung, Produktion und Feedbackschleifen übernehmen – auf Wunsch inklusive Paid-Social-Aussteuerung und Community Management unter den Ads.</p>
           <p style="margin:18px 0 0;">
-            <a href="${htmlEscape(INTRO_CALL_URL)}" style="display:inline-block;margin:0 8px 8px 0;padding:12px 18px;border-radius:9px;background:#8b3fca;color:#ffffff;text-decoration:none;font-size:14px;font-weight:800;">15-Min-Kurzgespräch buchen</a>
-            <a href="${htmlEscape(managementHref)}" style="display:inline-block;padding:11px 16px;border-radius:9px;border:1px solid #8b3fca;background:#ffffff;color:#6f2fa9;text-decoration:none;font-size:14px;font-weight:800;">Kampagnen-Support per Mail anfragen</a>
+            <a href="${htmlEscape(INTRO_CALL_URL)}" style="display:inline-block;margin:0 8px 8px 0;padding:12px 18px;border-radius:9px;background:#06458F;color:#ffffff;text-decoration:none;font-size:14px;font-weight:800;">15-Min-Kurzgespräch buchen</a>
+            <a href="${htmlEscape(managementHref)}" style="display:inline-block;padding:11px 16px;border-radius:9px;border:1px solid #06458F;background:#ffffff;color:#06458F;text-decoration:none;font-size:14px;font-weight:800;">Kampagnen-Support per Mail anfragen</a>
           </p>
         </div>
       </td>
     </tr>
     <tr>
       <td class="email-pad" style="padding:0 42px 36px;">
-        <div style="padding:22px 24px;border-radius:16px;background:#17121f;color:#ffffff;">
-          <div style="font-size:12px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#c8ff45;">Zusätzlicher Wachstumskanal</div>
+        <div style="padding:22px 24px;border-radius:16px;background:#062A59;color:#ffffff;">
+          <div style="font-size:12px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#F2072A;">Zusätzlicher Wachstumskanal</div>
           <h2 style="margin:7px 0 8px;font-size:21px;line-height:28px;color:#ffffff;">Wird deine Marke in ChatGPT, Gemini und Google AI empfohlen?</h2>
           <p style="margin:0;color:#d8cfe2;font-size:14px;line-height:22px;">Mit einem GEO-Audit siehst du, ob KI-Systeme deine Marke kennen, korrekt einordnen und gegenüber Wettbewerbern empfehlen.</p>
-          <p style="margin:16px 0 0;"><a href="${htmlEscape(geoHref)}" style="color:#c8ff45;font-size:14px;font-weight:800;text-decoration:none;">Kostenlose KI-Sichtbarkeits-Analyse →</a></p>
+          <p style="margin:16px 0 0;"><a href="${htmlEscape(geoHref)}" style="color:#F2072A;font-size:14px;font-weight:800;text-decoration:none;">Kostenlose KI-Sichtbarkeits-Analyse →</a></p>
         </div>
       </td>
     </tr>`;
@@ -321,10 +321,10 @@ export function renderNoResultsEmail({
   const query = clientInfo.noResultsQuery || clientInfo.searchQuery || 'Nicht angegeben';
   const children = `
     <tr><td class="email-pad" style="padding:8px 42px 34px;">
-      <p style="margin:0;font-size:17px;line-height:27px;color:#4a4052;">Hallo ${htmlEscape(clientInfo.name)},</p>
-      <p style="margin:12px 0;font-size:17px;line-height:27px;color:#4a4052;">für deine Suche gab es noch keinen eindeutigen Treffer. Wir haben die Anfrage erhalten und können passende Alternativen manuell prüfen.</p>
-      <div style="margin:20px 0;padding:17px;border-radius:12px;background:#f5f1f8;color:#31283a;font-size:14px;line-height:22px;"><strong>Suchanfrage:</strong><br />${htmlLines(query)}<br /><span style="color:#817688;">Referenz: ${htmlEscape(leadId)}</span></div>
-      <p style="margin:0;font-size:14px;line-height:22px;color:#4a4052;">Antworte einfach mit Budget, Timing und gewünschten Formaten. Das Team kann dann gezielter recherchieren oder einen passenden KI-UGC-/Hybrid-Ansatz vorschlagen.</p>
+      <p style="margin:0;font-size:17px;line-height:27px;color:#374151;">Hallo ${htmlEscape(clientInfo.name)},</p>
+      <p style="margin:12px 0;font-size:17px;line-height:27px;color:#374151;">für deine Suche gab es noch keinen eindeutigen Treffer. Wir haben die Anfrage erhalten und können passende Alternativen manuell prüfen.</p>
+      <div style="margin:20px 0;padding:17px;border-radius:12px;background:#f5f1f8;color:#202124;font-size:14px;line-height:22px;"><strong>Suchanfrage:</strong><br />${htmlLines(query)}<br /><span style="color:#5C6470;">Referenz: ${htmlEscape(leadId)}</span></div>
+      <p style="margin:0;font-size:14px;line-height:22px;color:#374151;">Antworte einfach mit Budget, Timing und gewünschten Formaten. Das Team kann dann gezielter recherchieren oder einen passenden KI-UGC-/Hybrid-Ansatz vorschlagen.</p>
     </td></tr>`;
 
   return {
@@ -348,9 +348,9 @@ export function renderContactAcknowledgementEmail({
 }): RenderedEmail {
   const children = `
     <tr><td class="email-pad" style="padding:8px 42px 34px;">
-      <p style="margin:0;font-size:17px;line-height:27px;color:#4a4052;">Hallo ${htmlEscape(clientInfo.name)},</p>
-      <p style="margin:12px 0;font-size:17px;line-height:27px;color:#4a4052;">deine Nachricht ist angekommen. Wir melden uns über diese E-Mail-Adresse bei dir.</p>
-      <div style="margin:20px 0;padding:17px;border-radius:12px;background:#f5f1f8;color:#31283a;font-size:14px;line-height:22px;"><strong>Thema:</strong> ${htmlEscape(clientInfo.subject || 'Allgemeine Anfrage')}<br /><span style="color:#817688;">Referenz: ${htmlEscape(leadId)}</span></div>
+      <p style="margin:0;font-size:17px;line-height:27px;color:#374151;">Hallo ${htmlEscape(clientInfo.name)},</p>
+      <p style="margin:12px 0;font-size:17px;line-height:27px;color:#374151;">deine Nachricht ist angekommen. Wir melden uns über diese E-Mail-Adresse bei dir.</p>
+      <div style="margin:20px 0;padding:17px;border-radius:12px;background:#f5f1f8;color:#202124;font-size:14px;line-height:22px;"><strong>Thema:</strong> ${htmlEscape(clientInfo.subject || 'Allgemeine Anfrage')}<br /><span style="color:#5C6470;">Referenz: ${htmlEscape(leadId)}</span></div>
     </td></tr>`;
 
   return {
@@ -383,12 +383,12 @@ export function renderUnpaidOfferHoldEmail({
   ];
   const children = `
     <tr><td class="email-pad" style="padding:8px 42px 34px;">
-      <p style="margin:0;font-size:17px;line-height:27px;color:#4a4052;">Hallo ${htmlEscape(clientInfo.name)},</p>
-      ${paragraphs.map((text) => `<p style="margin:12px 0;font-size:17px;line-height:27px;color:#4a4052;">${htmlEscape(text)}</p>`).join('')}
-      <p style="margin:22px 0;"><a href="${htmlEscape(INTRO_CALL_URL)}" style="display:inline-block;padding:12px 18px;border-radius:9px;background:#8b3fca;color:#ffffff;text-decoration:none;font-size:15px;font-weight:800;">Termin für einen kurzen Call wählen</a></p>
-      <p style="margin:12px 0;font-size:17px;line-height:27px;color:#4a4052;">Oder antworte einfach auf diese Mail mit zwei, drei Terminvorschlägen.</p>
-      <p style="margin:20px 0 0;font-size:17px;line-height:27px;color:#4a4052;">Viele Grüße<br />Gorden<br /><span style="color:#817688;">UGC VZ</span></p>
-      <p style="margin:20px 0 0;font-size:12px;line-height:19px;color:#817688;">Referenz: ${htmlEscape(leadId)}</p>
+      <p style="margin:0;font-size:17px;line-height:27px;color:#374151;">Hallo ${htmlEscape(clientInfo.name)},</p>
+      ${paragraphs.map((text) => `<p style="margin:12px 0;font-size:17px;line-height:27px;color:#374151;">${htmlEscape(text)}</p>`).join('')}
+      <p style="margin:22px 0;"><a href="${htmlEscape(INTRO_CALL_URL)}" style="display:inline-block;padding:12px 18px;border-radius:9px;background:#06458F;color:#ffffff;text-decoration:none;font-size:15px;font-weight:800;">Termin für einen kurzen Call wählen</a></p>
+      <p style="margin:12px 0;font-size:17px;line-height:27px;color:#374151;">Oder antworte einfach auf diese Mail mit zwei, drei Terminvorschlägen.</p>
+      <p style="margin:20px 0 0;font-size:17px;line-height:27px;color:#374151;">Viele Grüße<br />Gorden<br /><span style="color:#5C6470;">UGC VZ</span></p>
+      <p style="margin:20px 0 0;font-size:12px;line-height:19px;color:#5C6470;">Referenz: ${htmlEscape(leadId)}</p>
     </td></tr>`;
 
   return {
@@ -445,7 +445,7 @@ export function renderInternalLeadEmail({
 
   const children = `
     <tr><td class="email-pad" style="padding:8px 42px 34px;">
-      <div style="padding:14px 16px;border-radius:10px;background:#f5f1f8;font-size:14px;line-height:22px;color:#31283a;">
+      <div style="padding:14px 16px;border-radius:10px;background:#f5f1f8;font-size:14px;line-height:22px;color:#202124;">
         <strong>Brand-Mail:</strong> <span style="color:${statusColor};font-weight:800;">${htmlEscape(statusLabel)}</span><br />
         ${brandDelivery.id ? `<strong>Resend-ID:</strong> ${htmlEscape(brandDelivery.id)}<br />` : ''}
         ${brandDelivery.error ? `<strong>Fehler:</strong> ${htmlEscape(brandDelivery.error)}<br />` : ''}
@@ -457,7 +457,7 @@ export function renderInternalLeadEmail({
       <p style="margin:0;font-size:14px;line-height:22px;"><strong>Suche/Thema:</strong> ${htmlLines(query)}<br /><strong>Nachricht:</strong><br />${htmlLines(clientInfo.message, 'Keine Nachricht')}</p>
       <h2 style="margin:24px 0 8px;font-size:19px;">Creator</h2>
       <ol style="padding-left:20px;font-size:14px;line-height:21px;">${creatorRows}</ol>
-      <p style="margin:20px 0 0;font-size:13px;line-height:20px;color:#746b7c;">Bei Status „Von Resend angenommen“ wurde die Nachricht in die Versandqueue übernommen. Der Resend-Webhook meldet Zustellung oder Bounce separat in Slack.</p>
+      <p style="margin:20px 0 0;font-size:13px;line-height:20px;color:#5C6470;">Bei Status „Von Resend angenommen“ wurde die Nachricht in die Versandqueue übernommen. Der Resend-Webhook meldet Zustellung oder Bounce separat in Slack.</p>
     </td></tr>`;
 
   const text = `${kindLabel} ${leadId}
@@ -507,35 +507,35 @@ export function renderCreatorOutreachEmail({
   const referralHref = 'https://ugc-vz.de/creator?utm_source=creator-selection-email&utm_medium=email&utm_campaign=creator-referral';
   const children = `
     <tr><td class="email-pad" style="padding:8px 42px 22px;">
-      <p style="margin:0;font-size:17px;line-height:27px;color:#4a4052;">Hallo ${htmlEscape(creator.name)},</p>
-      <p style="margin:12px 0 0;font-size:17px;line-height:27px;color:#4a4052;"><strong style="color:#21172a;">${htmlEscape(requester)}</strong> hat dein Profil für eine konkrete UGC-Anfrage ausgewählt. Das ist noch keine Buchung – aber ein echtes Interessenssignal.</p>
-      <div style="margin:20px 0 0;padding:18px;border-left:4px solid #c8ff45;border-radius:10px;background:#17121f;color:#ffffff;font-size:14px;line-height:22px;">
-        <div style="font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#c8ff45;">Projektanfrage</div>
+      <p style="margin:0;font-size:17px;line-height:27px;color:#374151;">Hallo ${htmlEscape(creator.name)},</p>
+      <p style="margin:12px 0 0;font-size:17px;line-height:27px;color:#374151;"><strong style="color:#202124;">${htmlEscape(requester)}</strong> hat dein Profil für eine konkrete UGC-Anfrage ausgewählt. Das ist noch keine Buchung – aber ein echtes Interessenssignal.</p>
+      <div style="margin:20px 0 0;padding:18px;border-left:4px solid #F2072A;border-radius:10px;background:#062A59;color:#ffffff;font-size:14px;line-height:22px;">
+        <div style="font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#F2072A;">Projektanfrage</div>
         <div style="margin-top:8px;"><strong>Gesucht:</strong> ${htmlLines(query)}</div>
         ${clientInfo.message ? `<div style="margin-top:8px;color:#d8cfe2;"><strong style="color:#ffffff;">Briefing:</strong> ${htmlLines(clientInfo.message)}</div>` : ''}
         <div style="margin-top:8px;color:#a99eb2;font-size:12px;">Referenz: ${htmlEscape(leadId)}</div>
       </div>
-      <div style="margin:18px 0;padding:15px 17px;border-radius:12px;background:#f5f1f8;color:#31283a;font-size:14px;line-height:22px;">
+      <div style="margin:18px 0;padding:15px 17px;border-radius:12px;background:#f5f1f8;color:#202124;font-size:14px;line-height:22px;">
         <strong>Deine Angaben bei UGC VZ</strong><br />
         Preis: ${htmlEscape(creator.priceRange || 'noch nicht hinterlegt')}<br />
         Netzwerke: ${htmlEscape(networkSummary(creator))}<br />
         Reichweite: ${htmlEscape(reachSummary(creator))}
       </div>
-      <p style="margin:0;font-size:14px;line-height:22px;color:#4a4052;">Wenn das Projekt passt, sende der Brand direkt deine Verfügbarkeit, deinen aktuellen Preis und den vorgesehenen Leistungsumfang.</p>
-      <p style="margin:18px 0 0;"><a href="${htmlEscape(replyHref)}" style="display:inline-block;padding:13px 18px;border-radius:9px;background:#8b3fca;color:#ffffff;text-decoration:none;font-size:14px;font-weight:800;">Interesse &amp; Verfügbarkeit senden</a></p>
-      <p style="margin:10px 0 0;font-size:12px;line-height:19px;color:#817688;">Deine Antwort geht direkt an die anfragende Person. UGC VZ verlangt keine Vermittlungsgebühr oder Provision.</p>
+      <p style="margin:0;font-size:14px;line-height:22px;color:#374151;">Wenn das Projekt passt, sende der Brand direkt deine Verfügbarkeit, deinen aktuellen Preis und den vorgesehenen Leistungsumfang.</p>
+      <p style="margin:18px 0 0;"><a href="${htmlEscape(replyHref)}" style="display:inline-block;padding:13px 18px;border-radius:9px;background:#06458F;color:#ffffff;text-decoration:none;font-size:14px;font-weight:800;">Interesse &amp; Verfügbarkeit senden</a></p>
+      <p style="margin:10px 0 0;font-size:12px;line-height:19px;color:#5C6470;">Deine Antwort geht direkt an die anfragende Person. UGC VZ verlangt keine Vermittlungsgebühr oder Provision.</p>
     </td></tr>
     <tr><td class="email-pad" style="padding:0 42px 24px;">
       <div style="padding:20px;border-radius:14px;border:1px solid #e5dbea;background:#ffffff;">
-        <div style="font-size:12px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#6f2fa9;">Mehr passende Anfragen bekommen</div>
-        <h2 style="margin:7px 0 8px;font-size:20px;line-height:27px;color:#21172a;">Sind Preis, Portfolio und Social-Links noch aktuell?</h2>
-        <p style="margin:0;font-size:14px;line-height:22px;color:#4a4052;">Aktuelle Angaben helfen Brands bei einer schnellen Entscheidung. Schick uns Änderungen kurz per E-Mail – dein Profil bleibt kostenlos.</p>
-        <p style="margin:14px 0 0;"><a href="${htmlEscape(updateHref)}" style="color:#6f2fa9;font-size:14px;font-weight:800;text-decoration:none;">Profilangaben aktualisieren →</a></p>
+        <div style="font-size:12px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#06458F;">Mehr passende Anfragen bekommen</div>
+        <h2 style="margin:7px 0 8px;font-size:20px;line-height:27px;color:#202124;">Sind Preis, Portfolio und Social-Links noch aktuell?</h2>
+        <p style="margin:0;font-size:14px;line-height:22px;color:#374151;">Aktuelle Angaben helfen Brands bei einer schnellen Entscheidung. Schick uns Änderungen kurz per E-Mail – dein Profil bleibt kostenlos.</p>
+        <p style="margin:14px 0 0;"><a href="${htmlEscape(updateHref)}" style="color:#06458F;font-size:14px;font-weight:800;text-decoration:none;">Profilangaben aktualisieren →</a></p>
       </div>
     </td></tr>
     <tr><td class="email-pad" style="padding:0 42px 34px;">
-      <p style="margin:0;font-size:13px;line-height:21px;color:#746b7c;"><strong>Kennst du weitere gute UGC Creator?</strong> UGC VZ ist auch für sie kostenlos. Du kannst ihnen diesen Link selbst weitergeben: <a href="${referralHref}" style="color:#6f2fa9;">ugc-vz.de/creator</a>.</p>
-      <p style="margin:12px 0 0;font-size:12px;line-height:19px;color:#9a8fa2;">Du möchtest solche Auswahlbenachrichtigungen nicht mehr erhalten? <a href="${htmlEscape(pauseHref)}" style="color:#746b7c;">Benachrichtigungen pausieren</a>.</p>
+      <p style="margin:0;font-size:13px;line-height:21px;color:#5C6470;"><strong>Kennst du weitere gute UGC Creator?</strong> UGC VZ ist auch für sie kostenlos. Du kannst ihnen diesen Link selbst weitergeben: <a href="${referralHref}" style="color:#06458F;">ugc-vz.de/creator</a>.</p>
+      <p style="margin:12px 0 0;font-size:12px;line-height:19px;color:#5C6470;">Du möchtest solche Auswahlbenachrichtigungen nicht mehr erhalten? <a href="${htmlEscape(pauseHref)}" style="color:#5C6470;">Benachrichtigungen pausieren</a>.</p>
     </td></tr>`;
 
   return {

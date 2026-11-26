@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
   const nonce = crypto.randomBytes(16).toString('base64url');
   const signedState = signOAuthState({ creatorId, provider: 'instagram', nonce });
 
-  const authorizeUrl = buildInstagramAuthorizeUrl({ redirectUri, stateNonce: nonce });
+  const authorizeUrl = buildInstagramAuthorizeUrl({ redirectUri, stateNonce: signedState });
 
   const response = NextResponse.redirect(authorizeUrl, 303);
   response.cookies.set(SOCIAL_OAUTH_STATE_COOKIE, signedState, {
@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
     path: '/',
-    maxAge: 600,
+    maxAge: 1800,
   });
   return response;
 }

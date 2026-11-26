@@ -79,12 +79,14 @@ function run() {
   assert.ok(workspace.includes('loadQuickBriefDraft'), 'BrandWorkspaceClient must pre-fill from loadQuickBriefDraft');
   assert.ok(workspace.includes('clearQuickBriefDraft'), 'BrandWorkspaceClient must clear Quick Brief draft after creation');
 
-  // 7. Layout checks: no .page-glow gradient blob, MotionProvider enabled, self-hosted fonts
+  // 7. Layout & Brand Kit CI checks: no .page-glow gradient blob, MotionProvider enabled, self-hosted Inter + ugcVZ tokens
   const layout = read('app/layout.tsx');
   assert.equal(layout.includes('page-glow'), false, 'RootLayout must not render legacy .page-glow gradient blob');
   assert.ok(layout.includes('MotionProvider'), 'RootLayout must wrap app in MotionProvider');
-  assert.ok(layout.includes('@fontsource-variable/bricolage-grotesque'), 'RootLayout must load Bricolage Grotesque');
-  assert.ok(layout.includes('@fontsource-variable/inter'), 'RootLayout must load Inter');
+  assert.ok(layout.includes('@fontsource-variable/inter'), 'RootLayout must load self-hosted Inter');
+  const globalsCss = read('app/globals.css');
+  assert.ok(globalsCss.includes('--brand-primary: #06458F'), 'globals.css must expose Directory Blue #06458F');
+  assert.ok(globalsCss.includes('--brand-accent: #F2072A'), 'globals.css must expose Creator Red #F2072A');
 
   console.log('OK Etappe 4 UI, SEO, Design-System, Copy & Quick-Brief checks passed.');
 }

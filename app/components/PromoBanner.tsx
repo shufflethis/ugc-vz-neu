@@ -114,16 +114,16 @@ export default function PromoBanner({ initialPromo }: { initialPromo: ActiveProm
     <div
       role="region"
       aria-label="Aktionsangebot"
-      className="border-b border-[#2a2a2a] bg-[#121212] text-[#F7F6F2]"
+      className="border-b border-[#053673] bg-[#06458F] text-white"
     >
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-2.5 text-xs sm:px-8 sm:text-sm">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-          <span className="inline-flex items-center rounded-full bg-[#C8F04B] px-2.5 py-0.5 text-[11px] font-bold text-[#121212]">
+          <span className="inline-flex items-center rounded-[6px] bg-[#D10523] px-2.5 py-0.5 text-[11px] font-bold text-white">
             10 % Aktion
           </span>
           <p className="font-medium leading-snug">
             {headline}{' '}
-            <span className="font-mono font-semibold tabular-nums text-[#C8F04B] transition-opacity duration-200">
+            <span className="font-mono font-semibold tabular-nums text-white underline decoration-[#F2072A] decoration-2 underline-offset-4 transition-opacity duration-200">
               {reducedMotion ? 'Bis Mo 30.11., 23:59 Uhr.' : `Noch ${countdown.label}`}
             </span>
           </p>
@@ -132,7 +132,7 @@ export default function PromoBanner({ initialPromo }: { initialPromo: ActiveProm
         <div className="flex shrink-0 items-center gap-2">
           <Link
             href="/brand?tab=signup"
-            className="inline-flex min-h-[32px] items-center rounded-full bg-[#C8F04B] px-3.5 text-xs font-bold text-[#121212] transition-opacity hover:opacity-90"
+            className="inline-flex min-h-[32px] items-center rounded-[8px] bg-white px-3.5 text-xs font-bold text-[#06458F] transition-colors hover:bg-[#F5F7FA]"
           >
             Kampagne starten
           </Link>
@@ -140,7 +140,7 @@ export default function PromoBanner({ initialPromo }: { initialPromo: ActiveProm
             type="button"
             onClick={handleDismiss}
             aria-label="Aktionshinweis schließen"
-            className="flex h-8 w-8 items-center justify-center rounded-full text-[#F7F6F2]/70 transition-colors hover:bg-white/10 hover:text-[#F7F6F2]"
+            className="flex h-8 w-8 items-center justify-center rounded-[8px] text-white/75 transition-colors hover:bg-white/10 hover:text-white"
           >
             <X size={16} aria-hidden="true" />
           </button>

@@ -60,7 +60,7 @@ const isSafeUrl = (url: string) => {
 const socialButtons = (accounts: InternalSocialAccount[]) => sortedAccounts(accounts)
   .map((account) => {
     const label = `${htmlEscape(platformName(account.platform))}${account.handle ? ` ${htmlEscape(account.handle)}` : ''} · ${htmlEscape(followerLabel(account.followers))}`;
-    const style = 'display:inline-block;margin:5px 6px 0 0;padding:8px 11px;border:1px solid #ddd2e5;border-radius:8px;background:#ffffff;color:#6f2fa9;font-size:12px;font-weight:800;text-decoration:none;';
+    const style = 'display:inline-block;margin:5px 6px 0 0;padding:8px 11px;border:1px solid #ddd2e5;border-radius:8px;background:#ffffff;color:#06458F;font-size:12px;font-weight:800;text-decoration:none;';
     return isSafeUrl(account.url)
       ? `<a href="${htmlEscape(account.url)}" style="${style}">${label}</a>`
       : `<span style="${style}">${label}</span>`;
@@ -94,7 +94,7 @@ const detailRows = (details: InternalCreatorDetails) => ([
   ['E-Mail verifiziert', dateLabel(details.emailVerifiedAt)],
 ] as const)
   .filter(([, value]) => cleanText(value).length > 0)
-  .map(([label, value]) => `<tr><td style="padding:4px 12px 4px 0;color:#817688;font-size:12px;vertical-align:top;white-space:nowrap;">${htmlEscape(label)}</td><td style="padding:4px 0;color:#31283a;font-size:13px;">${htmlEscape(cleanText(value)).replace(/\n/g, '<br />')}</td></tr>`)
+  .map(([label, value]) => `<tr><td style="padding:4px 12px 4px 0;color:#5C6470;font-size:12px;vertical-align:top;white-space:nowrap;">${htmlEscape(label)}</td><td style="padding:4px 0;color:#202124;font-size:13px;">${htmlEscape(cleanText(value)).replace(/\n/g, '<br />')}</td></tr>`)
   .join('');
 
 const headline = (details: InternalCreatorDetails) => [
@@ -105,10 +105,10 @@ const headline = (details: InternalCreatorDetails) => [
 const contactBlock = (creator: SelectedCreator, details: InternalCreatorDetails) => {
   const rows = [
     creator.contactEmail
-      ? `<a href="mailto:${htmlEscape(creator.contactEmail)}" style="color:#6f2fa9;font-weight:700;text-decoration:none;">${htmlEscape(creator.contactEmail)}</a>`
+      ? `<a href="mailto:${htmlEscape(creator.contactEmail)}" style="color:#06458F;font-weight:700;text-decoration:none;">${htmlEscape(creator.contactEmail)}</a>`
       : '',
     details.phone
-      ? `<a href="${htmlEscape(telHref(details.phone))}" style="color:#6f2fa9;font-weight:700;text-decoration:none;">${htmlEscape(details.phone)}</a>`
+      ? `<a href="${htmlEscape(telHref(details.phone))}" style="color:#06458F;font-weight:700;text-decoration:none;">${htmlEscape(details.phone)}</a>`
       : '',
     details.contactText ? htmlEscape(cleanText(details.contactText)) : '',
   ].filter(Boolean);
@@ -125,37 +125,37 @@ const dossierCard = (creator: SelectedCreator) => {
   return `
     <tr>
       <td style="padding:0 0 14px;">
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e8e1ed;border-radius:16px;background:#ffffff;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #DCE2EA;border-radius:16px;background:#ffffff;">
           <tr>
             <td style="padding:20px;">
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                 <tr>
                   <td width="58" valign="top" style="width:58px;">
-                    <div class="creator-avatar" style="width:46px;height:46px;line-height:46px;border-radius:50%;background:#8b3fca;color:#ffffff;text-align:center;font-size:15px;font-weight:800;">${getInitials(creator.name)}</div>
+                    <div class="creator-avatar" style="width:46px;height:46px;line-height:46px;border-radius:50%;background:#06458F;color:#ffffff;text-align:center;font-size:15px;font-weight:800;">${getInitials(creator.name)}</div>
                   </td>
                   <td valign="middle">
-                    <div style="font-size:19px;line-height:25px;font-weight:800;color:#21172a;">${htmlEscape(creator.name || 'UGC Creator')}</div>
-                    <div style="margin-top:3px;font-size:13px;line-height:19px;color:#746b7c;">${htmlEscape(creator.id)}${headline(details) ? ` · ${htmlEscape(headline(details))}` : ''}</div>
+                    <div style="font-size:19px;line-height:25px;font-weight:800;color:#202124;">${htmlEscape(creator.name || 'UGC Creator')}</div>
+                    <div style="margin-top:3px;font-size:13px;line-height:19px;color:#5C6470;">${htmlEscape(creator.id)}${headline(details) ? ` · ${htmlEscape(headline(details))}` : ''}</div>
                   </td>
                 </tr>
               </table>
-              <div style="margin-top:14px;">${socialButtons(details.socialAccounts) || '<span style="font-size:13px;color:#817688;">Keine Social-Accounts hinterlegt</span>'}</div>
-              <div style="margin-top:14px;padding:12px 14px;border-radius:10px;background:#f8f6fa;font-size:13px;line-height:20px;color:#31283a;">
+              <div style="margin-top:14px;">${socialButtons(details.socialAccounts) || '<span style="font-size:13px;color:#5C6470;">Keine Social-Accounts hinterlegt</span>'}</div>
+              <div style="margin-top:14px;padding:12px 14px;border-radius:10px;background:#F5F7FA;font-size:13px;line-height:20px;color:#202124;">
                 <strong>Kontakt:</strong><br />${contactBlock(creator, details)}
               </div>
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:14px;">
                 <tr>
                   <td class="stack-cell" width="50%" valign="top" style="width:50%;padding-right:10px;">
-                    <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:#9a8fa2;">Preisvorstellung</div>
-                    <div style="margin-top:4px;font-size:14px;line-height:20px;color:#31283a;">${htmlEscape(cleanText(creator.priceRange, 'Nicht hinterlegt')).replace(/\n/g, '<br />')}</div>
+                    <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:#5C6470;">Preisvorstellung</div>
+                    <div style="margin-top:4px;font-size:14px;line-height:20px;color:#202124;">${htmlEscape(cleanText(creator.priceRange, 'Nicht hinterlegt')).replace(/\n/g, '<br />')}</div>
                   </td>
                   <td class="stack-cell" width="50%" valign="top" style="width:50%;padding-left:10px;">
-                    <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:#9a8fa2;">Reichweite</div>
-                    <div style="margin-top:4px;font-size:14px;line-height:20px;color:#31283a;">${htmlEscape(cleanText(creator.reach, 'Nicht hinterlegt')).replace(/\n/g, '<br />')}</div>
+                    <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:#5C6470;">Reichweite</div>
+                    <div style="margin-top:4px;font-size:14px;line-height:20px;color:#202124;">${htmlEscape(cleanText(creator.reach, 'Nicht hinterlegt')).replace(/\n/g, '<br />')}</div>
                   </td>
                 </tr>
               </table>
-              ${rows ? `<div style="margin-top:16px;padding-top:14px;border-top:1px solid #eee9f2;"><div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:#9a8fa2;margin-bottom:8px;">Alle Details</div><table role="presentation" cellpadding="0" cellspacing="0" width="100%">${rows}</table></div>` : ''}
+              ${rows ? `<div style="margin-top:16px;padding-top:14px;border-top:1px solid #DCE2EA;"><div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:#5C6470;margin-bottom:8px;">Alle Details</div><table role="presentation" cellpadding="0" cellspacing="0" width="100%">${rows}</table></div>` : ''}
             </td>
           </tr>
         </table>
@@ -216,11 +216,11 @@ export function renderInternalMatchEmail({
   const children = `
     <tr>
       <td class="email-pad" style="padding:8px 42px 22px;">
-        <p style="margin:0;font-size:16px;line-height:25px;color:#4a4052;">Hallo ${htmlEscape(clientInfo.name || 'Team')},</p>
-        <p style="margin:10px 0 0;font-size:16px;line-height:25px;color:#4a4052;">hier sind die vollständigen Profildaten deiner Auswahl – inklusive Direktkontakt, damit keine zweite Recherche nötig ist.</p>
-        <div style="margin-top:18px;padding:14px 16px;border-left:4px solid #c8ff45;border-radius:8px;background:#17121f;color:#ffffff;font-size:14px;line-height:21px;">
+        <p style="margin:0;font-size:16px;line-height:25px;color:#374151;">Hallo ${htmlEscape(clientInfo.name || 'Team')},</p>
+        <p style="margin:10px 0 0;font-size:16px;line-height:25px;color:#374151;">hier sind die vollständigen Profildaten deiner Auswahl – inklusive Direktkontakt, damit keine zweite Recherche nötig ist.</p>
+        <div style="margin-top:18px;padding:14px 16px;border-left:4px solid #F2072A;border-radius:8px;background:#062A59;color:#ffffff;font-size:14px;line-height:21px;">
           <strong>Suche:</strong> ${htmlEscape(searchQuery)}<br />
-          <span style="color:#cfc5d8;">Referenz: ${htmlEscape(leadId)}</span>
+          <span style="color:#C4D7EF;">Referenz: ${htmlEscape(leadId)}</span>
         </div>
       </td>
     </tr>
@@ -229,7 +229,7 @@ export function renderInternalMatchEmail({
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
           ${selectedCreators.map(dossierCard).join('')}
         </table>
-        <p style="margin:4px 0 0;font-size:12px;line-height:19px;color:#817688;">Die Creator wurden zu dieser Anfrage <strong>nicht</strong> benachrichtigt. Profil-, Preis- und Reichweitenangaben stammen von den Creatorn selbst.</p>
+        <p style="margin:4px 0 0;font-size:12px;line-height:19px;color:#5C6470;">Die Creator wurden zu dieser Anfrage <strong>nicht</strong> benachrichtigt. Profil-, Preis- und Reichweitenangaben stammen von den Creatorn selbst.</p>
       </td>
     </tr>`;
 

@@ -22,8 +22,8 @@ export default function BudgetBar({
 }: BudgetBarProps) {
   const clamped = Math.max(0, Math.min(100, Math.round(usedPercent)));
   const isWarning = clamped >= 80;
-  const fillColor = isWarning ? 'bg-[#E8A317]' : 'bg-[#C8F04B]';
-  const trackColor = darkSurface ? 'bg-white/15' : 'bg-[#E4E1D8]';
+  const fillColor = isWarning ? 'bg-[#F2072A]' : 'bg-[#06458F]';
+  const trackColor = darkSurface ? 'bg-white/20' : 'bg-[#DCE2EA]';
 
   return (
     <div

@@ -48,16 +48,16 @@ export default function ViewBudgetCalculator({
   const feePercent = Math.round(breakdown.feeRate * 100);
 
   return (
-    <div className="rounded-[20px] border border-[#E4E1D8] bg-white p-6 shadow-[0_1px_2px_rgba(18,18,18,.06),0_8px_24px_rgba(18,18,18,.06)] sm:p-8">
+    <div className="rounded-[20px] border border-[#DCE2EA] bg-white p-6 shadow-[0_1px_2px_rgba(18,18,18,.06),0_8px_24px_rgba(18,18,18,.06)] sm:p-8">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <div>
-          <p className="text-sm font-medium text-[#5C5A55]">Budget-Rechner</p>
-          <h2 className={`${compact ? 'text-xl' : 'text-2xl'} mt-0.5 font-bold tracking-tight text-[#121212]`}>
+          <p className="text-sm font-medium text-[#5C6470]">Budget-Rechner</p>
+          <h2 className={`${compact ? 'text-xl' : 'text-2xl'} mt-0.5 font-bold tracking-tight text-[#202124]`}>
             Rechne dein Kampagnenbudget durch
           </h2>
         </div>
         {breakdown.promoActive && (
-          <span className="inline-flex items-center rounded-full bg-[#C8F04B] px-3 py-1 text-xs font-bold text-[#121212]">
+          <span className="inline-flex items-center rounded-[6px] bg-[#FDECEF] px-3 py-1 text-xs font-bold text-[#D10523]">
             Aktion: 10 % statt 15 %
           </span>
         )}
@@ -66,10 +66,10 @@ export default function ViewBudgetCalculator({
       <div className="mt-6 space-y-5">
         <div>
           <div className="mb-2 flex items-center justify-between gap-3 text-sm">
-            <label htmlFor="calc-budget" className="font-medium text-[#121212]">
+            <label htmlFor="calc-budget" className="font-medium text-[#202124]">
               Budget-Obergrenze
             </label>
-            <span className="font-mono text-base font-bold tabular-nums text-[#121212]">
+            <span className="font-mono text-base font-bold tabular-nums text-[#202124]">
               {budgetEur.toLocaleString('de-DE')} €
             </span>
           </div>
@@ -81,9 +81,9 @@ export default function ViewBudgetCalculator({
             step={100}
             value={budgetEur}
             onChange={(e) => setBudgetEur(Number(e.target.value))}
-            className="h-2 w-full cursor-pointer appearance-none rounded-full bg-[#E4E1D8] accent-[#121212]"
+            className="h-2 w-full cursor-pointer appearance-none rounded-full bg-[#DCE2EA] accent-[#06458F]"
           />
-          <div className="mt-1 flex justify-between text-xs tabular-nums text-[#5C5A55]">
+          <div className="mt-1 flex justify-between text-xs tabular-nums text-[#5C6470]">
             <span>200 €</span>
             <span>20.000 €</span>
           </div>
@@ -91,10 +91,10 @@ export default function ViewBudgetCalculator({
 
         <div>
           <div className="mb-2 flex items-center justify-between gap-3 text-sm">
-            <label htmlFor="calc-rate" className="font-medium text-[#121212]">
+            <label htmlFor="calc-rate" className="font-medium text-[#202124]">
               Preis pro 1.000 Views
             </label>
-            <span className="font-mono text-base font-bold tabular-nums text-[#121212]">
+            <span className="font-mono text-base font-bold tabular-nums text-[#202124]">
               {rateEur.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €
             </span>
           </div>
@@ -106,9 +106,9 @@ export default function ViewBudgetCalculator({
             step={0.5}
             value={rateEur}
             onChange={(e) => setRateEur(Number(e.target.value))}
-            className="h-2 w-full cursor-pointer appearance-none rounded-full bg-[#E4E1D8] accent-[#121212]"
+            className="h-2 w-full cursor-pointer appearance-none rounded-full bg-[#DCE2EA] accent-[#06458F]"
           />
-          <div className="mt-1 flex justify-between text-xs tabular-nums text-[#5C5A55]">
+          <div className="mt-1 flex justify-between text-xs tabular-nums text-[#5C6470]">
             <span>1,00 €</span>
             <span>10,00 €</span>
           </div>
@@ -116,35 +116,35 @@ export default function ViewBudgetCalculator({
       </div>
 
       {/* Aufschluesselung nach Spec 8.7 */}
-      <dl className="mt-6 space-y-2.5 rounded-2xl bg-[#F7F6F2] p-4 text-sm">
+      <dl className="mt-6 space-y-2.5 rounded-2xl bg-[#F5F7FA] p-4 text-sm">
         <div className="flex items-center justify-between gap-3">
-          <dt className="text-[#5C5A55]">Budget gesamt</dt>
-          <dd className="font-mono font-bold tabular-nums text-[#121212]">
+          <dt className="text-[#5C6470]">Budget gesamt</dt>
+          <dd className="font-mono font-bold tabular-nums text-[#202124]">
             {formatEuroFromCents(breakdown.budgetCents, { hideZeroDecimals: true })}
           </dd>
         </div>
         <div className="flex items-center justify-between gap-3">
-          <dt className="text-[#5C5A55]">davon an Creator (0 % Abzug)</dt>
-          <dd className="rounded-lg bg-[#C8F04B] px-2 py-0.5 font-mono font-bold tabular-nums text-[#121212] transition-opacity duration-200">
+          <dt className="text-[#5C6470]">davon an Creator (0 % Abzug)</dt>
+          <dd className="rounded-[6px] bg-[#EBF2FA] px-2.5 py-0.5 font-mono font-bold tabular-nums text-[#06458F] transition-opacity duration-200">
             {formatEuroFromCents(breakdown.creatorPoolCents, { hideZeroDecimals: true })}
           </dd>
         </div>
         <div className="flex items-center justify-between gap-3">
-          <dt className="text-[#5C5A55]">davon Servicegebühr ({feePercent} %)</dt>
-          <dd className="font-mono font-semibold tabular-nums text-[#121212]">
+          <dt className="text-[#5C6470]">davon Servicegebühr ({feePercent} %)</dt>
+          <dd className="font-mono font-semibold tabular-nums text-[#202124]">
             {formatEuroFromCents(breakdown.feeCents, { hideZeroDecimals: true })}
           </dd>
         </div>
-        <div className="flex items-center justify-between gap-3 border-t border-[#E4E1D8] pt-2.5">
-          <dt className="font-medium text-[#121212]">Rechnerische Views</dt>
-          <dd className="font-mono text-lg font-bold tabular-nums text-[#121212] transition-opacity duration-200">
+        <div className="flex items-center justify-between gap-3 border-t border-[#DCE2EA] pt-2.5">
+          <dt className="font-medium text-[#202124]">Rechnerische Views</dt>
+          <dd className="font-mono text-lg font-bold tabular-nums text-[#202124] transition-opacity duration-200">
             bis zu {breakdown.estimatedViews.toLocaleString('de-DE')} Views
           </dd>
         </div>
       </dl>
 
       {breakdown.promoActive && breakdown.promoBonusForCreatorsCents > 0 && (
-        <div className="mt-3 rounded-xl border border-[#121212]/15 bg-[#C8F04B]/30 px-4 py-3 text-xs leading-5 text-[#121212]">
+        <div className="mt-3 rounded-[8px] border border-[#F2072A]/25 bg-[#FDECEF] px-4 py-3 text-xs leading-5 text-[#202124]">
           <strong>Aktion: 10 % statt 15 %.</strong> Bei{' '}
           {formatEuroFromCents(breakdown.budgetCents, { hideZeroDecimals: true })} Budget gehen{' '}
           <strong className="tabular-nums">
@@ -162,18 +162,18 @@ export default function ViewBudgetCalculator({
         </div>
       )}
 
-      <p className="mt-4 text-sm font-medium text-[#121212]">
+      <p className="mt-4 text-sm font-medium text-[#202124]">
         Davon gehen {formatEuroFromCents(breakdown.creatorPoolCents, { hideZeroDecimals: true })} an Creator,{' '}
         {formatEuroFromCents(breakdown.feeCents, { hideZeroDecimals: true })} Servicegebühr. Mehr zahlst du nie.
       </p>
-      <p className="mt-1 text-xs text-[#5C5A55]">
+      <p className="mt-1 text-xs text-[#5C6470]">
         Rechenbeispiel, keine garantierte Reichweite. Gezählt werden nur geprüfte Beiträge in vollen 1.000er-Schritten.
       </p>
 
       <div className="mt-5">
         <Link
           href={ctaHref}
-          className="inline-flex min-h-[48px] w-full items-center justify-center rounded-xl bg-[#121212] px-6 text-sm font-semibold text-[#F7F6F2] transition-opacity hover:opacity-90"
+          className="inline-flex min-h-[48px] w-full items-center justify-center rounded-xl bg-[#06458F] px-6 text-sm font-semibold text-white hover:bg-[#053673] transition-opacity hover:opacity-90"
         >
           {ctaLabel}
         </Link>

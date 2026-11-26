@@ -51,7 +51,7 @@ export default function VerifyClient({ token }: { token: string }) {
           type="button"
           onClick={confirm}
           disabled={submitting || !token}
-          className="mt-6 min-h-[48px] w-full rounded-xl bg-geo-violet px-6 font-semibold text-white hover:bg-[#7531ae] disabled:opacity-50"
+          className="mt-6 min-h-[48px] w-full rounded-xl bg-geo-violet px-6 font-semibold text-white hover:bg-[#053673] disabled:opacity-50"
         >
           {submitting ? 'Wird geöffnet …' : 'Anmeldung bestätigen & öffnen →'}
         </button>

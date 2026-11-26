@@ -23,7 +23,7 @@ export default function InlineError({ message, actionLabel, onAction }: InlineEr
           <button
             type="button"
             onClick={onAction}
-            className="text-xs font-semibold text-[#121212] underline underline-offset-2 hover:opacity-80"
+            className="text-xs font-semibold text-[#202124] underline underline-offset-2 hover:opacity-80"
           >
             {actionLabel}
           </button>

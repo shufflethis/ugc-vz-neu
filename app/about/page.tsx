@@ -107,35 +107,35 @@ export default function AboutPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-white text-[#121212]">
+    <div className="min-h-screen bg-white text-[#202124]">
       <HomePageSchema />
       <BreadcrumbSchema items={breadcrumbs} />
 
       {/* Hero (Spec 8.2 about.page) */}
-      <section aria-labelledby="about-hero-title" className="bg-[#F7F6F2] px-5 py-16 sm:px-8 sm:py-24">
+      <section aria-labelledby="about-hero-title" className="bg-[#F5F7FA] px-5 py-16 sm:px-8 sm:py-24">
         <div className="mx-auto max-w-[1200px]">
           <div className="max-w-3xl">
-            <p className="text-sm font-medium text-[#6C2BD9]">Über UGC VZ · Berlin</p>
+            <p className="text-sm font-medium text-[#06458F]">Über UGC VZ · Berlin</p>
             <h1
               id="about-hero-title"
-              className="mt-2 font-display text-[38px] font-bold leading-[42px] tracking-[-0.02em] text-[#121212] sm:text-5xl sm:leading-[1.08] lg:text-[60px] lg:leading-[66px]"
+              className="mt-2 font-display text-[38px] font-bold leading-[42px] tracking-[-0.02em] text-[#202124] sm:text-5xl sm:leading-[1.08] lg:text-[60px] lg:leading-[66px]"
             >
               Wir kommen aus der Agentur. Deshalb haben wir UGC VZ gebaut.
             </h1>
-            <p className="mt-5 text-base leading-7 text-[#5C5A55] sm:text-lg sm:leading-8">
+            <p className="mt-5 text-base leading-7 text-[#5C6470] sm:text-lg sm:leading-8">
               Bei famefact arbeiten wir seit Jahren mit Marken und Creatorn. Wir haben gesehen, wie viel Zeit für Mails, Absprachen und Link-Sammeln draufgeht. UGC VZ macht daraus einen klaren Ablauf: Brief, Posting, Prüfung, Abrechnung.
             </p>
           </div>
 
-          <div className="mt-10 rounded-[20px] border border-[#E4E1D8] bg-white p-6 shadow-card sm:p-8">
-            <h2 className="font-display text-xl font-bold text-[#121212]">Wie wir arbeiten</h2>
-            <p className="mt-3 max-w-3xl text-sm leading-7 text-[#5C5A55] sm:text-base">
+          <div className="mt-10 rounded-[20px] border border-[#DCE2EA] bg-white p-6 shadow-card sm:p-8">
+            <h2 className="font-display text-xl font-bold text-[#202124]">Wie wir arbeiten</h2>
+            <p className="mt-3 max-w-3xl text-sm leading-7 text-[#5C6470] sm:text-base">
               UGC VZ ist ein Produkt der track by track GmbH in Berlin, dem Team hinter der Social-Media-Agentur{' '}
               <a
                 href="https://famefact.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="font-semibold text-[#121212] underline underline-offset-4 hover:text-[#6C2BD9]"
+                className="font-semibold text-[#202124] underline underline-offset-4 hover:text-[#06458F]"
               >
                 famefact
               </a>
@@ -149,17 +149,17 @@ export default function AboutPage() {
       <FloFounderCard />
 
       {/* Team-Raster */}
-      <section aria-labelledby="about-team-title" className="bg-[#F7F6F2] px-5 py-16 sm:px-8 sm:py-24">
+      <section aria-labelledby="about-team-title" className="bg-[#F5F7FA] px-5 py-16 sm:px-8 sm:py-24">
         <div className="mx-auto max-w-[1200px]">
           <div className="max-w-2xl">
-            <p className="text-sm font-medium text-[#5C5A55]">track by track GmbH · famefact</p>
+            <p className="text-sm font-medium text-[#5C6470]">track by track GmbH · famefact</p>
             <h2
               id="about-team-title"
-              className="mt-1 font-display text-[30px] font-bold leading-[34px] tracking-[-0.02em] text-[#121212] sm:text-[44px] sm:leading-[48px]"
+              className="mt-1 font-display text-[30px] font-bold leading-[34px] tracking-[-0.02em] text-[#202124] sm:text-[44px] sm:leading-[48px]"
             >
               Die Menschen dahinter
             </h2>
-            <p className="mt-3 text-base leading-7 text-[#5C5A55]">
+            <p className="mt-3 text-base leading-7 text-[#5C6470]">
               Das Team aus Berlin, das täglich mit Marken, Performance-Teams und Creatorn in Deutschland, Österreich und der Schweiz arbeitet.
             </p>
           </div>
@@ -168,9 +168,9 @@ export default function AboutPage() {
             {TEAM.map((member) => (
               <article
                 key={member.slug}
-                className="flex flex-col overflow-hidden rounded-[20px] border border-[#E4E1D8] bg-white shadow-card"
+                className="flex flex-col overflow-hidden rounded-[20px] border border-[#DCE2EA] bg-white shadow-card"
               >
-                <div className="relative aspect-[4/5] w-full bg-[#F7F6F2]">
+                <div className="relative aspect-[4/5] w-full bg-[#F5F7FA]">
                   {member.hasPhoto ? (
                     <Image
                       src={`/team/${member.slug}.webp`}
@@ -180,20 +180,20 @@ export default function AboutPage() {
                       className="object-cover object-top"
                     />
                   ) : (
-                    <div className="flex h-full w-full flex-col items-center justify-center bg-[#121212] p-6 text-center text-[#F7F6F2]">
+                    <div className="flex h-full w-full flex-col items-center justify-center bg-[#062A59] p-6 text-center text-[#F5F7FA]">
                       <span className="font-display text-4xl font-bold">{member.initials}</span>
-                      <span className="mt-3 rounded-lg border border-white/20 px-2.5 py-1 text-[11px] text-[#F7F6F2]/75">
+                      <span className="mt-3 rounded-lg border border-white/20 px-2.5 py-1 text-[11px] text-[#F5F7FA]/75">
                         [PLATZHALTER: Foto Florian Runge 4:5]
                       </span>
                     </div>
                   )}
                 </div>
                 <div className="flex flex-1 flex-col p-5">
-                  <h3 className="font-display text-lg font-bold text-[#121212]">{member.name}</h3>
-                  <p className="mt-0.5 text-xs font-semibold uppercase tracking-wide text-[#6C2BD9]">
+                  <h3 className="font-display text-lg font-bold text-[#202124]">{member.name}</h3>
+                  <p className="mt-0.5 text-xs font-semibold uppercase tracking-wide text-[#06458F]">
                     {member.role}
                   </p>
-                  <p className="mt-2.5 text-sm leading-6 text-[#5C5A55]">{member.bio}</p>
+                  <p className="mt-2.5 text-sm leading-6 text-[#5C6470]">{member.bio}</p>
                 </div>
               </article>
             ))}
@@ -203,24 +203,24 @@ export default function AboutPage() {
 
       {/* Abschluss-CTA */}
       <section className="bg-white px-5 py-16 sm:px-8">
-        <div className="mx-auto max-w-[1200px] rounded-[24px] bg-[#121212] px-6 py-14 text-center text-[#F7F6F2] sm:px-12">
+        <div className="mx-auto max-w-[1200px] rounded-[24px] bg-[#06458F] px-6 py-14 text-center text-[#F5F7FA] sm:px-12">
           <h2 className="font-display text-3xl font-bold tracking-[-0.02em] sm:text-4xl">
             Fragen zu einer ersten Kampagne?
           </h2>
-          <p className="mx-auto mt-3 max-w-lg text-base text-[#F7F6F2]/75">
+          <p className="mx-auto mt-3 max-w-lg text-base text-[#F5F7FA]/75">
             Schreib uns direkt nach Berlin oder starte dein kostenloses Marken-Konto in einer Minute.
           </p>
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Link
               href="/contact"
-              className="btn-press inline-flex min-h-[52px] items-center gap-2 rounded-full bg-[#F7F6F2] px-7 text-sm font-semibold text-[#121212] hover:opacity-90"
+              className="btn-press inline-flex min-h-[52px] items-center gap-2 rounded-full bg-[#F5F7FA] px-7 text-sm font-semibold text-[#202124] hover:opacity-90"
             >
               <span>Sprich mit uns</span>
               <ArrowRight size={16} aria-hidden="true" />
             </Link>
             <Link
               href="/brand?tab=signup"
-              className="btn-press inline-flex min-h-[52px] items-center rounded-full border border-white/25 px-7 text-sm font-semibold text-[#F7F6F2] hover:border-white/60"
+              className="btn-press inline-flex min-h-[52px] items-center rounded-full border border-white/25 px-7 text-sm font-semibold text-[#F5F7FA] hover:border-white/60"
             >
               Kampagne starten
             </Link>

@@ -345,7 +345,7 @@ export default function UgcContractBuilder() {
                     activeTab === 'contract' ? 'Vertragsvorlage' : 'Anfrage-Text',
                   )
                 }
-                className="rounded-lg bg-geo-violet px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#7531ae]"
+                className="rounded-lg bg-geo-violet px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#053673]"
               >
                 Text kopieren
               </button>

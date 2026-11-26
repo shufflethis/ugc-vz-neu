@@ -1,7 +1,7 @@
 // Hero-Motiv: Handy mit Creator-Profil auf einer Verlaufsflaeche, dazu zwei schwebende
 // Karten aus der echten Oberflaeche (Brand-Anfrage, Auswahl-Leiste). Statisch,
 // Creator als Platzhalter (Initialen) -- siehe docs/motion-studio/brief.md.
-const GRADIENT = 'linear-gradient(152deg, #0396F8 0%, #1F6FF4 25%, #3F58F2 50%, #653AED 75%, #9131EF 100%)';
+const GRADIENT = 'linear-gradient(152deg, #062A59 0%, #06458F 62%, #F2072A 100%)';
 
 export default function HeroVisual() {
   return (

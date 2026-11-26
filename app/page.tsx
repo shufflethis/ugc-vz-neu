@@ -75,44 +75,44 @@ export default async function Home() {
   const heroUsedPct = Math.max(0, Math.min(100, 100 - heroRemainingPct));
 
   return (
-    <div className="home-page min-h-screen bg-white text-[#121212]">
+    <div className="home-page min-h-screen bg-white text-[#202124]">
       <HomePageSchema />
       <JsonLdScript data={homeFaqSchema} />
 
-      {/* ---------- 1. Hero (Spec 8.2 home.hero, Paper #F7F6F2, kein Gradient) ---------- */}
+      {/* ---------- 1. Hero (Spec 8.2 home.hero, Paper #F5F7FA, kein Gradient) ---------- */}
       <section
         aria-labelledby="home-title"
-        className="bg-[#F7F6F2] px-5 pb-14 pt-10 sm:px-8 sm:pb-20 sm:pt-16"
+        className="bg-[#F5F7FA] px-5 pb-14 pt-10 sm:px-8 sm:pb-20 sm:pt-16"
       >
         <div className="mx-auto grid max-w-[1200px] items-center gap-10 lg:grid-cols-12 lg:gap-12">
           {/* Linke Spalte: klare Botschaft, 1 Primary Button, leiser Creator-Link */}
           <div className="max-w-[560px] lg:col-span-6">
-            <p className="text-sm font-medium text-[#5C5A55]">
+            <p className="text-sm font-medium text-[#5C6470]">
               Für Marken in Deutschland, Österreich und der Schweiz
             </p>
 
             <h1
               id="home-title"
-              className="mt-3 font-display text-[40px] font-bold leading-[44px] tracking-[-0.02em] text-[#121212] sm:text-6xl sm:leading-[1.06] lg:text-[68px] lg:leading-[74px]"
+              className="mt-3 font-display text-[40px] font-bold leading-[44px] tracking-[-0.02em] text-[#202124] sm:text-6xl sm:leading-[1.06] lg:text-[68px] lg:leading-[74px]"
             >
               Echte Creator. Echte Views. Dein Budget.
             </h1>
 
-            <p className="mt-5 text-base leading-6 text-[#5C5A55] sm:text-lg sm:leading-7">
+            <p className="mt-5 text-base leading-6 text-[#5C6470] sm:text-lg sm:leading-7">
               Du schreibst ein kurzes Briefing und legst fest, was dir 1.000 Views wert sind. Creator posten dein Produkt auf TikTok und Instagram. Du zahlst nur geprüfte Beiträge und nie mehr als dein Budget.
             </p>
 
             <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
               <Link
                 href="/brand?tab=signup"
-                className="btn-press inline-flex min-h-[48px] items-center justify-center gap-2 rounded-full bg-[#121212] px-7 text-sm font-semibold text-[#F7F6F2] hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6C2BD9] focus-visible:ring-offset-2 sm:min-h-[52px] sm:text-base"
+                className="btn-press inline-flex min-h-[48px] items-center justify-center gap-2 rounded-full bg-[#06458F] px-7 text-sm font-semibold text-white hover:bg-[#053673] hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#06458F] focus-visible:ring-offset-2 sm:min-h-[52px] sm:text-base"
               >
                 <span>Kampagne starten</span>
                 <ArrowRight size={17} aria-hidden="true" />
               </Link>
               <Link
                 href="#so-funktionierts"
-                className="btn-press inline-flex min-h-[48px] items-center justify-center rounded-full border border-[#E4E1D8] bg-white px-6 text-sm font-semibold text-[#121212] hover:border-[#121212] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6C2BD9] focus-visible:ring-offset-2 sm:min-h-[52px] sm:text-base"
+                className="btn-press inline-flex min-h-[48px] items-center justify-center rounded-full border border-[#DCE2EA] bg-white px-6 text-sm font-semibold text-[#202124] hover:border-[#06458F] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#06458F] focus-visible:ring-offset-2 sm:min-h-[52px] sm:text-base"
               >
                 So läuft eine Kampagne
               </Link>
@@ -121,14 +121,14 @@ export default async function Home() {
             <div className="mt-5">
               <Link
                 href="/creator"
-                className="inline-flex items-center gap-1.5 text-sm font-medium text-[#121212] underline decoration-[#E4E1D8] underline-offset-4 transition-colors hover:text-[#6C2BD9] hover:decoration-[#6C2BD9]"
+                className="inline-flex items-center gap-1.5 text-sm font-medium text-[#202124] underline decoration-[#DCE2EA] underline-offset-4 transition-colors hover:text-[#06458F] hover:decoration-[#06458F]"
               >
                 <span>Du bist Creator? Hier verdienst du pro 1.000 Views</span>
                 <ArrowRight size={15} aria-hidden="true" />
               </Link>
             </div>
 
-            <p className="mt-6 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-medium text-[#5C5A55] sm:text-sm">
+            <p className="mt-6 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-medium text-[#5C6470] sm:text-sm">
               <span>Kostenloses Konto</span>
               <span aria-hidden="true">·</span>
               <span>Kein Abo</span>
@@ -137,7 +137,7 @@ export default async function Home() {
               {stats.liveCreatorCount && (
                 <>
                   <span aria-hidden="true">·</span>
-                  <span className="tabular-nums text-[#121212]">
+                  <span className="tabular-nums text-[#202124]">
                     {stats.liveCreatorCount.toLocaleString('de-DE')} aktive Creator-Profile
                   </span>
                 </>
@@ -161,7 +161,7 @@ export default async function Home() {
                   />
                 </div>
                 <div className="hidden sm:col-span-5 sm:block">
-                  <div className="overflow-hidden rounded-[20px] border border-[#E4E1D8] bg-white shadow-card">
+                  <div className="overflow-hidden rounded-[20px] border border-[#DCE2EA] bg-white shadow-card">
                     {/* Statisches Posterbild der zweiten Perspektive (max. 1 aktives Video gleichzeitig) */}
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
@@ -175,25 +175,25 @@ export default async function Home() {
               </div>
 
               {/* Live-Kampagnenkarte oder klar markierte Beispielansicht */}
-              <div className="mt-4 rounded-[20px] border border-[#E4E1D8] bg-white p-4 shadow-card sm:p-5">
+              <div className="mt-4 rounded-[20px] border border-[#DCE2EA] bg-white p-4 shadow-card sm:p-5">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#121212]">
+                  <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#202124]">
                     <span
-                      className={`h-2 w-2 rounded-full ${heroCampaign ? 'bg-[#1F9D55]' : 'bg-[#6C2BD9]'}`}
+                      className={`h-2 w-2 rounded-full ${heroCampaign ? 'bg-[#1F9D55]' : 'bg-[#06458F]'}`}
                       aria-hidden="true"
                     />
                     {heroCampaign ? heroCampaign.title : 'View-Kampagne · TikTok & Reels'}
                   </span>
-                  <span className="rounded-full border border-[#E4E1D8] bg-[#F7F6F2] px-2.5 py-0.5 text-[11px] font-medium text-[#5C5A55]">
+                  <span className="rounded-full border border-[#DCE2EA] bg-[#F5F7FA] px-2.5 py-0.5 text-[11px] font-medium text-[#5C6470]">
                     {heroCampaign ? 'Live-Kampagne' : 'Beispielansicht'}
                   </span>
                 </div>
 
                 <div className="mt-3 flex flex-wrap items-baseline justify-between gap-2">
-                  <p className="font-mono text-sm font-bold tabular-nums text-[#121212] sm:text-base">
-                    <span className="rounded-md bg-[#C8F04B] px-2 py-0.5">{heroRateLabel}</span>
+                  <p className="font-mono text-sm font-bold tabular-nums text-[#06458F] sm:text-base">
+                    <span className="rounded-[6px] bg-[#EBF2FA] px-2.5 py-0.5">{heroRateLabel}</span>
                   </p>
-                  <p className="text-xs font-medium tabular-nums text-[#5C5A55] sm:text-sm">
+                  <p className="text-xs font-medium tabular-nums text-[#5C6470] sm:text-sm">
                     {heroBudgetLabel} · noch {heroRemainingPct} % übrig
                   </p>
                 </div>
@@ -219,32 +219,32 @@ export default async function Home() {
       <section
         id="search"
         aria-labelledby="home-search-title"
-        className="scroll-mt-20 border-y border-[#E4E1D8] bg-white px-5 py-16 sm:px-8 sm:py-24"
+        className="scroll-mt-20 border-y border-[#DCE2EA] bg-white px-5 py-16 sm:px-8 sm:py-24"
       >
         <div className="mx-auto max-w-[1200px]">
           <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div className="max-w-2xl">
-              <p className="text-sm font-medium text-[#5C5A55]">Creator-Pool direkt testen</p>
+              <p className="text-sm font-medium text-[#5C6470]">Creator-Pool direkt testen</p>
               <h2
                 id="home-search-title"
-                className="mt-1 font-display text-[28px] font-bold leading-[32px] tracking-[-0.02em] text-[#121212] sm:text-[36px] sm:leading-[42px]"
+                className="mt-1 font-display text-[28px] font-bold leading-[32px] tracking-[-0.02em] text-[#202124] sm:text-[36px] sm:leading-[42px]"
               >
                 Oder direkt passende Creator im Pool suchen
               </h2>
-              <p className="mt-2 text-sm leading-6 text-[#5C5A55] sm:text-base">
+              <p className="mt-2 text-sm leading-6 text-[#5C6470] sm:text-base">
                 Beschreibe Produkt, Zielgruppe und Format. Die KI-Suche filtert in 20 Kategorien nach echten Profilen und Arbeitsproben.
               </p>
             </div>
             <Link
               href="/brands/ugc-creator-finden"
-              className="inline-flex shrink-0 items-center gap-1.5 text-sm font-semibold text-[#121212] underline decoration-[#E4E1D8] underline-offset-4 hover:text-[#6C2BD9] hover:decoration-[#6C2BD9]"
+              className="inline-flex shrink-0 items-center gap-1.5 text-sm font-semibold text-[#202124] underline decoration-[#DCE2EA] underline-offset-4 hover:text-[#06458F] hover:decoration-[#06458F]"
             >
               <span>Zur kompletten Pool-Vorschau</span>
               <ArrowRight size={15} aria-hidden="true" />
             </Link>
           </div>
 
-          <div className="rounded-[24px] border border-[#E4E1D8] bg-[#F7F6F2]/60 p-4 shadow-card sm:p-8">
+          <div className="rounded-[24px] border border-[#DCE2EA] bg-[#F5F7FA]/60 p-4 shadow-card sm:p-8">
             <SearchBox showFeatured={false} hideNicheChips />
           </div>
         </div>
@@ -256,57 +256,57 @@ export default async function Home() {
       {/* ---------- 6. Beitragspruefung sichtbar machen (Spec 8.2 home.proof) ---------- */}
       <VerificationProofSection />
 
-      {/* ---------- 7. Creator-Band auf Ink #121212 (Spec 8.2 home.creator_band) ---------- */}
+      {/* ---------- 7. Creator-Band auf Directory Blue Navy (#062A59 + #F2072A Akzent) ---------- */}
       <section
         aria-labelledby="home-creator-title"
-        className="bg-[#121212] px-5 py-16 text-[#F7F6F2] sm:px-8 sm:py-24"
+        className="border-y-2 border-[#F2072A]/70 bg-[#062A59] px-5 py-16 text-white sm:px-8 sm:py-24"
       >
         <div className="mx-auto grid max-w-[1200px] items-center gap-10 lg:grid-cols-12 lg:gap-12">
           <div className="lg:col-span-7">
-            <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#C8F04B]">
+            <p className="inline-flex items-center gap-2 rounded-[6px] bg-[#D10523] px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] text-white">
               Für Creator
             </p>
             <h2
               id="home-creator-title"
-              className="mt-3 font-display text-[32px] font-bold leading-[36px] tracking-[-0.02em] text-[#F7F6F2] sm:text-5xl sm:leading-[54px]"
+              className="mt-4 font-display text-[32px] font-bold leading-[36px] tracking-[-0.02em] text-white sm:text-5xl sm:leading-[54px]"
             >
               Du postest sowieso. Lass dich dafür bezahlen.
             </h2>
 
             {stats.highestTkpEurCents ? (
               <div className="mt-6">
-                <p className="font-display text-5xl font-bold leading-none tabular-nums text-[#C8F04B] sm:text-7xl lg:text-[84px]">
+                <p className="font-display text-5xl font-bold leading-none tabular-nums text-white sm:text-7xl lg:text-[84px]">
                   {formatEurCentsDe(stats.highestTkpEurCents)} €
                 </p>
-                <p className="mt-2 font-mono text-sm font-medium text-[#C8F04B]/90 sm:text-base">
+                <p className="mt-2 font-mono text-sm font-medium text-[#C4D7EF] sm:text-base">
                   pro 1.000 Views · aktueller Spitzensatz einer laufenden Kampagne
                 </p>
               </div>
             ) : (
-              <p className="mt-6 rounded-[16px] border border-white/15 bg-white/5 px-5 py-4 font-display text-xl font-semibold leading-snug text-[#C8F04B] sm:text-2xl">
+              <p className="mt-6 rounded-[12px] border border-white/20 bg-white/10 px-5 py-4 font-display text-xl font-semibold leading-snug text-white sm:text-2xl">
                 Jede Kampagne zeigt dir vorher, was sie pro 1.000 Views zahlt.
               </p>
             )}
 
-            <p className="mt-5 max-w-xl text-base leading-7 text-[#F7F6F2]/80 sm:text-lg">
+            <p className="mt-5 max-w-xl text-base leading-7 text-white/85 sm:text-lg">
               Mach bei Kampagnen von Marken mit, poste auf deinem TikTok oder Instagram und bekomm Geld für deine Views. Anmeldung kostenlos, 0 % Gebühr für Creator. Der Satz gehört dir.
             </p>
 
-            <ul className="mt-6 grid gap-2.5 text-sm text-[#F7F6F2]/85 sm:grid-cols-2">
+            <ul className="mt-6 grid gap-2.5 text-sm text-white/90 sm:grid-cols-2">
               <li className="flex items-center gap-2">
-                <Check size={16} className="shrink-0 text-[#C8F04B]" aria-hidden="true" />
+                <Check size={16} className="shrink-0 text-[#F2072A]" aria-hidden="true" />
                 <span>0 % Plattformgebühr für Creator</span>
               </li>
               <li className="flex items-center gap-2">
-                <Check size={16} className="shrink-0 text-[#C8F04B]" aria-hidden="true" />
+                <Check size={16} className="shrink-0 text-[#F2072A]" aria-hidden="true" />
                 <span>Keine Exklusivität, du wählst frei</span>
               </li>
               <li className="flex items-center gap-2">
-                <Check size={16} className="shrink-0 text-[#C8F04B]" aria-hidden="true" />
+                <Check size={16} className="shrink-0 text-[#F2072A]" aria-hidden="true" />
                 <span>Transparente Checkliste vor Dreh</span>
               </li>
               <li className="flex items-center gap-2">
-                <Check size={16} className="shrink-0 text-[#C8F04B]" aria-hidden="true" />
+                <Check size={16} className="shrink-0 text-[#F2072A]" aria-hidden="true" />
                 <span>Kein Mindest-Follower-Zwang</span>
               </li>
             </ul>
@@ -314,14 +314,14 @@ export default async function Home() {
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <Link
                 href="/creator"
-                className="btn-press inline-flex min-h-[52px] items-center gap-2 rounded-full bg-[#C8F04B] px-7 text-sm font-bold text-[#121212] hover:opacity-90 sm:text-base"
+                className="btn-press inline-flex min-h-[52px] items-center gap-2 rounded-[8px] bg-white px-7 text-sm font-bold text-[#06458F] hover:bg-[#F5F7FA] sm:text-base"
               >
                 <span>Kampagnen ansehen</span>
                 <ArrowRight size={17} aria-hidden="true" />
               </Link>
               <Link
                 href="/creator#creator-form"
-                className="btn-press inline-flex min-h-[52px] items-center rounded-full border border-white/25 px-6 text-sm font-semibold text-[#F7F6F2] hover:border-white/60"
+                className="btn-press inline-flex min-h-[52px] items-center rounded-[8px] border border-white/35 px-6 text-sm font-semibold text-white hover:border-white hover:bg-white/10"
               >
                 Kostenlos mitmachen
               </Link>
@@ -348,19 +348,19 @@ export default async function Home() {
       {/* ---------- 9. Beliebte Branchen (Spec 8.2 home.industries, max. 1x pro Seite) ---------- */}
       <section
         aria-labelledby="home-niches-title"
-        className="border-y border-[#E4E1D8] bg-[#F7F6F2] px-5 py-14 sm:px-8 sm:py-16"
+        className="border-y border-[#DCE2EA] bg-[#F5F7FA] px-5 py-14 sm:px-8 sm:py-16"
       >
         <div className="mx-auto max-w-[1200px]">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <h2
               id="home-niches-title"
-              className="font-display text-2xl font-bold tracking-[-0.02em] text-[#121212] sm:text-3xl"
+              className="font-display text-2xl font-bold tracking-[-0.02em] text-[#202124] sm:text-3xl"
             >
               Beliebte Branchen
             </h2>
             <Link
               href="/alle-seiten#branchen"
-              className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#121212] hover:text-[#6C2BD9]"
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#202124] hover:text-[#06458F]"
             >
               <span>Alle Branchen ansehen</span>
               <ArrowRight size={15} aria-hidden="true" />
@@ -372,7 +372,7 @@ export default async function Home() {
               <li key={niche.slug} className="shrink-0">
                 <Link
                   href={nichePath(niche)}
-                  className="btn-press inline-flex min-h-[44px] items-center gap-2 whitespace-nowrap rounded-full border border-[#E4E1D8] bg-white px-4 text-sm font-medium text-[#121212] hover:border-[#121212]"
+                  className="btn-press inline-flex min-h-[44px] items-center gap-2 whitespace-nowrap rounded-full border border-[#DCE2EA] bg-white px-4 text-sm font-medium text-[#202124] hover:border-[#06458F]"
                 >
                   <span>{niche.chip}</span>
                 </Link>
@@ -390,7 +390,7 @@ export default async function Home() {
         <div className="mx-auto max-w-[720px]">
           <h2
             id="home-faq-title"
-            className="text-center font-display text-[30px] font-bold leading-[34px] tracking-[-0.02em] text-[#121212] sm:text-[44px] sm:leading-[48px]"
+            className="text-center font-display text-[30px] font-bold leading-[34px] tracking-[-0.02em] text-[#202124] sm:text-[44px] sm:leading-[48px]"
           >
             Kurz gefragt
           </h2>
@@ -400,18 +400,18 @@ export default async function Home() {
               <details
                 key={item.q}
                 open={idx === 0}
-                className="group rounded-[20px] border border-[#E4E1D8] bg-white px-5 transition-colors open:border-[#121212]/30 sm:px-6"
+                className="group rounded-[20px] border border-[#DCE2EA] bg-white px-5 transition-colors open:border-[#06458F]/30 sm:px-6"
               >
-                <summary className="flex min-h-[64px] cursor-pointer list-none items-center justify-between gap-4 py-4 font-display text-base font-semibold text-[#121212] sm:text-lg [&::-webkit-details-marker]:hidden">
+                <summary className="flex min-h-[64px] cursor-pointer list-none items-center justify-between gap-4 py-4 font-display text-base font-semibold text-[#202124] sm:text-lg [&::-webkit-details-marker]:hidden">
                   <span>{item.q}</span>
                   <span
-                    className="shrink-0 text-xl font-normal text-[#5C5A55] transition-transform duration-200 group-open:rotate-45"
+                    className="shrink-0 text-xl font-normal text-[#5C6470] transition-transform duration-200 group-open:rotate-45"
                     aria-hidden="true"
                   >
                     +
                   </span>
                 </summary>
-                <p className="pb-5 text-sm leading-7 text-[#5C5A55] sm:text-base">{item.a}</p>
+                <p className="pb-5 text-sm leading-7 text-[#5C6470] sm:text-base">{item.a}</p>
               </details>
             ))}
           </div>
@@ -419,7 +419,7 @@ export default async function Home() {
           <p className="mt-7 text-center">
             <Link
               href="/faq"
-              className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#121212] underline decoration-[#E4E1D8] underline-offset-4 hover:text-[#6C2BD9] hover:decoration-[#6C2BD9]"
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#202124] underline decoration-[#DCE2EA] underline-offset-4 hover:text-[#06458F] hover:decoration-[#06458F]"
             >
               <span>Alle häufigen Fragen</span>
               <ArrowRight size={15} aria-hidden="true" />
@@ -431,27 +431,27 @@ export default async function Home() {
       {/* ---------- 11. Abschluss-CTA (Spec 8.2 home.final_cta, Buttons in der Box) ---------- */}
       <section aria-labelledby="home-final-cta-title" className="bg-white px-5 pb-4 sm:px-8">
         <div className="mx-auto max-w-[1200px]">
-          <div className="rounded-[24px] bg-[#121212] px-6 py-14 text-center text-[#F7F6F2] sm:px-12 sm:py-16">
+          <div className="rounded-[12px] border-t-[3px] border-[#F2072A] bg-[#06458F] px-6 py-14 text-center text-white sm:px-12 sm:py-16">
             <h2
               id="home-final-cta-title"
               className="font-display text-[30px] font-bold leading-[34px] tracking-[-0.02em] sm:text-[44px] sm:leading-[48px]"
             >
               Starte deine erste Kampagne.
             </h2>
-            <p className="mx-auto mt-3 max-w-lg text-base leading-7 text-[#F7F6F2]/75 sm:text-lg">
+            <p className="mx-auto mt-3 max-w-lg text-base leading-7 text-white/85 sm:text-lg">
               Kostenloses Konto, kein Abo, feste Budget-Obergrenze.
             </p>
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Link
                 href="/brand?tab=signup"
-                className="btn-press inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-full bg-[#F7F6F2] px-7 text-sm font-semibold text-[#121212] hover:opacity-90 sm:w-auto sm:text-base"
+                className="btn-press inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-[8px] bg-white px-7 text-sm font-semibold text-[#06458F] hover:bg-[#F5F7FA] sm:w-auto sm:text-base"
               >
                 <span>Kampagne starten</span>
                 <ArrowRight size={17} aria-hidden="true" />
               </Link>
               <Link
                 href="/creator"
-                className="btn-press inline-flex min-h-[52px] w-full items-center justify-center rounded-full border border-white/25 px-7 text-sm font-semibold text-[#F7F6F2] hover:border-white/60 sm:w-auto sm:text-base"
+                className="btn-press inline-flex min-h-[52px] w-full items-center justify-center rounded-[8px] border border-white/35 px-7 text-sm font-semibold text-white hover:border-white hover:bg-white/10 sm:w-auto sm:text-base"
               >
                 Ich bin Creator
               </Link>

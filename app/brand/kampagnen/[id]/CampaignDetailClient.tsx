@@ -443,7 +443,7 @@ export default function CampaignDetailClient({ initialDetail }: { initialDetail:
                             type="button"
                             disabled={busyId === app.id}
                             onClick={() => updateApplication(app.id, 'selected')}
-                            className="rounded-xl bg-geo-violet px-3.5 py-2 text-xs font-semibold text-white hover:bg-[#7531ae] disabled:opacity-50"
+                            className="rounded-xl bg-geo-violet px-3.5 py-2 text-xs font-semibold text-white hover:bg-[#053673] disabled:opacity-50"
                           >
                             Auswählen
                           </button>
@@ -784,7 +784,7 @@ function SubmissionTrackerRow({
             type="button"
             disabled={saving}
             onClick={() => save()}
-            className="min-h-[34px] rounded-lg bg-geo-violet px-3 text-xs font-bold text-white hover:bg-[#7531ae] disabled:opacity-50"
+            className="min-h-[34px] rounded-lg bg-geo-violet px-3 text-xs font-bold text-white hover:bg-[#053673] disabled:opacity-50"
           >
             {saving ? '…' : 'Werte speichern'}
           </button>

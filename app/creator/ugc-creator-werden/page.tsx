@@ -75,7 +75,7 @@ export default async function UGCCreatorWerdenPage() {
             Du brauchst keine große Community, sondern starke Beispielvideos, klares Licht, guten Ton und ein auffindbares Profil. Hier siehst du die konkreten Schritte vom ersten Übungsvideo bis zur ersten bezahlten Brand-Anfrage.
           </p>
           <div className="flex flex-wrap gap-3">
-            <Link href="/creator#creator-form" className="inline-flex min-h-[48px] items-center bg-geo-violet hover:bg-[#7531ae] text-white font-semibold py-3 px-6 rounded-full">
+            <Link href="/creator#creator-form" className="inline-flex min-h-[48px] items-center bg-geo-violet hover:bg-[#053673] text-white font-semibold py-3 px-6 rounded-full">
               Kostenloses Profil bei UGC VZ anlegen →
             </Link>
             <Link href="/brands/ugc-kosten-rechner" className="inline-flex min-h-[48px] items-center border border-hairline bg-white hover:border-geo-violet text-ink font-semibold py-3 px-6 rounded-full">

@@ -108,37 +108,44 @@ export const emailShell = ({
       }
     </style>
   </head>
-  <body style="margin:0;padding:0;background:#f7f6f2;color:#121212;font-family:Arial,Helvetica,sans-serif;">
+  <body style="margin:0;padding:0;background:#F5F7FA;color:#202124;font-family:Inter,Arial,Helvetica,sans-serif;">
     <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">${htmlEscape(preheader)}</div>
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f7f6f2;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F5F7FA;">
       <tr>
         <td align="center" style="padding:28px 12px;">
-          <table role="presentation" width="640" cellpadding="0" cellspacing="0" class="email-wrap" style="width:640px;max-width:640px;background:#ffffff;border-radius:20px;overflow:hidden;border:1px solid #e4e1d8;">
+          <table role="presentation" width="640" cellpadding="0" cellspacing="0" class="email-wrap" style="width:640px;max-width:640px;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #DCE2EA;">
             <tr>
-              <td class="email-pad" style="padding:20px 42px;background:#121212;">
+              <td style="height:4px;background:#06458F;font-size:0;line-height:0;">&nbsp;</td>
+            </tr>
+            <tr>
+              <td class="email-pad" style="padding:20px 42px;background:#ffffff;border-bottom:1px solid #DCE2EA;">
                 <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                   <tr>
-                    <td style="font-size:20px;font-weight:800;color:#ffffff;letter-spacing:-.3px;">UGC <span style="color:#c8f04b;">VZ</span></td>
-                    <td align="right" style="font-size:12px;color:#d6d3cb;">${htmlEscape(headerTagline)}</td>
+                    <td style="vertical-align:middle;">
+                      <a href="https://ugc-vz.de" style="text-decoration:none;display:inline-block;">
+                        <img src="https://ugc-vz.de/brand/ugcvz-logo-header.png" alt="UGC VZ" height="32" style="display:block;height:32px;width:auto;border:0;" />
+                      </a>
+                    </td>
+                    <td align="right" style="vertical-align:middle;font-size:12px;font-weight:600;color:#5C6470;">${htmlEscape(headerTagline)}</td>
                   </tr>
                 </table>
               </td>
             </tr>
             <tr>
-              <td class="email-pad" style="padding:38px 42px 14px;">
-                <div style="font-size:12px;line-height:18px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:#8b3fca;">${htmlEscape(eyebrow)}</div>
-                <h1 style="margin:9px 0 0;font-size:34px;line-height:41px;letter-spacing:-.8px;color:#17121f;">${htmlEscape(title)}</h1>
+              <td class="email-pad" style="padding:34px 42px 14px;">
+                <div style="font-size:12px;line-height:18px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:#06458F;">${htmlEscape(eyebrow)}</div>
+                <h1 style="margin:8px 0 0;font-size:30px;line-height:36px;letter-spacing:-.5px;color:#202124;">${htmlEscape(title)}</h1>
               </td>
             </tr>
             ${children}
             <tr>
-              <td class="email-pad" style="padding:25px 42px 34px;border-top:1px solid #eee9f2;color:#746b7c;font-size:12px;line-height:19px;">
+              <td class="email-pad" style="padding:24px 42px 32px;border-top:1px solid #DCE2EA;background:#F5F7FA;color:#5C6470;font-size:12px;line-height:19px;">
                 ${htmlEscape(footerNote || 'Diese transaktionale E-Mail erhältst du, weil über UGC VZ eine Anfrage mit deiner Adresse gestellt wurde.')}
-                <div style="margin-top:13px;">
-                  UGC VZ ist ein Service der <strong style="color:#5f5666;">track by track GmbH</strong> · Schliemannstr. 23, 10437 Berlin<br />
-                  <a href="https://ugc-vz.de/impressum" style="color:#6f2fa9;text-decoration:none;">Impressum</a>
-                  &nbsp;·&nbsp;<a href="https://ugc-vz.de/datenschutz" style="color:#6f2fa9;text-decoration:none;">Datenschutz</a>${unsubscribeUrl ? `&nbsp;·&nbsp;<a href="${htmlEscape(unsubscribeUrl)}" style="color:#6f2fa9;text-decoration:none;">Abmelden</a>` : ''}<br />
-                  Fragen oder Missbrauch melden: <a href="mailto:hi@ugc-vz.de" style="color:#6f2fa9;text-decoration:none;">hi@ugc-vz.de</a>
+                <div style="margin-top:12px;">
+                  UGC VZ ist ein Service der <strong style="color:#202124;">track by track GmbH</strong> · Schliemannstr. 23, 10437 Berlin<br />
+                  <a href="https://ugc-vz.de/impressum" style="color:#06458F;text-decoration:none;font-weight:600;">Impressum</a>
+                  &nbsp;·&nbsp;<a href="https://ugc-vz.de/datenschutz" style="color:#06458F;text-decoration:none;font-weight:600;">Datenschutz</a>${unsubscribeUrl ? `&nbsp;·&nbsp;<a href="${htmlEscape(unsubscribeUrl)}" style="color:#06458F;text-decoration:none;font-weight:600;">Abmelden</a>` : ''}<br />
+                  Fragen oder Missbrauch melden: <a href="mailto:hi@ugc-vz.de" style="color:#06458F;text-decoration:none;font-weight:600;">hi@ugc-vz.de</a>
                 </div>
               </td>
             </tr>

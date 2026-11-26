@@ -7,6 +7,8 @@ import {
   buildInstagramAuthorizeUrl,
   decryptSocialToken,
   encryptSocialToken,
+  resolveOAuthCallbackState,
+  signOAuthState,
   upsertVerifiedOAuthSocialAccount,
 } from '../app/lib/social-oauth';
 import {
@@ -104,7 +106,24 @@ async function main() {
   assert.equal(fbAuthUrl.searchParams.get('response_type'), 'code');
   assert.equal(fbAuthUrl.searchParams.get('override_default_response_type'), 'true');
   assert.equal(fbAuthUrl.searchParams.get('scope'), null, 'Bei config_id darf kein scope-Parameter mitgesendet werden');
-  console.log('OK: Meta Unified Login (Facebook Login for Business) Authorize-URL mit config_id');
+
+  // 2c. Bulletproof OAuth callback state resolution (cookie + cross-domain HMAC+session fallback + CSRF rejection)
+  const signedSt = signOAuthState({ creatorId: 'creator-123', provider: 'instagram', nonce: 'n-abc' });
+  assert.equal(
+    resolveOAuthCallbackState({ cookieValue: signedSt, stateParam: signedSt, expectedProvider: 'instagram', sessionCreatorId: null })?.creatorId,
+    'creator-123',
+  );
+  assert.equal(
+    resolveOAuthCallbackState({ cookieValue: undefined, stateParam: signedSt, expectedProvider: 'instagram', sessionCreatorId: 'creator-123' })?.creatorId,
+    'creator-123',
+    'Cross-Domain Fallback muss mit gueltiger HMAC-Signatur + passender Creator-Session funktionieren',
+  );
+  assert.equal(
+    resolveOAuthCallbackState({ cookieValue: undefined, stateParam: signedSt, expectedProvider: 'instagram', sessionCreatorId: 'other-creator' }),
+    null,
+    'Fremde Session darf Fallback niemals bestehen (CSRF-Schutz)',
+  );
+  console.log('OK: Meta Unified Login (Facebook Login for Business) Authorize-URL & State-Fallback');
 
   // 3. PGlite DB Integration (Migrations 001..025 + Public View Safety + Official View Sync)
   const db = new PGlite();

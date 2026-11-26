@@ -1,6 +1,6 @@
 {
-  "name": "UGC-VZ.de",
-  "short_name": "UGC-VZ",
+  "name": "UGC VZ — Das Creatorverzeichnis",
+  "short_name": "ugcVZ",
   "icons": [
     {
       "src": "/web-app-manifest-192x192.png",
@@ -15,7 +15,7 @@
       "purpose": "maskable"
     }
   ],
-  "theme_color": "#ffffff",
-  "background_color": "#ffffff",
+  "theme_color": "#06458F",
+  "background_color": "#FFFFFF",
   "display": "standalone"
 }

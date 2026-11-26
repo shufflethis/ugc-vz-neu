@@ -350,7 +350,7 @@ export default function CreatorSelectionPopup({
                     <button
                       type="button"
                       onClick={() => openMode('workspace')}
-                      className="flex-1 rounded-xl bg-geo-violet px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#7531ae] focus-visible:ring-2 focus-visible:ring-geo-violet focus-visible:ring-offset-2 sm:flex-none"
+                      className="flex-1 rounded-xl bg-geo-violet px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#053673] focus-visible:ring-2 focus-visible:ring-geo-violet focus-visible:ring-offset-2 sm:flex-none"
                     >
                       Als Kampagne starten
                     </button>
@@ -437,7 +437,7 @@ export default function CreatorSelectionPopup({
                           <button
                             type="button"
                             onClick={() => openMode('workspace')}
-                            className="inline-flex items-center gap-2 rounded-2xl bg-geo-violet px-6 py-3.5 text-base font-semibold text-white shadow-lg transition hover:bg-[#7531ae]"
+                            className="inline-flex items-center gap-2 rounded-2xl bg-geo-violet px-6 py-3.5 text-base font-semibold text-white shadow-lg transition hover:bg-[#053673]"
                           >
                             <BriefcaseBusiness className="h-5 w-5" aria-hidden="true" />
                             <span>Kampagne im Workspace starten</span>
@@ -503,7 +503,7 @@ export default function CreatorSelectionPopup({
                           <div className="flex flex-wrap justify-center gap-3 pt-2">
                             <a
                               href="/brand"
-                              className="rounded-xl bg-geo-violet px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#7531ae]"
+                              className="rounded-xl bg-geo-violet px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#053673]"
                             >
                               Zum Brand-Workspace →
                             </a>
@@ -782,7 +782,7 @@ export default function CreatorSelectionPopup({
                               <button
                                 type="submit"
                                 disabled={isSubmitting}
-                                className="flex-1 px-6 py-3 bg-geo-violet text-white rounded-xl hover:bg-[#7531ae] font-semibold disabled:opacity-50 text-sm"
+                                className="flex-1 px-6 py-3 bg-geo-violet text-white rounded-xl hover:bg-[#053673] font-semibold disabled:opacity-50 text-sm"
                               >
                                 {isSubmitting ? 'Kampagne wird angelegt …' : 'Kampagne & Workspace starten →'}
                               </button>
@@ -811,7 +811,7 @@ export default function CreatorSelectionPopup({
                                 href={INTRO_CALL_URL}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-flex min-h-[42px] items-center rounded-xl bg-geo-violet px-4 py-2 text-sm font-semibold text-white hover:bg-[#7531ae]"
+                                className="inline-flex min-h-[42px] items-center rounded-xl bg-geo-violet px-4 py-2 text-sm font-semibold text-white hover:bg-[#053673]"
                               >
                                 15-Min-Freischaltungs-Call buchen →
                               </a>

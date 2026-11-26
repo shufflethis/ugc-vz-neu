@@ -61,8 +61,8 @@ const FORMAT_CHIPS = [
 ];
 
 const fieldClass =
-  'min-h-[48px] w-full rounded-[12px] border border-[#E4E1D8] bg-white px-4 py-3 text-sm text-[#121212] outline-none transition-colors focus:border-[#6C2BD9] focus:ring-4 focus:ring-[#6C2BD9]/15';
-const labelClass = 'mb-1.5 block text-sm font-semibold text-[#121212]';
+  'min-h-[48px] w-full rounded-[12px] border border-[#DCE2EA] bg-white px-4 py-3 text-sm text-[#202124] outline-none transition-colors focus:border-[#06458F] focus:ring-4 focus:ring-[#06458F]/15';
+const labelClass = 'mb-1.5 block text-sm font-semibold text-[#202124]';
 
 const splitLinks = (value: string) =>
   value
@@ -320,19 +320,19 @@ export default function CreatorRegistrationForm({
     <section id="creator-form" className="scroll-mt-20 bg-white px-5 py-16 sm:px-8 sm:py-20">
       <div className="mx-auto max-w-[680px]">
         {verified && (
-          <div className="mb-6 rounded-[20px] border border-[#1F9D55]/30 bg-[#C8F04B]/25 p-5" role="status">
+          <div className="mb-6 rounded-[20px] border border-[#1F9D55]/30 bg-[#EBF2FA]/25 p-5" role="status">
             <div className="flex items-start gap-3">
-              <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#121212] text-[#C8F04B]">
+              <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#062A59] text-[#F2072A]">
                 <Check size={15} aria-hidden="true" />
               </span>
               <div>
-                <p className="font-display font-bold text-[#121212]">Dein Konto ist bestätigt</p>
-                <p className="mt-1 text-sm text-[#5C5A55]">
+                <p className="font-display font-bold text-[#202124]">Dein Konto ist bestätigt</p>
+                <p className="mt-1 text-sm text-[#5C6470]">
                   Du kannst dich jetzt direkt in deinem Konto anmelden und offene Kampagnen ansehen.
                 </p>
                 <Link
                   href="/konto"
-                  className="mt-3 inline-flex min-h-[40px] items-center rounded-full bg-[#121212] px-4 text-xs font-semibold text-[#F7F6F2]"
+                  className="mt-3 inline-flex min-h-[40px] items-center rounded-full bg-[#06458F] px-4 text-xs font-semibold text-[#F5F7FA]"
                 >
                   Zum Creator-Konto
                 </Link>
@@ -342,25 +342,25 @@ export default function CreatorRegistrationForm({
         )}
 
         {(invalid || failed) && (
-          <div className="mb-6 rounded-[20px] border border-[#E8A317]/40 bg-amber-50 p-5 text-sm text-[#121212]" role="alert">
+          <div className="mb-6 rounded-[20px] border border-[#E8A317]/40 bg-amber-50 p-5 text-sm text-[#202124]" role="alert">
             {invalid
               ? 'Der Bestätigungslink ist ungültig oder abgelaufen. Melde dich unten einfach erneut an, um einen frischen Code zu erhalten.'
               : 'Die Bestätigung konnte gerade nicht abgeschlossen werden. Versuch es erneut oder schreib uns an hi@ugc-vz.de.'}
           </div>
         )}
 
-        <div className="rounded-[24px] border border-[#E4E1D8] bg-[#F7F6F2] p-6 shadow-card sm:p-10">
+        <div className="rounded-[24px] border border-[#DCE2EA] bg-[#F5F7FA] p-6 shadow-card sm:p-10">
           {submittedEmail ? (
             <div className="space-y-6 text-center">
-              <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#EFE8FD] text-[#6C2BD9]">
+              <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#EBF2FA] text-[#06458F]">
                 <Mail size={22} aria-hidden="true" />
               </span>
               <div>
-                <h2 className="font-display text-2xl font-bold text-[#121212] sm:text-3xl">
+                <h2 className="font-display text-2xl font-bold text-[#202124] sm:text-3xl">
                   Code eingeben
                 </h2>
-                <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-[#5C5A55]">
-                  Fertig. Wir haben dir einen Code an <strong className="text-[#121212]">{submittedEmail}</strong> geschickt. Bestätige ihn, dann siehst du alle Kampagnen.
+                <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-[#5C6470]">
+                  Fertig. Wir haben dir einen Code an <strong className="text-[#202124]">{submittedEmail}</strong> geschickt. Bestätige ihn, dann siehst du alle Kampagnen.
                 </p>
               </div>
 
@@ -382,18 +382,18 @@ export default function CreatorRegistrationForm({
                 <button
                   type="submit"
                   disabled={verifying}
-                  className="btn-press min-h-[48px] w-full rounded-full bg-[#121212] px-6 text-sm font-semibold text-[#F7F6F2] hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="btn-press min-h-[48px] w-full rounded-full bg-[#06458F] px-6 text-sm font-semibold text-white hover:bg-[#053673] hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {verifying ? 'Code wird geprüft...' : 'Code bestätigen und Kampagnen ansehen'}
                 </button>
                 <InlineError message={message} />
               </form>
 
-              <p className="text-xs text-[#5C5A55]">
+              <p className="text-xs text-[#5C6470]">
                 Nichts da? Schau im Spam oder im Gmail-Tab „Benachrichtigungen“.
               </p>
 
-              <div className="flex flex-wrap items-center justify-center gap-4 border-t border-[#E4E1D8] pt-4 text-xs text-[#5C5A55]">
+              <div className="flex flex-wrap items-center justify-center gap-4 border-t border-[#DCE2EA] pt-4 text-xs text-[#5C6470]">
                 <ResendTimer
                   initialSeconds={60}
                   resetTrigger={resendKey}
@@ -409,7 +409,7 @@ export default function CreatorRegistrationForm({
                     setOtpCode('');
                     setMessage('');
                   }}
-                  className="font-medium text-[#121212] underline underline-offset-2"
+                  className="font-medium text-[#202124] underline underline-offset-2"
                 >
                   E-Mail korrigieren
                 </button>
@@ -419,7 +419,7 @@ export default function CreatorRegistrationForm({
             <form onSubmit={handleSubmit} noValidate>
               {/* Onboarding Progress Bar (Spec 8.10: scaleX, aria-valuenow) */}
               <div className="mb-7">
-                <div className="flex items-center justify-between text-xs font-semibold text-[#5C5A55]">
+                <div className="flex items-center justify-between text-xs font-semibold text-[#5C6470]">
                   <span>Schritt {step + 1} von {STEPS.length}</span>
                   <span className="font-mono tabular-nums">{progressPct} %</span>
                 </div>
@@ -429,17 +429,17 @@ export default function CreatorRegistrationForm({
                   aria-valuemin={0}
                   aria-valuemax={100}
                   aria-valuenow={progressPct}
-                  className="mt-2 h-2 w-full overflow-hidden rounded-full bg-[#E4E1D8]"
+                  className="mt-2 h-2 w-full overflow-hidden rounded-full bg-[#DCE2EA]"
                 >
                   <div
-                    className="h-full w-full origin-left rounded-full bg-[#121212] transition-transform duration-200 ease-[cubic-bezier(.2,.8,.2,1)] motion-reduce:transition-none"
+                    className="h-full w-full origin-left rounded-full bg-[#062A59] transition-transform duration-200 ease-[cubic-bezier(.2,.8,.2,1)] motion-reduce:transition-none"
                     style={{ transform: `scaleX(${progressPct / 100})` }}
                   />
                 </div>
-                <h2 className="mt-5 font-display text-2xl font-bold text-[#121212] sm:text-3xl">
+                <h2 className="mt-5 font-display text-2xl font-bold text-[#202124] sm:text-3xl">
                   {STEPS[step].title}
                 </h2>
-                <p className="mt-1.5 text-sm leading-6 text-[#5C5A55]">{STEPS[step].description}</p>
+                <p className="mt-1.5 text-sm leading-6 text-[#5C6470]">{STEPS[step].description}</p>
               </div>
 
               {/* Schritt 1: maximal 2 Pflichtfelder (E-Mail + TikTok/Instagram-Name) */}
@@ -463,7 +463,7 @@ export default function CreatorRegistrationForm({
 
                   <div>
                     <span className={labelClass}>TikTok- oder Instagram-Name *</span>
-                    <div className="mb-2.5 inline-grid grid-cols-2 rounded-full border border-[#E4E1D8] bg-white p-1">
+                    <div className="mb-2.5 inline-grid grid-cols-2 rounded-full border border-[#DCE2EA] bg-white p-1">
                       {(['tiktok', 'instagram'] as const).map((platform) => (
                         <button
                           key={platform}
@@ -472,8 +472,8 @@ export default function CreatorRegistrationForm({
                           aria-pressed={form.socialPlatform === platform}
                           className={`min-h-[36px] rounded-full px-4 text-xs font-semibold transition-colors ${
                             form.socialPlatform === platform
-                              ? 'bg-[#121212] text-[#F7F6F2]'
-                              : 'text-[#5C5A55] hover:text-[#121212]'
+                              ? 'bg-[#06458F] text-white'
+                              : 'text-[#5C6470] hover:text-[#202124]'
                           }`}
                         >
                           {platform === 'tiktok' ? 'TikTok' : 'Instagram'}
@@ -489,7 +489,7 @@ export default function CreatorRegistrationForm({
                       placeholder={form.socialPlatform === 'tiktok' ? '@dein.tiktok' : '@dein.instagram'}
                       className={fieldClass}
                     />
-                    <p className="mt-1.5 text-xs text-[#5C5A55]">
+                    <p className="mt-1.5 text-xs text-[#5C6470]">
                       Direkt danach kannst du deinen Kanal im Konto per Verifizierung verbinden. Geburtsjahr und weitere Angaben sind später optional im Profil möglich.
                     </p>
                   </div>
@@ -502,7 +502,7 @@ export default function CreatorRegistrationForm({
                   <div>
                     <div className="flex items-center justify-between gap-2">
                       <span className={labelClass}>Themen (bis zu 3 wählen) *</span>
-                      <span className="font-mono text-xs tabular-nums text-[#5C5A55]">
+                      <span className="font-mono text-xs tabular-nums text-[#5C6470]">
                         {form.selectedTopics.length} / 3
                       </span>
                     </div>
@@ -517,8 +517,8 @@ export default function CreatorRegistrationForm({
                             onClick={() => toggleTopic(cat.label)}
                             className={`min-h-[40px] rounded-full border px-3.5 text-xs font-semibold transition-colors ${
                               active
-                                ? 'border-[#121212] bg-[#121212] text-[#F7F6F2]'
-                                : 'border-[#E4E1D8] bg-white text-[#121212] hover:border-[#121212]'
+                                ? 'border-[#06458F] bg-[#06458F] text-white'
+                                : 'border-[#DCE2EA] bg-white text-[#202124] hover:border-[#06458F]'
                             }`}
                           >
                             {cat.label}
@@ -541,8 +541,8 @@ export default function CreatorRegistrationForm({
                             onClick={() => toggleFormat(fmt)}
                             className={`min-h-[40px] rounded-full border px-3.5 text-xs font-semibold transition-colors ${
                               active
-                                ? 'border-[#121212] bg-[#121212] text-[#F7F6F2]'
-                                : 'border-[#E4E1D8] bg-white text-[#121212] hover:border-[#121212]'
+                                ? 'border-[#06458F] bg-[#06458F] text-white'
+                                : 'border-[#DCE2EA] bg-white text-[#202124] hover:border-[#06458F]'
                             }`}
                           >
                             {fmt}
@@ -599,17 +599,17 @@ export default function CreatorRegistrationForm({
                     />
                   </div>
 
-                  <div className="space-y-3 rounded-[16px] border border-[#E4E1D8] bg-white p-4">
+                  <div className="space-y-3 rounded-[16px] border border-[#DCE2EA] bg-white p-4">
                     <label className="flex cursor-pointer items-start gap-3">
                       <input
                         type="checkbox"
                         checked={form.platformConsent}
                         onChange={(e) => update('platformConsent', e.target.checked)}
-                        className="mt-1 h-4 w-4 accent-[#121212]"
+                        className="mt-1 h-4 w-4 accent-[#06458F]"
                       />
-                      <span className="text-xs leading-5 text-[#5C5A55]">
-                        <strong className="text-[#121212]">Pflicht:</strong> Ich stimme der Verarbeitung meiner Angaben für mein UGC VZ Profil gemäß{' '}
-                        <Link href="/datenschutz" className="font-semibold text-[#121212] underline">
+                      <span className="text-xs leading-5 text-[#5C6470]">
+                        <strong className="text-[#202124]">Pflicht:</strong> Ich stimme der Verarbeitung meiner Angaben für mein UGC VZ Profil gemäß{' '}
+                        <Link href="/datenschutz" className="font-semibold text-[#202124] underline">
                           Datenschutzerklärung
                         </Link>{' '}
                         zu.
@@ -620,10 +620,10 @@ export default function CreatorRegistrationForm({
                         type="checkbox"
                         checked={form.projectConsent}
                         onChange={(e) => update('projectConsent', e.target.checked)}
-                        className="mt-1 h-4 w-4 accent-[#121212]"
+                        className="mt-1 h-4 w-4 accent-[#06458F]"
                       />
-                      <span className="text-xs leading-5 text-[#5C5A55]">
-                        <strong className="text-[#121212]">Pflicht:</strong> UGC VZ darf mich per E-Mail über passende Kampagnen und Anfragen informieren. Widerruf jederzeit möglich.
+                      <span className="text-xs leading-5 text-[#5C6470]">
+                        <strong className="text-[#202124]">Pflicht:</strong> UGC VZ darf mich per E-Mail über passende Kampagnen und Anfragen informieren. Widerruf jederzeit möglich.
                       </span>
                     </label>
                     <label className="flex cursor-pointer items-start gap-3">
@@ -631,10 +631,10 @@ export default function CreatorRegistrationForm({
                         type="checkbox"
                         checked={form.newsletterConsent}
                         onChange={(e) => update('newsletterConsent', e.target.checked)}
-                        className="mt-1 h-4 w-4 accent-[#121212]"
+                        className="mt-1 h-4 w-4 accent-[#06458F]"
                       />
-                      <span className="text-xs leading-5 text-[#5C5A55]">
-                        <strong className="text-[#121212]">Optional:</strong> Gelegentliche Tipps zu neuen Kampagnen per E-Mail erhalten.
+                      <span className="text-xs leading-5 text-[#5C6470]">
+                        <strong className="text-[#202124]">Optional:</strong> Gelegentliche Tipps zu neuen Kampagnen per E-Mail erhalten.
                       </span>
                     </label>
                   </div>
@@ -665,7 +665,7 @@ export default function CreatorRegistrationForm({
                       setMessage('');
                       setStep((current) => current - 1);
                     }}
-                    className="btn-press inline-flex min-h-[48px] items-center gap-2 rounded-full border border-[#E4E1D8] bg-white px-5 text-sm font-semibold text-[#121212] hover:border-[#121212]"
+                    className="btn-press inline-flex min-h-[48px] items-center gap-2 rounded-full border border-[#DCE2EA] bg-white px-5 text-sm font-semibold text-[#202124] hover:border-[#06458F]"
                   >
                     <ArrowLeft size={16} aria-hidden="true" />
                     <span>Zurück</span>
@@ -678,7 +678,7 @@ export default function CreatorRegistrationForm({
                   <button
                     type="button"
                     onClick={next}
-                    className="btn-press inline-flex min-h-[48px] items-center gap-2 rounded-full bg-[#121212] px-6 text-sm font-semibold text-[#F7F6F2] hover:opacity-90"
+                    className="btn-press inline-flex min-h-[48px] items-center gap-2 rounded-full bg-[#06458F] px-6 text-sm font-semibold text-white hover:bg-[#053673] hover:opacity-90"
                   >
                     <span>Weiter</span>
                     <ArrowRight size={16} aria-hidden="true" />
@@ -687,7 +687,7 @@ export default function CreatorRegistrationForm({
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="btn-press inline-flex min-h-[48px] items-center gap-2 rounded-full bg-[#121212] px-7 text-sm font-semibold text-[#F7F6F2] hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="btn-press inline-flex min-h-[48px] items-center gap-2 rounded-full bg-[#06458F] px-7 text-sm font-semibold text-white hover:bg-[#053673] hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     <span>{submitting ? 'Code wird gesendet...' : 'Kostenlos anmelden'}</span>
                     <ArrowRight size={16} aria-hidden="true" />
@@ -695,9 +695,9 @@ export default function CreatorRegistrationForm({
                 )}
               </div>
 
-              <p className="mt-5 text-center text-xs text-[#5C5A55]">
+              <p className="mt-5 text-center text-xs text-[#5C6470]">
                 Deine E-Mail bleibt privat und erscheint nie öffentlich. Mehr im{' '}
-                <Link href="/datenschutz" className="underline hover:text-[#121212]">
+                <Link href="/datenschutz" className="underline hover:text-[#202124]">
                   Datenschutz
                 </Link>
                 .

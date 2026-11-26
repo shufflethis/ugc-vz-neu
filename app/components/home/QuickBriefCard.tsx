@@ -89,16 +89,16 @@ export default function QuickBriefCard() {
     <section
       id="schnell-brief"
       aria-labelledby="quick-brief-title"
-      className="bg-[#F7F6F2] px-5 py-16 sm:px-8 sm:py-24"
+      className="bg-[#F5F7FA] px-5 py-16 sm:px-8 sm:py-24"
     >
       <div className="mx-auto max-w-[1200px]">
-        <div className="rounded-[24px] border border-[#E4E1D8] bg-white p-6 shadow-card sm:p-10">
+        <div className="rounded-[24px] border border-[#DCE2EA] bg-white p-6 shadow-card sm:p-10">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="text-sm font-medium text-[#6C2BD9]">Unverbindlich testen</p>
+              <p className="text-sm font-medium text-[#06458F]">Unverbindlich testen</p>
               <h2
                 id="quick-brief-title"
-                className="mt-1 font-display text-[30px] font-bold leading-[34px] tracking-[-0.02em] text-[#121212] sm:text-[44px] sm:leading-[48px]"
+                className="mt-1 font-display text-[30px] font-bold leading-[34px] tracking-[-0.02em] text-[#202124] sm:text-[44px] sm:leading-[48px]"
               >
                 Dein Brief in 60 Sekunden
               </h2>
@@ -107,7 +107,7 @@ export default function QuickBriefCard() {
               <button
                 type="button"
                 onClick={() => setExpandedAll(true)}
-                className="self-start text-sm font-medium text-[#5C5A55] underline underline-offset-4 hover:text-[#121212] sm:self-auto"
+                className="self-start text-sm font-medium text-[#5C6470] underline underline-offset-4 hover:text-[#202124] sm:self-auto"
               >
                 Alle 3 Schritte direkt bearbeiten
               </button>
@@ -117,12 +117,12 @@ export default function QuickBriefCard() {
           <form onSubmit={handleSubmit} className="mt-8">
             <div className="grid gap-6 lg:grid-cols-3">
               {/* Schritt 1 */}
-              <div className="rounded-[20px] border border-[#E4E1D8] bg-[#F7F6F2]/60 p-5">
+              <div className="rounded-[20px] border border-[#DCE2EA] bg-[#F5F7FA]/60 p-5">
                 <div className="flex items-center gap-2.5">
-                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#121212] font-mono text-xs font-bold text-[#F7F6F2]">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#06458F] font-mono text-xs font-bold text-white">
                     1
                   </span>
-                  <label htmlFor="qb-goal" className="text-sm font-semibold text-[#121212]">
+                  <label htmlFor="qb-goal" className="text-sm font-semibold text-[#202124]">
                     Was sollen Creator zeigen?
                   </label>
                 </div>
@@ -135,7 +135,7 @@ export default function QuickBriefCard() {
                     if (error) setError('');
                   }}
                   placeholder="z. B. unsere Cap im Alltag, 20 % Rabatt im Shop"
-                  className="mt-3 w-full resize-none rounded-[12px] border border-[#E4E1D8] bg-white px-3.5 py-3 text-sm text-[#121212] placeholder-[#5C5A55]/70 outline-none transition-colors focus:border-[#6C2BD9] focus:ring-4 focus:ring-[#6C2BD9]/15"
+                  className="mt-3 w-full resize-none rounded-[12px] border border-[#DCE2EA] bg-white px-3.5 py-3 text-sm text-[#202124] placeholder-[#5C6470]/70 outline-none transition-colors focus:border-[#06458F] focus:ring-4 focus:ring-[#06458F]/15"
                 />
                 <div className="mt-2.5 flex flex-wrap gap-1.5">
                   {QUICK_EXAMPLES.map((example) => (
@@ -146,7 +146,7 @@ export default function QuickBriefCard() {
                         setGoal(example);
                         setExpandedAll(true);
                       }}
-                      className="rounded-full border border-[#E4E1D8] bg-white px-2.5 py-1 text-[11px] font-medium text-[#5C5A55] transition-colors hover:border-[#121212] hover:text-[#121212]"
+                      className="rounded-full border border-[#DCE2EA] bg-white px-2.5 py-1 text-[11px] font-medium text-[#5C6470] transition-colors hover:border-[#06458F] hover:text-[#202124]"
                     >
                       {example.length > 34 ? `${example.slice(0, 34)}...` : example}
                     </button>
@@ -157,17 +157,17 @@ export default function QuickBriefCard() {
               {/* Schritt 2 (immer im DOM fuer SSR & Screenshots, visuell hervorgehoben nach Schritt 1) */}
               <div
                 onClick={() => setExpandedAll(true)}
-                className={`rounded-[20px] border border-[#E4E1D8] bg-[#F7F6F2]/60 p-5 transition-opacity duration-200 ${
+                className={`rounded-[20px] border border-[#DCE2EA] bg-[#F5F7FA]/60 p-5 transition-opacity duration-200 ${
                   stepsUnlocked ? 'opacity-100' : 'opacity-75'
                 }`}
               >
                 <div className="flex items-center gap-2.5">
-                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#121212] font-mono text-xs font-bold text-[#F7F6F2]">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#06458F] font-mono text-xs font-bold text-white">
                     2
                   </span>
-                  <p className="text-sm font-semibold text-[#121212]">Wo soll gepostet werden?</p>
+                  <p className="text-sm font-semibold text-[#202124]">Wo soll gepostet werden?</p>
                 </div>
-                <p className="mt-1.5 text-xs text-[#5C5A55]">Pflichtfeld: mindestens eine Plattform wählen.</p>
+                <p className="mt-1.5 text-xs text-[#5C6470]">Pflichtfeld: mindestens eine Plattform wählen.</p>
                 <div className="mt-3.5 grid grid-cols-2 gap-2" role="group" aria-label="Plattformen wählen">
                   {QUICK_BRIEF_PLATFORMS.map((platform) => {
                     const selected = platforms.includes(platform.id);
@@ -177,14 +177,14 @@ export default function QuickBriefCard() {
                         type="button"
                         aria-pressed={selected}
                         onClick={() => togglePlatform(platform.id)}
-                        className={`btn-press flex min-h-[44px] items-center justify-between gap-2 rounded-[12px] border px-3 text-left text-xs font-semibold transition-colors ${
+                        className={`btn-press flex min-h-[44px] items-center justify-between gap-2 rounded-[8px] border px-3 text-left text-xs font-semibold transition-colors ${
                           selected
-                            ? 'border-[#121212] bg-[#121212] text-[#F7F6F2]'
-                            : 'border-[#E4E1D8] bg-white text-[#121212] hover:border-[#121212]'
+                            ? 'border-[#06458F] bg-[#06458F] text-white'
+                            : 'border-[#DCE2EA] bg-white text-[#202124] hover:border-[#06458F]'
                         }`}
                       >
                         <span>{platform.label}</span>
-                        {selected && <Check size={14} aria-hidden="true" className="shrink-0 text-[#C8F04B]" />}
+                        {selected && <Check size={14} aria-hidden="true" className="shrink-0 text-white" />}
                       </button>
                     );
                   })}
@@ -194,19 +194,19 @@ export default function QuickBriefCard() {
               {/* Schritt 3 */}
               <div
                 onClick={() => setExpandedAll(true)}
-                className={`rounded-[20px] border border-[#E4E1D8] bg-[#F7F6F2]/60 p-5 transition-opacity duration-200 ${
+                className={`rounded-[20px] border border-[#DCE2EA] bg-[#F5F7FA]/60 p-5 transition-opacity duration-200 ${
                   stepsUnlocked ? 'opacity-100' : 'opacity-75'
                 }`}
               >
                 <div className="flex items-center gap-2.5">
-                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#121212] font-mono text-xs font-bold text-[#F7F6F2]">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#06458F] font-mono text-xs font-bold text-white">
                     3
                   </span>
-                  <p className="text-sm font-semibold text-[#121212]">Dein Budget</p>
+                  <p className="text-sm font-semibold text-[#202124]">Dein Budget</p>
                 </div>
                 <div className="mt-3 grid grid-cols-2 gap-3">
                   <div>
-                    <label htmlFor="qb-cpm" className="block text-xs font-medium text-[#5C5A55]">
+                    <label htmlFor="qb-cpm" className="block text-xs font-medium text-[#5C6470]">
                       Preis / 1.000 Views (€)
                     </label>
                     <input
@@ -218,11 +218,11 @@ export default function QuickBriefCard() {
                         setPricePerThousandInput(e.target.value);
                         setExpandedAll(true);
                       }}
-                      className="mt-1.5 min-h-[44px] w-full rounded-[12px] border border-[#E4E1D8] bg-white px-3 text-sm font-semibold tabular-nums text-[#121212] outline-none focus:border-[#6C2BD9] focus:ring-4 focus:ring-[#6C2BD9]/15"
+                      className="mt-1.5 min-h-[44px] w-full rounded-[12px] border border-[#DCE2EA] bg-white px-3 text-sm font-semibold tabular-nums text-[#202124] outline-none focus:border-[#06458F] focus:ring-4 focus:ring-[#06458F]/15"
                     />
                   </div>
                   <div>
-                    <label htmlFor="qb-budget" className="block text-xs font-medium text-[#5C5A55]">
+                    <label htmlFor="qb-budget" className="block text-xs font-medium text-[#5C6470]">
                       Budget-Obergrenze (€)
                     </label>
                     <input
@@ -235,7 +235,7 @@ export default function QuickBriefCard() {
                         setBudgetCapInput(e.target.value);
                         setExpandedAll(true);
                       }}
-                      className="mt-1.5 min-h-[44px] w-full rounded-[12px] border border-[#E4E1D8] bg-white px-3 text-sm font-semibold tabular-nums text-[#121212] outline-none focus:border-[#6C2BD9] focus:ring-4 focus:ring-[#6C2BD9]/15"
+                      className="mt-1.5 min-h-[44px] w-full rounded-[12px] border border-[#DCE2EA] bg-white px-3 text-sm font-semibold tabular-nums text-[#202124] outline-none focus:border-[#06458F] focus:ring-4 focus:ring-[#06458F]/15"
                     />
                   </div>
                 </div>
@@ -250,8 +250,8 @@ export default function QuickBriefCard() {
                       }}
                       className={`rounded-full border px-2.5 py-1 text-xs font-medium tabular-nums transition-colors ${
                         Number(budgetCapInput) === preset
-                          ? 'border-[#121212] bg-[#121212] text-[#F7F6F2]'
-                          : 'border-[#E4E1D8] bg-white text-[#5C5A55] hover:border-[#121212]'
+                          ? 'border-[#06458F] bg-[#06458F] text-white'
+                          : 'border-[#DCE2EA] bg-white text-[#5C6470] hover:border-[#06458F]'
                       }`}
                     >
                       {preset.toLocaleString('de-DE')} €
@@ -261,24 +261,24 @@ export default function QuickBriefCard() {
               </div>
             </div>
 
-            {/* Live-Ergebniszeile mit Lime-Marker */}
-            <div className="mt-6 flex flex-col items-start justify-between gap-5 rounded-[20px] border border-[#E4E1D8] bg-[#F7F6F2] p-5 lg:flex-row lg:items-center">
+            {/* Live-Ergebniszeile in Directory Blue Soft */}
+            <div className="mt-6 flex flex-col items-start justify-between gap-5 rounded-[12px] border border-[#DCE2EA] bg-[#F5F7FA] p-5 lg:flex-row lg:items-center">
               <div className="space-y-1.5">
-                <p className="text-base font-bold leading-snug text-[#121212] sm:text-xl">
-                  <span className="inline-block rounded-lg bg-[#C8F04B] px-2.5 py-1 font-mono tabular-nums text-[#121212]">
+                <p className="text-base font-bold leading-snug text-[#202124] sm:text-xl">
+                  <span className="inline-block rounded-[8px] bg-[#EBF2FA] px-2.5 py-1 font-mono tabular-nums text-[#06458F]">
                     Bis zu {headlineViews.toLocaleString('de-DE')} bezahlte Views.
                   </span>{' '}
                   <span>
                     Mehr als {Math.round(parsedBudget).toLocaleString('de-DE')} € zahlst du nicht.
                   </span>
                 </p>
-                <p className="text-xs text-[#5C5A55]">
+                <p className="text-xs text-[#5C6470]">
                   Rechenbeispiel, keine garantierte Reichweite. Im Budget enthalten:{' '}
-                  <strong className="font-semibold text-[#121212]">
+                  <strong className="font-semibold text-[#202124]">
                     {formatEuroFromCents(calc.creatorPoolCents, { hideZeroDecimals: true })}
                   </strong>{' '}
                   für Creator-Views und{' '}
-                  <strong className="font-semibold text-[#121212]">
+                  <strong className="font-semibold text-[#202124]">
                     {formatEuroFromCents(calc.feeCents, { hideZeroDecimals: true })}
                   </strong>{' '}
                   Servicegebühr ({feePercent} %{calc.promoActive ? ' Aktionsrate' : ''}, 0 % für Creator).
@@ -288,12 +288,12 @@ export default function QuickBriefCard() {
               <div className="flex w-full flex-col items-stretch gap-1.5 lg:w-auto lg:items-end">
                 <button
                   type="submit"
-                  className="btn-press inline-flex min-h-[52px] items-center justify-center gap-2 whitespace-nowrap rounded-full bg-[#121212] px-6 text-sm font-semibold text-[#F7F6F2] hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6C2BD9] focus-visible:ring-offset-2"
+                  className="btn-press inline-flex min-h-[52px] items-center justify-center gap-2 whitespace-nowrap rounded-full bg-[#06458F] px-6 text-sm font-semibold text-white hover:bg-[#053673] hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#06458F] focus-visible:ring-offset-2"
                 >
                   <span>Brief speichern und Konto anlegen</span>
                   <ArrowRight size={16} aria-hidden="true" />
                 </button>
-                <p className="text-center text-xs text-[#5C5A55] lg:text-right">
+                <p className="text-center text-xs text-[#5C6470] lg:text-right">
                   Dauert eine Minute. Wir schicken dir einen 6-stelligen Code, kein Passwort nötig.
                 </p>
               </div>

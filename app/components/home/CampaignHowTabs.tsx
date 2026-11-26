@@ -93,27 +93,27 @@ function StepScreenGraphic({ tab, stepIndex, step }: { tab: AudienceTab; stepInd
   const Icon = icons[stepIndex] || FileText;
 
   return (
-    <div className="rounded-[20px] border border-[#E4E1D8] bg-[#F7F6F2] p-6 shadow-card">
+    <div className="rounded-[20px] border border-[#DCE2EA] bg-[#F5F7FA] p-6 shadow-card">
       <div className="flex items-center justify-between gap-3">
-        <span className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold text-[#121212] shadow-sm">
-          <Icon size={14} aria-hidden="true" className="text-[#6C2BD9]" />
+        <span className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold text-[#202124] shadow-sm">
+          <Icon size={14} aria-hidden="true" className="text-[#06458F]" />
           {step.screenBadge}
         </span>
-        <span className="rounded-full border border-[#E4E1D8] bg-white px-2.5 py-0.5 text-[11px] font-medium text-[#5C5A55]">
+        <span className="rounded-full border border-[#DCE2EA] bg-white px-2.5 py-0.5 text-[11px] font-medium text-[#5C6470]">
           Beispielansicht
         </span>
       </div>
 
       {/* Kompakte Inline-SVG Ablauf-Grafik (< 3 KB, kein Autoplay) */}
-      <div className="mt-5 rounded-[16px] border border-[#E4E1D8] bg-white p-5">
-        <div className="flex items-center justify-between gap-2 border-b border-[#E4E1D8] pb-3.5">
-          <p className="font-display text-lg font-bold text-[#121212]">{step.screenTitle}</p>
+      <div className="mt-5 rounded-[16px] border border-[#DCE2EA] bg-white p-5">
+        <div className="flex items-center justify-between gap-2 border-b border-[#DCE2EA] pb-3.5">
+          <p className="font-display text-lg font-bold text-[#202124]">{step.screenTitle}</p>
           <svg width="72" height="16" viewBox="0 0 72 16" fill="none" aria-hidden="true">
-            <circle cx="8" cy="8" r="5" fill={stepIndex === 0 ? '#121212' : '#E4E1D8'} />
-            <line x1="16" y1="8" x2="28" y2="8" stroke="#E4E1D8" strokeWidth="2" />
-            <circle cx="36" cy="8" r="5" fill={stepIndex === 1 ? '#121212' : '#E4E1D8'} />
-            <line x1="44" y1="8" x2="56" y2="8" stroke="#E4E1D8" strokeWidth="2" />
-            <circle cx="64" cy="8" r="5" fill={stepIndex === 2 ? '#C8F04B' : '#E4E1D8'} stroke={stepIndex === 2 ? '#121212' : 'none'} strokeWidth="1.5" />
+            <circle cx="8" cy="8" r="5" fill={stepIndex === 0 ? '#06458F' : '#DCE2EA'} />
+            <line x1="16" y1="8" x2="28" y2="8" stroke="#DCE2EA" strokeWidth="2" />
+            <circle cx="36" cy="8" r="5" fill={stepIndex === 1 ? '#06458F' : '#DCE2EA'} />
+            <line x1="44" y1="8" x2="56" y2="8" stroke="#DCE2EA" strokeWidth="2" />
+            <circle cx="64" cy="8" r="5" fill={stepIndex === 2 ? '#F2072A' : '#DCE2EA'} stroke={stepIndex === 2 ? '#06458F' : 'none'} strokeWidth="1.5" />
           </svg>
         </div>
 
@@ -121,16 +121,16 @@ function StepScreenGraphic({ tab, stepIndex, step }: { tab: AudienceTab; stepInd
           {step.screenRows.map((row) => (
             <div
               key={row.label}
-              className="flex items-center justify-between gap-4 rounded-xl border border-[#E4E1D8]/80 bg-[#F7F6F2]/60 px-4 py-3 text-sm"
+              className="flex items-center justify-between gap-4 rounded-[8px] border border-[#DCE2EA] bg-[#F5F7FA]/70 px-4 py-3 text-sm"
             >
-              <dt className="text-[#5C5A55]">{row.label}</dt>
+              <dt className="text-[#5C6470]">{row.label}</dt>
               <dd
                 className={`font-semibold tabular-nums ${
                   row.highlight === 'lime'
-                    ? 'rounded-md bg-[#C8F04B] px-2 py-0.5 text-[#121212]'
+                    ? 'rounded-[6px] bg-[#EBF2FA] px-2.5 py-0.5 text-[#06458F]'
                     : row.highlight === 'muted'
-                      ? 'text-[#5C5A55]'
-                      : 'text-[#121212]'
+                      ? 'text-[#5C6470]'
+                      : 'text-[#202124]'
                 }`}
               >
                 {row.value}
@@ -156,10 +156,10 @@ export default function CampaignHowTabs() {
     >
       <div className="mx-auto max-w-[1200px]">
         <div className="mx-auto max-w-2xl text-center">
-          <p className="text-sm font-medium text-[#5C5A55]">Ablauf in 3 Schritten</p>
+          <p className="text-sm font-medium text-[#5C6470]">Ablauf in 3 Schritten</p>
           <h2
             id="home-how-title"
-            className="mt-2 font-display text-[30px] font-bold leading-[34px] tracking-[-0.02em] text-[#121212] sm:text-[44px] sm:leading-[48px]"
+            className="mt-2 font-display text-[30px] font-bold leading-[34px] tracking-[-0.02em] text-[#202124] sm:text-[44px] sm:leading-[48px]"
           >
             So läuft eine Kampagne
           </h2>
@@ -168,7 +168,7 @@ export default function CampaignHowTabs() {
           <div
             role="tablist"
             aria-label="Ablauf nach Zielgruppe"
-            className="mx-auto mt-7 inline-grid grid-cols-2 rounded-full border border-[#E4E1D8] bg-[#F7F6F2] p-1"
+            className="mx-auto mt-7 inline-grid grid-cols-2 rounded-full border border-[#DCE2EA] bg-[#F5F7FA] p-1"
           >
             <button
               type="button"
@@ -179,8 +179,8 @@ export default function CampaignHowTabs() {
               onClick={() => setActiveTab('brand')}
               className={`min-h-[44px] rounded-full px-6 text-sm font-semibold transition-colors duration-150 ${
                 activeTab === 'brand'
-                  ? 'bg-[#121212] text-[#F7F6F2]'
-                  : 'text-[#5C5A55] hover:text-[#121212]'
+                  ? 'bg-[#06458F] text-white'
+                  : 'text-[#5C6470] hover:text-[#202124]'
               }`}
             >
               Für Marken
@@ -194,8 +194,8 @@ export default function CampaignHowTabs() {
               onClick={() => setActiveTab('creator')}
               className={`min-h-[44px] rounded-full px-6 text-sm font-semibold transition-colors duration-150 ${
                 activeTab === 'creator'
-                  ? 'bg-[#121212] text-[#F7F6F2]'
-                  : 'text-[#5C5A55] hover:text-[#121212]'
+                  ? 'bg-[#06458F] text-white'
+                  : 'text-[#5C6470] hover:text-[#202124]'
               }`}
             >
               Für Creator
@@ -223,14 +223,14 @@ export default function CampaignHowTabs() {
                     aria-current={selected ? 'step' : undefined}
                     className={`w-full rounded-[20px] border p-5 text-left transition-colors duration-150 ${
                       selected
-                        ? 'border-[#121212] bg-[#F7F6F2]'
-                        : 'border-[#E4E1D8] bg-white hover:border-[#121212]/40'
+                        ? 'border-[#06458F] bg-[#F5F7FA]'
+                        : 'border-[#DCE2EA] bg-white hover:border-[#06458F]/40'
                     }`}
                   >
-                    <h3 className="font-display text-[19px] font-semibold leading-6 text-[#121212] sm:text-[22px] sm:leading-7">
+                    <h3 className="font-display text-[19px] font-semibold leading-6 text-[#202124] sm:text-[22px] sm:leading-7">
                       {step.title}
                     </h3>
-                    <p className="mt-2 text-sm leading-6 text-[#5C5A55] sm:text-base sm:leading-7">
+                    <p className="mt-2 text-sm leading-6 text-[#5C6470] sm:text-base sm:leading-7">
                       {step.description}
                     </p>
                   </button>
@@ -263,14 +263,14 @@ export default function CampaignHowTabs() {
                     aria-current={selected ? 'step' : undefined}
                     className={`w-full rounded-[20px] border p-5 text-left transition-colors duration-150 ${
                       selected
-                        ? 'border-[#121212] bg-[#F7F6F2]'
-                        : 'border-[#E4E1D8] bg-white hover:border-[#121212]/40'
+                        ? 'border-[#06458F] bg-[#F5F7FA]'
+                        : 'border-[#DCE2EA] bg-white hover:border-[#06458F]/40'
                     }`}
                   >
-                    <h3 className="font-display text-[19px] font-semibold leading-6 text-[#121212] sm:text-[22px] sm:leading-7">
+                    <h3 className="font-display text-[19px] font-semibold leading-6 text-[#202124] sm:text-[22px] sm:leading-7">
                       {step.title}
                     </h3>
-                    <p className="mt-2 text-sm leading-6 text-[#5C5A55] sm:text-base sm:leading-7">
+                    <p className="mt-2 text-sm leading-6 text-[#5C6470] sm:text-base sm:leading-7">
                       {step.description}
                     </p>
                   </button>

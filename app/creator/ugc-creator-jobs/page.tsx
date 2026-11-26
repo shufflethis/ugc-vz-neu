@@ -70,7 +70,7 @@ export default async function UGCCreatorJobsPage() {
             Bezahlte UGC-Aufträge entstehen fast immer aus konkreten Brand-Briefings: Produkt testen, authentisches Video für Ads oder Produktseiten drehen, Nutzungsrechte sauber vereinbaren. Je prüfbarer dein Profil ist, desto schneller wirst du in die engere Auswahl genommen.
           </p>
           <div className="flex flex-wrap gap-3">
-            <Link href="/creator#creator-form" className="inline-flex min-h-[48px] items-center bg-geo-violet hover:bg-[#7531ae] text-white font-semibold py-3 px-6 rounded-full">
+            <Link href="/creator#creator-form" className="inline-flex min-h-[48px] items-center bg-geo-violet hover:bg-[#053673] text-white font-semibold py-3 px-6 rounded-full">
               Kostenloses Creator-Profil eintragen →
             </Link>
             <Link href="/konto" className="inline-flex min-h-[48px] items-center border border-hairline bg-white hover:border-geo-violet text-ink font-semibold py-3 px-6 rounded-full">

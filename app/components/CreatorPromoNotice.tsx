@@ -23,10 +23,10 @@ export default function CreatorPromoNotice({ initialPromo }: { initialPromo: Act
   if (!active) return null;
 
   return (
-    <div className="mx-auto mb-8 max-w-3xl rounded-2xl border border-[#121212]/15 bg-[#C8F04B]/25 px-5 py-4 text-left text-sm leading-6 text-[#121212]">
+    <div className="mx-auto mb-8 max-w-3xl rounded-[12px] border border-[#06458F]/20 bg-[#EBF2FA] px-5 py-4 text-left text-sm leading-6 text-[#202124]">
       <p>
-        <strong>Black Friday bei den Marken:</strong> Bis Montag starten Marken günstiger. Bei gleichem Budget geht mehr Geld an Creator. Schau rein, welche Kampagnen neu sind.{' '}
-        <Link href="/konto" className="font-semibold underline underline-offset-2">
+        <strong className="text-[#06458F]">Black Friday bei den Marken:</strong> Bis Montag starten Marken günstiger. Bei gleichem Budget geht mehr Geld an Creator. Schau rein, welche Kampagnen neu sind.{' '}
+        <Link href="/konto" className="font-semibold text-[#06458F] underline underline-offset-2">
           Kampagnen ansehen
         </Link>
       </p>

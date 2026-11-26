@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDatabase, isDatabaseConfigured } from '@/app/lib/database';
+import { CREATOR_SESSION_COOKIE, verifySession } from '@/app/lib/creator-session';
 import {
   isTikTokOAuthConfigured,
+  resolveOAuthCallbackState,
   SOCIAL_OAUTH_STATE_COOKIE,
   upsertVerifiedOAuthSocialAccount,
-  verifyOAuthState,
 } from '@/app/lib/social-oauth';
 
 export const runtime = 'nodejs';
@@ -25,10 +26,21 @@ export async function GET(request: NextRequest) {
     return redirectWithStatus(request, 'tiktok_error');
   }
 
+  const providerError = request.nextUrl.searchParams.get('error') || '';
+  if (providerError) {
+    return redirectWithStatus(request, providerError === 'access_denied' ? 'tiktok_denied' : 'tiktok_error');
+  }
+
   const code = request.nextUrl.searchParams.get('code') || '';
   const stateParam = request.nextUrl.searchParams.get('state') || '';
-  const state = verifyOAuthState(request.cookies.get(SOCIAL_OAUTH_STATE_COOKIE)?.value, 'tiktok');
-  if (!code || !state || state.nonce !== stateParam || !state.codeVerifier) {
+  const sessionCreatorId = verifySession(request.cookies.get(CREATOR_SESSION_COOKIE)?.value);
+  const state = resolveOAuthCallbackState({
+    cookieValue: request.cookies.get(SOCIAL_OAUTH_STATE_COOKIE)?.value,
+    stateParam,
+    expectedProvider: 'tiktok',
+    sessionCreatorId,
+  });
+  if (!code || !state || !state.codeVerifier) {
     return redirectWithStatus(request, 'tiktok_invalid');
   }
 

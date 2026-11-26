@@ -107,12 +107,12 @@ export default function ClientWissenContent({ posts }: { posts: ContentPostCard[
                 onClick={() => setActiveFilter(opt.id)}
                 className={`min-h-[42px] rounded-full border px-4 text-sm font-semibold transition-colors ${
                   active
-                    ? 'border-[#121212] bg-[#121212] text-[#F7F6F2]'
-                    : 'border-[#E4E1D8] bg-white text-[#121212] hover:border-[#121212]'
+                    ? 'border-[#06458F] bg-[#06458F] text-white'
+                    : 'border-[#DCE2EA] bg-white text-[#202124] hover:border-[#06458F]'
                 }`}
               >
                 <span>{opt.label}</span>
-                <span className={`ml-1.5 font-mono text-xs tabular-nums ${active ? 'text-[#C8F04B]' : 'text-[#5C5A55]'}`}>
+                <span className={`ml-1.5 font-mono text-xs tabular-nums ${active ? 'text-[#F2072A]' : 'text-[#5C6470]'}`}>
                   {filterCounts[opt.id]}
                 </span>
               </button>
@@ -127,20 +127,20 @@ export default function ClientWissenContent({ posts }: { posts: ContentPostCard[
             placeholder="Artikel durchsuchen..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="min-h-[44px] w-full rounded-full border border-[#E4E1D8] bg-[#F7F6F2] pl-4 pr-11 text-sm text-[#121212] placeholder-[#5C5A55] outline-none transition-colors focus:border-[#6C2BD9] focus:bg-white focus:ring-4 focus:ring-[#6C2BD9]/15"
+            className="min-h-[44px] w-full rounded-full border border-[#DCE2EA] bg-[#F5F7FA] pl-4 pr-11 text-sm text-[#202124] placeholder-[#5C6470] outline-none transition-colors focus:border-[#06458F] focus:bg-white focus:ring-4 focus:ring-[#06458F]/15"
           />
           <Search
             size={17}
             aria-hidden="true"
-            className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-[#5C5A55]"
+            className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-[#5C6470]"
           />
         </div>
       </div>
 
       {/* Leerer Zustand */}
       {filteredPosts.length === 0 && (
-        <div className="rounded-[20px] border border-[#E4E1D8] bg-[#F7F6F2] p-10 text-center">
-          <p className="text-base font-medium text-[#121212]">
+        <div className="rounded-[20px] border border-[#DCE2EA] bg-[#F5F7FA] p-10 text-center">
+          <p className="text-base font-medium text-[#202124]">
             Keine passenden Artikel für diese Auswahl gefunden.
           </p>
           <button
@@ -149,7 +149,7 @@ export default function ClientWissenContent({ posts }: { posts: ContentPostCard[
               setSearchTerm('');
               setActiveFilter('alle');
             }}
-            className="mt-4 inline-flex min-h-[44px] items-center rounded-full bg-[#121212] px-5 text-sm font-semibold text-[#F7F6F2]"
+            className="mt-4 inline-flex min-h-[44px] items-center rounded-full bg-[#06458F] px-5 text-sm font-semibold text-white hover:bg-[#053673]"
           >
             Filter zurücksetzen
           </button>
@@ -164,9 +164,9 @@ export default function ClientWissenContent({ posts }: { posts: ContentPostCard[
             return (
               <article
                 key={post.slug}
-                className="group flex flex-col overflow-hidden rounded-[20px] border border-[#E4E1D8] bg-white shadow-card transition-colors hover:border-[#121212]/40"
+                className="group flex flex-col overflow-hidden rounded-[20px] border border-[#DCE2EA] bg-white shadow-card transition-colors hover:border-[#06458F]/40"
               >
-                <div className="relative aspect-[16/9] overflow-hidden bg-[#F7F6F2]">
+                <div className="relative aspect-[16/9] overflow-hidden bg-[#F5F7FA]">
                   <Image
                     src={post.featuredImage}
                     alt={post.title}
@@ -185,30 +185,30 @@ export default function ClientWissenContent({ posts }: { posts: ContentPostCard[
                     {post.categories.slice(0, 2).map((category) => (
                       <span
                         key={category}
-                        className="rounded-full border border-[#E4E1D8] bg-[#F7F6F2] px-2.5 py-0.5 text-xs font-medium text-[#5C5A55]"
+                        className="rounded-full border border-[#DCE2EA] bg-[#F5F7FA] px-2.5 py-0.5 text-xs font-medium text-[#5C6470]"
                       >
                         {category}
                       </span>
                     ))}
                   </div>
 
-                  <h2 className="font-display text-xl font-bold leading-snug text-[#121212] line-clamp-2 group-hover:text-[#6C2BD9]">
+                  <h2 className="font-display text-xl font-bold leading-snug text-[#202124] line-clamp-2 group-hover:text-[#06458F]">
                     <Link href={`/wissen/${post.slug}`}>{post.title}</Link>
                   </h2>
 
-                  <p className="mt-2.5 flex-1 text-sm leading-6 text-[#5C5A55] line-clamp-3">
+                  <p className="mt-2.5 flex-1 text-sm leading-6 text-[#5C6470] line-clamp-3">
                     {post.excerpt}
                   </p>
 
-                  <div className="mt-5 flex flex-wrap items-center justify-between gap-2 border-t border-[#E4E1D8] pt-4 text-xs text-[#5C5A55]">
-                    <span className="font-medium text-[#121212]">{post.authorName}</span>
+                  <div className="mt-5 flex flex-wrap items-center justify-between gap-2 border-t border-[#DCE2EA] pt-4 text-xs text-[#5C6470]">
+                    <span className="font-medium text-[#202124]">{post.authorName}</span>
                     {reviewedDate && <span>Geprüft: {reviewedDate}</span>}
                   </div>
 
                   <Link
                     href={`/wissen/${post.slug}`}
                     aria-label={`${post.title} lesen`}
-                    className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-[#121212] hover:text-[#6C2BD9]"
+                    className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-[#202124] hover:text-[#06458F]"
                   >
                     <span>Artikel lesen</span>
                     <ArrowRight size={14} aria-hidden="true" />

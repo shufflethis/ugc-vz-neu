@@ -4,7 +4,7 @@ import type { getDatabase } from '@/app/lib/database';
 type DatabaseClient = ReturnType<typeof getDatabase>;
 
 export const SOCIAL_OAUTH_STATE_COOKIE = 'ugcvz_social_oauth_state';
-const STATE_TTL_MS = 10 * 60 * 1000;
+const STATE_TTL_MS = 30 * 60 * 1000;
 const TOKEN_CIPHER_VERSION = 'v1';
 const TOKEN_AAD = Buffer.from('ugcvz-social-token-v1', 'utf8');
 
@@ -185,6 +185,30 @@ export function verifyOAuthState(raw: string | undefined, expectedProvider: Soci
   }
 }
 
+export function resolveOAuthCallbackState(input: {
+  cookieValue: string | undefined;
+  stateParam: string;
+  expectedProvider: SocialOAuthProvider;
+  sessionCreatorId: string | null;
+}): SignedOAuthState | null {
+  const fromCookie = verifyOAuthState(input.cookieValue, input.expectedProvider);
+  if (
+    fromCookie
+    && input.stateParam
+    && (fromCookie.nonce === input.stateParam || input.cookieValue === input.stateParam)
+  ) {
+    return fromCookie;
+  }
+
+  // Fallback when cross-domain redirect (e.g. www -> apex) or browser privacy strips the short-lived state cookie:
+  // still 100% CSRF-safe because stateParam itself carries an HMAC-SHA256 signature AND must match the active creator session.
+  const fromParam = verifyOAuthState(input.stateParam, input.expectedProvider);
+  if (fromParam && input.sessionCreatorId && fromParam.creatorId === input.sessionCreatorId) {
+    return fromParam;
+  }
+  return null;
+}
+
 function isUndefinedColumnError(err: unknown): boolean {
   if (!err || typeof err !== 'object') return false;
   const code = (err as { code?: string }).code;
@@ -222,8 +246,14 @@ export async function upsertVerifiedOAuthSocialAccount(
 
   const [existing] = (await sql.query(
     `SELECT id FROM creator_social_accounts
-     WHERE creator_id = $1 AND platform = $2
-       AND (provider_account_id = $3 OR lower(canonical_handle) = $4 OR lower(url) = lower($5))
+     WHERE creator_id = $1 AND lower(platform) = lower($2)
+       AND (
+         provider_account_id = $3
+         OR ($4 <> '' AND lower(coalesce(canonical_handle, '')) = $4)
+         OR ($4 <> '' AND lower(ltrim(coalesce(handle, ''), '@')) = $4)
+         OR lower(rtrim(replace(url, '://www.', '://'), '/')) = lower(rtrim(replace($5, '://www.', '://'), '/'))
+       )
+     ORDER BY verified_at DESC NULLS LAST, created_at ASC
      LIMIT 1`,
     [input.creatorId, input.platform, input.providerAccountId, canonical, input.url],
   )) as unknown as Array<{ id: string }>;
@@ -242,6 +272,7 @@ export async function upsertVerifiedOAuthSocialAccount(
              oauth_refresh_token_enc = COALESCE($9, oauth_refresh_token_enc),
              oauth_token_expires_at = COALESCE($10::timestamptz, oauth_token_expires_at),
              oauth_last_error = '',
+             verification_code = NULL,
              verification_method = 'oauth',
              verified_at = now(),
              last_synced_at = now()
@@ -259,7 +290,6 @@ export async function upsertVerifiedOAuthSocialAccount(
           tokenExpiresAt,
         ],
       );
-      return;
     } catch (err) {
       if (!isUndefinedColumnError(err)) throw err;
       await sql.query(
@@ -270,14 +300,30 @@ export async function upsertVerifiedOAuthSocialAccount(
              provider_account_id = $5,
              followers = COALESCE($6, followers),
              oauth_scope = $7,
+             verification_code = NULL,
              verification_method = 'oauth',
              verified_at = now(),
              last_synced_at = now()
          WHERE id = $1`,
         [existing.id, displayHandle, canonical, input.url, input.providerAccountId, followers, input.scope || ''],
       );
-      return;
     }
+
+    // Clean up any stale unverified duplicate entries for the same handle/platform
+    if (canonical) {
+      await sql.query(
+        `DELETE FROM creator_social_accounts
+         WHERE creator_id = $1 AND lower(platform) = lower($2) AND id <> $3
+           AND verified_at IS NULL
+           AND (
+             lower(coalesce(canonical_handle, '')) = $4
+             OR lower(ltrim(coalesce(handle, ''), '@')) = $4
+             OR lower(rtrim(replace(url, '://www.', '://'), '/')) = lower(rtrim(replace($5, '://www.', '://'), '/'))
+           )`,
+        [input.creatorId, input.platform, existing.id, canonical, input.url],
+      );
+    }
+    return;
   }
 
   try {

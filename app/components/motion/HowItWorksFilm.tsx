@@ -9,7 +9,7 @@ import {
 } from './timeline';
 
 const GRADIENT = 'linear-gradient(152deg, #0396F8 0%, #1F6FF4 25%, #3F58F2 50%, #653AED 75%, #9131EF 100%)';
-const VIOLET = '#8B3FCA';
+const VIOLET = '#06458F';
 
 type Creator = { name: string; initials: string; city: string; topics: string; formats: string };
 const CREATORS: Creator[] = [

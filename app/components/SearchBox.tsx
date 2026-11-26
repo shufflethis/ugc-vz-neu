@@ -558,7 +558,7 @@ export default function SearchBox({ initialQuery = '', showFeatured = false, hid
                 aria-label="Kategorie filtern"
                 value={activeFilters.category || ''}
                 onChange={(e) => updateFilter({ category: e.target.value || undefined })}
-                className="min-h-[38px] rounded-full border border-[#E4E1D8] bg-white px-3.5 text-xs font-medium text-[#121212] outline-none focus:border-[#6C2BD9]"
+                className="min-h-[38px] rounded-full border border-[#DCE2EA] bg-white px-3.5 text-xs font-medium text-[#202124] outline-none focus:border-[#06458F]"
               >
                 <option value="">Alle 20 Kategorien</option>
                 {CREATOR_TAXONOMY.map((cat) => (
@@ -570,7 +570,7 @@ export default function SearchBox({ initialQuery = '', showFeatured = false, hid
                 aria-label="Plattform filtern"
                 value={activeFilters.platform || ''}
                 onChange={(e) => updateFilter({ platform: e.target.value || undefined })}
-                className="min-h-[38px] rounded-full border border-[#E4E1D8] bg-white px-3.5 text-xs font-medium text-[#121212] outline-none focus:border-[#6C2BD9]"
+                className="min-h-[38px] rounded-full border border-[#DCE2EA] bg-white px-3.5 text-xs font-medium text-[#202124] outline-none focus:border-[#06458F]"
               >
                 <option value="">Alle Plattformen</option>
                 <option value="tiktok">TikTok</option>
@@ -582,7 +582,7 @@ export default function SearchBox({ initialQuery = '', showFeatured = false, hid
                 aria-label="Format filtern"
                 value={activeFilters.format || ''}
                 onChange={(e) => updateFilter({ format: e.target.value || undefined })}
-                className="min-h-[38px] rounded-full border border-[#E4E1D8] bg-white px-3.5 text-xs font-medium text-[#121212] outline-none focus:border-[#6C2BD9]"
+                className="min-h-[38px] rounded-full border border-[#DCE2EA] bg-white px-3.5 text-xs font-medium text-[#202124] outline-none focus:border-[#06458F]"
               >
                 <option value="">Alle Formate</option>
                 {CREATOR_STYLE_OPTIONS.map((style) => (
@@ -605,7 +605,7 @@ export default function SearchBox({ initialQuery = '', showFeatured = false, hid
                   const val = e.currentTarget.value.trim() || undefined;
                   if (val !== activeFilters.city) updateFilter({ city: val });
                 }}
-                className="min-h-[38px] w-36 rounded-full border border-[#E4E1D8] bg-white px-3.5 text-xs text-[#121212] placeholder-[#5C5A55] outline-none focus:border-[#6C2BD9]"
+                className="min-h-[38px] w-36 rounded-full border border-[#DCE2EA] bg-white px-3.5 text-xs text-[#202124] placeholder-[#5C6470] outline-none focus:border-[#06458F]"
               />
 
               <button
@@ -614,8 +614,8 @@ export default function SearchBox({ initialQuery = '', showFeatured = false, hid
                 onClick={() => updateFilter({ verifiedOnly: !activeFilters.verifiedOnly })}
                 className={`min-h-[38px] rounded-full border px-3.5 text-xs font-semibold transition-colors ${
                   activeFilters.verifiedOnly
-                    ? 'border-[#121212] bg-[#121212] text-[#F7F6F2]'
-                    : 'border-[#E4E1D8] bg-white text-[#121212] hover:border-[#121212]'
+                    ? 'border-[#06458F] bg-[#06458F] text-white'
+                    : 'border-[#DCE2EA] bg-white text-[#202124] hover:border-[#06458F]'
                 }`}
               >
                 Nur mit Nachweis
@@ -625,7 +625,7 @@ export default function SearchBox({ initialQuery = '', showFeatured = false, hid
                 <button
                   type="button"
                   onClick={() => performSearch(submittedQuery, removedFilters, {})}
-                  className="min-h-[38px] px-2 text-xs font-semibold text-[#6C2BD9] underline underline-offset-2"
+                  className="min-h-[38px] px-2 text-xs font-semibold text-[#06458F] underline underline-offset-2"
                 >
                   Filter zurücksetzen
                 </button>
@@ -673,15 +673,15 @@ export default function SearchBox({ initialQuery = '', showFeatured = false, hid
                     {creator.categories && creator.categories.length > 0 && (
                       <div className="flex flex-wrap gap-1.5">
                         {creator.categories.slice(0, 3).map((catLabel) => (
-                          <span key={catLabel} className="rounded-full bg-[#F7F6F2] px-2.5 py-0.5 text-[11px] font-semibold text-[#121212]">
+                          <span key={catLabel} className="rounded-full bg-[#F5F7FA] px-2.5 py-0.5 text-[11px] font-semibold text-[#202124]">
                             {catLabel}
                           </span>
                         ))}
                       </div>
                     )}
                     {creator.matchReason && (
-                      <div className="rounded-lg bg-[#EFE8FD] px-2.5 py-1.5 text-xs leading-4 text-[#121212]">
-                        <span className="font-semibold text-[#6C2BD9]">Warum passt das? </span>
+                      <div className="rounded-lg bg-[#EBF2FA] px-2.5 py-1.5 text-xs leading-4 text-[#202124]">
+                        <span className="font-semibold text-[#06458F]">Warum passt das? </span>
                         {creator.matchReason}
                       </div>
                     )}
@@ -730,25 +730,25 @@ export default function SearchBox({ initialQuery = '', showFeatured = false, hid
                   </div>
                   <div className="mt-auto grid gap-2 pt-4">
                     <button type="button" onClick={() => { setProfileCreator(creator); trackSearchClick(creator.id); trackUGCEvents.creatorView(creator.id, 'profile'); }} aria-label={`Profil von ${creator.name} ansehen`} className="rounded-xl border border-hairline bg-white px-3 py-3 text-sm font-semibold text-ink hover:border-geo-violet focus-visible:ring-2 focus-visible:ring-geo-violet">Profil & Arbeitsproben ↗</button>
-                    <button type="button" aria-pressed={selectedCreators.includes(creator.id)} aria-label={`${creator.name} ${selectedCreators.includes(creator.id) ? 'aus Auswahl entfernen' : 'zur Auswahl hinzufügen'}`} onClick={() => handleSelectCreator(creator.id)} className={`rounded-xl px-3 py-3 text-sm font-semibold focus-visible:ring-2 focus-visible:ring-geo-violet focus-visible:ring-offset-2 ${selectedCreators.includes(creator.id) ? 'bg-[#edf5e5] text-[#385523]' : 'bg-geo-violet text-white hover:bg-[#7531ae]'}`}>{selectedCreators.includes(creator.id) ? '✓ In deiner Auswahl' : '+ Zur Auswahl'}</button>
+                    <button type="button" aria-pressed={selectedCreators.includes(creator.id)} aria-label={`${creator.name} ${selectedCreators.includes(creator.id) ? 'aus Auswahl entfernen' : 'zur Auswahl hinzufügen'}`} onClick={() => handleSelectCreator(creator.id)} className={`rounded-xl px-3 py-3 text-sm font-semibold focus-visible:ring-2 focus-visible:ring-geo-violet focus-visible:ring-offset-2 ${selectedCreators.includes(creator.id) ? 'bg-[#edf5e5] text-[#385523]' : 'bg-geo-violet text-white hover:bg-[#053673]'}`}>{selectedCreators.includes(creator.id) ? '✓ In deiner Auswahl' : '+ Zur Auswahl'}</button>
                   </div>
                 </div>
               ))}
             </div>
 
             {searchSubmitted && lowMatchCount && creators.length > 0 && (
-              <div className="mt-6 flex flex-col items-start justify-between gap-4 rounded-2xl border border-[#E4E1D8] bg-[#F7F6F2] p-5 text-left sm:flex-row sm:items-center">
+              <div className="mt-6 flex flex-col items-start justify-between gap-4 rounded-2xl border border-[#DCE2EA] bg-[#F5F7FA] p-5 text-left sm:flex-row sm:items-center">
                 <div>
-                  <p className="text-sm font-bold text-[#121212]">
+                  <p className="text-sm font-bold text-[#202124]">
                     Für {detectedCategoryLabel || submittedQuery} haben wir gerade {totalCount} passende Creator.
                   </p>
-                  <p className="mt-1 text-xs leading-5 text-[#5C5A55]">
+                  <p className="mt-1 text-xs leading-5 text-[#5C6470]">
                     Starte eine Kampagne, dann melden sich passende Creator bei dir.
                   </p>
                 </div>
                 <Link
                   href="/brand?tab=signup"
-                  className="inline-flex min-h-[44px] shrink-0 items-center justify-center rounded-xl bg-[#121212] px-5 text-sm font-semibold text-[#F7F6F2] transition-opacity hover:opacity-90"
+                  className="inline-flex min-h-[44px] shrink-0 items-center justify-center rounded-xl bg-[#06458F] px-5 text-sm font-semibold text-white hover:bg-[#053673] transition-opacity hover:opacity-90"
                 >
                   Kampagne starten
                 </Link>

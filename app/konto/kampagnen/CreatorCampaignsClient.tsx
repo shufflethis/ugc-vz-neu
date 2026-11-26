@@ -173,7 +173,7 @@ export default function CreatorCampaignsClient({
                 <button
                   type="button"
                   onClick={() => setTab('open')}
-                  className="mt-5 rounded-xl bg-geo-violet px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#7531ae]"
+                  className="mt-5 rounded-xl bg-geo-violet px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#053673]"
                 >
                   Offene Kampagnen ansehen ({openCampaigns.length})
                 </button>
@@ -536,7 +536,7 @@ function CampaignCard({
             <button
               type="submit"
               disabled={busyApply}
-              className="inline-flex items-center gap-2 rounded-xl bg-geo-violet px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#7531ae] disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-xl bg-geo-violet px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#053673] disabled:opacity-50"
             >
               <Send className="h-4 w-4" aria-hidden="true" />
               {busyApply
@@ -651,7 +651,7 @@ function CampaignCard({
             <button
               type="submit"
               disabled={busySubmit}
-              className="rounded-xl bg-geo-violet px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#7531ae] disabled:opacity-50"
+              className="rounded-xl bg-geo-violet px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#053673] disabled:opacity-50"
             >
               {busySubmit ? 'Wird eingereicht …' : 'Clip einreichen'}
             </button>

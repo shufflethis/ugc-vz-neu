@@ -11,8 +11,8 @@ import InlineError from '@/app/components/auth/InlineError';
 import BrandWalletPanel from './BrandWalletPanel';
 
 const fieldClass =
-  'min-h-[48px] w-full rounded-xl border border-[#E4E1D8] bg-white px-4 py-3 text-sm text-[#121212] outline-none transition-colors focus:border-[#6C2BD9] focus:ring-4 focus:ring-[#6C2BD9]/15';
-const labelClass = 'mb-1.5 block text-sm font-medium text-[#121212]';
+  'min-h-[48px] w-full rounded-xl border border-[#DCE2EA] bg-white px-4 py-3 text-sm text-[#202124] outline-none transition-colors focus:border-[#06458F] focus:ring-4 focus:ring-[#06458F]/15';
+const labelClass = 'mb-1.5 block text-sm font-medium text-[#202124]';
 
 const MODEL_LABELS: Record<CompensationModel, string> = {
   fixed: 'Festpreis / Paket',
@@ -24,8 +24,8 @@ const MODEL_LABELS: Record<CompensationModel, string> = {
 const STATUS_BADGES: Record<string, string> = {
   active: 'bg-[#edf5e5] text-[#1F9D55]',
   paused: 'bg-amber-50 text-amber-800',
-  completed: 'bg-[#F7F6F2] text-[#5C5A55]',
-  draft: 'bg-[#F7F6F2] text-[#5C5A55]',
+  completed: 'bg-[#F5F7FA] text-[#5C6470]',
+  draft: 'bg-[#F5F7FA] text-[#5C6470]',
 };
 
 export default function BrandWorkspaceClient({
@@ -158,22 +158,22 @@ function BrandLoginView({ initialTab }: { initialTab: 'login' | 'signup' }) {
   };
 
   return (
-    <div className="min-h-screen bg-[#F7F6F2] px-4 pb-24 pt-12 text-[#121212] sm:px-8 sm:pt-16">
+    <div className="min-h-screen bg-[#F5F7FA] px-4 pb-24 pt-12 text-[#202124] sm:px-8 sm:pt-16">
       <div className="mx-auto max-w-md">
         <div className="mb-6 text-center">
-          <p className="text-sm font-medium text-[#5C5A55]">UGC VZ für Marken</p>
-          <h1 className="mt-1.5 text-3xl font-bold tracking-tight text-[#121212] sm:text-4xl">
+          <p className="text-sm font-medium text-[#5C6470]">UGC VZ für Marken</p>
+          <h1 className="mt-1.5 text-3xl font-bold tracking-tight text-[#202124] sm:text-4xl">
             {sent ? 'Code eingeben' : mode === 'login' ? 'Willkommen zurück' : 'Konto anlegen'}
           </h1>
-          <p className="mt-2 text-sm leading-6 text-[#5C5A55]">
+          <p className="mt-2 text-sm leading-6 text-[#5C6470]">
             Wir schicken dir einen 6-stelligen Code an deine geschäftliche E-Mail. Kein Passwort, kein Abo.
           </p>
         </div>
 
-        <div className="rounded-[20px] border border-[#E4E1D8] bg-white p-6 shadow-[0_1px_2px_rgba(18,18,18,.06),0_8px_24px_rgba(18,18,18,.06)] sm:p-8">
+        <div className="rounded-[20px] border border-[#DCE2EA] bg-white p-6 shadow-[0_1px_2px_rgba(18,18,18,.06),0_8px_24px_rgba(18,18,18,.06)] sm:p-8">
           {hasSavedBrief && (
-            <div className="mb-5 rounded-xl border border-[#121212]/15 bg-[#F7F6F2] px-4 py-3 text-xs leading-5 text-[#121212]">
-              <span className="inline-block rounded bg-[#C8F04B] px-1.5 py-0.5 font-bold">Brief gespeichert</span>{' '}
+            <div className="mb-5 rounded-xl border border-[#06458F]/15 bg-[#F5F7FA] px-4 py-3 text-xs leading-5 text-[#202124]">
+              <span className="inline-block rounded bg-[#EBF2FA] px-1.5 py-0.5 font-bold">Brief gespeichert</span>{' '}
               Deine Angaben aus dem 60-Sekunden-Brief werden nach der Anmeldung automatisch im Kampagnen-Builder vorausgefüllt.
             </div>
           )}
@@ -181,7 +181,7 @@ function BrandLoginView({ initialTab }: { initialTab: 'login' | 'signup' }) {
             <div
               role="tablist"
               aria-label="Marken-Zugang"
-              className="mb-6 grid grid-cols-2 rounded-xl bg-[#F7F6F2] p-1"
+              className="mb-6 grid grid-cols-2 rounded-xl bg-[#F5F7FA] p-1"
             >
               <button
                 type="button"
@@ -189,7 +189,7 @@ function BrandLoginView({ initialTab }: { initialTab: 'login' | 'signup' }) {
                 aria-selected={mode === 'login'}
                 onClick={() => switchMode('login')}
                 className={`min-h-[40px] rounded-lg text-sm font-semibold transition-colors ${
-                  mode === 'login' ? 'bg-white text-[#121212] shadow-sm' : 'text-[#5C5A55] hover:text-[#121212]'
+                  mode === 'login' ? 'bg-white text-[#202124] shadow-sm' : 'text-[#5C6470] hover:text-[#202124]'
                 }`}
               >
                 Anmelden
@@ -200,7 +200,7 @@ function BrandLoginView({ initialTab }: { initialTab: 'login' | 'signup' }) {
                 aria-selected={mode === 'signup'}
                 onClick={() => switchMode('signup')}
                 className={`min-h-[40px] rounded-lg text-sm font-semibold transition-colors ${
-                  mode === 'signup' ? 'bg-white text-[#121212] shadow-sm' : 'text-[#5C5A55] hover:text-[#121212]'
+                  mode === 'signup' ? 'bg-white text-[#202124] shadow-sm' : 'text-[#5C6470] hover:text-[#202124]'
                 }`}
               >
                 Konto anlegen
@@ -211,16 +211,16 @@ function BrandLoginView({ initialTab }: { initialTab: 'login' | 'signup' }) {
           {sent ? (
             <div className="space-y-5">
               <div className="text-center">
-                <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#EFE8FD] text-[#6C2BD9]">
+                <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#EBF2FA] text-[#06458F]">
                   <Mail size={22} aria-hidden="true" />
                 </span>
                 {switchedNotice && (
-                  <p className="mt-3 rounded-xl bg-[#EFE8FD] px-3.5 py-2 text-xs font-medium text-[#121212]">
+                  <p className="mt-3 rounded-xl bg-[#EBF2FA] px-3.5 py-2 text-xs font-medium text-[#202124]">
                     Du hast schon ein Konto bei uns. Wir haben dir direkt deinen Anmeldecode geschickt.
                   </p>
                 )}
-                <p className="mt-3 text-sm leading-6 text-[#5C5A55]">
-                  Code ist unterwegs an <strong className="text-[#121212]">{email}</strong>. Nichts da? Schau im Spam oder im Gmail-Tab „Benachrichtigungen“.
+                <p className="mt-3 text-sm leading-6 text-[#5C6470]">
+                  Code ist unterwegs an <strong className="text-[#202124]">{email}</strong>. Nichts da? Schau im Spam oder im Gmail-Tab „Benachrichtigungen“.
                 </p>
               </div>
 
@@ -243,12 +243,12 @@ function BrandLoginView({ initialTab }: { initialTab: 'login' | 'signup' }) {
                   />
                 </div>
 
-                <label className="flex cursor-pointer items-center gap-2.5 text-sm text-[#5C5A55]">
+                <label className="flex cursor-pointer items-center gap-2.5 text-sm text-[#5C6470]">
                   <input
                     type="checkbox"
                     checked={rememberMe}
                     onChange={(e) => setRememberMe(e.target.checked)}
-                    className="h-4 w-4 rounded border-[#E4E1D8] accent-[#121212]"
+                    className="h-4 w-4 rounded border-[#DCE2EA] accent-[#06458F]"
                   />
                   <span>Angemeldet bleiben (30 Tage)</span>
                 </label>
@@ -256,7 +256,7 @@ function BrandLoginView({ initialTab }: { initialTab: 'login' | 'signup' }) {
                 <button
                   type="submit"
                   disabled={verifying}
-                  className="min-h-[48px] w-full rounded-xl bg-[#121212] px-6 text-sm font-semibold text-[#F7F6F2] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="min-h-[48px] w-full rounded-xl bg-[#06458F] px-6 text-sm font-semibold text-white hover:bg-[#053673] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {verifying ? 'Code wird geprüft ...' : 'Code bestätigen'}
                 </button>
@@ -264,7 +264,7 @@ function BrandLoginView({ initialTab }: { initialTab: 'login' | 'signup' }) {
                 <InlineError message={error} />
               </form>
 
-              <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[#E4E1D8] pt-4 text-xs text-[#5C5A55]">
+              <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[#DCE2EA] pt-4 text-xs text-[#5C6470]">
                 <ResendTimer
                   initialSeconds={cooldownSec}
                   resetTrigger={resendKey}
@@ -281,7 +281,7 @@ function BrandLoginView({ initialTab }: { initialTab: 'login' | 'signup' }) {
                     setError('');
                     setSwitchedNotice(false);
                   }}
-                  className="font-semibold text-[#121212] underline underline-offset-2"
+                  className="font-semibold text-[#202124] underline underline-offset-2"
                 >
                   E-Mail ändern
                 </button>
@@ -356,12 +356,12 @@ function BrandLoginView({ initialTab }: { initialTab: 'login' | 'signup' }) {
                 </>
               )}
 
-              <label className="flex cursor-pointer items-center gap-2.5 text-sm text-[#5C5A55]">
+              <label className="flex cursor-pointer items-center gap-2.5 text-sm text-[#5C6470]">
                 <input
                   type="checkbox"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  className="h-4 w-4 rounded border-[#E4E1D8] accent-[#121212]"
+                  className="h-4 w-4 rounded border-[#DCE2EA] accent-[#06458F]"
                 />
                 <span>Angemeldet bleiben (30 Tage)</span>
               </label>
@@ -369,7 +369,7 @@ function BrandLoginView({ initialTab }: { initialTab: 'login' | 'signup' }) {
               <button
                 type="submit"
                 disabled={submitting}
-                className="min-h-[48px] w-full rounded-xl bg-[#121212] px-6 text-sm font-semibold text-[#F7F6F2] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                className="min-h-[48px] w-full rounded-xl bg-[#06458F] px-6 text-sm font-semibold text-white hover:bg-[#053673] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {submitting
                   ? 'Code wird gesendet ...'
@@ -384,14 +384,14 @@ function BrandLoginView({ initialTab }: { initialTab: 'login' | 'signup' }) {
                 onAction={suggestSignup ? () => switchMode('signup') : undefined}
               />
 
-              <p className="pt-1 text-center text-sm text-[#5C5A55]">
+              <p className="pt-1 text-center text-sm text-[#5C6470]">
                 {mode === 'login' ? (
                   <>
                     Noch kein Konto?{' '}
                     <button
                       type="button"
                       onClick={() => switchMode('signup')}
-                      className="font-semibold text-[#121212] underline underline-offset-2"
+                      className="font-semibold text-[#202124] underline underline-offset-2"
                     >
                       Konto anlegen
                     </button>
@@ -402,7 +402,7 @@ function BrandLoginView({ initialTab }: { initialTab: 'login' | 'signup' }) {
                     <button
                       type="button"
                       onClick={() => switchMode('login')}
-                      className="font-semibold text-[#121212] underline underline-offset-2"
+                      className="font-semibold text-[#202124] underline underline-offset-2"
                     >
                       Anmelden
                     </button>
@@ -413,20 +413,20 @@ function BrandLoginView({ initialTab }: { initialTab: 'login' | 'signup' }) {
           )}
         </div>
 
-        <div className="mt-6 space-y-2 text-center text-xs text-[#5C5A55]">
+        <div className="mt-6 space-y-2 text-center text-xs text-[#5C6470]">
           <p>
             Du bist Creator?{' '}
-            <Link href="/konto" className="font-semibold text-[#121212] underline underline-offset-2">
+            <Link href="/konto" className="font-semibold text-[#202124] underline underline-offset-2">
               Zum Creator-Login
             </Link>
             {' · '}
-            <Link href="/brands" className="font-semibold text-[#121212] underline underline-offset-2">
+            <Link href="/brands" className="font-semibold text-[#202124] underline underline-offset-2">
               Infos für Marken
             </Link>
           </p>
           <p>
             Klappt gar nicht? Schreib uns an{' '}
-            <a href="mailto:hi@ugc-vz.de" className="font-semibold text-[#121212] underline underline-offset-2">
+            <a href="mailto:hi@ugc-vz.de" className="font-semibold text-[#202124] underline underline-offset-2">
               hi@ugc-vz.de
             </a>
           </p>
@@ -638,7 +638,7 @@ function BrandDashboard({
             <button
               type="button"
               onClick={() => setShowCreate((v) => !v)}
-              className="inline-flex min-h-[42px] items-center gap-2 rounded-xl bg-geo-violet px-4 text-sm font-semibold text-white hover:bg-[#7531ae]"
+              className="inline-flex min-h-[42px] items-center gap-2 rounded-xl bg-geo-violet px-4 text-sm font-semibold text-white hover:bg-[#053673]"
             >
               <Plus size={16} /> {showCreate ? 'Formular schließen' : 'Neue Kampagne'}
             </button>
@@ -685,9 +685,9 @@ function BrandDashboard({
             </div>
 
             {loadedFromQuickBrief && (
-              <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-[#121212]/15 bg-white px-4 py-3 text-xs text-[#121212]">
+              <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-[#06458F]/15 bg-white px-4 py-3 text-xs text-[#202124]">
                 <p>
-                  <span className="mr-2 inline-block rounded bg-[#C8F04B] px-2 py-0.5 font-bold">Übernommen</span>
+                  <span className="mr-2 inline-block rounded bg-[#EBF2FA] px-2 py-0.5 font-bold">Übernommen</span>
                   Dein 60-Sekunden-Brief wurde vorausgefüllt. Prüfe die Felder und starte deine Kampagne.
                 </p>
                 <button
@@ -696,7 +696,7 @@ function BrandDashboard({
                     clearQuickBriefDraft();
                     setLoadedFromQuickBrief(false);
                   }}
-                  className="font-semibold text-[#5C5A55] underline hover:text-[#121212]"
+                  className="font-semibold text-[#5C6470] underline hover:text-[#202124]"
                 >
                   Hinweis schließen
                 </button>
@@ -802,7 +802,7 @@ function BrandDashboard({
             </div>
 
             {estimatedCapViews !== null && (
-              <div className="rounded-2xl border border-[#1F9D55]/30 bg-[#f6fbf1] px-4 py-3 text-xs leading-5 text-[#121212]">
+              <div className="rounded-2xl border border-[#1F9D55]/30 bg-[#f6fbf1] px-4 py-3 text-xs leading-5 text-[#202124]">
                 <strong>Budget-Rechnung:</strong> Bei <strong>{tkpNumeric.toFixed(2).replace('.', ',')} € pro 1.000 Views</strong> und einer festen Budget-Obergrenze von <strong>{totalBudgetNumeric.toLocaleString('de-DE')} €</strong> zahlst du nie mehr als dein Budget. Rechenbeispiel, keine garantierte Reichweite.
               </div>
             )}
@@ -909,7 +909,7 @@ function BrandDashboard({
             <button
               type="submit"
               disabled={creating}
-              className="inline-flex min-h-[46px] items-center gap-2 rounded-full bg-geo-violet px-6 text-sm font-bold text-white hover:bg-[#7531ae] disabled:opacity-60"
+              className="inline-flex min-h-[46px] items-center gap-2 rounded-full bg-geo-violet px-6 text-sm font-bold text-white hover:bg-[#053673] disabled:opacity-60"
             >
               <CheckCircle2 size={16} /> {creating ? 'Wird angelegt …' : 'Kampagne live anlegen →'}
             </button>

@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDatabase, isDatabaseConfigured } from '@/app/lib/database';
+import { CREATOR_SESSION_COOKIE, verifySession } from '@/app/lib/creator-session';
 import {
   getInstagramFacebookBusinessScopes,
   getInstagramOAuthScopes,
   getMetaGraphApiVersion,
   isInstagramFacebookBusinessLogin,
   isInstagramOAuthConfigured,
+  resolveOAuthCallbackState,
   SOCIAL_OAUTH_STATE_COOKIE,
   upsertVerifiedOAuthSocialAccount,
-  verifyOAuthState,
 } from '@/app/lib/social-oauth';
 
 export const runtime = 'nodejs';
@@ -138,10 +139,23 @@ export async function GET(request: NextRequest) {
     return redirectWithStatus(request, 'instagram_error');
   }
 
+  const providerError = request.nextUrl.searchParams.get('error') || '';
+  if (providerError) {
+    const reason = request.nextUrl.searchParams.get('error_reason') || '';
+    console.warn('Instagram OAuth returned provider error', providerError, reason);
+    return redirectWithStatus(request, providerError === 'access_denied' ? 'instagram_denied' : 'instagram_error');
+  }
+
   const code = request.nextUrl.searchParams.get('code') || '';
   const stateParam = request.nextUrl.searchParams.get('state') || '';
-  const state = verifyOAuthState(request.cookies.get(SOCIAL_OAUTH_STATE_COOKIE)?.value, 'instagram');
-  if (!code || !state || state.nonce !== stateParam) {
+  const sessionCreatorId = verifySession(request.cookies.get(CREATOR_SESSION_COOKIE)?.value);
+  const state = resolveOAuthCallbackState({
+    cookieValue: request.cookies.get(SOCIAL_OAUTH_STATE_COOKIE)?.value,
+    stateParam,
+    expectedProvider: 'instagram',
+    sessionCreatorId,
+  });
+  if (!code || !state) {
     return redirectWithStatus(request, 'instagram_invalid');
   }
 

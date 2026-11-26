@@ -50,7 +50,7 @@ export default function VerifyClient({ token }: { token: string }) {
             type="button"
             disabled={busy}
             onClick={confirm}
-            className="mt-6 min-h-[48px] w-full rounded-xl bg-geo-violet px-6 font-semibold text-white transition hover:bg-[#7531ae] disabled:opacity-60"
+            className="mt-6 min-h-[48px] w-full rounded-xl bg-geo-violet px-6 font-semibold text-white transition hover:bg-[#053673] disabled:opacity-60"
           >
             {busy ? 'Anmeldung läuft …' : 'Jetzt ins Creator-Konto einloggen →'}
           </button>

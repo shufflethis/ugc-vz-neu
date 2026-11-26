@@ -50,7 +50,13 @@ export async function POST(request: NextRequest) {
     const code = `UGCVZ-${crypto.randomBytes(3).toString('hex').toUpperCase()}`;
     const [existing] = (await sql.query(
       `SELECT id FROM creator_social_accounts
-       WHERE creator_id = $1 AND platform = $2 AND (lower(canonical_handle) = $3 OR lower(url) = lower($4))
+       WHERE creator_id = $1 AND lower(platform) = lower($2)
+         AND (
+           lower(coalesce(canonical_handle, '')) = $3
+           OR lower(ltrim(coalesce(handle, ''), '@')) = $3
+           OR lower(rtrim(replace(url, '://www.', '://'), '/')) = lower(rtrim(replace($4, '://www.', '://'), '/'))
+         )
+       ORDER BY verified_at DESC NULLS LAST, created_at ASC
        LIMIT 1`,
       [creatorId, platform, normalized.handle, normalized.url],
     )) as unknown as Array<any>;
@@ -64,6 +70,17 @@ export async function POST(request: NextRequest) {
          WHERE id = $1`,
         [accountId, `@${normalized.handle}`, normalized.handle, normalized.url, code],
       );
+      await sql.query(
+        `DELETE FROM creator_social_accounts
+         WHERE creator_id = $1 AND lower(platform) = lower($2) AND id <> $3
+           AND verified_at IS NULL
+           AND (
+             lower(coalesce(canonical_handle, '')) = $4
+             OR lower(ltrim(coalesce(handle, ''), '@')) = $4
+             OR lower(rtrim(replace(url, '://www.', '://'), '/')) = lower(rtrim(replace($5, '://www.', '://'), '/'))
+           )`,
+        [creatorId, platform, accountId, normalized.handle, normalized.url],
+      );
     } else {
       const [inserted] = (await sql.query(
         `INSERT INTO creator_social_accounts (creator_id, platform, handle, canonical_handle, url, verification_code, verification_method)
@@ -76,6 +93,19 @@ export async function POST(request: NextRequest) {
 
     const accounts = await listCreatorSocialConnections(sql, creatorId);
     return NextResponse.json({ success: true, accountId, code, url: normalized.url, accounts });
+  }
+
+  if (action === 'remove') {
+    const accountId = cleanText(body.accountId, 60);
+    if (!accountId) {
+      return NextResponse.json({ success: false, error: 'Ungültige Kanal-ID.' }, { status: 400 });
+    }
+    await sql.query(
+      `DELETE FROM creator_social_accounts WHERE id = $1 AND creator_id = $2`,
+      [accountId, creatorId],
+    );
+    const accounts = await listCreatorSocialConnections(sql, creatorId);
+    return NextResponse.json({ success: true, accounts });
   }
 
   if (action === 'check') {

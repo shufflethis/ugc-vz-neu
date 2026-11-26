@@ -288,23 +288,35 @@ export async function generateCreditNotePdfWithZugferd(
   const page = pdfDoc.addPage([595.28, 841.89]); // A4
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const bold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-  const ink = rgb(0.07, 0.07, 0.07);
-  const muted = rgb(0.36, 0.35, 0.33);
-  const line = rgb(0.89, 0.88, 0.85);
+  const brandBlue = rgb(0.024, 0.271, 0.561); // #06458F Directory Blue
+  const brandRed = rgb(0.949, 0.027, 0.165); // #F2072A Creator Red
+  const ink = rgb(0.125, 0.129, 0.141); // #202124
+  const muted = rgb(0.361, 0.392, 0.439); // #5C6470
+  const line = rgb(0.863, 0.886, 0.918); // #DCE2EA
+  const cloud = rgb(0.961, 0.969, 0.98); // #F5F7FA
 
-  let y = 785;
+  // ugcVZ Brand CI Kopfstreifen (Directory Blue + Creator Red Akzent)
+  page.drawRectangle({ x: 0, y: 833, width: 490, height: 9, color: brandBlue });
+  page.drawRectangle({ x: 490, y: 833, width: 105.28, height: 9, color: brandRed });
+
+  let y = 795;
   const left = 50;
 
+  page.drawText('ugc', { x: left, y: y + 18, size: 11, font: bold, color: brandBlue });
+  page.drawText('VZ', { x: left + 20, y: y + 18, size: 11, font: bold, color: brandRed });
+  page.drawText('  Das Creatorverzeichnis · ugc-vz.de', { x: left + 36, y: y + 18, size: 8.5, font, color: muted });
+
   // Kopfzeile: Pflichtwort "Gutschrift" (§ 14 Abs. 4 Nr. 10 UStG)
-  page.drawText('GUTSCHRIFT', { x: left, y, size: 22, font: bold, color: ink });
-  page.drawText(`Nr. ${sanitizeWinAnsi(input.number)}`, { x: 410, y: y + 4, size: 12, font: bold, color: ink });
-  y -= 24;
+  page.drawText('GUTSCHRIFT', { x: left, y: y - 4, size: 22, font: bold, color: brandBlue });
+  page.drawText(`Nr. ${sanitizeWinAnsi(input.number)}`, { x: 410, y: y, size: 12, font: bold, color: ink });
+  y -= 26;
   page.drawText(`Ausstellungsdatum: ${formatDateDe(input.issuedAtIso)}`, { x: 410, y, size: 9, font, color: muted });
   page.drawText(`Leistungszeitraum: ${sanitizeWinAnsi(input.period)}`, { x: left, y, size: 10, font, color: muted });
 
-  y -= 34;
+  y -= 32;
   page.drawLine({ start: { x: left, y }, end: { x: 545, y }, thickness: 1, color: line });
   y -= 24;
+  void cloud;
 
   // Leistender Unternehmer (Creator) vs. Leistungsempfänger (track by track GmbH)
   page.drawText('Leistender Unternehmer (Creator):', { x: left, y, size: 9, font: bold, color: muted });
@@ -409,20 +421,30 @@ export async function generateBrandTopupInvoicePdf(input: {
   const page = pdfDoc.addPage([595.28, 841.89]);
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const bold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-  const ink = rgb(0.07, 0.07, 0.07);
-  const muted = rgb(0.36, 0.35, 0.33);
-  const line = rgb(0.89, 0.88, 0.85);
+  const brandBlue = rgb(0.024, 0.271, 0.561); // #06458F Directory Blue
+  const brandRed = rgb(0.949, 0.027, 0.165); // #F2072A Creator Red
+  const ink = rgb(0.125, 0.129, 0.141); // #202124
+  const muted = rgb(0.361, 0.392, 0.439); // #5C6470
+  const line = rgb(0.863, 0.886, 0.918); // #DCE2EA
 
-  let y = 785;
+  // ugcVZ Brand CI Kopfstreifen
+  page.drawRectangle({ x: 0, y: 833, width: 490, height: 9, color: brandBlue });
+  page.drawRectangle({ x: 490, y: 833, width: 105.28, height: 9, color: brandRed });
+
+  let y = 795;
   const left = 50;
 
-  page.drawText('RECHNUNG', { x: left, y, size: 22, font: bold, color: ink });
-  page.drawText(`Nr. ${sanitizeWinAnsi(input.invoiceNumber)}`, { x: 410, y: y + 4, size: 12, font: bold, color: ink });
-  y -= 22;
+  page.drawText('ugc', { x: left, y: y + 18, size: 11, font: bold, color: brandBlue });
+  page.drawText('VZ', { x: left + 20, y: y + 18, size: 11, font: bold, color: brandRed });
+  page.drawText('  Das Creatorverzeichnis · ugc-vz.de', { x: left + 36, y: y + 18, size: 8.5, font, color: muted });
+
+  page.drawText('RECHNUNG', { x: left, y: y - 4, size: 22, font: bold, color: brandBlue });
+  page.drawText(`Nr. ${sanitizeWinAnsi(input.invoiceNumber)}`, { x: 410, y: y, size: 12, font: bold, color: ink });
+  y -= 24;
   page.drawText(`Datum: ${formatDateDe(input.issuedAtIso)}`, { x: 410, y, size: 9, font, color: muted });
   page.drawText(`Zahlungsart: ${sanitizeWinAnsi(input.methodLabel)}`, { x: left, y, size: 9.5, font, color: muted });
 
-  y -= 30;
+  y -= 28;
   page.drawLine({ start: { x: left, y }, end: { x: 545, y }, thickness: 1, color: line });
   y -= 22;
 
@@ -438,7 +460,7 @@ export async function generateBrandTopupInvoicePdf(input: {
   page.drawText(`USt-IdNr.: ${PLATFORM_ISSUER.vatId}`, { x: 310, y, size: 9, font, color: muted });
 
   y -= 38;
-  page.drawRectangle({ x: left, y: y - 6, width: 495, height: 22, color: rgb(0.97, 0.96, 0.95) });
+  page.drawRectangle({ x: left, y: y - 6, width: 495, height: 22, color: rgb(0.961, 0.969, 0.98) });
   page.drawText('Position', { x: left + 8, y, size: 9, font: bold, color: ink });
   page.drawText('Betrag', { x: 455, y, size: 9, font: bold, color: ink });
   y -= 24;

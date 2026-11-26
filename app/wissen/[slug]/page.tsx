@@ -141,7 +141,7 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
             </div>
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 leading-tight">{post.title}</h1>
             <div className="flex flex-wrap items-center gap-4 text-ink-soft mb-8 text-sm">
-              <Link href={author.url} className="font-semibold text-[#121212] underline decoration-[#E4E1D8] underline-offset-4 hover:text-[#6C2BD9]">
+              <Link href={author.url} className="font-semibold text-[#202124] underline decoration-[#DCE2EA] underline-offset-4 hover:text-[#06458F]">
                 Autor: {author.name}
               </Link>
               <span>·</span>
@@ -206,12 +206,12 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
 
       <section className="px-4 sm:px-8 md:px-16 lg:px-24 pb-20 bg-surface">
         <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-6">
-          <Link href="/brands" className="surface-card rounded-lg p-6 hover:border-[#121212] transition-colors">
-            <h2 className="text-xl font-bold text-[#121212] mb-3">Creator-Kampagne starten</h2>
+          <Link href="/brands" className="surface-card rounded-lg p-6 hover:border-[#06458F] transition-colors">
+            <h2 className="text-xl font-bold text-[#202124] mb-3">Creator-Kampagne starten</h2>
             <p className="text-ink-soft leading-relaxed">Bezahle nach geprüften Views mit fester Budget-Obergrenze und ohne Abo.</p>
           </Link>
-          <Link href="/creator" className="surface-card rounded-lg p-6 hover:border-[#121212] transition-colors">
-            <h2 className="text-xl font-bold text-[#121212] mb-3">Als Creator mitmachen</h2>
+          <Link href="/creator" className="surface-card rounded-lg p-6 hover:border-[#06458F] transition-colors">
+            <h2 className="text-xl font-bold text-[#202124] mb-3">Als Creator mitmachen</h2>
             <p className="text-ink-soft leading-relaxed">Kostenlos anmelden, Kampagnen auswählen und pro 1.000 Views verdienen bei 0 % Gebühr.</p>
           </Link>
         </div>

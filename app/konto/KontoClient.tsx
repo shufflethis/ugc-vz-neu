@@ -194,33 +194,33 @@ function LoginView({ invalid, error, noSession }: { invalid: boolean; error: boo
   };
 
   return (
-    <div className="min-h-screen bg-[#F7F6F2] px-4 pb-24 pt-12 text-[#121212] sm:px-8 sm:pt-16">
+    <div className="min-h-screen bg-[#F5F7FA] px-4 pb-24 pt-12 text-[#202124] sm:px-8 sm:pt-16">
       <section className="mx-auto max-w-md">
         <div className="mb-6 text-center">
-          <p className="text-sm font-medium text-[#5C5A55]">UGC VZ für Creator</p>
-          <h1 className="mt-1.5 text-3xl font-bold tracking-tight text-[#121212] sm:text-4xl">
+          <p className="text-sm font-medium text-[#5C6470]">UGC VZ für Creator</p>
+          <h1 className="mt-1.5 text-3xl font-bold tracking-tight text-[#202124] sm:text-4xl">
             {sent ? 'Code eingeben' : 'Creator-Konto'}
           </h1>
-          <p className="mt-2 text-sm leading-6 text-[#5C5A55]">
+          <p className="mt-2 text-sm leading-6 text-[#5C6470]">
             Melde dich mit deiner E-Mail per 6-stelligem Code an. Kein Passwort nötig.
           </p>
         </div>
 
-        <div className="rounded-[20px] border border-[#E4E1D8] bg-white p-6 shadow-[0_1px_2px_rgba(18,18,18,.06),0_8px_24px_rgba(18,18,18,.06)] sm:p-8">
+        <div className="rounded-[20px] border border-[#DCE2EA] bg-white p-6 shadow-[0_1px_2px_rgba(18,18,18,.06),0_8px_24px_rgba(18,18,18,.06)] sm:p-8">
           {sent ? (
             <div className="space-y-5">
               <div className="text-center">
-                <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#EFE8FD] text-[#6C2BD9]">
+                <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#EBF2FA] text-[#06458F]">
                   <Mail size={22} aria-hidden="true" />
                 </span>
-                <p className="mt-3 text-sm leading-6 text-[#5C5A55]">
-                  Wenn zu <strong className="text-[#121212]">{email}</strong> ein Profil existiert, ist der Code unterwegs. Nichts da? Schau im Spam oder im Gmail-Tab „Benachrichtigungen“.
+                <p className="mt-3 text-sm leading-6 text-[#5C6470]">
+                  Wenn zu <strong className="text-[#202124]">{email}</strong> ein Profil existiert, ist der Code unterwegs. Nichts da? Schau im Spam oder im Gmail-Tab „Benachrichtigungen“.
                 </p>
               </div>
 
               <form onSubmit={verifyOtp} className="space-y-4">
                 <div>
-                  <span className="mb-1.5 block text-center text-sm font-medium text-[#121212]">6-stelliger Anmeldecode</span>
+                  <span className="mb-1.5 block text-center text-sm font-medium text-[#202124]">6-stelliger Anmeldecode</span>
                   <OtpInput
                     value={otpCode}
                     onChange={(next) => {
@@ -237,12 +237,12 @@ function LoginView({ invalid, error, noSession }: { invalid: boolean; error: boo
                   />
                 </div>
 
-                <label className="flex cursor-pointer items-center gap-2.5 text-sm text-[#5C5A55]">
+                <label className="flex cursor-pointer items-center gap-2.5 text-sm text-[#5C6470]">
                   <input
                     type="checkbox"
                     checked={rememberMe}
                     onChange={(e) => setRememberMe(e.target.checked)}
-                    className="h-4 w-4 rounded border-[#E4E1D8] accent-[#121212]"
+                    className="h-4 w-4 rounded border-[#DCE2EA] accent-[#06458F]"
                   />
                   <span>Angemeldet bleiben (30 Tage)</span>
                 </label>
@@ -250,7 +250,7 @@ function LoginView({ invalid, error, noSession }: { invalid: boolean; error: boo
                 <button
                   type="submit"
                   disabled={verifying}
-                  className="min-h-[48px] w-full rounded-xl bg-[#121212] px-6 text-sm font-semibold text-[#F7F6F2] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="min-h-[48px] w-full rounded-xl bg-[#06458F] px-6 text-sm font-semibold text-white hover:bg-[#053673] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {verifying ? 'Code wird geprüft ...' : 'Code bestätigen'}
                 </button>
@@ -258,7 +258,7 @@ function LoginView({ invalid, error, noSession }: { invalid: boolean; error: boo
                 <InlineError message={message} />
               </form>
 
-              <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[#E4E1D8] pt-4 text-xs text-[#5C5A55]">
+              <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[#DCE2EA] pt-4 text-xs text-[#5C6470]">
                 <ResendTimer
                   initialSeconds={cooldownSec}
                   resetTrigger={resendKey}
@@ -274,7 +274,7 @@ function LoginView({ invalid, error, noSession }: { invalid: boolean; error: boo
                     setOtpCode('');
                     setMessage('');
                   }}
-                  className="font-semibold text-[#121212] underline underline-offset-2"
+                  className="font-semibold text-[#202124] underline underline-offset-2"
                 >
                   E-Mail ändern
                 </button>
@@ -296,13 +296,13 @@ function LoginView({ invalid, error, noSession }: { invalid: boolean; error: boo
               )}
 
               <div>
-                <label htmlFor="creator-login-email" className="mb-1.5 block text-sm font-medium text-[#121212]">
+                <label htmlFor="creator-login-email" className="mb-1.5 block text-sm font-medium text-[#202124]">
                   E-Mail-Adresse
                 </label>
                 <input
                   id="creator-login-email"
                   type="email"
-                  className="min-h-[48px] w-full rounded-xl border border-[#E4E1D8] bg-white px-4 py-3 text-sm text-[#121212] outline-none transition-colors focus:border-[#6C2BD9] focus:ring-4 focus:ring-[#6C2BD9]/15"
+                  className="min-h-[48px] w-full rounded-xl border border-[#DCE2EA] bg-white px-4 py-3 text-sm text-[#202124] outline-none transition-colors focus:border-[#06458F] focus:ring-4 focus:ring-[#06458F]/15"
                   value={email}
                   onChange={(e) => {
                     setEmail(e.target.value);
@@ -315,12 +315,12 @@ function LoginView({ invalid, error, noSession }: { invalid: boolean; error: boo
                 />
               </div>
 
-              <label className="flex cursor-pointer items-center gap-2.5 text-sm text-[#5C5A55]">
+              <label className="flex cursor-pointer items-center gap-2.5 text-sm text-[#5C6470]">
                 <input
                   type="checkbox"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  className="h-4 w-4 rounded border-[#E4E1D8] accent-[#121212]"
+                  className="h-4 w-4 rounded border-[#DCE2EA] accent-[#06458F]"
                 />
                 <span>Angemeldet bleiben (30 Tage)</span>
               </label>
@@ -328,7 +328,7 @@ function LoginView({ invalid, error, noSession }: { invalid: boolean; error: boo
               <button
                 type="submit"
                 disabled={submitting}
-                className="min-h-[48px] w-full rounded-xl bg-[#121212] px-6 text-sm font-semibold text-[#F7F6F2] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                className="min-h-[48px] w-full rounded-xl bg-[#06458F] px-6 text-sm font-semibold text-white hover:bg-[#053673] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {submitting ? 'Code wird gesendet ...' : 'Code schicken'}
               </button>
@@ -338,20 +338,20 @@ function LoginView({ invalid, error, noSession }: { invalid: boolean; error: boo
           )}
         </div>
 
-        <div className="mt-6 space-y-2 text-center text-xs text-[#5C5A55]">
+        <div className="mt-6 space-y-2 text-center text-xs text-[#5C6470]">
           <p>
             Noch kein Profil?{' '}
-            <Link href="/creator" className="font-semibold text-[#121212] underline underline-offset-2">
+            <Link href="/creator" className="font-semibold text-[#202124] underline underline-offset-2">
               Jetzt kostenlos anlegen
             </Link>
             {' · '}
-            <Link href="/brand/login" className="font-semibold text-[#121212] underline underline-offset-2">
+            <Link href="/brand/login" className="font-semibold text-[#202124] underline underline-offset-2">
               Login für Marken
             </Link>
           </p>
           <p>
             Klappt gar nicht? Schreib uns an{' '}
-            <a href="mailto:hi@ugc-vz.de" className="font-semibold text-[#121212] underline underline-offset-2">
+            <a href="mailto:hi@ugc-vz.de" className="font-semibold text-[#202124] underline underline-offset-2">
               hi@ugc-vz.de
             </a>
           </p>

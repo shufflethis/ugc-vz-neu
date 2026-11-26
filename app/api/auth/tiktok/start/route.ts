@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
   authorizeUrl.searchParams.set('scope', getTikTokOAuthScopes());
   authorizeUrl.searchParams.set('response_type', 'code');
   authorizeUrl.searchParams.set('redirect_uri', redirectUri);
-  authorizeUrl.searchParams.set('state', nonce);
+  authorizeUrl.searchParams.set('state', signedState);
   authorizeUrl.searchParams.set('code_challenge', codeChallenge);
   authorizeUrl.searchParams.set('code_challenge_method', 'S256');
 
@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
     path: '/',
-    maxAge: 600,
+    maxAge: 1800,
   });
   return response;
 }

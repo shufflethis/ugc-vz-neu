@@ -452,7 +452,7 @@ export default function UgcCostCalculator({ benchmarks = [], defaultNiche = 'all
                   <button
                     type="submit"
                     disabled={leadSending}
-                    className="min-h-[44px] w-full rounded-xl bg-geo-violet px-4 text-sm font-semibold text-white hover:bg-[#7531ae] disabled:opacity-50"
+                    className="min-h-[44px] w-full rounded-xl bg-geo-violet px-4 text-sm font-semibold text-white hover:bg-[#053673] disabled:opacity-50"
                   >
                     {leadSending ? 'Wird gesendet …' : 'Kostenlos anfordern'}
                   </button>

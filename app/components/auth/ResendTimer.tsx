@@ -43,7 +43,7 @@ export default function ResendTimer({
 
   if (secondsLeft > 0) {
     return (
-      <span className="text-xs font-medium tabular-nums text-[#5C5A55]">
+      <span className="text-xs font-medium tabular-nums text-[#5C6470]">
         Code erneut senden (in {secondsLeft} s)
       </span>
     );
@@ -54,7 +54,7 @@ export default function ResendTimer({
       type="button"
       onClick={handleClick}
       disabled={resending || disabled}
-      className="text-xs font-semibold text-[#6C2BD9] underline underline-offset-2 transition-opacity hover:opacity-80 disabled:opacity-50"
+      className="text-xs font-semibold text-[#06458F] underline underline-offset-2 transition-opacity hover:opacity-80 disabled:opacity-50"
     >
       {resending ? 'Code wird gesendet ...' : 'Code erneut senden'}
     </button>

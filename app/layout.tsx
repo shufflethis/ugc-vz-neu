@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import "@fontsource-variable/bricolage-grotesque";
 import "@fontsource-variable/inter";
 import { GeistSans } from 'geist/font/sans'
 import { GeistMono } from 'geist/font/mono'
@@ -79,12 +78,14 @@ export default function RootLayout({
       <head>
         {/* Favicon and App Icons */}
         <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+        <link rel="icon" type="image/png" href="/favicon-32x32.png" sizes="32x32" />
         <link rel="shortcut icon" href="/favicon.ico" />
         <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
         <meta name="apple-mobile-web-app-title" content="UGC VZ" />
+        <meta name="theme-color" content="#06458F" />
         <link rel="manifest" href="/site.webmanifest" />
       </head>
-      <body className="flex flex-col min-h-screen bg-white text-[#121212] antialiased">
+      <body className="flex flex-col min-h-screen bg-white text-[#202124] antialiased">
         <MotionProvider>
           <PublicOnly>
             <PromoBanner initialPromo={getActivePromo(new Date())} />

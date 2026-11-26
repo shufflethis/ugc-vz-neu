@@ -23,10 +23,10 @@ export default function TrustElements({ compact = false }: { compact?: boolean }
   return (
     <section
       aria-label="Agentur-Referenzen von famefact"
-      className={`${compact ? 'border-y border-[#E4E1D8] bg-white py-8 sm:py-10' : 'border-y border-[#E4E1D8] bg-[#F7F6F2] py-16 sm:py-20'} px-5 sm:px-8`}
+      className={`${compact ? 'border-y border-[#DCE2EA] bg-white py-8 sm:py-10' : 'border-y border-[#DCE2EA] bg-[#F5F7FA] py-16 sm:py-20'} px-5 sm:px-8`}
     >
       <div className="mx-auto max-w-[1200px]">
-        <p className="mb-6 text-center text-xs font-medium text-[#5C5A55] sm:text-sm">
+        <p className="mb-6 text-center text-xs font-medium text-[#5C6470] sm:text-sm">
           Marken, für die das Team hinter UGC VZ bei famefact arbeitet
         </p>
 

@@ -116,34 +116,34 @@ export default function BrandsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white text-[#121212]">
+    <div className="min-h-screen bg-white text-[#202124]">
       <BreadcrumbSchema items={breadcrumbs} />
       <JsonLdScript data={serviceSchema} />
       <JsonLdScript data={faqSchema} />
 
       {/* 1. Hero + Live Budget-Rechner (Spec 8.2 brands.hero) */}
-      <section aria-labelledby="brands-hero-title" className="bg-[#F7F6F2] px-5 py-12 sm:px-8 sm:py-20">
+      <section aria-labelledby="brands-hero-title" className="bg-[#F5F7FA] px-5 py-12 sm:px-8 sm:py-20">
         <div className="mx-auto grid max-w-[1200px] items-center gap-10 lg:grid-cols-12 lg:gap-12">
           <div className="max-w-[560px] lg:col-span-6">
-            <p className="text-sm font-medium text-[#6C2BD9]">UGC VZ für Marken</p>
+            <p className="text-sm font-medium text-[#06458F]">UGC VZ für Marken</p>
             <h1
               id="brands-hero-title"
-              className="mt-2 font-display text-[38px] font-bold leading-[42px] tracking-[-0.02em] text-[#121212] sm:text-5xl sm:leading-[1.08] lg:text-[60px] lg:leading-[66px]"
+              className="mt-2 font-display text-[38px] font-bold leading-[42px] tracking-[-0.02em] text-[#202124] sm:text-5xl sm:leading-[1.08] lg:text-[60px] lg:leading-[66px]"
             >
               Creator-Kampagnen, die du nach echten Views bezahlst.
             </h1>
-            <p className="mt-5 text-base leading-7 text-[#5C5A55] sm:text-lg">
+            <p className="mt-5 text-base leading-7 text-[#5C6470] sm:text-lg">
               Du legst fest, was dir 1.000 Views wert sind und wie viel du maximal ausgibst. Creator posten, wir prüfen, du zahlst nur, was zählt.
             </p>
 
-            <ul className="mt-6 space-y-3 text-sm font-medium text-[#121212] sm:text-base">
+            <ul className="mt-6 space-y-3 text-sm font-medium text-[#202124] sm:text-base">
               {[
                 'Feste Budget-Obergrenze in jeder Kampagne',
                 'Nur geprüfte Beiträge werden bezahlt',
                 'Alle Beiträge und Views live in deinem Konto',
               ].map((bullet) => (
                 <li key={bullet} className="flex items-center gap-3">
-                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#C8F04B] text-[#121212]">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#EBF2FA] text-[#202124]">
                     <Check size={14} strokeWidth={2.5} aria-hidden="true" />
                   </span>
                   <span>{bullet}</span>
@@ -154,7 +154,7 @@ export default function BrandsPage() {
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
               <Link
                 href="/brand?tab=signup"
-                className="btn-press inline-flex min-h-[52px] items-center justify-center gap-2 rounded-full bg-[#121212] px-7 text-sm font-semibold text-[#F7F6F2] hover:opacity-90 sm:text-base"
+                className="btn-press inline-flex min-h-[52px] items-center justify-center gap-2 rounded-full bg-[#06458F] px-7 text-sm font-semibold text-white hover:bg-[#053673] hover:opacity-90 sm:text-base"
               >
                 <span>Kampagne starten</span>
                 <ArrowRight size={17} aria-hidden="true" />
@@ -164,7 +164,7 @@ export default function BrandsPage() {
                   href={bookingHref}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="btn-press inline-flex min-h-[52px] items-center justify-center gap-2 rounded-full border border-[#E4E1D8] bg-white px-6 text-sm font-semibold text-[#121212] hover:border-[#121212]"
+                  className="btn-press inline-flex min-h-[52px] items-center justify-center gap-2 rounded-full border border-[#DCE2EA] bg-white px-6 text-sm font-semibold text-[#202124] hover:border-[#06458F]"
                 >
                   <Calendar size={16} aria-hidden="true" />
                   <span>15 Minuten mit Flo sprechen</span>
@@ -172,7 +172,7 @@ export default function BrandsPage() {
               ) : (
                 <Link
                   href={bookingHref}
-                  className="btn-press inline-flex min-h-[52px] items-center justify-center gap-2 rounded-full border border-[#E4E1D8] bg-white px-6 text-sm font-semibold text-[#121212] hover:border-[#121212]"
+                  className="btn-press inline-flex min-h-[52px] items-center justify-center gap-2 rounded-full border border-[#DCE2EA] bg-white px-6 text-sm font-semibold text-[#202124] hover:border-[#06458F]"
                 >
                   <Calendar size={16} aria-hidden="true" />
                   <span>15 Minuten mit Flo sprechen</span>
@@ -201,10 +201,10 @@ export default function BrandsPage() {
       <section aria-labelledby="brands-ways-title" className="bg-white px-5 py-16 sm:px-8 sm:py-24">
         <div className="mx-auto max-w-[1200px]">
           <div className="max-w-2xl">
-            <p className="text-sm font-medium text-[#5C5A55]">Kampagnenmodelle</p>
+            <p className="text-sm font-medium text-[#5C6470]">Kampagnenmodelle</p>
             <h2
               id="brands-ways-title"
-              className="mt-1 font-display text-[30px] font-bold leading-[34px] tracking-[-0.02em] text-[#121212] sm:text-[44px] sm:leading-[48px]"
+              className="mt-1 font-display text-[30px] font-bold leading-[34px] tracking-[-0.02em] text-[#202124] sm:text-[44px] sm:leading-[48px]"
             >
               Zwei Wege, ein Konto
             </h2>
@@ -214,38 +214,38 @@ export default function BrandsPage() {
             {/* Weg 1: Reichweite nach Views */}
             <Link
               href="/brand?tab=signup"
-              className="group flex flex-col justify-between rounded-[20px] border border-[#E4E1D8] bg-[#F7F6F2] p-7 transition-colors hover:border-[#121212]"
+              className="group flex flex-col justify-between rounded-[20px] border border-[#DCE2EA] bg-[#F5F7FA] p-7 transition-colors hover:border-[#06458F]"
             >
               <div>
                 <div className="flex items-center justify-between gap-3">
-                  <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#121212] text-[#C8F04B]">
+                  <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#062A59] text-[#F2072A]">
                     <TrendingUp size={20} aria-hidden="true" />
                   </span>
-                  <span className="rounded-full bg-[#C8F04B] px-3 py-1 font-mono text-xs font-bold text-[#121212]">
+                  <span className="rounded-full bg-[#EBF2FA] px-3 py-1 font-mono text-xs font-bold text-[#202124]">
                     z. B. 2,00 € pro 1.000 Views
                   </span>
                 </div>
 
                 {/* Kompakte Feed-Vorschau */}
-                <div className="mt-5 grid grid-cols-3 gap-2 rounded-2xl border border-[#E4E1D8] bg-white p-3">
+                <div className="mt-5 grid grid-cols-3 gap-2 rounded-2xl border border-[#DCE2EA] bg-white p-3">
                   {['TikTok · 42k', 'Reel · 28k', 'Short · 19k'].map((label) => (
-                    <div key={label} className="rounded-xl bg-[#F7F6F2] px-2.5 py-3 text-center">
-                      <span className="block text-[11px] font-semibold text-[#121212]">{label}</span>
-                      <span className="mt-1 inline-block rounded bg-[#C8F04B] px-1.5 py-0.5 text-[10px] font-bold text-[#121212]">
+                    <div key={label} className="rounded-xl bg-[#F5F7FA] px-2.5 py-3 text-center">
+                      <span className="block text-[11px] font-semibold text-[#202124]">{label}</span>
+                      <span className="mt-1 inline-block rounded bg-[#EBF2FA] px-1.5 py-0.5 text-[10px] font-bold text-[#202124]">
                         Zählt
                       </span>
                     </div>
                   ))}
                 </div>
 
-                <h3 className="mt-6 font-display text-2xl font-bold text-[#121212]">
+                <h3 className="mt-6 font-display text-2xl font-bold text-[#202124]">
                   Reichweite nach Views
                 </h3>
-                <p className="mt-2.5 text-sm leading-6 text-[#5C5A55] sm:text-base">
+                <p className="mt-2.5 text-sm leading-6 text-[#5C6470] sm:text-base">
                   Creator posten auf ihren eigenen Profilen. Du zahlst pro 1.000 geprüfte Views (TKP-Prinzip) bis zu deiner Obergrenze. Gut für Shop-Aktionen, Rabattcodes und Launches.
                 </p>
               </div>
-              <span className="mt-6 inline-flex items-center gap-1.5 text-sm font-semibold text-[#121212] group-hover:text-[#6C2BD9]">
+              <span className="mt-6 inline-flex items-center gap-1.5 text-sm font-semibold text-[#202124] group-hover:text-[#06458F]">
                 <span>View-Kampagne starten</span>
                 <ArrowRight size={15} aria-hidden="true" />
               </span>
@@ -254,38 +254,38 @@ export default function BrandsPage() {
             {/* Weg 2: Videos fuer deine Kanaele und Ads */}
             <Link
               href="/brand?tab=signup"
-              className="group flex flex-col justify-between rounded-[20px] border border-[#E4E1D8] bg-[#F7F6F2] p-7 transition-colors hover:border-[#121212]"
+              className="group flex flex-col justify-between rounded-[20px] border border-[#DCE2EA] bg-[#F5F7FA] p-7 transition-colors hover:border-[#06458F]"
             >
               <div>
                 <div className="flex items-center justify-between gap-3">
-                  <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-[#121212] border border-[#E4E1D8]">
+                  <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-[#202124] border border-[#DCE2EA]">
                     <Film size={20} aria-hidden="true" />
                   </span>
-                  <span className="rounded-full border border-[#E4E1D8] bg-white px-3 py-1 font-mono text-xs font-bold text-[#121212]">
+                  <span className="rounded-full border border-[#DCE2EA] bg-white px-3 py-1 font-mono text-xs font-bold text-[#202124]">
                     Festpreis pro Video
                   </span>
                 </div>
 
                 {/* Kompakte Datei-Vorschau */}
-                <div className="mt-5 grid grid-cols-3 gap-2 rounded-2xl border border-[#E4E1D8] bg-white p-3">
+                <div className="mt-5 grid grid-cols-3 gap-2 rounded-2xl border border-[#DCE2EA] bg-white p-3">
                   {['Hook A.mp4', 'Hook B.mp4', 'Testimonial.mp4'].map((file) => (
-                    <div key={file} className="rounded-xl bg-[#F7F6F2] px-2.5 py-3 text-center">
-                      <span className="block truncate font-mono text-[11px] font-semibold text-[#121212]">
+                    <div key={file} className="rounded-xl bg-[#F5F7FA] px-2.5 py-3 text-center">
+                      <span className="block truncate font-mono text-[11px] font-semibold text-[#202124]">
                         {file}
                       </span>
-                      <span className="mt-1 inline-block text-[10px] text-[#5C5A55]">9:16 + Rechte</span>
+                      <span className="mt-1 inline-block text-[10px] text-[#5C6470]">9:16 + Rechte</span>
                     </div>
                   ))}
                 </div>
 
-                <h3 className="mt-6 font-display text-2xl font-bold text-[#121212]">
+                <h3 className="mt-6 font-display text-2xl font-bold text-[#202124]">
                   Videos für deine Kanäle und Ads
                 </h3>
-                <p className="mt-2.5 text-sm leading-6 text-[#5C5A55] sm:text-base">
+                <p className="mt-2.5 text-sm leading-6 text-[#5C6470] sm:text-base">
                   Du beauftragst Creator direkt für Produktvideos und Ad-Creatives, mit klaren Nutzungsrechten. Auch mit Produktversand.
                 </p>
               </div>
-              <span className="mt-6 inline-flex items-center gap-1.5 text-sm font-semibold text-[#121212] group-hover:text-[#6C2BD9]">
+              <span className="mt-6 inline-flex items-center gap-1.5 text-sm font-semibold text-[#202124] group-hover:text-[#06458F]">
                 <span>Produktion planen</span>
                 <ArrowRight size={15} aria-hidden="true" />
               </span>
@@ -302,31 +302,31 @@ export default function BrandsPage() {
         <div className="mx-auto max-w-[1200px]">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
-              <p className="text-sm font-medium text-[#5C5A55]">Volle Kontrolle nach dem Login</p>
+              <p className="text-sm font-medium text-[#5C6470]">Volle Kontrolle nach dem Login</p>
               <h2
                 id="brands-dashboard-title"
-                className="mt-1 font-display text-[30px] font-bold leading-[34px] tracking-[-0.02em] text-[#121212] sm:text-[44px] sm:leading-[48px]"
+                className="mt-1 font-display text-[30px] font-bold leading-[34px] tracking-[-0.02em] text-[#202124] sm:text-[44px] sm:leading-[48px]"
               >
                 Alles in einem Konto.
               </h2>
             </div>
-            <span className="rounded-full border border-[#E4E1D8] bg-[#F7F6F2] px-3 py-1 text-xs font-medium text-[#5C5A55]">
+            <span className="rounded-full border border-[#DCE2EA] bg-[#F5F7FA] px-3 py-1 text-xs font-medium text-[#5C6470]">
               Beispielansicht
             </span>
           </div>
 
           {/* Browser-Rahmen */}
-          <div className="mt-8 overflow-hidden rounded-[24px] border border-[#E4E1D8] bg-[#F7F6F2] shadow-card">
-            <div className="flex items-center justify-between border-b border-[#E4E1D8] bg-white px-4 py-3">
+          <div className="mt-8 overflow-hidden rounded-[24px] border border-[#DCE2EA] bg-[#F5F7FA] shadow-card">
+            <div className="flex items-center justify-between border-b border-[#DCE2EA] bg-white px-4 py-3">
               <div className="flex items-center gap-1.5" aria-hidden="true">
-                <span className="h-2.5 w-2.5 rounded-full bg-[#E4E1D8]" />
-                <span className="h-2.5 w-2.5 rounded-full bg-[#E4E1D8]" />
-                <span className="h-2.5 w-2.5 rounded-full bg-[#E4E1D8]" />
+                <span className="h-2.5 w-2.5 rounded-full bg-[#DCE2EA]" />
+                <span className="h-2.5 w-2.5 rounded-full bg-[#DCE2EA]" />
+                <span className="h-2.5 w-2.5 rounded-full bg-[#DCE2EA]" />
               </div>
-              <span className="rounded-md bg-[#F7F6F2] px-3 py-1 font-mono text-[11px] text-[#5C5A55]">
+              <span className="rounded-md bg-[#F5F7FA] px-3 py-1 font-mono text-[11px] text-[#5C6470]">
                 ugc-vz.de/brand/kampagnen
               </span>
-              <span className="text-[11px] font-medium text-[#5C5A55]">Beispielansicht</span>
+              <span className="text-[11px] font-medium text-[#5C6470]">Beispielansicht</span>
             </div>
 
             <div className="p-5 sm:p-8">
@@ -340,12 +340,12 @@ export default function BrandsPage() {
                 ].map((kpi) => (
                   <div
                     key={kpi.label}
-                    className="rounded-[16px] border border-[#E4E1D8] bg-white p-4"
+                    className="rounded-[16px] border border-[#DCE2EA] bg-white p-4"
                   >
-                    <p className="text-xs font-medium text-[#5C5A55]">{kpi.label}</p>
+                    <p className="text-xs font-medium text-[#5C6470]">{kpi.label}</p>
                     <p
                       className={`mt-2 font-mono text-2xl font-bold tabular-nums ${
-                        kpi.accent ? 'inline-block rounded-md bg-[#C8F04B] px-2 py-0.5 text-[#121212]' : 'text-[#121212]'
+                        kpi.accent ? 'inline-block rounded-md bg-[#EBF2FA] px-2 py-0.5 text-[#202124]' : 'text-[#202124]'
                       }`}
                     >
                       {kpi.value}
@@ -354,29 +354,29 @@ export default function BrandsPage() {
                 ))}
               </div>
 
-              <div className="mt-5 rounded-[16px] border border-[#E4E1D8] bg-white p-4">
-                <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-medium text-[#5C5A55]">
+              <div className="mt-5 rounded-[16px] border border-[#DCE2EA] bg-white p-4">
+                <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-medium text-[#5C6470]">
                   <span>Budget-Auslastung (256 € von 1.000 € Obergrenze)</span>
-                  <span className="font-mono font-semibold tabular-nums text-[#121212]">26 % genutzt</span>
+                  <span className="font-mono font-semibold tabular-nums text-[#202124]">26 % genutzt</span>
                 </div>
                 <BudgetBar usedPercent={26} label="Beispielansicht Budget-Auslastung" className="mt-2.5" />
 
-                <div className="mt-4 divide-y divide-[#E4E1D8] text-sm">
+                <div className="mt-4 divide-y divide-[#DCE2EA] text-sm">
                   {[
                     { post: 'TikTok · Produkt im Alltag', views: '64.000 Views', amount: '128,00 €', status: 'Zählt' },
                     { post: 'Instagram Reel · Rabatt-Hinweis', views: '41.000 Views', amount: '82,00 €', status: 'Zählt' },
                     { post: 'TikTok · Unboxing Clip', views: '14.500 Views', amount: 'Prüfung läuft', status: 'In Prüfung' },
                   ].map((row) => (
                     <div key={row.post} className="flex flex-wrap items-center justify-between gap-2 py-3">
-                      <span className="font-medium text-[#121212]">{row.post}</span>
+                      <span className="font-medium text-[#202124]">{row.post}</span>
                       <div className="flex items-center gap-3">
-                        <span className="font-mono text-xs tabular-nums text-[#5C5A55]">{row.views}</span>
-                        <span className="font-mono text-xs font-semibold tabular-nums text-[#121212]">{row.amount}</span>
+                        <span className="font-mono text-xs tabular-nums text-[#5C6470]">{row.views}</span>
+                        <span className="font-mono text-xs font-semibold tabular-nums text-[#202124]">{row.amount}</span>
                         <span
                           className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold ${
                             row.status === 'Zählt'
-                              ? 'bg-[#C8F04B] text-[#121212]'
-                              : 'bg-[#F7F6F2] text-[#5C5A55]'
+                              ? 'bg-[#EBF2FA] text-[#202124]'
+                              : 'bg-[#F5F7FA] text-[#5C6470]'
                           }`}
                         >
                           {row.status}
@@ -387,7 +387,7 @@ export default function BrandsPage() {
                 </div>
               </div>
 
-              <p className="mt-3 text-right text-xs text-[#5C5A55]">
+              <p className="mt-3 text-right text-xs text-[#5C6470]">
                 Beispielansicht mit erfundenen Zahlen.
               </p>
             </div>
@@ -399,13 +399,13 @@ export default function BrandsPage() {
       <FloFounderCard />
 
       {/* 7. Mehr Details & Kompakte Linkliste (Spec 8.2 brands.extras) */}
-      <section aria-labelledby="brands-extras-title" className="bg-[#F7F6F2] px-5 py-16 sm:px-8 sm:py-20">
+      <section aria-labelledby="brands-extras-title" className="bg-[#F5F7FA] px-5 py-16 sm:px-8 sm:py-20">
         <div className="mx-auto max-w-[1200px]">
           <div className="grid gap-10 lg:grid-cols-12">
             <div className="lg:col-span-6">
               <h2
                 id="brands-extras-title"
-                className="font-display text-2xl font-bold tracking-[-0.02em] text-[#121212] sm:text-3xl"
+                className="font-display text-2xl font-bold tracking-[-0.02em] text-[#202124] sm:text-3xl"
               >
                 Mehr Details
               </h2>
@@ -413,22 +413,22 @@ export default function BrandsPage() {
                 {EXTRA_ACCORDIONS.map((item) => (
                   <details
                     key={item.title}
-                    className="group rounded-[16px] border border-[#E4E1D8] bg-white px-5"
+                    className="group rounded-[16px] border border-[#DCE2EA] bg-white px-5"
                   >
-                    <summary className="flex min-h-[56px] cursor-pointer list-none items-center justify-between gap-4 py-3 font-semibold text-[#121212] [&::-webkit-details-marker]:hidden">
+                    <summary className="flex min-h-[56px] cursor-pointer list-none items-center justify-between gap-4 py-3 font-semibold text-[#202124] [&::-webkit-details-marker]:hidden">
                       <span>{item.title}</span>
-                      <span className="text-lg text-[#5C5A55] transition-transform group-open:rotate-45" aria-hidden="true">
+                      <span className="text-lg text-[#5C6470] transition-transform group-open:rotate-45" aria-hidden="true">
                         +
                       </span>
                     </summary>
-                    <p className="pb-4 text-sm leading-6 text-[#5C5A55]">{item.body}</p>
+                    <p className="pb-4 text-sm leading-6 text-[#5C6470]">{item.body}</p>
                   </details>
                 ))}
               </div>
             </div>
 
             <div className="lg:col-span-6">
-              <h2 className="font-display text-2xl font-bold tracking-[-0.02em] text-[#121212] sm:text-3xl">
+              <h2 className="font-display text-2xl font-bold tracking-[-0.02em] text-[#202124] sm:text-3xl">
                 Weitere Seiten für Marken
               </h2>
               <ul className="mt-5 grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
@@ -436,10 +436,10 @@ export default function BrandsPage() {
                   <li key={item.href}>
                     <Link
                       href={item.href}
-                      className="flex min-h-[48px] items-center justify-between rounded-xl border border-[#E4E1D8] bg-white px-3.5 py-2.5 text-sm font-medium text-[#121212] transition-colors hover:border-[#121212]"
+                      className="flex min-h-[48px] items-center justify-between rounded-xl border border-[#DCE2EA] bg-white px-3.5 py-2.5 text-sm font-medium text-[#202124] transition-colors hover:border-[#06458F]"
                     >
                       <span>{item.label}</span>
-                      <ArrowRight size={14} className="shrink-0 text-[#5C5A55]" aria-hidden="true" />
+                      <ArrowRight size={14} className="shrink-0 text-[#5C6470]" aria-hidden="true" />
                     </Link>
                   </li>
                 ))}
@@ -454,7 +454,7 @@ export default function BrandsPage() {
         <div className="mx-auto max-w-[720px]">
           <h2
             id="brands-faq-title"
-            className="text-center font-display text-[30px] font-bold leading-[34px] tracking-[-0.02em] text-[#121212] sm:text-4xl"
+            className="text-center font-display text-[30px] font-bold leading-[34px] tracking-[-0.02em] text-[#202124] sm:text-4xl"
           >
             Häufige Fragen von Marken
           </h2>
@@ -463,15 +463,15 @@ export default function BrandsPage() {
               <details
                 key={item.q}
                 open={idx === 0}
-                className="group rounded-[20px] border border-[#E4E1D8] bg-white px-5 sm:px-6"
+                className="group rounded-[20px] border border-[#DCE2EA] bg-white px-5 sm:px-6"
               >
-                <summary className="flex min-h-[60px] cursor-pointer list-none items-center justify-between gap-4 py-4 font-display text-base font-semibold text-[#121212] sm:text-lg [&::-webkit-details-marker]:hidden">
+                <summary className="flex min-h-[60px] cursor-pointer list-none items-center justify-between gap-4 py-4 font-display text-base font-semibold text-[#202124] sm:text-lg [&::-webkit-details-marker]:hidden">
                   <span>{item.q}</span>
-                  <span className="shrink-0 text-xl text-[#5C5A55] transition-transform group-open:rotate-45" aria-hidden="true">
+                  <span className="shrink-0 text-xl text-[#5C6470] transition-transform group-open:rotate-45" aria-hidden="true">
                     +
                   </span>
                 </summary>
-                <p className="pb-5 text-sm leading-7 text-[#5C5A55] sm:text-base">{item.a}</p>
+                <p className="pb-5 text-sm leading-7 text-[#5C6470] sm:text-base">{item.a}</p>
               </details>
             ))}
           </div>
@@ -480,24 +480,24 @@ export default function BrandsPage() {
 
       {/* 9. Abschluss-CTA */}
       <section className="bg-white px-5 pb-4 sm:px-8">
-        <div className="mx-auto max-w-[1200px] rounded-[24px] bg-[#121212] px-6 py-14 text-center text-[#F7F6F2] sm:px-12">
+        <div className="mx-auto max-w-[1200px] rounded-[24px] bg-[#06458F] px-6 py-14 text-center text-[#F5F7FA] sm:px-12">
           <h2 className="font-display text-3xl font-bold tracking-[-0.02em] sm:text-4xl">
             Starte deine erste Kampagne.
           </h2>
-          <p className="mx-auto mt-3 max-w-lg text-base text-[#F7F6F2]/75">
+          <p className="mx-auto mt-3 max-w-lg text-base text-[#F5F7FA]/75">
             Kostenloses Konto, kein Abo, feste Budget-Obergrenze.
           </p>
           <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Link
               href="/brand?tab=signup"
-              className="btn-press inline-flex min-h-[52px] items-center gap-2 rounded-full bg-[#F7F6F2] px-7 text-sm font-semibold text-[#121212] hover:opacity-90"
+              className="btn-press inline-flex min-h-[52px] items-center gap-2 rounded-full bg-[#F5F7FA] px-7 text-sm font-semibold text-[#202124] hover:opacity-90"
             >
               <span>Kampagne starten</span>
               <ArrowRight size={16} aria-hidden="true" />
             </Link>
             <Link
               href="/preise"
-              className="btn-press inline-flex min-h-[52px] items-center rounded-full border border-white/25 px-7 text-sm font-semibold text-[#F7F6F2] hover:border-white/60"
+              className="btn-press inline-flex min-h-[52px] items-center rounded-full border border-white/25 px-7 text-sm font-semibold text-[#F5F7FA] hover:border-white/60"
             >
               Preise ansehen
             </Link>

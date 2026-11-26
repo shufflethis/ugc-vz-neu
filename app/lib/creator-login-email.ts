@@ -26,9 +26,9 @@ export const buildCreatorLoginEmail = ({
   const safeCode = otpCode ? htmlEscape(otpCode) : '';
 
   const codeBlock = safeCode
-    ? `<div style="margin:22px 0;padding:18px 20px;border-radius:12px;background:#f7f6f2;border:1px solid #e4e1d8;text-align:center;">
-         <div style="font-size:12px;font-weight:700;color:#5c5a55;">Dein 6-stelliger Anmeldecode</div>
-         <div style="margin-top:8px;font-size:32px;line-height:38px;font-weight:800;letter-spacing:.26em;color:#121212;font-family:monospace;">${safeCode}</div>
+    ? `<div style="margin:22px 0;padding:18px 20px;border-radius:12px;background:#F5F7FA;border:1px solid #DCE2EA;text-align:center;">
+         <div style="font-size:12px;font-weight:700;color:#5C6470;">Dein 6-stelliger Anmeldecode</div>
+         <div style="margin-top:8px;font-size:32px;line-height:38px;font-weight:800;letter-spacing:.26em;color:#06458F;font-family:monospace;">${safeCode}</div>
        </div>`
     : '';
 
@@ -38,17 +38,17 @@ export const buildCreatorLoginEmail = ({
 
   const body = `<tr>
     <td class="email-pad" style="padding:8px 42px 30px;">
-      <p style="margin:0;font-size:16px;line-height:26px;color:#121212;">Hallo ${htmlEscape(firstName)},</p>
-      <p style="margin:14px 0 0;font-size:16px;line-height:26px;color:#5c5a55;">${introText}</p>
+      <p style="margin:0;font-size:16px;line-height:26px;color:#202124;">Hallo ${htmlEscape(firstName)},</p>
+      <p style="margin:14px 0 0;font-size:16px;line-height:26px;color:#5C6470;">${introText}</p>
       ${codeBlock}
       <table role="presentation" cellspacing="0" cellpadding="0" style="margin:22px 0;">
         <tr>
-          <td style="border-radius:12px;background:#121212;">
-            <a href="${safeUrl}" style="display:inline-block;padding:14px 24px;color:#f7f6f2;text-decoration:none;font-size:15px;font-weight:700;">${isActivation ? 'Konto bestätigen' : 'Creator-Konto öffnen'}</a>
+          <td style="border-radius:8px;background:#06458F;">
+            <a href="${safeUrl}" style="display:inline-block;padding:14px 24px;color:#FFFFFF;text-decoration:none;font-size:15px;font-weight:700;">${isActivation ? 'Konto bestätigen' : 'Creator-Konto öffnen'}</a>
           </td>
         </tr>
       </table>
-      <p style="margin:0;font-size:13px;line-height:20px;color:#5c5a55;">Code und Link sind ${CREATOR_LOGIN_TTL_MINUTES} Minuten gültig. Falls du dich nicht angemeldet hast, ignoriere diese E-Mail einfach.</p>
+      <p style="margin:0;font-size:13px;line-height:20px;color:#5C6470;">Code und Link sind ${CREATOR_LOGIN_TTL_MINUTES} Minuten gültig. Falls du dich nicht angemeldet hast, ignoriere diese E-Mail einfach.</p>
     </td>
   </tr>`;
 

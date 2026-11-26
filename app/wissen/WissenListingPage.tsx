@@ -35,7 +35,7 @@ export default function WissenListingPage({ page }: { page: number }) {
   };
 
   return (
-    <div className="min-h-screen bg-white text-[#121212]">
+    <div className="min-h-screen bg-white text-[#202124]">
       <JsonLdScript data={schema} />
       <BreadcrumbSchema
         items={[
@@ -45,17 +45,17 @@ export default function WissenListingPage({ page }: { page: number }) {
         ]}
       />
 
-      <section className="bg-[#F7F6F2] px-5 py-14 sm:px-8 sm:py-20">
+      <section className="bg-[#F5F7FA] px-5 py-14 sm:px-8 sm:py-20">
         <div className="mx-auto max-w-[1200px]">
-          <p className="text-sm font-medium text-[#6C2BD9]">Ratgeber &amp; Praxiswissen</p>
+          <p className="text-sm font-medium text-[#06458F]">Ratgeber &amp; Praxiswissen</p>
           <h1 className="mt-2 font-display text-4xl font-bold leading-tight tracking-[-0.02em] sm:text-5xl">
             Wissen rund um Creator-Kampagnen
           </h1>
-          <p className="mt-4 max-w-2xl text-base leading-7 text-[#5C5A55] sm:text-lg">
+          <p className="mt-4 max-w-2xl text-base leading-7 text-[#5C6470] sm:text-lg">
             Praxisnahe Guides für Marken und Creator zu View-Kampagnen, Preisen, Verträgen, Rechten und Briefings.
           </p>
           {page > 1 && (
-            <p className="mt-3 text-sm font-medium text-[#5C5A55]">
+            <p className="mt-3 text-sm font-medium text-[#5C6470]">
               Seite {page} von {pageCount}
             </p>
           )}
@@ -74,8 +74,8 @@ export default function WissenListingPage({ page }: { page: number }) {
                 aria-current={number === page ? 'page' : undefined}
                 className={`inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full border px-4 text-sm font-semibold transition-colors ${
                   number === page
-                    ? 'border-[#121212] bg-[#121212] text-[#F7F6F2]'
-                    : 'border-[#E4E1D8] bg-white text-[#121212] hover:border-[#121212]'
+                    ? 'border-[#06458F] bg-[#06458F] text-white'
+                    : 'border-[#DCE2EA] bg-white text-[#202124] hover:border-[#06458F]'
                 }`}
               >
                 {number}
@@ -87,26 +87,26 @@ export default function WissenListingPage({ page }: { page: number }) {
         <section className="mt-16 grid gap-6 md:grid-cols-2">
           <Link
             href="/brands"
-            className="group rounded-[20px] border border-[#E4E1D8] bg-[#F7F6F2] p-7 transition-colors hover:border-[#121212]"
+            className="group rounded-[20px] border border-[#DCE2EA] bg-[#F5F7FA] p-7 transition-colors hover:border-[#06458F]"
           >
-            <h2 className="font-display text-2xl font-bold text-[#121212]">Für Marken</h2>
-            <p className="mt-2 text-sm leading-6 text-[#5C5A55]">
+            <h2 className="font-display text-2xl font-bold text-[#202124]">Für Marken</h2>
+            <p className="mt-2 text-sm leading-6 text-[#5C6470]">
               Starte Creator-Kampagnen nach geprüften Views mit fester Budget-Obergrenze und ohne Abo.
             </p>
-            <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-[#121212] group-hover:text-[#6C2BD9]">
+            <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-[#202124] group-hover:text-[#06458F]">
               <span>Mehr erfahren</span>
               <ArrowRight size={15} aria-hidden="true" />
             </span>
           </Link>
           <Link
             href="/creator"
-            className="group rounded-[20px] border border-[#E4E1D8] bg-[#F7F6F2] p-7 transition-colors hover:border-[#121212]"
+            className="group rounded-[20px] border border-[#DCE2EA] bg-[#F5F7FA] p-7 transition-colors hover:border-[#06458F]"
           >
-            <h2 className="font-display text-2xl font-bold text-[#121212]">Für Creator</h2>
-            <p className="mt-2 text-sm leading-6 text-[#5C5A55]">
+            <h2 className="font-display text-2xl font-bold text-[#202124]">Für Creator</h2>
+            <p className="mt-2 text-sm leading-6 text-[#5C6470]">
               Suche dir passende Kampagnen aus, poste auf deinem Profil und verdiene pro 1.000 Views bei 0 % Gebühr.
             </p>
-            <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-[#121212] group-hover:text-[#6C2BD9]">
+            <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-[#202124] group-hover:text-[#06458F]">
               <span>Kostenlos mitmachen</span>
               <ArrowRight size={15} aria-hidden="true" />
             </span>

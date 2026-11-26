@@ -53,25 +53,25 @@ export default function AllPagesSitemapPage() {
   const posts = getPublishedPosts();
 
   return (
-    <div className="min-h-screen bg-[#F7F6F2] px-5 py-16 text-[#121212] sm:px-8 sm:py-24">
+    <div className="min-h-screen bg-[#F5F7FA] px-5 py-16 text-[#202124] sm:px-8 sm:py-24">
       <div className="mx-auto max-w-[1200px]">
         <header className="max-w-2xl">
-          <p className="text-sm font-medium text-[#5C5A55]">Seitenverzeichnis</p>
+          <p className="text-sm font-medium text-[#5C6470]">Seitenverzeichnis</p>
           <h1 className="mt-2 font-display text-4xl font-bold leading-tight tracking-[-0.02em] sm:text-5xl">
             Alle Seiten auf UGC VZ
           </h1>
-          <p className="mt-4 text-base leading-7 text-[#5C5A55]">
+          <p className="mt-4 text-base leading-7 text-[#5C6470]">
             Alle wichtigen Einstiege für Marken, Creator, Branchen, Vergleiche und Wissensartikel auf einen Blick.
           </p>
         </header>
 
         <div className="mt-12 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-          <section className="rounded-[20px] border border-[#E4E1D8] bg-white p-6 shadow-card">
+          <section className="rounded-[20px] border border-[#DCE2EA] bg-white p-6 shadow-card">
             <h2 className="font-display text-xl font-bold">Für Marken &amp; Tools</h2>
             <ul className="mt-4 space-y-2.5 text-sm">
               {CORE_BRAND_LINKS.map((item) => (
                 <li key={item.href}>
-                  <Link href={item.href} className="text-[#121212] underline decoration-[#E4E1D8] underline-offset-4 hover:decoration-[#6C2BD9]">
+                  <Link href={item.href} className="text-[#202124] underline decoration-[#DCE2EA] underline-offset-4 hover:decoration-[#06458F]">
                     {item.label}
                   </Link>
                 </li>
@@ -79,14 +79,14 @@ export default function AllPagesSitemapPage() {
             </ul>
           </section>
 
-          <section id="branchen" className="scroll-mt-24 rounded-[20px] border border-[#E4E1D8] bg-white p-6 shadow-card">
+          <section id="branchen" className="scroll-mt-24 rounded-[20px] border border-[#DCE2EA] bg-white p-6 shadow-card">
             <h2 className="font-display text-xl font-bold">Creator nach Branche</h2>
             <ul className="mt-4 space-y-2.5 text-sm">
               {NICHE_INDEX.map((niche) => (
                 <li key={niche.slug}>
                   <Link
                     href={nichePath(niche)}
-                    className="text-[#121212] underline decoration-[#E4E1D8] underline-offset-4 hover:decoration-[#6C2BD9]"
+                    className="text-[#202124] underline decoration-[#DCE2EA] underline-offset-4 hover:decoration-[#06458F]"
                   >
                     {niche.chip}
                   </Link>
@@ -95,11 +95,11 @@ export default function AllPagesSitemapPage() {
             </ul>
           </section>
 
-          <section className="rounded-[20px] border border-[#E4E1D8] bg-white p-6 shadow-card">
+          <section className="rounded-[20px] border border-[#DCE2EA] bg-white p-6 shadow-card">
             <h2 className="font-display text-xl font-bold">Plattform-Vergleiche</h2>
             <ul className="mt-4 space-y-2.5 text-sm">
               <li>
-                <Link href="/vergleich" className="font-semibold text-[#121212] underline decoration-[#E4E1D8] underline-offset-4 hover:decoration-[#6C2BD9]">
+                <Link href="/vergleich" className="font-semibold text-[#202124] underline decoration-[#DCE2EA] underline-offset-4 hover:decoration-[#06458F]">
                   Alle Plattformen im Vergleich
                 </Link>
               </li>
@@ -107,7 +107,7 @@ export default function AllPagesSitemapPage() {
                 <li key={comp.slug}>
                   <Link
                     href={`/vergleich/${comp.slug}${SUFFIX}`}
-                    className="text-[#121212] underline decoration-[#E4E1D8] underline-offset-4 hover:decoration-[#6C2BD9]"
+                    className="text-[#202124] underline decoration-[#DCE2EA] underline-offset-4 hover:decoration-[#06458F]"
                   >
                     {comp.name} Alternative
                   </Link>
@@ -116,12 +116,12 @@ export default function AllPagesSitemapPage() {
             </ul>
           </section>
 
-          <section className="rounded-[20px] border border-[#E4E1D8] bg-white p-6 shadow-card">
+          <section className="rounded-[20px] border border-[#DCE2EA] bg-white p-6 shadow-card">
             <h2 className="font-display text-xl font-bold">Für Creator</h2>
             <ul className="mt-4 space-y-2.5 text-sm">
               {CORE_CREATOR_LINKS.map((item) => (
                 <li key={item.href}>
-                  <Link href={item.href} className="text-[#121212] underline decoration-[#E4E1D8] underline-offset-4 hover:decoration-[#6C2BD9]">
+                  <Link href={item.href} className="text-[#202124] underline decoration-[#DCE2EA] underline-offset-4 hover:decoration-[#06458F]">
                     {item.label}
                   </Link>
                 </li>
@@ -129,12 +129,12 @@ export default function AllPagesSitemapPage() {
             </ul>
           </section>
 
-          <section className="rounded-[20px] border border-[#E4E1D8] bg-white p-6 shadow-card">
+          <section className="rounded-[20px] border border-[#DCE2EA] bg-white p-6 shadow-card">
             <h2 className="font-display text-xl font-bold">Unternehmen &amp; Rechtliches</h2>
             <ul className="mt-4 space-y-2.5 text-sm">
               {COMPANY_LINKS.map((item) => (
                 <li key={item.href}>
-                  <Link href={item.href} className="text-[#121212] underline decoration-[#E4E1D8] underline-offset-4 hover:decoration-[#6C2BD9]">
+                  <Link href={item.href} className="text-[#202124] underline decoration-[#DCE2EA] underline-offset-4 hover:decoration-[#06458F]">
                     {item.label}
                   </Link>
                 </li>
@@ -142,14 +142,14 @@ export default function AllPagesSitemapPage() {
             </ul>
           </section>
 
-          <section className="rounded-[20px] border border-[#E4E1D8] bg-white p-6 shadow-card">
+          <section className="rounded-[20px] border border-[#DCE2EA] bg-white p-6 shadow-card">
             <h2 className="font-display text-xl font-bold">Wissen &amp; Ratgeber</h2>
-            <p className="mt-2 text-xs text-[#5C5A55]">
+            <p className="mt-2 text-xs text-[#5C6470]">
               {posts.length} veröffentlichte Artikel rund um UGC, Preise, Verträge und Kampagnen.
             </p>
             <ul className="mt-4 space-y-2.5 text-sm">
               <li>
-                <Link href="/wissen" className="font-semibold text-[#121212] underline decoration-[#E4E1D8] underline-offset-4 hover:decoration-[#6C2BD9]">
+                <Link href="/wissen" className="font-semibold text-[#202124] underline decoration-[#DCE2EA] underline-offset-4 hover:decoration-[#06458F]">
                   Alle Wissensartikel ansehen
                 </Link>
               </li>
@@ -157,7 +157,7 @@ export default function AllPagesSitemapPage() {
                 <li key={post.slug}>
                   <Link
                     href={`/wissen/${post.slug}`}
-                    className="text-[#121212] underline decoration-[#E4E1D8] underline-offset-4 hover:decoration-[#6C2BD9]"
+                    className="text-[#202124] underline decoration-[#DCE2EA] underline-offset-4 hover:decoration-[#06458F]"
                   >
                     {post.title}
                   </Link>
