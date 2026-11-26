@@ -745,16 +745,34 @@ export default function BrandWalletPanel() {
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="rounded-full bg-[#F5F7FA] px-2.5 py-0.5 text-xs font-medium text-[#202124]">
-                    {t.status}
-                  </span>
-                  <a
-                    href={`/api/brand/invoices/${t.id}/pdf`}
-                    className="inline-flex items-center gap-1 text-xs font-semibold text-[#06458F] hover:underline"
+                  <span
+                    className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                      t.status === 'succeeded'
+                        ? 'bg-emerald-50 text-emerald-800'
+                        : t.status === 'failed'
+                          ? 'bg-[#F2072A]/10 text-[#D10523]'
+                          : 'bg-amber-50 text-amber-800'
+                    }`}
                   >
-                    <Download size={14} aria-hidden="true" />
-                    PDF
-                  </a>
+                    {t.status === 'succeeded'
+                      ? 'Bezahlt'
+                      : t.status === 'pending'
+                        ? 'Checkout offen'
+                        : t.status === 'failed'
+                          ? 'Abgebrochen / Abgelaufen'
+                          : t.status === 'refunded'
+                            ? 'Erstattet'
+                            : t.status}
+                  </span>
+                  {t.status === 'succeeded' && (
+                    <a
+                      href={`/api/brand/invoices/${t.id}/pdf`}
+                      className="inline-flex items-center gap-1 text-xs font-semibold text-[#06458F] hover:underline"
+                    >
+                      <Download size={14} aria-hidden="true" />
+                      PDF
+                    </a>
+                  )}
                 </div>
               </div>
             ))}

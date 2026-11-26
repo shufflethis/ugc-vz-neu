@@ -8,6 +8,7 @@ import {
   sendCampaignNotificationEmail,
 } from '@/app/lib/campaign-notification-email';
 import { AUTH_ERROR_PROVIDER_UNAVAILABLE, sendTransactionalAuthEmail } from '@/app/lib/auth-delivery';
+import { FREEMAIL_REJECTION_MESSAGE, isFreeEmailAddress } from '@/app/lib/business-email';
 import {
   cleanMultiline,
   cleanText,
@@ -68,7 +69,13 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ success: false, error: 'Bitte gib deinen Namen an.' }, { status: 400 });
       }
       if (!emailRegex.test(email)) {
-        return NextResponse.json({ success: false, error: 'Bitte gib eine gültige E-Mail-Adresse an.' }, { status: 400 });
+        return NextResponse.json({ success: false, error: 'Bitte gib eine gültige geschäftliche E-Mail-Adresse an.' }, { status: 400 });
+      }
+      if (isFreeEmailAddress(email)) {
+        return NextResponse.json(
+          { success: false, code: 'freemail_not_allowed', error: FREEMAIL_REJECTION_MESSAGE },
+          { status: 400 },
+        );
       }
       brand = await upsertBrandAccount(sql, {
         email,

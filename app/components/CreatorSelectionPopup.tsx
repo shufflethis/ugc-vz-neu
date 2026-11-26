@@ -6,6 +6,7 @@ import { toast } from 'react-toastify';
 import CreatorAvatar from './CreatorAvatar';
 import OtpInput from './auth/OtpInput';
 import { trackUGCEvents } from '../lib/analytics';
+import { FREEMAIL_REJECTION_MESSAGE, isFreeEmailAddress } from '../lib/business-email';
 import { detectHighRiskKeywords } from '../lib/high-risk-compliance';
 
 interface Creator {
@@ -129,6 +130,10 @@ export default function CreatorSelectionPopup({
     }
     if (!campaignData.email || !validateEmail(campaignData.email.trim())) {
       setCampaignError('Bitte gib eine gültige geschäftliche E-Mail-Adresse an.');
+      return;
+    }
+    if (isFreeEmailAddress(campaignData.email.trim())) {
+      setCampaignError(FREEMAIL_REJECTION_MESSAGE);
       return;
     }
 
@@ -601,6 +606,12 @@ export default function CreatorSelectionPopup({
                             maxLength={254}
                             value={campaignData.email}
                             onChange={handleCampaignInputChange}
+                            onBlur={() => {
+                              if (isFreeEmailAddress(campaignData.email.trim())) {
+                                setCampaignError(FREEMAIL_REJECTION_MESSAGE);
+                              }
+                            }}
+                            aria-invalid={Boolean(campaignError && isFreeEmailAddress(campaignData.email.trim()))}
                             className="w-full rounded-[8px] border border-[#DCE2EA] bg-white px-3.5 py-2.5 text-sm text-[#202124] outline-none focus:border-[#06458F] focus:ring-4 focus:ring-[#06458F]/10"
                             placeholder="lisa@deinemarke.de"
                           />

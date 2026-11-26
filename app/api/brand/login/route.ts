@@ -15,6 +15,7 @@ import {
   logAuthEvent,
   sendTransactionalAuthEmail,
 } from '@/app/lib/auth-delivery';
+import { FREEMAIL_REJECTION_MESSAGE, isFreeEmailAddress } from '@/app/lib/business-email';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -50,6 +51,17 @@ export async function POST(request: NextRequest) {
   const contactName = cleanText(body.name, 120);
   const companyName = cleanText(body.company, 140);
 
+  if (mode === 'signup' && isFreeEmailAddress(email)) {
+    return NextResponse.json(
+      {
+        success: false,
+        code: 'freemail_not_allowed',
+        error: FREEMAIL_REJECTION_MESSAGE,
+      },
+      { status: 400 },
+    );
+  }
+
   const rate = checkAuthRateLimit({
     flow: 'brand',
     email,
@@ -80,6 +92,16 @@ export async function POST(request: NextRequest) {
 
     if (mode === 'login') {
       if (!existingBrand) {
+        if (isFreeEmailAddress(email)) {
+          return NextResponse.json(
+            {
+              success: false,
+              code: 'freemail_not_allowed',
+              error: FREEMAIL_REJECTION_MESSAGE,
+            },
+            { status: 400 },
+          );
+        }
         logAuthEvent({
           flow: 'brand',
           mode: 'login',

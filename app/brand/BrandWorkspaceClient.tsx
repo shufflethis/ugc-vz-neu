@@ -12,6 +12,7 @@ import {
   type IndustryCategory,
 } from '@/app/lib/high-risk-compliance';
 import { clearQuickBriefDraft, loadQuickBriefDraft } from '@/app/lib/quick-brief';
+import { FREEMAIL_REJECTION_MESSAGE, isFreeEmailAddress } from '@/app/lib/business-email';
 import { trackUGCEvents } from '@/app/lib/analytics';
 import OtpInput from '@/app/components/auth/OtpInput';
 import ResendTimer from '@/app/components/auth/ResendTimer';
@@ -88,6 +89,10 @@ function BrandLoginView({ initialTab }: { initialTab: 'login' | 'signup' }) {
     const trimmedEmail = email.trim();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i.test(trimmedEmail)) {
       setError('Bitte gib eine gültige geschäftliche E-Mail-Adresse an.');
+      return false;
+    }
+    if (targetMode === 'signup' && isFreeEmailAddress(trimmedEmail)) {
+      setError(FREEMAIL_REJECTION_MESSAGE);
       return false;
     }
     if (targetMode === 'signup' && (!name.trim() || !company.trim())) {
@@ -339,6 +344,12 @@ function BrandLoginView({ initialTab }: { initialTab: 'login' | 'signup' }) {
                     if (error) setError('');
                     if (suggestSignup) setSuggestSignup(false);
                   }}
+                  onBlur={() => {
+                    if (mode === 'signup' && isFreeEmailAddress(email.trim())) {
+                      setError(FREEMAIL_REJECTION_MESSAGE);
+                    }
+                  }}
+                  aria-invalid={Boolean(error && isFreeEmailAddress(email.trim()))}
                   placeholder="name@deinemarke.de"
                   className={fieldClass}
                 />

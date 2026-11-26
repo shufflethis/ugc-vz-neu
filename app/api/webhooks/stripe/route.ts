@@ -71,10 +71,11 @@ export async function POST(request: NextRequest) {
         break;
       }
 
-      case 'checkout.session.async_payment_failed': {
+      case 'checkout.session.async_payment_failed':
+      case 'checkout.session.expired': {
         const session = event.data.object as Stripe.Checkout.Session;
         await sql.query(
-          `UPDATE brand_wallet_topups
+          `UPDATE wallet_topups
            SET status = 'failed'
            WHERE provider_ref = $1 AND status = 'pending'`,
           [session.id],

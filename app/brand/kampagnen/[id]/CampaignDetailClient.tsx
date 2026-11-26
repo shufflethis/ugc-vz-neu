@@ -329,8 +329,34 @@ export default function CampaignDetailClient({ initialDetail }: { initialDetail:
               )}
               {campaign.discountCode && (
                 <p className="mt-2 inline-flex items-center rounded-full border border-[#06458F]/25 bg-[#06458F]/5 px-3 py-1 text-xs font-semibold text-[#06458F]">
-                  Aktions-Hinweis: {campaign.discountCode}
+                  Aktions-Hinweis / Code: {campaign.discountCode}
                 </p>
+              )}
+              {hasAffiliate && (
+                <div className="mt-2.5 flex flex-wrap items-center gap-2 text-xs">
+                  <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 font-semibold text-emerald-800">
+                    <Coins size={12} aria-hidden="true" />
+                    {affiliateRateLabel}
+                  </span>
+                  {campaign.affiliateTargetUrl && (
+                    <a
+                      href={campaign.affiliateTargetUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 rounded-full border border-[#DCE2EA] bg-[#F5F7FA] px-3 py-1 font-medium text-[#06458F] hover:underline"
+                    >
+                      <Link2 size={12} aria-hidden="true" />
+                      Ziel-URL: {campaign.affiliateTargetUrl.replace(/^https?:\/\//i, '')}
+                    </a>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setTab('affiliate')}
+                    className="font-semibold text-[#06458F] underline underline-offset-2 hover:text-[#D10523]"
+                  >
+                    Tracking-Links (/r/…) entstehen pro ausgewähltem Creator → Tab „Affiliate &amp; Kickbacks“
+                  </button>
+                </div>
               )}
             </div>
             <div className="flex flex-wrap gap-2">
@@ -814,7 +840,7 @@ export default function CampaignDetailClient({ initialDetail }: { initialDetail:
                     Der Kickback wird direkt aus deinem Kampagnenbudget / Marken-Wallet im Creator-Guthaben gutgeschrieben (Creator wird per E-Mail benachrichtigt).
                   </p>
                 </div>
-                <Link href="/brand/wallet" className="text-xs font-bold text-[#06458F] underline">
+                <Link href="/brand#brand-wallet-title" className="text-xs font-bold text-[#06458F] underline">
                   Wallet aufladen →
                 </Link>
               </div>
