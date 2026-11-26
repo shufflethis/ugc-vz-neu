@@ -1,37 +1,33 @@
-import crypto from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
-import { Resend } from 'resend';
 import { getDatabase, isDatabaseConfigured } from '@/app/lib/database';
 import { buildBrandLoginEmail } from '@/app/lib/brand-login-email';
 import { isTrustedSameOrigin } from '@/app/lib/brand-session';
-import { cleanText, createBrandLoginChallenge, upsertBrandAccount } from '@/app/lib/brand-workspace';
+import {
+  cleanText,
+  createBrandLoginChallenge,
+  findBrandByEmail,
+  upsertBrandAccount,
+} from '@/app/lib/brand-workspace';
+import {
+  AUTH_ERROR_PROVIDER_UNAVAILABLE,
+  checkAuthRateLimit,
+  getClientIp,
+  logAuthEvent,
+  sendTransactionalAuthEmail,
+} from '@/app/lib/auth-delivery';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
 
-const WINDOW_MS = 60 * 60 * 1000;
-const rateLimits = new Map<string, number[]>();
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i;
-
-const getIp = (req: Request) => req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || req.headers.get('x-real-ip') || 'unknown';
-const hashKey = (value: string) => crypto.createHash('sha256').update(value).digest('hex').slice(0, 24);
-
-const consumeLimit = (key: string, limit: number) => {
-  const now = Date.now();
-  const recent = (rateLimits.get(key) || []).filter((ts) => now - ts < WINDOW_MS);
-  if (recent.length >= limit) return false;
-  recent.push(now);
-  rateLimits.set(key, recent);
-  return true;
-};
 
 export async function POST(request: NextRequest) {
   if (!isTrustedSameOrigin(request)) {
     return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
   }
   if (!isDatabaseConfigured()) {
-    return NextResponse.json({ success: false, error: 'Der Brand-Login ist gerade nicht verfügbar.' }, { status: 503 });
+    return NextResponse.json({ success: false, error: AUTH_ERROR_PROVIDER_UNAVAILABLE }, { status: 503 });
   }
 
   let body: Record<string, unknown>;
@@ -50,22 +46,83 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: false, error: 'Bitte gib eine gültige geschäftliche E-Mail-Adresse an.' }, { status: 400 });
   }
 
-  if (!consumeLimit(`ip:${hashKey(getIp(request))}`, 10) || !consumeLimit(`email:${hashKey(email)}`, 4)) {
-    return NextResponse.json({ success: false, error: 'Zu viele Anfragen. Bitte versuche es später erneut.' }, { status: 429 });
-  }
+  const mode: 'login' | 'signup' = body.mode === 'signup' ? 'signup' : 'login';
+  const contactName = cleanText(body.name, 120);
+  const companyName = cleanText(body.company, 140);
 
-  const resendApiKey = process.env.RESEND_API_KEY;
-  if (!resendApiKey) {
-    return NextResponse.json({ success: false, error: 'Der E-Mail-Versand ist gerade nicht konfiguriert.' }, { status: 503 });
+  const rate = checkAuthRateLimit({
+    flow: 'brand',
+    email,
+    ip: getClientIp(request),
+  });
+  if (!rate.allowed) {
+    logAuthEvent({
+      flow: 'brand',
+      mode,
+      email,
+      profileFound: false,
+      emailSent: false,
+      providerStatus: 429,
+      errorCode: rate.reason,
+    });
+    return NextResponse.json(
+      { success: false, error: rate.error, retryAfterSec: rate.retryAfterSec },
+      { status: 429, headers: { 'Retry-After': String(rate.retryAfterSec) } },
+    );
   }
 
   try {
     const sql = getDatabase();
-    const brand = await upsertBrandAccount(sql, {
-      email,
-      contactName: cleanText(body.name, 120),
-      companyName: cleanText(body.company, 140),
-    });
+    const existingBrand = await findBrandByEmail(sql, email);
+
+    let brand = existingBrand;
+    let switchedToLogin = false;
+
+    if (mode === 'login') {
+      if (!existingBrand) {
+        logAuthEvent({
+          flow: 'brand',
+          mode: 'login',
+          email,
+          profileFound: false,
+          emailSent: false,
+          errorCode: 'account_not_found',
+        });
+        return NextResponse.json(
+          {
+            success: false,
+            code: 'account_not_found',
+            suggestedMode: 'signup',
+            error: 'Zu dieser E-Mail-Adresse gibt es noch kein Marken-Konto. Lege jetzt dein Konto an.',
+          },
+          { status: 404 },
+        );
+      }
+    } else if (existingBrand) {
+      // Bestehende E-Mail im Registrieren-Zustand fuehrt automatisch zur Anmeldung statt zu Fehler oder Doppelkonto.
+      switchedToLogin = true;
+      brand = existingBrand;
+    } else {
+      if (!contactName || !companyName) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'Bitte gib deinen Namen und deine Marke bzw. dein Unternehmen an.',
+          },
+          { status: 400 },
+        );
+      }
+      brand = await upsertBrandAccount(sql, {
+        email,
+        contactName,
+        companyName,
+      });
+    }
+
+    if (!brand) {
+      return NextResponse.json({ success: false, error: AUTH_ERROR_PROVIDER_UNAVAILABLE }, { status: 503 });
+    }
+
     const redirectTo = cleanText(body.redirectTo, 200);
     const { token, otpCode } = await createBrandLoginChallenge(sql, brand.id, email, redirectTo);
 
@@ -80,31 +137,61 @@ export async function POST(request: NextRequest) {
       otpCode,
     });
 
-    const resend = new Resend(resendApiKey);
-    const response = await resend.emails.send({
-      from: process.env.RESEND_FROM || 'UGC VZ <hi@ugc-vz.de>',
-      to: email,
-      replyTo: process.env.UGC_INTERNAL_EMAIL || 'hi@ugc-vz.de',
-      subject: emailPayload.subject,
-      html: emailPayload.html,
-      text: emailPayload.text,
-      tags: [
-        { name: 'category', value: 'brand_login' },
-        { name: 'audience', value: 'brand' },
-      ],
+    const delivery = await sendTransactionalAuthEmail({
+      flow: 'brand',
+      message: {
+        to: email,
+        subject: emailPayload.subject,
+        html: emailPayload.html,
+        text: emailPayload.text,
+        tags: [
+          { name: 'category', value: 'brand_login' },
+          { name: 'audience', value: 'brand' },
+        ],
+      },
     });
 
-    if (response.error) {
-      console.error('Brand login email failed', response.error.name);
-      return NextResponse.json({ success: false, error: 'Die E-Mail konnte nicht versendet werden.' }, { status: 502 });
+    logAuthEvent({
+      flow: 'brand',
+      mode,
+      email,
+      profileFound: Boolean(existingBrand),
+      profileStatus: existingBrand ? 'existing' : 'created',
+      emailSent: delivery.ok,
+      providerStatus: delivery.providerStatus,
+      errorCode: delivery.errorCode,
+    });
+
+    if (!delivery.ok) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: delivery.userMessage || AUTH_ERROR_PROVIDER_UNAVAILABLE,
+          ...(delivery.retryAfterSec ? { retryAfterSec: delivery.retryAfterSec } : {}),
+        },
+        {
+          status: delivery.status,
+          ...(delivery.retryAfterSec ? { headers: { 'Retry-After': String(delivery.retryAfterSec) } } : {}),
+        },
+      );
     }
 
     return NextResponse.json({
       success: true,
-      message: 'Wir haben dir deinen persönlichen Anmeldelink geschickt. Prüfe bitte dein Postfach (und ggf. Spam).',
+      switchedToLogin,
+      resendCooldownSec: 60,
+      message: `Code ist unterwegs an ${email}. Nichts da? Schau im Spam oder im Gmail-Tab „Benachrichtigungen“.`,
     });
   } catch (error) {
-    console.error('Brand login failed', error instanceof Error ? error.message : 'unknown');
-    return NextResponse.json({ success: false, error: 'Anmeldung konnte gerade nicht gestartet werden.' }, { status: 500 });
+    logAuthEvent({
+      flow: 'brand',
+      mode,
+      email,
+      profileFound: false,
+      emailSent: false,
+      providerStatus: 500,
+      errorCode: error instanceof Error ? error.name : 'unexpected_error',
+    });
+    return NextResponse.json({ success: false, error: AUTH_ERROR_PROVIDER_UNAVAILABLE }, { status: 503 });
   }
 }

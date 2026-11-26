@@ -1,43 +1,34 @@
 import crypto from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
-import { Resend } from 'resend';
 import { getDatabase, isDatabaseConfigured } from '@/app/lib/database';
 import { buildCreatorLoginEmail, CREATOR_LOGIN_TTL_MINUTES, hashCreatorOtp } from '@/app/lib/creator-login-email';
+import {
+  AUTH_ERROR_PROVIDER_UNAVAILABLE,
+  checkAuthRateLimit,
+  getClientIp,
+  logAuthEvent,
+  sendTransactionalAuthEmail,
+} from '@/app/lib/auth-delivery';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
 
-const WINDOW_MS = 60 * 60 * 1000;
-const rateLimits = new Map<string, number[]>();
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i;
 
-const text = (value: unknown, max: number) => String(value || '')
-  .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '')
-  .replace(/\s+/g, ' ')
-  .trim()
-  .slice(0, max);
+const text = (value: unknown, max: number) =>
+  String(value || '')
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, max);
 
-const getIp = (request: Request) => request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-  || request.headers.get('x-real-ip')
-  || 'unknown';
-
-const rateLimitKey = (value: string) => crypto.createHash('sha256').update(value).digest('hex').slice(0, 24);
-
-const consumeRateLimit = (key: string, limit: number) => {
-  const now = Date.now();
-  const recent = (rateLimits.get(key) || []).filter((timestamp) => now - timestamp < WINDOW_MS);
-  if (recent.length >= limit) return false;
-  recent.push(now);
-  rateLimits.set(key, recent);
-  return true;
-};
-
-const GENERIC_MESSAGE = 'Wenn zu dieser E-Mail-Adresse ein Creator-Profil existiert, haben wir dir einen 6-stelligen Code und Anmeldelink geschickt. Prüfe auch deinen Spam-Ordner.';
+const GENERIC_MESSAGE =
+  'Wenn zu dieser Adresse ein Profil existiert, ist der Code unterwegs. Nichts da? Schau im Spam oder im Gmail-Tab „Benachrichtigungen“.';
 
 export async function POST(request: NextRequest) {
   if (!isDatabaseConfigured()) {
-    return NextResponse.json({ success: false, error: 'Der Login ist gerade nicht verfügbar.' }, { status: 503 });
+    return NextResponse.json({ success: false, error: AUTH_ERROR_PROVIDER_UNAVAILABLE }, { status: 503 });
   }
 
   let body: Record<string, unknown>;
@@ -52,93 +43,136 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: false, error: 'Bitte gib eine gültige E-Mail-Adresse an.' }, { status: 400 });
   }
 
-  const ipAllowed = consumeRateLimit(`ip:${rateLimitKey(getIp(request))}`, 10);
-  const emailAllowed = consumeRateLimit(`email:${rateLimitKey(email)}`, 4);
-  if (!ipAllowed || !emailAllowed) {
-    return NextResponse.json({
-      success: false,
-      error: 'Zu viele Versuche. Bitte probiere es später erneut.',
-    }, { status: 429, headers: { 'Retry-After': '3600' } });
-  }
-
-  const sql = getDatabase();
-
-  // Auch unbestaetigte (pending_verification) Profile koennen sich jetzt per Code/Link
-  // aktivieren und direkt einloggen statt still ins Leere zu laufen.
-  const [creator] = await sql.query(
-    `
-    SELECT p.id, p.display_name, p.status
-    FROM creator_private_contacts c
-    JOIN creator_profiles p ON p.id = c.creator_id
-    WHERE lower(c.email) = lower($1)
-      AND p.status IN ('active', 'pending_verification')
-    ORDER BY CASE WHEN p.status = 'active' THEN 0 ELSE 1 END
-    LIMIT 1
-  `,
-    [email],
-  ) as unknown as Array<{ id: string; display_name: string; status: string }>;
-
-  if (!creator) {
-    console.warn('Creator login requested for unknown or archived profile:', email);
-    return NextResponse.json({ success: true, message: GENERIC_MESSAGE });
-  }
-
-  const resendApiKey = process.env.RESEND_API_KEY;
-  if (!resendApiKey) {
-    return NextResponse.json({ success: false, error: 'Der Login ist gerade nicht verfügbar.' }, { status: 503 });
-  }
-
-  const token = crypto.randomBytes(32).toString('base64url');
-  const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
-  const otpCode = String(crypto.randomInt(100000, 1000000));
-  const otpHash = hashCreatorOtp(email, otpCode);
-  const expiresAt = new Date(Date.now() + CREATOR_LOGIN_TTL_MINUTES * 60 * 1000).toISOString();
-
-  await sql.query(
-    `UPDATE creator_verification_tokens
-     SET used_at = now()
-     WHERE creator_id = $1 AND purpose = 'edit_profile' AND used_at IS NULL`,
-    [creator.id],
-  );
-
-  await sql.query(
-    `INSERT INTO creator_verification_tokens (creator_id, token_hash, otp_code_hash, purpose, expires_at)
-     VALUES ($1, $2, $3, 'edit_profile', $4)`,
-    [creator.id, tokenHash, otpHash, expiresAt],
-  );
-
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || request.nextUrl.origin;
-  const loginUrl = new URL('/konto/verify', baseUrl);
-  loginUrl.searchParams.set('token', token);
-
-  const emailPayload = buildCreatorLoginEmail({
-    name: creator.display_name,
-    loginUrl: loginUrl.toString(),
-    otpCode,
-    isActivation: creator.status === 'pending_verification',
+  const rate = checkAuthRateLimit({
+    flow: 'creator',
+    email,
+    ip: getClientIp(request),
   });
-
-  const resend = new Resend(resendApiKey);
-  const response = await resend.emails.send({
-    from: process.env.RESEND_FROM || 'UGC VZ <hi@ugc-vz.de>',
-    to: email,
-    replyTo: process.env.UGC_INTERNAL_EMAIL || 'hi@ugc-vz.de',
-    subject: emailPayload.subject,
-    html: emailPayload.html,
-    text: emailPayload.text,
-    tags: [
-      { name: 'category', value: 'creator_login' },
-      { name: 'audience', value: 'creator' },
-    ],
-  });
-
-  if (response.error) {
-    console.error('Creator login email rejected by Resend', response.error.name);
-    return NextResponse.json({
-      success: false,
-      error: 'Die E-Mail konnte nicht versendet werden. Bitte versuche es erneut.',
-    }, { status: 502 });
+  if (!rate.allowed) {
+    logAuthEvent({
+      flow: 'creator',
+      email,
+      profileFound: false,
+      emailSent: false,
+      providerStatus: 429,
+      errorCode: rate.reason,
+    });
+    return NextResponse.json(
+      { success: false, error: rate.error, retryAfterSec: rate.retryAfterSec },
+      { status: 429, headers: { 'Retry-After': String(rate.retryAfterSec) } },
+    );
   }
 
-  return NextResponse.json({ success: true, message: GENERIC_MESSAGE });
+  try {
+    const sql = getDatabase();
+
+    // Case-insensitiv und getrimmt suchen; schliesst aktive und noch unbestaetigte Profile ein.
+    const [creator] = (await sql.query(
+      `
+      SELECT p.id, p.display_name, p.status
+      FROM creator_private_contacts c
+      JOIN creator_profiles p ON p.id = c.creator_id
+      WHERE lower(btrim(c.email)) = lower($1)
+        AND p.status IN ('active', 'pending_verification')
+      ORDER BY CASE WHEN p.status = 'active' THEN 0 ELSE 1 END, p.updated_at DESC
+      LIMIT 1
+    `,
+      [email],
+    )) as unknown as Array<{ id: string; display_name: string; status: string }>;
+
+    if (!creator) {
+      logAuthEvent({
+        flow: 'creator',
+        email,
+        profileFound: false,
+        profileStatus: null,
+        emailSent: false,
+      });
+      return NextResponse.json({ success: true, message: GENERIC_MESSAGE, resendCooldownSec: 60 });
+    }
+
+    const token = crypto.randomBytes(32).toString('base64url');
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+    const otpCode = String(crypto.randomInt(100000, 1000000));
+    const otpHash = hashCreatorOtp(email, otpCode);
+    const expiresAt = new Date(Date.now() + CREATOR_LOGIN_TTL_MINUTES * 60 * 1000).toISOString();
+
+    await sql.query(
+      `UPDATE creator_verification_tokens
+       SET used_at = now()
+       WHERE creator_id = $1 AND purpose = 'edit_profile' AND used_at IS NULL`,
+      [creator.id],
+    );
+
+    await sql.query(
+      `INSERT INTO creator_verification_tokens (creator_id, token_hash, otp_code_hash, purpose, expires_at)
+       VALUES ($1, $2, $3, 'edit_profile', $4)`,
+      [creator.id, tokenHash, otpHash, expiresAt],
+    );
+
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || request.nextUrl.origin;
+    const loginUrl = new URL('/konto/verify', baseUrl);
+    loginUrl.searchParams.set('token', token);
+
+    const emailPayload = buildCreatorLoginEmail({
+      name: creator.display_name,
+      loginUrl: loginUrl.toString(),
+      otpCode,
+      isActivation: creator.status === 'pending_verification',
+    });
+
+    const delivery = await sendTransactionalAuthEmail({
+      flow: 'creator',
+      message: {
+        to: email,
+        subject: emailPayload.subject,
+        html: emailPayload.html,
+        text: emailPayload.text,
+        tags: [
+          { name: 'category', value: 'creator_login' },
+          { name: 'audience', value: 'creator' },
+        ],
+      },
+    });
+
+    logAuthEvent({
+      flow: 'creator',
+      email,
+      profileFound: true,
+      profileStatus: creator.status,
+      emailSent: delivery.ok,
+      providerStatus: delivery.providerStatus,
+      errorCode: delivery.errorCode,
+    });
+
+    if (!delivery.ok) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: delivery.userMessage || AUTH_ERROR_PROVIDER_UNAVAILABLE,
+          ...(delivery.retryAfterSec ? { retryAfterSec: delivery.retryAfterSec } : {}),
+        },
+        {
+          status: delivery.status,
+          ...(delivery.retryAfterSec ? { headers: { 'Retry-After': String(delivery.retryAfterSec) } } : {}),
+        },
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: GENERIC_MESSAGE,
+      resendCooldownSec: 60,
+    });
+  } catch (error) {
+    logAuthEvent({
+      flow: 'creator',
+      email,
+      profileFound: false,
+      emailSent: false,
+      providerStatus: 500,
+      errorCode: error instanceof Error ? error.name : 'unexpected_error',
+    });
+    return NextResponse.json({ success: false, error: AUTH_ERROR_PROVIDER_UNAVAILABLE }, { status: 503 });
+  }
 }

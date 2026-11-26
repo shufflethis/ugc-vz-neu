@@ -1,7 +1,11 @@
 import crypto from 'node:crypto';
 
 export const CREATOR_SESSION_COOKIE = 'ugcvz_session';
-export const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+export const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+export const SHORT_SESSION_TTL_MS = 24 * 60 * 60 * 1000;
+
+export const getCreatorSessionTtlMs = (rememberMe = true) =>
+  rememberMe ? SESSION_TTL_MS : SHORT_SESSION_TTL_MS;
 
 const getSecret = (): string | null => process.env.CREATOR_SESSION_SECRET || null;
 
@@ -10,12 +14,13 @@ const sign = (payload: string, secretValue: string) =>
 
 /**
  * Stateless, HMAC-signierte Session. Kein Passwort, kein Session-Store: Die
- * E-Mail-Adresse ist die Identitaet, der Magic-Link erzeugt diese Session.
+ * E-Mail-Adresse ist die Identitaet, der Code oder Link erzeugt diese Session.
  */
-export const signSession = (creatorId: string): string => {
+export const signSession = (creatorId: string, options?: { rememberMe?: boolean }): string => {
   const secretValue = getSecret();
   if (!secretValue) throw new Error('CREATOR_SESSION_SECRET is not configured.');
-  const expiresAt = Date.now() + SESSION_TTL_MS;
+  const ttlMs = getCreatorSessionTtlMs(options?.rememberMe !== false);
+  const expiresAt = Date.now() + ttlMs;
   const payload = Buffer.from(JSON.stringify({ cid: creatorId, exp: expiresAt })).toString('base64url');
   return `${payload}.${sign(payload, secretValue)}`;
 };

@@ -7,7 +7,9 @@ import {
   createBrandCampaign,
   getBrandAccount,
   listBrandCampaigns,
+  sanitizeCampaignPlatforms,
   toPositiveIntOrNull,
+  validateCampaignBusinessRules,
   type CampaignVisibility,
   type CompensationModel,
 } from '@/app/lib/brand-workspace';
@@ -45,6 +47,20 @@ export async function POST(request: NextRequest) {
   const title = cleanText(body.title, 140);
   if (!title) return NextResponse.json({ success: false, error: 'Bitte gib einen Kampagnentitel an.' }, { status: 400 });
 
+  const compensationModel = (['fixed', 'tkp', 'hybrid', 'barter'].includes(String(body.compensationModel))
+    ? body.compensationModel
+    : 'fixed') as CompensationModel;
+  const platforms = sanitizeCampaignPlatforms(body.platforms);
+  const totalBudgetEur = toPositiveIntOrNull(body.totalBudgetEur, 1_000_000);
+  const rulesCheck = validateCampaignBusinessRules({
+    compensationModel,
+    totalBudgetEur,
+    platforms,
+  });
+  if (!rulesCheck.ok) {
+    return NextResponse.json({ success: false, error: rulesCheck.error }, { status: 400 });
+  }
+
   const sql = getDatabase();
   const brand = await getBrandAccount(sql, brandId);
   if (!brand) return NextResponse.json({ success: false, error: 'Konto nicht gefunden.' }, { status: 401 });
@@ -54,13 +70,11 @@ export async function POST(request: NextRequest) {
     brandDisplayName: cleanText(body.brandDisplayName, 120) || brand.companyName || brand.contactName || 'Brand',
     description: cleanMultiline(body.description, 3000),
     niche: cleanText(body.niche, 80),
-    platforms: Array.isArray(body.platforms) ? body.platforms.map(String) : ['tiktok', 'instagram'],
+    platforms,
     deliverables: cleanText(body.deliverables, 240),
-    compensationModel: (['fixed', 'tkp', 'hybrid', 'barter'].includes(String(body.compensationModel))
-      ? body.compensationModel
-      : 'fixed') as CompensationModel,
+    compensationModel,
     budgetPerVideoEur: toPositiveIntOrNull(body.budgetPerVideoEur, 50_000),
-    totalBudgetEur: toPositiveIntOrNull(body.totalBudgetEur, 1_000_000),
+    totalBudgetEur,
     tkpEurCents: toPositiveIntOrNull(body.tkpEurCents, 50_000),
     requiresProductChoice: Boolean(body.requiresProductChoice),
     productChoicePrompt: cleanText(body.productChoicePrompt, 240),

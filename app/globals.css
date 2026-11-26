@@ -261,3 +261,20 @@ body {
   width: 520px; height: 360px; left: -220px; top: -180px;
   background: var(--grad-logo); opacity: 0.08;
 }
+
+/* Auth OTP error shake (transform only, respects prefers-reduced-motion) */
+@keyframes otp-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+}
+.otp-shake {
+  animation: otp-shake 280ms cubic-bezier(.2,.8,.2,1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .otp-shake {
+    animation: none;
+  }
+}

@@ -1,7 +1,11 @@
 import crypto from 'node:crypto';
 
 export const BRAND_SESSION_COOKIE = 'ugcvz_brand_session';
-export const BRAND_SESSION_TTL_MS = 14 * 24 * 60 * 60 * 1000;
+export const BRAND_SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+export const BRAND_SHORT_SESSION_TTL_MS = 24 * 60 * 60 * 1000;
+
+export const getBrandSessionTtlMs = (rememberMe = true) =>
+  rememberMe ? BRAND_SESSION_TTL_MS : BRAND_SHORT_SESSION_TTL_MS;
 
 const getSecret = (): string | null =>
   process.env.BRAND_SESSION_SECRET || process.env.CREATOR_SESSION_SECRET || null;
@@ -13,10 +17,11 @@ const sign = (payload: string, secretValue: string) =>
  * Stateless, HMAC-signierte Brand-Session (gleiche Architektur wie creator-session.ts,
  * aber eigener Cookie-Name und Scope-Claim, damit Brand- und Creator-Sessions strikt getrennt bleiben).
  */
-export const signBrandSession = (brandId: string): string => {
+export const signBrandSession = (brandId: string, options?: { rememberMe?: boolean }): string => {
   const secretValue = getSecret();
   if (!secretValue) throw new Error('BRAND_SESSION_SECRET / CREATOR_SESSION_SECRET is not configured.');
-  const expiresAt = Date.now() + BRAND_SESSION_TTL_MS;
+  const ttlMs = getBrandSessionTtlMs(options?.rememberMe !== false);
+  const expiresAt = Date.now() + ttlMs;
   const payload = Buffer.from(JSON.stringify({ bid: brandId, scope: 'brand', exp: expiresAt })).toString('base64url');
   return `${payload}.${sign(payload, secretValue)}`;
 };

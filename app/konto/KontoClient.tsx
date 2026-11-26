@@ -9,6 +9,9 @@ import type { SocialOAuthAvailability } from '../lib/social-oauth';
 import type { CreatorAiProfileRecord } from '../lib/creator-social-analyzer';
 import SocialVerifySection from './SocialVerifySection';
 import AiProfileReviewCard from './AiProfileReviewCard';
+import OtpInput from '@/app/components/auth/OtpInput';
+import ResendTimer from '@/app/components/auth/ResendTimer';
+import InlineError from '@/app/components/auth/InlineError';
 
 const fieldClass = 'w-full rounded-xl border border-hairline bg-white px-4 py-3 text-ink outline-none transition focus:border-geo-violet focus:ring-4 focus:ring-geo-violet/10';
 const labelClass = 'mb-2 block text-sm font-semibold text-ink';
@@ -109,16 +112,20 @@ function ProjectRequests({ profile }: { profile: CreatorProfileView }) {
 function LoginView({ invalid, error, noSession }: { invalid: boolean; error: boolean; noSession: boolean }) {
   const [email, setEmail] = useState('');
   const [otpCode, setOtpCode] = useState('');
+  const [rememberMe, setRememberMe] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [sent, setSent] = useState(false);
   const [message, setMessage] = useState('');
+  const [shakeKey, setShakeKey] = useState(0);
+  const [resendKey, setResendKey] = useState(0);
+  const [cooldownSec, setCooldownSec] = useState(60);
 
-  const submit = async (event: FormEvent) => {
-    event.preventDefault();
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i.test(email.trim())) {
+  const requestCode = async () => {
+    const trimmedEmail = email.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i.test(trimmedEmail)) {
       setMessage('Bitte gib eine gültige E-Mail-Adresse an.');
-      return;
+      return false;
     }
     setSubmitting(true);
     setMessage('');
@@ -126,23 +133,38 @@ function LoginView({ invalid, error, noSession }: { invalid: boolean; error: boo
       const response = await fetch('/api/creator/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim() }),
+        body: JSON.stringify({ email: trimmedEmail }),
       });
       const result = await response.json();
-      if (!response.ok || !result.success) throw new Error(result.error || 'Login fehlgeschlagen.');
+      if (!response.ok || !result.success) {
+        if (typeof result.retryAfterSec === 'number' && result.retryAfterSec > 0) {
+          setCooldownSec(Math.min(60, result.retryAfterSec));
+          setResendKey((k) => k + 1);
+        }
+        throw new Error(result.error || 'Gerade klappt der Versand bei uns nicht. Versuch es in ein paar Minuten noch mal oder schreib uns an hi@ugc-vz.de.');
+      }
+      setCooldownSec(typeof result.resendCooldownSec === 'number' ? result.resendCooldownSec : 60);
+      setResendKey((k) => k + 1);
       setSent(true);
+      return true;
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : 'Login fehlgeschlagen. Bitte versuche es erneut.');
+      setMessage(err instanceof Error ? err.message : 'Anmeldung fehlgeschlagen. Bitte versuche es erneut.');
+      return false;
     } finally {
       setSubmitting(false);
     }
   };
 
-  const verifyOtp = async (event: FormEvent) => {
+  const submit = async (event: FormEvent) => {
     event.preventDefault();
-    const cleanCode = otpCode.replace(/\D/g, '');
+    await requestCode();
+  };
+
+  const submitVerifyCode = async (rawCode: string) => {
+    const cleanCode = rawCode.replace(/\D/g, '');
     if (cleanCode.length !== 6) {
       setMessage('Bitte gib den 6-stelligen Code aus deiner E-Mail ein.');
+      setShakeKey((k) => k + 1);
       return;
     }
     setVerifying(true);
@@ -151,10 +173,13 @@ function LoginView({ invalid, error, noSession }: { invalid: boolean; error: boo
       const response = await fetch('/api/creator/login/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim(), code: cleanCode }),
+        body: JSON.stringify({ email: email.trim(), code: cleanCode, rememberMe }),
       });
       const result = await response.json();
-      if (!response.ok || !result.success) throw new Error(result.error || 'Code konnte nicht bestätigt werden.');
+      if (!response.ok || !result.success) {
+        setShakeKey((k) => k + 1);
+        throw new Error(result.error || 'Code konnte nicht bestätigt werden.');
+      }
       window.location.assign(result.redirectTo || '/konto?login=1');
     } catch (err) {
       setMessage(err instanceof Error ? err.message : 'Anmeldung fehlgeschlagen.');
@@ -162,91 +187,174 @@ function LoginView({ invalid, error, noSession }: { invalid: boolean; error: boo
     }
   };
 
+  const verifyOtp = async (event: FormEvent) => {
+    event.preventDefault();
+    await submitVerifyCode(otpCode);
+  };
+
   return (
-    <div className="px-4 sm:px-8 md:px-16 lg:px-24 pb-24 pt-10 sm:pt-14">
-      <section className="max-w-lg mx-auto py-16">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold">Creator-Konto</h1>
-          <p className="mt-3 text-ink-soft">Melde dich mit deiner E-Mail per 6-stelligem Code an, um dein Profil zu bearbeiten, Social-Kanäle zu verifizieren und offene Kampagnen zu sehen.</p>
+    <div className="min-h-screen bg-[#F7F6F2] px-4 pb-24 pt-12 text-[#121212] sm:px-8 sm:pt-16">
+      <section className="mx-auto max-w-md">
+        <div className="mb-6 text-center">
+          <p className="text-sm font-medium text-[#5C5A55]">UGC VZ für Creator</p>
+          <h1 className="mt-1.5 text-3xl font-bold tracking-tight text-[#121212] sm:text-4xl">
+            {sent ? 'Code eingeben' : 'Creator-Konto'}
+          </h1>
+          <p className="mt-2 text-sm leading-6 text-[#5C5A55]">
+            Melde dich mit deiner E-Mail per 6-stelligem Code an. Kein Passwort nötig.
+          </p>
         </div>
 
-        {sent ? (
-          <div className="rounded-3xl border border-hairline bg-white p-8 shadow-[0_24px_80px_rgba(35,22,47,0.10)] sm:p-10">
-            <div className="flex flex-col items-center text-center">
-              <span className="flex h-16 w-16 items-center justify-center rounded-full bg-geo-violet/10 text-geo-violet"><Mail size={30} /></span>
-              <h2 className="mt-5 text-2xl font-bold">6-stelligen Code eingeben</h2>
-              <p className="mt-2 text-sm leading-6 text-ink-soft">
-                Wenn zu <strong className="text-ink">{email}</strong> ein Profil existiert (auch noch unbestätigte Profile!), haben wir dir einen 6-stelligen Code und einen Link geschickt.
-              </p>
-            </div>
-            <form onSubmit={verifyOtp} className="mt-6 space-y-4">
-              <label className="block">
-                <span className={labelClass}>6-stelliger Code aus deiner E-Mail</span>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  autoComplete="one-time-code"
-                  maxLength={8}
-                  value={otpCode}
-                  onChange={(e) => { setOtpCode(e.target.value); if (message) setMessage(''); }}
-                  placeholder="123456"
-                  className={`${fieldClass} text-center font-mono text-2xl font-bold tracking-[0.3em]`}
+        <div className="rounded-[20px] border border-[#E4E1D8] bg-white p-6 shadow-[0_1px_2px_rgba(18,18,18,.06),0_8px_24px_rgba(18,18,18,.06)] sm:p-8">
+          {sent ? (
+            <div className="space-y-5">
+              <div className="text-center">
+                <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#EFE8FD] text-[#6C2BD9]">
+                  <Mail size={22} aria-hidden="true" />
+                </span>
+                <p className="mt-3 text-sm leading-6 text-[#5C5A55]">
+                  Wenn zu <strong className="text-[#121212]">{email}</strong> ein Profil existiert, ist der Code unterwegs. Nichts da? Schau im Spam oder im Gmail-Tab „Benachrichtigungen“.
+                </p>
+              </div>
+
+              <form onSubmit={verifyOtp} className="space-y-4">
+                <div>
+                  <span className="mb-1.5 block text-center text-sm font-medium text-[#121212]">6-stelliger Anmeldecode</span>
+                  <OtpInput
+                    value={otpCode}
+                    onChange={(next) => {
+                      setOtpCode(next);
+                      if (message) setMessage('');
+                    }}
+                    onComplete={(code) => {
+                      if (!verifying) void submitVerifyCode(code);
+                    }}
+                    disabled={verifying}
+                    hasError={Boolean(message)}
+                    shakeKey={shakeKey}
+                    idPrefix="creator-otp"
+                  />
+                </div>
+
+                <label className="flex cursor-pointer items-center gap-2.5 text-sm text-[#5C5A55]">
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    className="h-4 w-4 rounded border-[#E4E1D8] accent-[#121212]"
+                  />
+                  <span>Angemeldet bleiben (30 Tage)</span>
+                </label>
+
+                <button
+                  type="submit"
+                  disabled={verifying}
+                  className="min-h-[48px] w-full rounded-xl bg-[#121212] px-6 text-sm font-semibold text-[#F7F6F2] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {verifying ? 'Code wird geprüft ...' : 'Code bestätigen'}
+                </button>
+
+                <InlineError message={message} />
+              </form>
+
+              <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[#E4E1D8] pt-4 text-xs text-[#5C5A55]">
+                <ResendTimer
+                  initialSeconds={cooldownSec}
+                  resetTrigger={resendKey}
+                  disabled={submitting || verifying}
+                  onResend={async () => {
+                    await requestCode();
+                  }}
                 />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSent(false);
+                    setOtpCode('');
+                    setMessage('');
+                  }}
+                  className="font-semibold text-[#121212] underline underline-offset-2"
+                >
+                  E-Mail ändern
+                </button>
+              </div>
+            </div>
+          ) : (
+            <form onSubmit={submit} noValidate className="space-y-4">
+              {noSession && (
+                <div className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900" role="alert">
+                  Dein Browser hat die Anmeldung nicht behalten. Fordere hier einfach einen neuen 6-stelligen Code an und gib ihn direkt im Browser ein.
+                </div>
+              )}
+              {(invalid || error) && (
+                <div className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900" role="alert">
+                  {invalid
+                    ? 'Der Anmeldelink ist ungültig oder abgelaufen. Fordere einfach einen neuen 6-stelligen Code an.'
+                    : 'Die Anmeldung konnte gerade nicht abgeschlossen werden. Versuch es noch mal oder schreib uns an hi@ugc-vz.de.'}
+                </div>
+              )}
+
+              <div>
+                <label htmlFor="creator-login-email" className="mb-1.5 block text-sm font-medium text-[#121212]">
+                  E-Mail-Adresse
+                </label>
+                <input
+                  id="creator-login-email"
+                  type="email"
+                  className="min-h-[48px] w-full rounded-xl border border-[#E4E1D8] bg-white px-4 py-3 text-sm text-[#121212] outline-none transition-colors focus:border-[#6C2BD9] focus:ring-4 focus:ring-[#6C2BD9]/15"
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    if (message) setMessage('');
+                  }}
+                  autoComplete="email"
+                  maxLength={254}
+                  placeholder="du@beispiel.de"
+                  required
+                />
+              </div>
+
+              <label className="flex cursor-pointer items-center gap-2.5 text-sm text-[#5C5A55]">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="h-4 w-4 rounded border-[#E4E1D8] accent-[#121212]"
+                />
+                <span>Angemeldet bleiben (30 Tage)</span>
               </label>
-              {message && <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">{message}</div>}
+
               <button
                 type="submit"
-                disabled={verifying}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-geo-violet px-6 py-3 font-semibold text-white transition hover:bg-geo-violet-soft disabled:opacity-60"
+                disabled={submitting}
+                className="min-h-[48px] w-full rounded-xl bg-[#121212] px-6 text-sm font-semibold text-[#F7F6F2] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {verifying ? 'Wird geprüft …' : 'Code bestätigen & einloggen →'}
+                {submitting ? 'Code wird gesendet ...' : 'Code schicken'}
               </button>
+
+              <InlineError message={message} />
             </form>
-            <p className="mt-4 rounded-xl bg-surface px-4 py-3 text-center text-xs text-ink-soft">
-              Kein Code im Posteingang? Prüfe bitte auch Spam oder „Benachrichtigungen“. Code &amp; Link sind 20 Minuten gültig.{' '}
-              <button type="button" onClick={() => { setSent(false); setOtpCode(''); setMessage(''); }} className="font-semibold text-geo-violet underline">
-                Andere E-Mail verwenden
-              </button>
-            </p>
-          </div>
-        ) : (
-          <form onSubmit={submit} noValidate className="rounded-3xl border border-hairline bg-white p-8 shadow-[0_24px_80px_rgba(35,22,47,0.10)]">
-            {noSession && (
-              <div className="mb-5 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900" role="alert">
-                Dein Browser hat die Anmeldung nicht behalten (oft in eingebauten Mail-App-Fenstern). Fordere hier einfach einen neuen 6-stelligen Code an und tippe ihn direkt in Chrome oder Safari ein.
-              </div>
-            )}
-            {(invalid || error) && (
-              <div className="mb-5 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900" role="alert">
-                {invalid ? 'Der Anmeldelink ist ungültig oder abgelaufen. Fordere einfach einen neuen 6-stelligen Code an.' : 'Die Anmeldung konnte gerade nicht abgeschlossen werden. Bitte versuche es erneut oder schreibe an hi@ugc-vz.de.'}
-              </div>
-            )}
-            <label>
-              <span className={labelClass}>E-Mail-Adresse</span>
-              <input
-                type="email"
-                className={fieldClass}
-                value={email}
-                onChange={(e) => { setEmail(e.target.value); if (message) setMessage(''); }}
-                autoComplete="email"
-                maxLength={254}
-                placeholder="du@beispiel.de"
-                required
-              />
-            </label>
-            <p className="mt-3 text-xs leading-5 text-ink-soft">Wir senden dir einen 6-stelligen Einmal-Code und einen geschützten Link. Funktioniert auch, um noch nicht bestätigte Profile sofort freizuschalten.</p>
+          )}
+        </div>
 
-            {message && <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">{message}</div>}
-
-            <button
-              type="submit"
-              disabled={submitting}
-              className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-geo-violet px-6 py-3 font-semibold text-white transition hover:bg-geo-violet-soft disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {submitting ? 'Wird gesendet …' : '6-stelligen Code anfordern'}
-            </button>
-          </form>
-        )}
+        <div className="mt-6 space-y-2 text-center text-xs text-[#5C5A55]">
+          <p>
+            Noch kein Profil?{' '}
+            <Link href="/creator" className="font-semibold text-[#121212] underline underline-offset-2">
+              Jetzt kostenlos anlegen
+            </Link>
+            {' · '}
+            <Link href="/brand/login" className="font-semibold text-[#121212] underline underline-offset-2">
+              Login für Marken
+            </Link>
+          </p>
+          <p>
+            Klappt gar nicht? Schreib uns an{' '}
+            <a href="mailto:hi@ugc-vz.de" className="font-semibold text-[#121212] underline underline-offset-2">
+              hi@ugc-vz.de
+            </a>
+          </p>
+        </div>
       </section>
     </div>
   );

@@ -284,6 +284,54 @@ export function generateCampaignPublicId(): string {
   return `CMP-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
 }
 
+export const ALLOWED_CAMPAIGN_PLATFORMS = new Set([
+  'tiktok',
+  'instagram',
+  'youtube',
+  'tiktok_shop',
+  'meta_ads',
+  'files_only',
+]);
+
+export function sanitizeCampaignPlatforms(rawPlatforms: unknown): string[] {
+  if (!Array.isArray(rawPlatforms)) return [];
+  return [
+    ...new Set(
+      rawPlatforms
+        .map((p) => String(p ?? '').toLowerCase().trim())
+        .filter((p) => ALLOWED_CAMPAIGN_PLATFORMS.has(p)),
+    ),
+  ];
+}
+
+export function validateCampaignBusinessRules(input: {
+  compensationModel: CompensationModel;
+  totalBudgetEur: number | null;
+  platforms: string[];
+}): { ok: true } | { ok: false; error: string } {
+  if (!input.platforms.length) {
+    return { ok: false, error: 'Bitte wähle mindestens eine Plattform aus.' };
+  }
+  if (input.compensationModel === 'tkp' && (!input.totalBudgetEur || input.totalBudgetEur <= 0)) {
+    return {
+      ok: false,
+      error: 'Für jede View-Kampagne ist eine feste Budget-Obergrenze in Euro Pflicht.',
+    };
+  }
+  return { ok: true };
+}
+
+export async function findBrandByEmail(sql: DatabaseClient, rawEmail: string): Promise<BrandAccount | null> {
+  const email = cleanText(rawEmail, 254).toLowerCase();
+  if (!email) return null;
+  const [existing] = (await sql.query(
+    `SELECT id, email, contact_name, company_name, website, email_verified_at
+     FROM brand_accounts WHERE lower(btrim(email)) = lower($1) LIMIT 1`,
+    [email],
+  )) as unknown as Array<any>;
+  return existing ? mapBrandAccount(existing) : null;
+}
+
 export async function upsertBrandAccount(
   sql: DatabaseClient,
   input: { email: string; contactName?: string; companyName?: string; website?: string },
@@ -295,7 +343,7 @@ export async function upsertBrandAccount(
 
   const [existing] = (await sql.query(
     `SELECT id, email, contact_name, company_name, website, email_verified_at
-     FROM brand_accounts WHERE lower(email) = lower($1) LIMIT 1`,
+     FROM brand_accounts WHERE lower(btrim(email)) = lower($1) LIMIT 1`,
     [email],
   )) as unknown as Array<any>;
 
@@ -397,7 +445,7 @@ export async function consumeBrandLoginOtp(
     `SELECT t.id, t.brand_id, t.otp_code_hash, t.otp_attempts, t.redirect_to
      FROM brand_login_tokens t
      JOIN brand_accounts b ON b.id = t.brand_id
-     WHERE lower(b.email) = lower($1)
+     WHERE lower(btrim(b.email)) = lower($1)
        AND t.used_at IS NULL
        AND t.expires_at > now()
        AND t.otp_code_hash IS NOT NULL

@@ -2,78 +2,128 @@
 
 import { FormEvent, useState } from 'react';
 import Link from 'next/link';
-import { BarChart3, CheckCircle2, LogOut, Mail, Plus, Search, ShieldCheck, Users } from 'lucide-react';
+import { CheckCircle2, LogOut, Mail, Plus, Search } from 'lucide-react';
 import type { BrandAccount, CampaignSummary, CampaignVisibility, CompensationModel } from '@/app/lib/brand-workspace';
+import OtpInput from '@/app/components/auth/OtpInput';
+import ResendTimer from '@/app/components/auth/ResendTimer';
+import InlineError from '@/app/components/auth/InlineError';
 
-const fieldClass = 'w-full rounded-xl border border-hairline bg-white px-4 py-3 text-sm text-ink outline-none transition focus:border-geo-violet focus:ring-4 focus:ring-geo-violet/10';
-const labelClass = 'mb-1.5 block text-xs font-semibold uppercase tracking-wide text-ink-soft';
+const fieldClass =
+  'min-h-[48px] w-full rounded-xl border border-[#E4E1D8] bg-white px-4 py-3 text-sm text-[#121212] outline-none transition-colors focus:border-[#6C2BD9] focus:ring-4 focus:ring-[#6C2BD9]/15';
+const labelClass = 'mb-1.5 block text-sm font-medium text-[#121212]';
 
 const MODEL_LABELS: Record<CompensationModel, string> = {
   fixed: 'Festpreis / Paket',
-  tkp: 'Pay-per-View (TKP)',
-  hybrid: 'Hybrid (Fix + Provision)',
+  tkp: 'Reichweite nach Views',
+  hybrid: 'Hybrid (Fix + Views)',
   barter: 'Produkt / Seeding',
 };
 
 const STATUS_BADGES: Record<string, string> = {
-  active: 'bg-[#edf5e5] text-[#385523]',
+  active: 'bg-[#edf5e5] text-[#1F9D55]',
   paused: 'bg-amber-50 text-amber-800',
-  completed: 'bg-surface text-ink-soft',
-  draft: 'bg-surface text-ink-soft',
+  completed: 'bg-[#F7F6F2] text-[#5C5A55]',
+  draft: 'bg-[#F7F6F2] text-[#5C5A55]',
 };
 
 export default function BrandWorkspaceClient({
   brand,
   initialCampaigns,
+  initialTab = 'login',
 }: {
   brand: BrandAccount | null;
   initialCampaigns: CampaignSummary[];
+  initialTab?: 'login' | 'signup';
 }) {
-  if (!brand) return <BrandLoginView />;
+  if (!brand) return <BrandLoginView initialTab={initialTab} />;
   return <BrandDashboard brand={brand} initialCampaigns={initialCampaigns} />;
 }
 
-function BrandLoginView() {
+function BrandLoginView({ initialTab }: { initialTab: 'login' | 'signup' }) {
+  const [mode, setMode] = useState<'login' | 'signup'>(initialTab);
   const [name, setName] = useState('');
   const [company, setCompany] = useState('');
   const [email, setEmail] = useState('');
   const [website, setWebsite] = useState('');
+  const [rememberMe, setRememberMe] = useState(true);
   const [otpCode, setOtpCode] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [sent, setSent] = useState(false);
+  const [switchedNotice, setSwitchedNotice] = useState(false);
+  const [suggestSignup, setSuggestSignup] = useState(false);
   const [error, setError] = useState('');
+  const [shakeKey, setShakeKey] = useState(0);
+  const [resendKey, setResendKey] = useState(0);
+  const [cooldownSec, setCooldownSec] = useState(60);
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
+  const switchMode = (nextMode: 'login' | 'signup') => {
+    setMode(nextMode);
     setError('');
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i.test(email.trim())) {
+    setSuggestSignup(false);
+    setSwitchedNotice(false);
+  };
+
+  const requestCode = async (targetMode: 'login' | 'signup') => {
+    setError('');
+    setSuggestSignup(false);
+    const trimmedEmail = email.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i.test(trimmedEmail)) {
       setError('Bitte gib eine gültige geschäftliche E-Mail-Adresse an.');
-      return;
+      return false;
+    }
+    if (targetMode === 'signup' && (!name.trim() || !company.trim())) {
+      setError('Bitte gib deinen Namen und deine Marke bzw. dein Unternehmen an.');
+      return false;
     }
     setSubmitting(true);
     try {
       const res = await fetch('/api/brand/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, company, email: email.trim(), website }),
+        body: JSON.stringify({
+          mode: targetMode,
+          name: targetMode === 'signup' ? name.trim() : undefined,
+          company: targetMode === 'signup' ? company.trim() : undefined,
+          email: trimmedEmail,
+          website,
+        }),
       });
       const data = await res.json();
-      if (!res.ok || !data.success) throw new Error(data.error || 'Anmeldung fehlgeschlagen.');
+      if (!res.ok || !data.success) {
+        if (data.code === 'account_not_found' && data.suggestedMode === 'signup') {
+          setSuggestSignup(true);
+        }
+        if (typeof data.retryAfterSec === 'number' && data.retryAfterSec > 0) {
+          setCooldownSec(Math.min(60, data.retryAfterSec));
+          setResendKey((k) => k + 1);
+        }
+        throw new Error(data.error || 'Gerade klappt der Versand bei uns nicht. Versuch es in ein paar Minuten noch mal oder schreib uns an hi@ugc-vz.de.');
+      }
+      setSwitchedNotice(Boolean(data.switchedToLogin));
+      setCooldownSec(typeof data.resendCooldownSec === 'number' ? data.resendCooldownSec : 60);
+      setResendKey((k) => k + 1);
       setSent(true);
+      return true;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Anmeldung fehlgeschlagen.');
+      return false;
     } finally {
       setSubmitting(false);
     }
   };
 
-  const handleVerifyOtp = async (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    await requestCode(mode);
+  };
+
+  const submitVerifyCode = async (rawCode: string) => {
     setError('');
-    const cleanCode = otpCode.replace(/\D/g, '');
+    const cleanCode = rawCode.replace(/\D/g, '');
     if (cleanCode.length !== 6) {
       setError('Bitte gib den 6-stelligen Code aus deiner E-Mail ein.');
+      setShakeKey((k) => k + 1);
       return;
     }
     setVerifying(true);
@@ -81,10 +131,13 @@ function BrandLoginView() {
       const res = await fetch('/api/brand/login/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim(), code: cleanCode }),
+        body: JSON.stringify({ email: email.trim(), code: cleanCode, rememberMe }),
       });
       const data = await res.json();
-      if (!res.ok || !data.success) throw new Error(data.error || 'Code ungültig oder abgelaufen.');
+      if (!res.ok || !data.success) {
+        setShakeKey((k) => k + 1);
+        throw new Error(data.error || 'Code ungültig oder abgelaufen.');
+      }
       window.location.assign(data.redirectTo || '/brand');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Code konnte nicht bestätigt werden.');
@@ -92,214 +145,279 @@ function BrandLoginView() {
     }
   };
 
+  const handleVerifyOtp = async (e: FormEvent) => {
+    e.preventDefault();
+    await submitVerifyCode(otpCode);
+  };
+
   return (
-    <div className="min-h-screen bg-white px-4 pb-24 pt-12 text-ink sm:px-8">
-      <div className="mx-auto max-w-6xl space-y-20">
-        {/* Hero + Code-Login */}
-        <div className="grid gap-10 lg:grid-cols-[1.08fr_0.92fr] lg:items-center">
-          <div>
-            <p className="font-mono text-xs font-semibold uppercase tracking-[0.16em] text-geo-violet">
-              UGC VZ Brand-Workspace · 750+ aktive DACH-Profile
-            </p>
-            <h1 className="mt-3 text-4xl font-bold leading-tight tracking-tight text-ink sm:text-5xl">
-              UGC-Kampagnen, die du nach echten Views steuerst.
-            </h1>
-            <p className="mt-4 text-base leading-7 text-ink-soft">
-              Lege Briefing, Zielplattform und optionales Budget-Limit in wenigen Minuten fest. Verifizierte Creator aus unserem DACH-Pool posten auf TikTok, Instagram Reels, YouTube Shorts oder TikTok Shop, und du siehst jeden Beitrag samt Views direkt in deinem Workspace.
-            </p>
-            <ul className="mt-6 space-y-3 text-sm text-ink">
-              <li className="flex items-start gap-3">
-                <Users size={18} className="mt-0.5 shrink-0 text-geo-violet" />
-                <span><strong>Zwei flexible Wege:</strong> Vergütung pro 1.000 geprüfte Views (TKP) mit optionalem Budget-Limit oder gezielte Creator-Produktion &amp; Produkt-Tests.</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <ShieldCheck size={18} className="mt-0.5 shrink-0 text-geo-violet" />
-                <span><strong>Verifizierte Social-Profile:</strong> Sieh vorab, welche Creator ihre TikTok- und Instagram-Kanäle bestätigt haben.</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <BarChart3 size={18} className="mt-0.5 shrink-0 text-geo-violet" />
-                <span><strong>Beitragsprüfung &amp; Live-Reporting:</strong> Eingereichte Links gegen deine Briefing-Checkliste prüfen, Views &amp; effektiven TKP als CSV oder Live-Report-Link teilen.</span>
-              </li>
-            </ul>
-            <p className="mt-6 text-xs text-ink-soft">
-              Für direkte Kampagnen und Creator-Anfragen ist ein kurzes Brand-Konto nötig. So schützen wir Creator vor Spam und halten alle Absprachen an einem Ort.{' '}
-              <Link href="/brands" className="font-semibold text-geo-violet underline hover:no-underline">
-                Creator-Pool als Vorschau ansehen →
-              </Link>
-            </p>
-          </div>
+    <div className="min-h-screen bg-[#F7F6F2] px-4 pb-24 pt-12 text-[#121212] sm:px-8 sm:pt-16">
+      <div className="mx-auto max-w-md">
+        <div className="mb-6 text-center">
+          <p className="text-sm font-medium text-[#5C5A55]">UGC VZ für Marken</p>
+          <h1 className="mt-1.5 text-3xl font-bold tracking-tight text-[#121212] sm:text-4xl">
+            {sent ? 'Code eingeben' : mode === 'login' ? 'Willkommen zurück' : 'Konto anlegen'}
+          </h1>
+          <p className="mt-2 text-sm leading-6 text-[#5C5A55]">
+            Wir schicken dir einen 6-stelligen Code an deine geschäftliche E-Mail. Kein Passwort, kein Abo.
+          </p>
+        </div>
 
-          <div className="rounded-3xl border border-hairline bg-white p-7 shadow-[0_24px_80px_rgba(35,22,47,0.10)] sm:p-8">
-            {sent ? (
-              <div className="space-y-5 py-2">
-                <div className="text-center">
-                  <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-geo-violet/10 text-geo-violet">
-                    <Mail size={26} />
-                  </span>
-                  <h2 className="mt-4 text-2xl font-bold text-ink">6-stelligen Code eingeben</h2>
-                  <p className="mt-2 text-sm leading-6 text-ink-soft">
-                    Wir haben deinen Code und einen geschützten Link an <strong className="text-ink">{email}</strong> gesendet.
+        <div className="rounded-[20px] border border-[#E4E1D8] bg-white p-6 shadow-[0_1px_2px_rgba(18,18,18,.06),0_8px_24px_rgba(18,18,18,.06)] sm:p-8">
+          {!sent && (
+            <div
+              role="tablist"
+              aria-label="Marken-Zugang"
+              className="mb-6 grid grid-cols-2 rounded-xl bg-[#F7F6F2] p-1"
+            >
+              <button
+                type="button"
+                role="tab"
+                aria-selected={mode === 'login'}
+                onClick={() => switchMode('login')}
+                className={`min-h-[40px] rounded-lg text-sm font-semibold transition-colors ${
+                  mode === 'login' ? 'bg-white text-[#121212] shadow-sm' : 'text-[#5C5A55] hover:text-[#121212]'
+                }`}
+              >
+                Anmelden
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={mode === 'signup'}
+                onClick={() => switchMode('signup')}
+                className={`min-h-[40px] rounded-lg text-sm font-semibold transition-colors ${
+                  mode === 'signup' ? 'bg-white text-[#121212] shadow-sm' : 'text-[#5C5A55] hover:text-[#121212]'
+                }`}
+              >
+                Konto anlegen
+              </button>
+            </div>
+          )}
+
+          {sent ? (
+            <div className="space-y-5">
+              <div className="text-center">
+                <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#EFE8FD] text-[#6C2BD9]">
+                  <Mail size={22} aria-hidden="true" />
+                </span>
+                {switchedNotice && (
+                  <p className="mt-3 rounded-xl bg-[#EFE8FD] px-3.5 py-2 text-xs font-medium text-[#121212]">
+                    Du hast schon ein Konto bei uns. Wir haben dir direkt deinen Anmeldecode geschickt.
                   </p>
-                </div>
-
-                <form onSubmit={handleVerifyOtp} className="space-y-4">
-                  <div>
-                    <label htmlFor="brand-otp" className={labelClass}>6-stelliger Anmeldecode</label>
-                    <input
-                      id="brand-otp"
-                      type="text"
-                      inputMode="numeric"
-                      autoComplete="one-time-code"
-                      maxLength={8}
-                      value={otpCode}
-                      onChange={(e) => { setOtpCode(e.target.value); if (error) setError(''); }}
-                      placeholder="123456"
-                      className={`${fieldClass} text-center font-mono text-2xl font-bold tracking-[0.3em]`}
-                    />
-                  </div>
-                  {error && <p role="alert" className="rounded-xl border border-red-200 bg-red-50 px-3.5 py-2.5 text-sm text-red-700">{error}</p>}
-                  <button
-                    type="submit"
-                    disabled={verifying}
-                    className="min-h-[48px] w-full rounded-xl bg-geo-violet px-6 font-semibold text-white transition hover:bg-[#7531ae] disabled:opacity-60"
-                  >
-                    {verifying ? 'Code wird geprüft …' : 'Code bestätigen & Workspace öffnen →'}
-                  </button>
-                </form>
-
-                <p className="rounded-xl bg-surface px-4 py-3 text-center text-xs text-ink-soft">
-                  Code &amp; Link sind 30 Minuten gültig. Prüfe ggf. auch deinen Spam-Ordner.{' '}
-                  <button type="button" onClick={() => { setSent(false); setOtpCode(''); setError(''); }} className="font-semibold text-geo-violet underline">
-                    E-Mail ändern
-                  </button>
+                )}
+                <p className="mt-3 text-sm leading-6 text-[#5C5A55]">
+                  Code ist unterwegs an <strong className="text-[#121212]">{email}</strong>. Nichts da? Schau im Spam oder im Gmail-Tab „Benachrichtigungen“.
                 </p>
               </div>
-            ) : (
-              <form onSubmit={handleSubmit} noValidate className="space-y-4">
-                <div>
-                  <h2 className="text-2xl font-bold text-ink">Brand-Workspace öffnen</h2>
-                  <p className="mt-1 text-sm text-ink-soft">Erstelle dein Brand-Konto oder melde dich mit einem 6-stelligen Einmal-Code per E-Mail an.</p>
-                </div>
 
-                <div aria-hidden="true" style={{ position: 'absolute', left: '-10000px', width: 1, height: 1, overflow: 'hidden' }}>
-                  <label htmlFor="brand-login-website">Website</label>
-                  <input id="brand-login-website" type="text" tabIndex={-1} autoComplete="off" value={website} onChange={(e) => setWebsite(e.target.value)} />
-                </div>
-
+              <form onSubmit={handleVerifyOtp} className="space-y-4">
                 <div>
-                  <label htmlFor="brand-email" className={labelClass}>Geschäftliche E-Mail *</label>
-                  <input
-                    id="brand-email"
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="marketing@deinebrand.de"
-                    className={fieldClass}
+                  <span className={`${labelClass} text-center`}>6-stelliger Anmeldecode</span>
+                  <OtpInput
+                    value={otpCode}
+                    onChange={(next) => {
+                      setOtpCode(next);
+                      if (error) setError('');
+                    }}
+                    onComplete={(code) => {
+                      if (!verifying) void submitVerifyCode(code);
+                    }}
+                    disabled={verifying}
+                    hasError={Boolean(error)}
+                    shakeKey={shakeKey}
+                    idPrefix="brand-otp"
                   />
                 </div>
-                <div className="grid gap-3 sm:grid-cols-2">
+
+                <label className="flex cursor-pointer items-center gap-2.5 text-sm text-[#5C5A55]">
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    className="h-4 w-4 rounded border-[#E4E1D8] accent-[#121212]"
+                  />
+                  <span>Angemeldet bleiben (30 Tage)</span>
+                </label>
+
+                <button
+                  type="submit"
+                  disabled={verifying}
+                  className="min-h-[48px] w-full rounded-xl bg-[#121212] px-6 text-sm font-semibold text-[#F7F6F2] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {verifying ? 'Code wird geprüft ...' : 'Code bestätigen'}
+                </button>
+
+                <InlineError message={error} />
+              </form>
+
+              <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[#E4E1D8] pt-4 text-xs text-[#5C5A55]">
+                <ResendTimer
+                  initialSeconds={cooldownSec}
+                  resetTrigger={resendKey}
+                  disabled={submitting || verifying}
+                  onResend={async () => {
+                    await requestCode(switchedNotice ? 'login' : mode);
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSent(false);
+                    setOtpCode('');
+                    setError('');
+                    setSwitchedNotice(false);
+                  }}
+                  className="font-semibold text-[#121212] underline underline-offset-2"
+                >
+                  E-Mail ändern
+                </button>
+              </div>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} noValidate className="space-y-4">
+              <div aria-hidden="true" style={{ position: 'absolute', left: '-10000px', width: 1, height: 1, overflow: 'hidden' }}>
+                <label htmlFor="brand-login-website">Website</label>
+                <input
+                  id="brand-login-website"
+                  type="text"
+                  tabIndex={-1}
+                  autoComplete="off"
+                  value={website}
+                  onChange={(e) => setWebsite(e.target.value)}
+                />
+              </div>
+
+              <div>
+                <label htmlFor="brand-email" className={labelClass}>Geschäftliche E-Mail</label>
+                <input
+                  id="brand-email"
+                  type="email"
+                  required
+                  autoComplete="email"
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    if (error) setError('');
+                    if (suggestSignup) setSuggestSignup(false);
+                  }}
+                  placeholder="name@deinemarke.de"
+                  className={fieldClass}
+                />
+              </div>
+
+              {mode === 'signup' && (
+                <>
                   <div>
                     <label htmlFor="brand-name" className={labelClass}>Dein Name</label>
                     <input
                       id="brand-name"
                       type="text"
+                      required
+                      autoComplete="name"
                       value={name}
-                      onChange={(e) => setName(e.target.value)}
+                      onChange={(e) => {
+                        setName(e.target.value);
+                        if (error) setError('');
+                      }}
                       placeholder="Vor- und Nachname"
                       className={fieldClass}
                     />
                   </div>
                   <div>
-                    <label htmlFor="brand-company" className={labelClass}>Brand / Unternehmen</label>
+                    <label htmlFor="brand-company" className={labelClass}>Marke / Unternehmen</label>
                     <input
                       id="brand-company"
                       type="text"
+                      required
+                      autoComplete="organization"
                       value={company}
-                      onChange={(e) => setCompany(e.target.value)}
+                      onChange={(e) => {
+                        setCompany(e.target.value);
+                        if (error) setError('');
+                      }}
                       placeholder="z. B. Deine Marke GmbH"
                       className={fieldClass}
                     />
                   </div>
-                </div>
+                </>
+              )}
 
-                {error && <p role="alert" className="rounded-xl border border-red-200 bg-red-50 px-3.5 py-2.5 text-sm text-red-700">{error}</p>}
+              <label className="flex cursor-pointer items-center gap-2.5 text-sm text-[#5C5A55]">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="h-4 w-4 rounded border-[#E4E1D8] accent-[#121212]"
+                />
+                <span>Angemeldet bleiben (30 Tage)</span>
+              </label>
 
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="min-h-[48px] w-full rounded-xl bg-geo-violet px-6 font-semibold text-white transition hover:bg-[#7531ae] disabled:opacity-60"
-                >
-                  {submitting ? 'Code wird gesendet …' : 'Brand-Konto anlegen / Code senden →'}
-                </button>
-                <p className="text-center text-xs text-ink-soft">
-                  Kein Pflicht-Abo. Du bist Creator?{' '}
-                  <Link href="/konto" className="font-semibold text-geo-violet underline">Zum Creator-Login</Link>
-                </p>
-              </form>
-            )}
-          </div>
+              <button
+                type="submit"
+                disabled={submitting}
+                className="min-h-[48px] w-full rounded-xl bg-[#121212] px-6 text-sm font-semibold text-[#F7F6F2] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {submitting
+                  ? 'Code wird gesendet ...'
+                  : mode === 'login'
+                    ? 'Code schicken'
+                    : 'Konto anlegen'}
+              </button>
+
+              <InlineError
+                message={error}
+                actionLabel={suggestSignup ? 'Jetzt Konto anlegen' : undefined}
+                onAction={suggestSignup ? () => switchMode('signup') : undefined}
+              />
+
+              <p className="pt-1 text-center text-sm text-[#5C5A55]">
+                {mode === 'login' ? (
+                  <>
+                    Noch kein Konto?{' '}
+                    <button
+                      type="button"
+                      onClick={() => switchMode('signup')}
+                      className="font-semibold text-[#121212] underline underline-offset-2"
+                    >
+                      Konto anlegen
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    Schon ein Konto?{' '}
+                    <button
+                      type="button"
+                      onClick={() => switchMode('login')}
+                      className="font-semibold text-[#121212] underline underline-offset-2"
+                    >
+                      Anmelden
+                    </button>
+                  </>
+                )}
+              </p>
+            </form>
+          )}
         </div>
 
-        {/* Zwei Kampagnenwege */}
-        <section className="space-y-6">
-          <div className="text-center">
-            <p className="font-mono text-xs font-semibold uppercase tracking-[0.16em] text-geo-violet">Zwei Wege im selben Workspace</p>
-            <h2 className="mt-2 text-3xl font-bold text-ink">Wähle das Modell, das zu deinem Ziel passt</h2>
-          </div>
-          <div className="grid gap-6 md:grid-cols-2">
-            <div className="rounded-3xl border border-geo-violet/30 bg-[#FBF8FE] p-7">
-              <p className="text-xs font-bold uppercase tracking-wider text-geo-violet">Weg 1 · Performance &amp; Reichweite</p>
-              <h3 className="mt-2 text-2xl font-bold text-ink">View-Kampagne (TKP) mit optionalem Budget-Limit</h3>
-              <p className="mt-3 text-sm leading-6 text-ink-soft">
-                Creator posten auf ihren eigenen Accounts auf TikTok, Instagram Reels oder YouTube Shorts. Du zahlst pro 1.000 geprüfte Views und behältst über ein optionales Budget-Limit jederzeit die volle Kostenkontrolle. Ideal für Shop-Aktionen, Rabatt-Kampagnen und schnelle Produkt-Launches.
-              </p>
-            </div>
-            <div className="rounded-3xl border border-hairline bg-surface p-7">
-              <p className="text-xs font-bold uppercase tracking-wider text-ink-soft">Weg 2 · Content &amp; Seeding</p>
-              <h3 className="mt-2 text-2xl font-bold text-ink">Creator-Produktion &amp; Produkt-Tests</h3>
-              <p className="mt-3 text-sm leading-6 text-ink-soft">
-                Beauftrage gezielt passende Profile aus über 750 DACH-Creatorn für Produktvideos, Ad-Creatives, Produktmuster-Tests oder TikTok Shop. Mit klarer Plattform-Auswahl, Briefing-Checkliste und direkter Freigabe im Dashboard.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* 4 Schritte */}
-        <section className="space-y-6">
-          <h2 className="text-center text-3xl font-bold text-ink">In vier Schritten zur messbaren Kampagne</h2>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {[
-              ['1', 'Brand-Konto einrichten', 'Melde dich in einer Minute mit deiner geschäftlichen E-Mail per 6-stelligem Code an.'],
-              ['2', 'Kampagne & Plattform festlegen', 'Wähle TikTok, Instagram Reels, YouTube Shorts, TikTok Shop oder reine Videodateien, definiere deine Checkliste und dein optionales Budget-Limit.'],
-              ['3', 'Creator matchen & einladen', 'Lade gezielt Favoriten aus über 750 DACH-Profilen ein oder öffne deine Kampagne für Bewerbungen verifizierter Profile.'],
-              ['4', 'Beiträge prüfen & Views tracken', 'Prüfe eingereichte Links gegen dein Briefing und teile Views, effektiven TKP und Ergebnisse als CSV oder Live-Report-Link.'],
-            ].map(([num, heading, body]) => (
-              <div key={num} className="rounded-2xl border border-hairline bg-white p-5">
-                <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-geo-violet text-sm font-bold text-white">{num}</span>
-                <h3 className="mt-3 text-base font-bold text-ink">{heading}</h3>
-                <p className="mt-1.5 text-sm leading-6 text-ink-soft">{body}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* Brand FAQ */}
-        <section className="mx-auto max-w-3xl space-y-4">
-          <h2 className="text-center text-3xl font-bold text-ink">Häufige Fragen von Brands</h2>
-          {[
-            ['Warum brauche ich ein Brand-Konto?', 'Damit Anfragen verbindlich bleiben, kein Spam entsteht und du alle Briefings, eingereichten Links, Views und Reports gesammelt in einem Dashboard siehst.'],
-            ['Wie funktioniert die Vergütung pro 1.000 Views?', 'Du definierst deinen Satz pro 1.000 Views und auf Wunsch ein maximales Budget-Limit. Nach Kampagnenende zählen nur geprüfte und aktive Beiträge in vollen 1.000er-Schritten bis zu diesem Limit.'],
-            ['Kann ich auch Videos ohne Posting-Pflicht oder mit Produktversand buchen?', 'Ja. Im Kampagnen-Setup wählst du aus, ob Creator auf eigenen Accounts posten, ob du Produkte versendest oder ob du fertige Videodateien für deine eigenen Kanäle und Ads brauchst.'],
-            ['Muss ich ein monatliches Abo abschließen?', 'Nein. Es gibt kein Pflicht-Abo. Du startest direkt mit deinem Kampagnenbudget und zahlst nur für geprüfte Ergebnisse innerhalb deines gesetzten Limits.'],
-            ['Was ist, wenn wir Unterstützung bei Strategie, Briefing oder Auswahl brauchen?', 'Unser Team hinter UGC VZ kommt aus der Agenturpraxis von famefact. Auf Wunsch begleiten wir Setup, Creator-Auswahl und Performance-Auswertung direkt mit.'],
-          ].map(([q, a]) => (
-            <details key={q} className="rounded-2xl border border-hairline bg-white p-5">
-              <summary className="cursor-pointer font-semibold text-ink">{q}</summary>
-              <p className="mt-2.5 text-sm leading-6 text-ink-soft">{a}</p>
-            </details>
-          ))}
-        </section>
+        <div className="mt-6 space-y-2 text-center text-xs text-[#5C5A55]">
+          <p>
+            Du bist Creator?{' '}
+            <Link href="/konto" className="font-semibold text-[#121212] underline underline-offset-2">
+              Zum Creator-Login
+            </Link>
+            {' · '}
+            <Link href="/brands" className="font-semibold text-[#121212] underline underline-offset-2">
+              Infos für Marken
+            </Link>
+          </p>
+          <p>
+            Klappt gar nicht? Schreib uns an{' '}
+            <a href="mailto:hi@ugc-vz.de" className="font-semibold text-[#121212] underline underline-offset-2">
+              hi@ugc-vz.de
+            </a>
+          </p>
+        </div>
       </div>
     </div>
   );
@@ -345,9 +463,9 @@ function BrandDashboard({
       setTkpEur('2.00');
       setBudgetPerVideoEur('');
       setTotalBudgetEur('500');
-      setDeliverables('1–3 authentische Short-Videos (TikTok / Reels / Shorts) inkl. Aktions-Hinweis');
-      setUsageRights('Organische Creator-Posts + Repost-Rechte (0 % Plattform-Provision)');
-      setDeadline('Aktionszeitraum / optionales Budget-Limit');
+      setDeliverables('1 bis 3 authentische Short-Videos (TikTok / Reels / Shorts) inkl. Aktions-Hinweis');
+      setUsageRights('Organische Creator-Posts + Repost-Rechte');
+      setDeadline('Aktionszeitraum oder bis Budget-Obergrenze erreicht');
       setPlatforms(['tiktok', 'instagram', 'youtube']);
       setRequiresProductChoice(false);
       setProductChoicePrompt('');
@@ -356,8 +474,8 @@ function BrandDashboard({
       setCompensationModel('tkp');
       setTkpEur('2.00');
       setBudgetPerVideoEur('');
-      setTotalBudgetEur('');
-      setDeliverables('Produkt-Showcase / Review nach Musterversand (1–3 Clips)');
+      setTotalBudgetEur('500');
+      setDeliverables('Produkt-Showcase / Review nach Musterversand (1 bis 3 Clips)');
       setUsageRights('Organische Posts + 6 Monate Paid Ads / TikTok Shop');
       setDeadline('Erste Clips 10 Tage nach Produktzustellung');
       setPlatforms(['tiktok', 'instagram', 'tiktok_shop']);
@@ -407,6 +525,14 @@ function BrandDashboard({
       setCreateError('Bitte gib einen Kampagnentitel an.');
       return;
     }
+    if (!platforms.length) {
+      setCreateError('Bitte wähle mindestens eine Plattform aus.');
+      return;
+    }
+    if (compensationModel === 'tkp' && (!totalBudgetNumeric || totalBudgetNumeric <= 0)) {
+      setCreateError('Für jede View-Kampagne ist eine feste Budget-Obergrenze in Euro Pflicht.');
+      return;
+    }
     setCreating(true);
     try {
       const tkpCents =
@@ -437,7 +563,7 @@ function BrandDashboard({
           usageRights,
           deadline,
           visibility,
-          platforms: platforms.length ? platforms : ['tiktok', 'instagram'],
+          platforms,
           description,
         }),
       });
@@ -533,12 +659,12 @@ function BrandDashboard({
                 {[
                   {
                     id: 'tkp_cap' as const,
-                    name: 'Pay-per-View / TKP',
-                    sub: 'z. B. 2 €/1.000 Views · optionales Budget-Limit · ohne Versand',
+                    name: 'Reichweite nach Views',
+                    sub: 'z. B. 2 €/1.000 Views · feste Budget-Obergrenze · ohne Versand',
                   },
                   {
                     id: 'product_tkp' as const,
-                    name: 'Produkt-Test + TKP',
+                    name: 'Produkt-Test + Views',
                     sub: 'Für alle Produkte & Services · inkl. Varianten-Auswahl',
                   },
                   {
@@ -601,8 +727,19 @@ function BrandDashboard({
                 </div>
               )}
               <div>
-                <label htmlFor="camp-total" className={labelClass}>Budget-Limit (€, optional)</label>
-                <input id="camp-total" type="number" min={0} value={totalBudgetEur} onChange={(e) => setTotalBudgetEur(e.target.value)} placeholder="Leer = offen" className={fieldClass} />
+                <label htmlFor="camp-total" className={labelClass}>
+                  {compensationModel === 'tkp' ? 'Budget-Obergrenze (€) *' : 'Budget-Obergrenze (€)'}
+                </label>
+                <input
+                  id="camp-total"
+                  type="number"
+                  min={compensationModel === 'tkp' ? 1 : 0}
+                  required={compensationModel === 'tkp'}
+                  value={totalBudgetEur}
+                  onChange={(e) => setTotalBudgetEur(e.target.value)}
+                  placeholder="z. B. 500"
+                  className={fieldClass}
+                />
               </div>
               <div>
                 <label htmlFor="camp-visibility" className={labelClass}>Sichtbarkeit</label>
@@ -614,9 +751,8 @@ function BrandDashboard({
             </div>
 
             {estimatedCapViews !== null && (
-              <div className="rounded-2xl border border-geo-green/60 bg-[#f6fbf1] px-4 py-3 text-xs leading-5 text-[#385523]">
-                <strong>Budget-Rechnung:</strong> Bei <strong>{tkpNumeric.toFixed(2).replace('.', ',')} € / 1.000 Views</strong> und einem optionalen Budget-Limit von <strong>{totalBudgetNumeric.toLocaleString('de-DE')} €</strong> sind bis zu{' '}
-                <strong>{estimatedCapViews.toLocaleString('de-DE')} bezahlte Views</strong> abgedeckt – ohne Plattform-Provision. (Leer lassen für offenes Budget ohne Obergrenze.)
+              <div className="rounded-2xl border border-[#1F9D55]/30 bg-[#f6fbf1] px-4 py-3 text-xs leading-5 text-[#121212]">
+                <strong>Budget-Rechnung:</strong> Bei <strong>{tkpNumeric.toFixed(2).replace('.', ',')} € pro 1.000 Views</strong> und einer festen Budget-Obergrenze von <strong>{totalBudgetNumeric.toLocaleString('de-DE')} €</strong> zahlst du nie mehr als dein Budget. Rechenbeispiel, keine garantierte Reichweite.
               </div>
             )}
 

@@ -83,6 +83,7 @@ export const emailShell = ({
   children,
   footerNote,
   unsubscribeUrl,
+  headerTagline = 'Creator-Kampagnen',
 }: {
   preheader: string;
   eyebrow: string;
@@ -90,6 +91,7 @@ export const emailShell = ({
   children: string;
   footerNote?: string;
   unsubscribeUrl?: string;
+  headerTagline?: string;
 }) => `<!doctype html>
 <html lang="de">
   <head>
@@ -106,18 +108,18 @@ export const emailShell = ({
       }
     </style>
   </head>
-  <body style="margin:0;padding:0;background:#f5f3f9;color:#1d1725;font-family:Arial,Helvetica,sans-serif;">
+  <body style="margin:0;padding:0;background:#f7f6f2;color:#121212;font-family:Arial,Helvetica,sans-serif;">
     <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">${htmlEscape(preheader)}</div>
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f5f3f9;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f7f6f2;">
       <tr>
         <td align="center" style="padding:28px 12px;">
-          <table role="presentation" width="640" cellpadding="0" cellspacing="0" class="email-wrap" style="width:640px;max-width:640px;background:#ffffff;border-radius:22px;overflow:hidden;box-shadow:0 12px 35px rgba(61,31,86,.10);">
+          <table role="presentation" width="640" cellpadding="0" cellspacing="0" class="email-wrap" style="width:640px;max-width:640px;background:#ffffff;border-radius:20px;overflow:hidden;border:1px solid #e4e1d8;">
             <tr>
-              <td class="email-pad" style="padding:22px 42px;background:#17121f;border-bottom:4px solid #8b3fca;">
+              <td class="email-pad" style="padding:20px 42px;background:#121212;">
                 <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                   <tr>
-                    <td style="font-size:21px;font-weight:800;color:#ffffff;letter-spacing:-.3px;">UGC<span style="color:#c8ff45;">VZ</span></td>
-                    <td align="right" style="font-size:12px;color:#d8cfe2;">Kostenlose Creator-Vermittlung</td>
+                    <td style="font-size:20px;font-weight:800;color:#ffffff;letter-spacing:-.3px;">UGC <span style="color:#c8f04b;">VZ</span></td>
+                    <td align="right" style="font-size:12px;color:#d6d3cb;">${htmlEscape(headerTagline)}</td>
                   </tr>
                 </table>
               </td>

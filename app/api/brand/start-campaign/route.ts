@@ -1,17 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { IncomingWebhook } from '@slack/webhook';
-import { Resend } from 'resend';
 import { getDatabase, isDatabaseConfigured } from '@/app/lib/database';
 import { BRAND_SESSION_COOKIE, isTrustedSameOrigin, verifyBrandSession } from '@/app/lib/brand-session';
 import { buildBrandLoginEmail } from '@/app/lib/brand-login-email';
+import { AUTH_ERROR_PROVIDER_UNAVAILABLE, sendTransactionalAuthEmail } from '@/app/lib/auth-delivery';
 import {
   cleanMultiline,
   cleanText,
   createBrandCampaign,
   createBrandLoginChallenge,
   getBrandAccount,
+  sanitizeCampaignPlatforms,
   toPositiveIntOrNull,
   upsertBrandAccount,
+  validateCampaignBusinessRules,
   type CampaignVisibility,
   type CompensationModel,
 } from '@/app/lib/brand-workspace';
@@ -82,17 +84,29 @@ export async function POST(request: NextRequest) {
     const compensationModel: CompensationModel = ['fixed', 'tkp', 'hybrid', 'barter'].includes(String(body.compensationModel))
       ? (body.compensationModel as CompensationModel)
       : 'fixed';
+    const platforms = sanitizeCampaignPlatforms(
+      Array.isArray(body.platforms) ? body.platforms : ['tiktok', 'instagram'],
+    );
+    const totalBudgetEur = toPositiveIntOrNull(body.totalBudgetEur, 1_000_000);
+    const rulesCheck = validateCampaignBusinessRules({
+      compensationModel,
+      totalBudgetEur,
+      platforms,
+    });
+    if (!rulesCheck.ok) {
+      return NextResponse.json({ success: false, error: rulesCheck.error }, { status: 400 });
+    }
 
     const created = await createBrandCampaign(sql, brand, {
       title,
       brandDisplayName: cleanText(body.company, 120) || brand.companyName || brand.contactName || 'Brand',
       description: cleanMultiline(body.description || body.message, 3000),
       niche: cleanText(body.niche, 80),
-      platforms: Array.isArray(body.platforms) ? body.platforms.map(String) : ['tiktok', 'instagram'],
+      platforms,
       deliverables: cleanText(body.deliverables, 240),
       compensationModel,
       budgetPerVideoEur: toPositiveIntOrNull(body.budgetPerVideoEur, 50_000),
-      totalBudgetEur: toPositiveIntOrNull(body.totalBudgetEur, 1_000_000),
+      totalBudgetEur,
       tkpEurCents: toPositiveIntOrNull(body.tkpEurCents, 50_000),
       requiresProductChoice: Boolean(body.requiresProductChoice),
       productChoicePrompt: cleanText(body.productChoicePrompt, 240),
@@ -126,14 +140,6 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const resendApiKey = process.env.RESEND_API_KEY;
-    if (!resendApiKey) {
-      return NextResponse.json(
-        { success: false, error: 'Kampagne angelegt, aber E-Mail-Versand ist nicht konfiguriert.' },
-        { status: 503 },
-      );
-    }
-
     const { token, otpCode } = await createBrandLoginChallenge(sql, brand.id, brand.email, campaignPath);
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || request.nextUrl.origin;
     const loginUrl = new URL('/brand/verify', baseUrl);
@@ -148,23 +154,28 @@ export async function POST(request: NextRequest) {
       invitedCount: created.invitedCount,
     });
 
-    const resend = new Resend(resendApiKey);
-    const sendRes = await resend.emails.send({
-      from: process.env.RESEND_FROM || 'UGC VZ <hi@ugc-vz.de>',
-      to: brand.email,
-      replyTo: process.env.UGC_INTERNAL_EMAIL || 'hi@ugc-vz.de',
-      subject: emailPayload.subject,
-      html: emailPayload.html,
-      text: emailPayload.text,
-      tags: [
-        { name: 'category', value: 'brand_campaign_login' },
-        { name: 'audience', value: 'brand' },
-      ],
+    const delivery = await sendTransactionalAuthEmail({
+      flow: 'brand_campaign',
+      message: {
+        to: brand.email,
+        subject: emailPayload.subject,
+        html: emailPayload.html,
+        text: emailPayload.text,
+        tags: [
+          { name: 'category', value: 'brand_campaign_login' },
+          { name: 'audience', value: 'brand' },
+        ],
+      },
     });
 
-    if (sendRes.error) {
-      console.error('Brand campaign login mail failed', sendRes.error.name);
-      return NextResponse.json({ success: false, error: 'Anmeldelink konnte nicht versendet werden.' }, { status: 502 });
+    if (!delivery.ok) {
+      return NextResponse.json(
+        { success: false, error: delivery.userMessage || AUTH_ERROR_PROVIDER_UNAVAILABLE },
+        {
+          status: delivery.status,
+          ...(delivery.retryAfterSec ? { headers: { 'Retry-After': String(delivery.retryAfterSec) } } : {}),
+        },
+      );
     }
 
     return NextResponse.json({

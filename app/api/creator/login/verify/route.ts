@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDatabase, isDatabaseConfigured } from '@/app/lib/database';
 import {
   CREATOR_SESSION_COOKIE,
-  SESSION_TTL_MS,
+  getCreatorSessionTtlMs,
   signSession,
 } from '@/app/lib/creator-session';
 import { isTrustedSameOrigin } from '@/app/lib/brand-session';
@@ -15,7 +15,7 @@ export const maxDuration = 30;
 
 const MAX_OTP_ATTEMPTS = 5;
 
-const activateAndSignSession = async (creatorId: string) => {
+const activateAndSignSession = async (creatorId: string, rememberMe: boolean) => {
   const sql = getDatabase();
   await sql.query(
     `UPDATE creator_profiles
@@ -29,7 +29,7 @@ const activateAndSignSession = async (creatorId: string) => {
      WHERE creator_id = $1`,
     [creatorId],
   );
-  return signSession(creatorId);
+  return signSession(creatorId, { rememberMe });
 };
 
 /**
@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: false, error: 'Datenbank nicht verfügbar.' }, { status: 503 });
   }
 
-  let body: { token?: unknown; email?: unknown; code?: unknown };
+  let body: { token?: unknown; email?: unknown; code?: unknown; rememberMe?: unknown };
   try {
     body = await request.json();
   } catch {
@@ -69,6 +69,7 @@ export async function POST(request: NextRequest) {
   const token = typeof body.token === 'string' ? body.token.trim() : '';
   const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
   const code = typeof body.code === 'string' ? body.code.replace(/\s+/g, '') : '';
+  const rememberMe = body.rememberMe !== false;
 
   try {
     let creatorId = '';
@@ -98,7 +99,7 @@ export async function POST(request: NextRequest) {
         `SELECT t.id, t.creator_id, t.otp_code_hash, t.otp_attempts
          FROM creator_verification_tokens t
          JOIN creator_private_contacts c ON c.creator_id = t.creator_id
-         WHERE lower(c.email) = lower($1)
+         WHERE lower(btrim(c.email)) = lower($1)
            AND t.purpose = 'edit_profile'
            AND t.used_at IS NULL
            AND t.expires_at > now()
@@ -156,14 +157,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const session = await activateAndSignSession(creatorId);
+    const session = await activateAndSignSession(creatorId, rememberMe);
     const response = NextResponse.json({ success: true, redirectTo: '/konto?login=1' });
     response.cookies.set(CREATOR_SESSION_COOKIE, session, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       path: '/',
-      maxAge: SESSION_TTL_MS / 1000,
+      maxAge: Math.floor(getCreatorSessionTtlMs(rememberMe) / 1000),
     });
     return response;
   } catch (error) {

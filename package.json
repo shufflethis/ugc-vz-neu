@@ -16,6 +16,8 @@
     "test:search-relevance": "node --import tsx scripts/test-search-relevance.ts",
     "test:hybrid-search": "node --import tsx scripts/test-hybrid-search.ts",
     "test:ai-profile": "node --import tsx scripts/test-ai-profile.ts",
+    "test:auth-flows": "node --import tsx scripts/test-auth-flows.ts",
+    "test:brand-workspace": "node --import tsx scripts/test-brand-workspace.ts",
     "test:gender": "node --import tsx scripts/test-gender.ts",
     "test:niche-data": "node --import tsx scripts/test-niche-data.ts",
     "test:lead-feedback": "node --import tsx scripts/test-lead-feedback.ts",

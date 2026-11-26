@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDatabase, isDatabaseConfigured } from '@/app/lib/database';
 import {
   BRAND_SESSION_COOKIE,
-  BRAND_SESSION_TTL_MS,
+  getBrandSessionTtlMs,
   isTrustedSameOrigin,
   signBrandSession,
 } from '@/app/lib/brand-session';
@@ -27,11 +27,13 @@ export async function POST(request: NextRequest) {
   let token = '';
   let email = '';
   let code = '';
+  let rememberMe = true;
   try {
-    const body = (await request.json()) as { token?: unknown; email?: unknown; code?: unknown };
+    const body = (await request.json()) as { token?: unknown; email?: unknown; code?: unknown; rememberMe?: unknown };
     token = typeof body.token === 'string' ? body.token.trim() : '';
     email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
     code = typeof body.code === 'string' ? body.code.replace(/\s+/g, '') : '';
+    rememberMe = body.rememberMe !== false;
   } catch {
     return NextResponse.json({ success: false, error: 'Ungültige Anfrage.' }, { status: 400 });
   }
@@ -56,14 +58,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const session = signBrandSession(result.brandId);
+    const session = signBrandSession(result.brandId, { rememberMe });
     const response = NextResponse.json({ success: true, redirectTo: result.redirectTo });
     response.cookies.set(BRAND_SESSION_COOKIE, session, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       path: '/',
-      maxAge: BRAND_SESSION_TTL_MS / 1000,
+      maxAge: Math.floor(getBrandSessionTtlMs(rememberMe) / 1000),
     });
     return response;
   } catch (error) {
