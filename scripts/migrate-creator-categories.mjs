@@ -20,7 +20,7 @@ if (!isDatabaseConfigured()) {
 }
 
 const sql = getDatabase();
-const rows = (await sql.query(`
+const rows = await sql.query(`
   SELECT
     p.id, p.public_id, p.display_name, p.topics, p.industries, p.special_traits,
     p.pet_context, p.children_context, p.primary_category, p.categories_confirmed_at,
@@ -29,7 +29,7 @@ const rows = (await sql.query(`
   LEFT JOIN creator_ai_profiles ai ON ai.creator_id = p.id AND ai.status = 'approved'
   WHERE p.status = 'active'
   ORDER BY p.created_at ASC
-`)) as unknown as Array<any>;
+`);
 
 let classifiedCount = 0;
 let skippedConfirmed = 0;

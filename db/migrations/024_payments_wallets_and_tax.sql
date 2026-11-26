@@ -173,3 +173,7 @@ CREATE TABLE IF NOT EXISTS stripe_webhook_events (
 );
 -- statement-breakpoint
 ALTER TABLE stripe_webhook_events ENABLE ROW LEVEL SECURITY;
+-- statement-breakpoint
+INSERT INTO schema_migrations (version)
+VALUES ('024_payments_wallets_and_tax')
+ON CONFLICT (version) DO NOTHING;
