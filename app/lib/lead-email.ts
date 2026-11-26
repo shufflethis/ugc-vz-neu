@@ -118,7 +118,7 @@ const reachSummary = (creator: SelectedCreator) => {
 };
 
 const socialButtonsHtml = (creator: SelectedCreator) => creatorUrls(creator)
-  .map((url) => `<a href="${htmlEscape(url)}" style="display:inline-block;margin:5px 6px 0 0;padding:7px 10px;border:1px solid #ddd2e5;border-radius:8px;background:#ffffff;color:#06458F;font-size:12px;font-weight:800;text-decoration:none;">${htmlEscape(platformLabel(url))} öffnen</a>`)
+  .map((url) => `<a href="${htmlEscape(url)}" style="display:inline-block;margin:5px 6px 0 0;padding:7px 10px;border:1px solid #DCE2EA;border-radius:8px;background:#ffffff;color:#06458F;font-size:12px;font-weight:800;text-decoration:none;">${htmlEscape(platformLabel(url))} öffnen</a>`)
   .join('');
 
 const creatorCardHtml = (creator: SelectedCreator) => {
@@ -268,7 +268,7 @@ export function renderBrandMatchEmail({
         <div style="padding:22px 24px;border-radius:16px;background:#062A59;color:#ffffff;">
           <div style="font-size:12px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#F2072A;">Zusätzlicher Wachstumskanal</div>
           <h2 style="margin:7px 0 8px;font-size:21px;line-height:28px;color:#ffffff;">Wird deine Marke in ChatGPT, Gemini und Google AI empfohlen?</h2>
-          <p style="margin:0;color:#d8cfe2;font-size:14px;line-height:22px;">Mit einem GEO-Audit siehst du, ob KI-Systeme deine Marke kennen, korrekt einordnen und gegenüber Wettbewerbern empfehlen.</p>
+          <p style="margin:0;color:#C4D7EF;font-size:14px;line-height:22px;">Mit einem GEO-Audit siehst du, ob KI-Systeme deine Marke kennen, korrekt einordnen und gegenüber Wettbewerbern empfehlen.</p>
           <p style="margin:16px 0 0;"><a href="${htmlEscape(geoHref)}" style="color:#F2072A;font-size:14px;font-weight:800;text-decoration:none;">Kostenlose KI-Sichtbarkeits-Analyse →</a></p>
         </div>
       </td>
@@ -323,7 +323,7 @@ export function renderNoResultsEmail({
     <tr><td class="email-pad" style="padding:8px 42px 34px;">
       <p style="margin:0;font-size:17px;line-height:27px;color:#374151;">Hallo ${htmlEscape(clientInfo.name)},</p>
       <p style="margin:12px 0;font-size:17px;line-height:27px;color:#374151;">für deine Suche gab es noch keinen eindeutigen Treffer. Wir haben die Anfrage erhalten und können passende Alternativen manuell prüfen.</p>
-      <div style="margin:20px 0;padding:17px;border-radius:12px;background:#f5f1f8;color:#202124;font-size:14px;line-height:22px;"><strong>Suchanfrage:</strong><br />${htmlLines(query)}<br /><span style="color:#5C6470;">Referenz: ${htmlEscape(leadId)}</span></div>
+      <div style="margin:20px 0;padding:17px;border-radius:12px;background:#F5F7FA;border:1px solid #DCE2EA;color:#202124;font-size:14px;line-height:22px;"><strong>Suchanfrage:</strong><br />${htmlLines(query)}<br /><span style="color:#5C6470;">Referenz: ${htmlEscape(leadId)}</span></div>
       <p style="margin:0;font-size:14px;line-height:22px;color:#374151;">Antworte einfach mit Budget, Timing und gewünschten Formaten. Das Team kann dann gezielter recherchieren oder einen passenden KI-UGC-/Hybrid-Ansatz vorschlagen.</p>
     </td></tr>`;
 
@@ -350,7 +350,7 @@ export function renderContactAcknowledgementEmail({
     <tr><td class="email-pad" style="padding:8px 42px 34px;">
       <p style="margin:0;font-size:17px;line-height:27px;color:#374151;">Hallo ${htmlEscape(clientInfo.name)},</p>
       <p style="margin:12px 0;font-size:17px;line-height:27px;color:#374151;">deine Nachricht ist angekommen. Wir melden uns über diese E-Mail-Adresse bei dir.</p>
-      <div style="margin:20px 0;padding:17px;border-radius:12px;background:#f5f1f8;color:#202124;font-size:14px;line-height:22px;"><strong>Thema:</strong> ${htmlEscape(clientInfo.subject || 'Allgemeine Anfrage')}<br /><span style="color:#5C6470;">Referenz: ${htmlEscape(leadId)}</span></div>
+      <div style="margin:20px 0;padding:17px;border-radius:12px;background:#F5F7FA;border:1px solid #DCE2EA;color:#202124;font-size:14px;line-height:22px;"><strong>Thema:</strong> ${htmlEscape(clientInfo.subject || 'Allgemeine Anfrage')}<br /><span style="color:#5C6470;">Referenz: ${htmlEscape(leadId)}</span></div>
     </td></tr>`;
 
   return {
@@ -445,7 +445,7 @@ export function renderInternalLeadEmail({
 
   const children = `
     <tr><td class="email-pad" style="padding:8px 42px 34px;">
-      <div style="padding:14px 16px;border-radius:10px;background:#f5f1f8;font-size:14px;line-height:22px;color:#202124;">
+      <div style="padding:14px 16px;border-radius:10px;background:#F5F7FA;border:1px solid #DCE2EA;font-size:14px;line-height:22px;color:#202124;">
         <strong>Brand-Mail:</strong> <span style="color:${statusColor};font-weight:800;">${htmlEscape(statusLabel)}</span><br />
         ${brandDelivery.id ? `<strong>Resend-ID:</strong> ${htmlEscape(brandDelivery.id)}<br />` : ''}
         ${brandDelivery.error ? `<strong>Fehler:</strong> ${htmlEscape(brandDelivery.error)}<br />` : ''}
@@ -478,7 +478,7 @@ ${selectedCreators.map(creatorTextInternal).join('\n\n') || 'Keine Creator ausge
       eyebrow: kindLabel,
       title: `Neue Anfrage ${leadId}`,
       children,
-      footerNote: 'Interne UGC-VZ-Statusmeldung zum automatisierten Lead- und E-Mail-Versand.',
+      footerNote: 'Interne UGC VZ Statusmeldung zum automatisierten Lead- und E-Mail-Versand.',
     }),
     text,
   };
@@ -512,10 +512,10 @@ export function renderCreatorOutreachEmail({
       <div style="margin:20px 0 0;padding:18px;border-left:4px solid #F2072A;border-radius:10px;background:#062A59;color:#ffffff;font-size:14px;line-height:22px;">
         <div style="font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#F2072A;">Projektanfrage</div>
         <div style="margin-top:8px;"><strong>Gesucht:</strong> ${htmlLines(query)}</div>
-        ${clientInfo.message ? `<div style="margin-top:8px;color:#d8cfe2;"><strong style="color:#ffffff;">Briefing:</strong> ${htmlLines(clientInfo.message)}</div>` : ''}
-        <div style="margin-top:8px;color:#a99eb2;font-size:12px;">Referenz: ${htmlEscape(leadId)}</div>
+        ${clientInfo.message ? `<div style="margin-top:8px;color:#C4D7EF;"><strong style="color:#ffffff;">Briefing:</strong> ${htmlLines(clientInfo.message)}</div>` : ''}
+        <div style="margin-top:8px;color:#93B4DC;font-size:12px;">Referenz: ${htmlEscape(leadId)}</div>
       </div>
-      <div style="margin:18px 0;padding:15px 17px;border-radius:12px;background:#f5f1f8;color:#202124;font-size:14px;line-height:22px;">
+      <div style="margin:18px 0;padding:15px 17px;border-radius:12px;background:#F5F7FA;border:1px solid #DCE2EA;color:#202124;font-size:14px;line-height:22px;">
         <strong>Deine Angaben bei UGC VZ</strong><br />
         Preis: ${htmlEscape(creator.priceRange || 'noch nicht hinterlegt')}<br />
         Netzwerke: ${htmlEscape(networkSummary(creator))}<br />
@@ -526,7 +526,7 @@ export function renderCreatorOutreachEmail({
       <p style="margin:10px 0 0;font-size:12px;line-height:19px;color:#5C6470;">Deine Antwort geht direkt an die anfragende Person. UGC VZ verlangt keine Vermittlungsgebühr oder Provision.</p>
     </td></tr>
     <tr><td class="email-pad" style="padding:0 42px 24px;">
-      <div style="padding:20px;border-radius:14px;border:1px solid #e5dbea;background:#ffffff;">
+      <div style="padding:20px;border-radius:14px;border:1px solid #DCE2EA;background:#ffffff;">
         <div style="font-size:12px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#06458F;">Mehr passende Anfragen bekommen</div>
         <h2 style="margin:7px 0 8px;font-size:20px;line-height:27px;color:#202124;">Sind Preis, Portfolio und Social-Links noch aktuell?</h2>
         <p style="margin:0;font-size:14px;line-height:22px;color:#374151;">Aktuelle Angaben helfen Brands bei einer schnellen Entscheidung. Schick uns Änderungen kurz per E-Mail – dein Profil bleibt kostenlos.</p>

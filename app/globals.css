@@ -322,13 +322,42 @@ h1, h2, h3, .font-display {
 .otp-shake {
   animation: otp-shake 280ms cubic-bezier(.2,.8,.2,1);
 }
+/* Silky GPU-only ambient float for EditorialMotionHero (zero JS conflict with scroll/mouse parallax) */
+@keyframes hero-float-a {
+  0%, 100% { transform: translate3d(0, 0px, 0); }
+  50% { transform: translate3d(0, -7px, 0); }
+}
+@keyframes hero-float-b {
+  0%, 100% { transform: translate3d(0, 0px, 0); }
+  50% { transform: translate3d(0, 8px, 0); }
+}
+@keyframes hero-float-c {
+  0%, 100% { transform: translate3d(0, 0px, 0); }
+  50% { transform: translate3d(0, -5px, 0); }
+}
+.hero-float-a {
+  animation: hero-float-a 7.2s ease-in-out infinite;
+  will-change: transform;
+}
+.hero-float-b {
+  animation: hero-float-b 8.6s ease-in-out infinite;
+  will-change: transform;
+}
+.hero-float-c {
+  animation: hero-float-c 6.4s ease-in-out infinite;
+  will-change: transform;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .otp-shake,
   .logo-marquee-track,
   .animate-float,
   .animate-pulse-glow,
   .animate-gradient-shift,
-  .reveal-up {
+  .reveal-up,
+  .hero-float-a,
+  .hero-float-b,
+  .hero-float-c {
     animation: none !important;
   }
   .btn-press,

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { type ReactNode, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import {
   motion,
@@ -34,6 +34,10 @@ export interface MotionHeroStats {
 
 interface EditorialMotionHeroProps {
   stats: MotionHeroStats;
+  /** Exakt eine H1-Ueberschrift von der aufrufenden Seite (SSR + SEO). */
+  heading: ReactNode;
+  /** ID des Headings fuer aria-labelledby. */
+  headingId?: string;
   /** Optionales 5-Sek.-Studio-Video auf reinem #FFFFFF (z. B. aus Pomelli / Veo / Kling). */
   videoSrc?: string;
   /** Zeigt unterhalb des Heroes die kompakte Vorschau- & Video-Upgrade-Leiste (nur fuer /motion-hero). */
@@ -59,6 +63,8 @@ function formatEurCentsDe(cents: number): string {
 
 export default function EditorialMotionHero({
   stats,
+  heading,
+  headingId = 'home-title',
   videoSrc,
   showUpgradeGuideBar = false,
 }: EditorialMotionHeroProps) {
@@ -68,33 +74,41 @@ export default function EditorialMotionHero({
   const [videoPlaying, setVideoPlaying] = useState(Boolean(videoSrc));
   const [copiedPrompt, setCopiedPrompt] = useState(false);
 
-  // Normalisierte Mausposition (-1 .. +1) mit sanfter Feder-Physik fuer Orla-Style Tiefen-Parallax
+  // Saubere Trennung der Motion-Layer (kein konkurrierendes y auf demselben Node):
+  // 1) Aeusserer Wrapper: nur gedaempfter Scroll-Parallax (smoothScroll)
+  // 2) Mittlerer Wrapper: nur weicher Maus-Parallax (mouseX/mouseY)
+  // 3) Innerer Content: nur reines GPU-CSS-Floating (.hero-float-*)
   const rawMouseX = useMotionValue(0);
   const rawMouseY = useMotionValue(0);
-  const mouseX = useSpring(rawMouseX, { stiffness: 65, damping: 20, mass: 0.7 });
-  const mouseY = useSpring(rawMouseY, { stiffness: 65, damping: 20, mass: 0.7 });
+  const mouseX = useSpring(rawMouseX, { stiffness: 36, damping: 24, mass: 0.95 });
+  const mouseY = useSpring(rawMouseY, { stiffness: 36, damping: 24, mass: 0.95 });
 
   const { scrollYProgress } = useScroll({
     target: sectionRef,
     offset: ['start start', 'end start'],
   });
+  const smoothScroll = useSpring(scrollYProgress, {
+    stiffness: 95,
+    damping: 28,
+    restDelta: 0.0005,
+  });
 
-  // Scroll-Choreografie: Subjekt waechst hauchfein, schwebende Karten driften sanft in Tiefenebenen auseinander
-  const subjectScrollY = useTransform(scrollYProgress, [0, 1], [0, 42]);
-  const subjectScrollScale = useTransform(scrollYProgress, [0, 1], [1, 1.045]);
-  const backLayerScrollY = useTransform(scrollYProgress, [0, 1], [0, -54]);
-  const midLayerScrollY = useTransform(scrollYProgress, [0, 1], [0, -88]);
-  const frontLayerScrollY = useTransform(scrollYProgress, [0, 1], [0, -124]);
+  // Scroll-Layer (butterweich gedaempft)
+  const subjectScrollY = useTransform(smoothScroll, [0, 1], [0, 28]);
+  const subjectScrollScale = useTransform(smoothScroll, [0, 1], [1, 1.03]);
+  const backLayerScrollY = useTransform(smoothScroll, [0, 1], [0, -34]);
+  const midLayerScrollY = useTransform(smoothScroll, [0, 1], [0, -56]);
+  const frontLayerScrollY = useTransform(smoothScroll, [0, 1], [0, -78]);
 
-  // 3 Tiefenebenen fuer Maus-Parallax (Hinten: gegengesetzt, Mitte: subtil, Vorne: staerker)
-  const subjectMouseX = useTransform(mouseX, [-1, 1], [-8, 8]);
-  const subjectMouseY = useTransform(mouseY, [-1, 1], [-5, 5]);
-  const backX = useTransform(mouseX, [-1, 1], [16, -16]);
-  const backY = useTransform(mouseY, [-1, 1], [12, -12]);
-  const midX = useTransform(mouseX, [-1, 1], [-20, 20]);
-  const midY = useTransform(mouseY, [-1, 1], [-14, 14]);
-  const frontX = useTransform(mouseX, [-1, 1], [-30, 30]);
-  const frontY = useTransform(mouseY, [-1, 1], [-20, 20]);
+  // Maus-Layer (subtil & seidenweich ohne Ruckeln)
+  const subjectMouseX = useTransform(mouseX, [-1, 1], [-6, 6]);
+  const subjectMouseY = useTransform(mouseY, [-1, 1], [-4, 4]);
+  const backX = useTransform(mouseX, [-1, 1], [10, -10]);
+  const backY = useTransform(mouseY, [-1, 1], [8, -8]);
+  const midX = useTransform(mouseX, [-1, 1], [-14, 14]);
+  const midY = useTransform(mouseY, [-1, 1], [-10, 10]);
+  const frontX = useTransform(mouseX, [-1, 1], [-20, 20]);
+  const frontY = useTransform(mouseY, [-1, 1], [-14, 14]);
 
   useEffect(() => {
     const mq = window.matchMedia?.('(prefers-reduced-motion: reduce)');
@@ -155,7 +169,7 @@ export default function EditorialMotionHero({
     <>
       <section
         ref={sectionRef}
-        aria-labelledby="motion-hero-title"
+        aria-labelledby={headingId}
         onPointerMove={handlePointerMove}
         onPointerLeave={handlePointerLeave}
         className="relative overflow-hidden border-b border-[#DCE2EA] bg-white px-5 sm:px-8"
@@ -171,8 +185,8 @@ export default function EditorialMotionHero({
         />
 
         <div className="relative mx-auto max-w-[1200px]">
-          <div className="relative grid grid-cols-1 items-end pb-10 pt-10 lg:min-h-[700px] lg:grid-cols-12 lg:pb-12 lg:pt-12 xl:min-h-[740px]">
-            {/* ZENTRALE STUDIO-CREATOR-FIGUR (Desktop: hinter den vorderen Badges, buendig am Boden) */}
+          <div className="relative grid grid-cols-1 items-end pb-10 pt-10 lg:min-h-[690px] lg:grid-cols-12 lg:pb-12 lg:pt-12 xl:min-h-[730px]">
+            {/* ZENTRALE STUDIO-CREATOR-FIGUR (Desktop, GPU-kompositiert ohne Layer-Konflikte) */}
             <div className="pointer-events-none absolute inset-y-0 left-[37%] right-[16%] z-10 hidden items-end justify-center lg:flex">
               <div
                 aria-hidden="true"
@@ -182,19 +196,17 @@ export default function EditorialMotionHero({
                 style={
                   reducedMotion
                     ? undefined
-                    : {
-                        x: subjectMouseX,
-                        y: subjectScrollY,
-                        scale: subjectScrollScale,
-                      }
+                    : { y: subjectScrollY, scale: subjectScrollScale }
                 }
-                animate={reducedMotion ? undefined : { y: [0, -5, 0] }}
-                transition={{ duration: 7.5, repeat: Infinity, ease: 'easeInOut' }}
-                className="relative flex h-[640px] w-full items-end justify-center xl:h-[685px]"
+                className="relative flex h-[635px] w-full items-end justify-center will-change-transform xl:h-[675px]"
               >
                 <motion.div
-                  style={reducedMotion ? undefined : { y: subjectMouseY }}
-                  className="relative h-full w-auto"
+                  style={
+                    reducedMotion
+                      ? undefined
+                      : { x: subjectMouseX, y: subjectMouseY }
+                  }
+                  className="relative h-full w-auto will-change-transform"
                 >
                   {videoSrc ? (
                     <video
@@ -216,136 +228,141 @@ export default function EditorialMotionHero({
                       width={348}
                       height={973}
                       fetchPriority="high"
-                      className="h-full w-auto select-none object-contain object-bottom drop-shadow-[0_22px_36px_rgba(6,42,89,0.08)]"
+                      className="h-full w-auto select-none object-contain object-bottom drop-shadow-[0_20px_32px_rgba(6,42,89,0.08)]"
                     />
                   )}
                 </motion.div>
               </motion.div>
             </div>
 
-            {/* SCHWEBENDE TIEFEN-EBENE 1 (HINTEN, leichte Tiefenunschaerfe wie Orla, nur Desktop) */}
+            {/* SCHWEBENDE TIEFEN-EBENE 1 (HINTEN: ugcVZ-Stern) */}
             <motion.div
-              style={reducedMotion ? undefined : { x: backX, y: backLayerScrollY }}
-              className="pointer-events-none absolute left-[38%] top-[10%] z-[5] hidden lg:block"
+              style={reducedMotion ? undefined : { y: backLayerScrollY }}
+              className="pointer-events-none absolute left-[38%] top-[10%] z-[5] hidden will-change-transform lg:block"
               aria-hidden="true"
             >
               <motion.div
-                style={reducedMotion ? undefined : { y: backY }}
-                animate={reducedMotion ? undefined : { rotate: [0, 8, 0], y: [0, -8, 0] }}
-                transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut' }}
+                style={reducedMotion ? undefined : { x: backX, y: backY }}
+                className="will-change-transform"
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src="/brand/ugcvz-mark.webp"
-                  alt=""
-                  width={68}
-                  height={68}
-                  className="h-14 w-14 opacity-85 blur-[0.6px] drop-shadow-[0_12px_20px_rgba(242,7,42,0.18)]"
-                />
-              </motion.div>
-            </motion.div>
-
-            {/* SCHWEBENDE REEL-KARTE 2 (RECHTS OBEN, tiefenunscharf -> beim Hover gestochen scharf) */}
-            <motion.div
-              style={reducedMotion ? undefined : { x: backX, y: backLayerScrollY }}
-              className="absolute right-[1%] top-[8%] z-20 hidden lg:block"
-            >
-              <motion.div
-                style={reducedMotion ? undefined : { y: backY }}
-                animate={reducedMotion ? undefined : { y: [0, 9, 0], rotate: [3.5, 2, 3.5] }}
-                transition={{ duration: 8.2, repeat: Infinity, ease: 'easeInOut' }}
-                className="group relative w-[142px] overflow-hidden rounded-[16px] border-2 border-white bg-white shadow-[0_18px_40px_rgba(6,42,89,0.15)] transition-[filter,transform] duration-300 [filter:blur(0.6px)] hover:scale-[1.04] hover:[filter:blur(0px)]"
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src="/motion-hero/reel-lifestyle.webp"
-                  alt="UGC-Beispielclip Lifestyle und Food"
-                  width={480}
-                  height={860}
-                  className="aspect-[9/14] w-full object-cover"
-                />
-                <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#062A59]/90 via-[#062A59]/45 to-transparent p-2.5 text-white">
-                  <p className="font-mono text-[11px] font-bold tabular-nums">31.400 Views</p>
-                  <p className="text-[10px] text-white/85">Matcha Reel · Geprüft</p>
+                <div className="hero-float-b">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src="/brand/ugcvz-mark.webp"
+                    alt=""
+                    width={68}
+                    height={68}
+                    className="h-14 w-14 opacity-90 drop-shadow-[0_10px_18px_rgba(242,7,42,0.16)]"
+                  />
                 </div>
               </motion.div>
             </motion.div>
 
-            {/* SCHWEBENDE REEL-KARTE 1 (LINKS NEBEN SCHULTER, gestochen scharf, Midground) */}
+            {/* SCHWEBENDE REEL-KARTE 2 (RECHTS OBEN, ohne teuren Live-Blur -> 120 fps butterweich) */}
             <motion.div
-              style={reducedMotion ? undefined : { x: midX, y: midLayerScrollY }}
-              className="absolute left-[40%] top-[23%] z-20 hidden lg:block xl:left-[41%]"
+              style={reducedMotion ? undefined : { y: backLayerScrollY }}
+              className="absolute right-[1%] top-[8%] z-20 hidden will-change-transform lg:block"
             >
               <motion.div
-                style={reducedMotion ? undefined : { y: midY }}
-                animate={reducedMotion ? undefined : { y: [0, -10, 0], rotate: [-4, -2.5, -4] }}
-                transition={{ duration: 6.8, repeat: Infinity, ease: 'easeInOut' }}
-                className="relative w-[132px] overflow-hidden rounded-[16px] border-2 border-white bg-white shadow-[0_22px_48px_rgba(6,69,143,0.18)] transition-transform duration-300 hover:scale-[1.05]"
+                style={reducedMotion ? undefined : { x: backX, y: backY }}
+                className="will-change-transform"
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src="/motion-hero/reel-skincare.webp"
-                  alt="UGC-Beispielclip Skincare"
-                  width={480}
-                  height={854}
-                  className="aspect-[9/14] w-full object-cover"
-                />
-                <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-[#062A59]/85 px-2 py-0.5 text-[10px] font-bold text-white backdrop-blur-sm">
-                  <span className="h-1.5 w-1.5 rounded-full bg-[#F2072A]" />
-                  Live
-                </span>
-                <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#062A59]/95 via-[#062A59]/50 to-transparent p-2.5 text-white">
-                  <p className="font-mono text-[11px] font-bold tabular-nums">42.800 Views</p>
-                  <p className="text-[10px] font-semibold text-[#9AF0BE]">✓ Zählt · 85,60 €</p>
+                <div className="hero-float-b">
+                  <div className="relative w-[142px] rotate-[3deg] overflow-hidden rounded-[16px] border-2 border-white bg-white opacity-95 shadow-[0_18px_40px_rgba(6,42,89,0.14)] transition-transform duration-300 ease-out hover:rotate-0 hover:scale-[1.04] hover:opacity-100">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src="/motion-hero/reel-lifestyle.webp"
+                      alt="UGC-Beispielclip Lifestyle und Food"
+                      width={480}
+                      height={860}
+                      className="aspect-[9/14] w-full object-cover"
+                    />
+                    <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#062A59]/90 via-[#062A59]/45 to-transparent p-2.5 text-white">
+                      <p className="font-mono text-[11px] font-bold tabular-nums">31.400 Views</p>
+                      <p className="text-[10px] text-white/85">Matcha Reel · Geprüft</p>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            </motion.div>
+
+            {/* SCHWEBENDE REEL-KARTE 1 (LINKS NEBEN SCHULTER, Midground) */}
+            <motion.div
+              style={reducedMotion ? undefined : { y: midLayerScrollY }}
+              className="absolute left-[40%] top-[23%] z-20 hidden will-change-transform lg:block xl:left-[41%]"
+            >
+              <motion.div
+                style={reducedMotion ? undefined : { x: midX, y: midY }}
+                className="will-change-transform"
+              >
+                <div className="hero-float-a">
+                  <div className="relative w-[132px] -rotate-[3.5deg] overflow-hidden rounded-[16px] border-2 border-white bg-white shadow-[0_22px_46px_rgba(6,69,143,0.16)] transition-transform duration-300 ease-out hover:rotate-0 hover:scale-[1.04]">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src="/motion-hero/reel-skincare.webp"
+                      alt="UGC-Beispielclip Skincare"
+                      width={480}
+                      height={854}
+                      className="aspect-[9/14] w-full object-cover"
+                    />
+                    <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-[#062A59]/90 px-2 py-0.5 text-[10px] font-bold text-white">
+                      <span className="h-1.5 w-1.5 rounded-full bg-[#F2072A]" />
+                      Live
+                    </span>
+                    <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#062A59]/95 via-[#062A59]/50 to-transparent p-2.5 text-white">
+                      <p className="font-mono text-[11px] font-bold tabular-nums">42.800 Views</p>
+                      <p className="text-[10px] font-semibold text-[#9AF0BE]">✓ Zählt · 85,60 €</p>
+                    </div>
+                  </div>
                 </div>
               </motion.div>
             </motion.div>
 
             {/* SCHWEBENDE RATE-PILL (RECHTS NEBEN KOPF, Vordergrund) */}
             <motion.div
-              style={reducedMotion ? undefined : { x: frontX, y: frontLayerScrollY }}
-              className="absolute right-[16%] top-[20%] z-30 hidden lg:block"
+              style={reducedMotion ? undefined : { y: frontLayerScrollY }}
+              className="absolute right-[16%] top-[20%] z-30 hidden will-change-transform lg:block"
             >
               <motion.div
-                style={reducedMotion ? undefined : { y: frontY }}
-                animate={reducedMotion ? undefined : { y: [0, 7, 0] }}
-                transition={{ duration: 5.8, repeat: Infinity, ease: 'easeInOut' }}
-                className="rounded-[12px] border border-[#DCE2EA] bg-white/95 px-3.5 py-2.5 shadow-[0_14px_34px_rgba(6,69,143,0.14)] backdrop-blur-md"
+                style={reducedMotion ? undefined : { x: frontX, y: frontY }}
+                className="will-change-transform"
               >
-                <p className="flex items-center gap-1.5 text-[11px] font-semibold text-[#5C6470]">
-                  <ShieldCheck size={13} className="text-[#1F9D55]" aria-hidden="true" />
-                  Geprüfter View-Satz
-                </p>
-                <p className="mt-0.5 font-mono text-sm font-bold tabular-nums text-[#06458F]">
-                  {heroRateLabel}
-                </p>
+                <div className="hero-float-c rounded-[12px] border border-[#DCE2EA] bg-white px-3.5 py-2.5 shadow-[0_14px_34px_rgba(6,69,143,0.13)]">
+                  <p className="flex items-center gap-1.5 text-[11px] font-semibold text-[#5C6470]">
+                    <ShieldCheck size={13} className="text-[#1F9D55]" aria-hidden="true" />
+                    Geprüfter View-Satz
+                  </p>
+                  <p className="mt-0.5 font-mono text-sm font-bold tabular-nums text-[#06458F]">
+                    {heroRateLabel}
+                  </p>
+                </div>
               </motion.div>
             </motion.div>
 
             {/* SCHWEBENDE PRUEF-KARTE (UNTEN MITTE-LINKS, Vordergrund) */}
             <motion.div
-              style={reducedMotion ? undefined : { x: frontX, y: midLayerScrollY }}
-              className="absolute bottom-[13%] left-[44%] z-30 hidden lg:block"
+              style={reducedMotion ? undefined : { y: midLayerScrollY }}
+              className="absolute bottom-[13%] left-[44%] z-30 hidden will-change-transform lg:block"
             >
               <motion.div
-                style={reducedMotion ? undefined : { y: frontY }}
-                animate={reducedMotion ? undefined : { y: [0, -6, 0] }}
-                transition={{ duration: 6.2, repeat: Infinity, ease: 'easeInOut' }}
-                className="flex items-center gap-2.5 rounded-[12px] border border-[#DCE2EA] bg-white/95 px-3.5 py-2.5 shadow-[0_16px_38px_rgba(6,42,89,0.14)] backdrop-blur-md"
+                style={reducedMotion ? undefined : { x: frontX, y: frontY }}
+                className="will-change-transform"
               >
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#1F9D55] text-white">
-                  <Check size={14} strokeWidth={2.75} aria-hidden="true" />
-                </span>
-                <div>
-                  <p className="text-xs font-bold text-[#202124]">Beitrag #14 zählt</p>
-                  <p className="text-[11px] text-[#5C6470]">Brief erfüllt · Online geprüft</p>
+                <div className="hero-float-a flex items-center gap-2.5 rounded-[12px] border border-[#DCE2EA] bg-white px-3.5 py-2.5 shadow-[0_16px_38px_rgba(6,42,89,0.13)]">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#1F9D55] text-white">
+                    <Check size={14} strokeWidth={2.75} aria-hidden="true" />
+                  </span>
+                  <div>
+                    <p className="text-xs font-bold text-[#202124]">Beitrag #14 zählt</p>
+                    <p className="text-[11px] text-[#5C6470]">Brief erfüllt · Online geprüft</p>
+                  </div>
                 </div>
               </motion.div>
             </motion.div>
 
-            {/* LINKE SPALTE: EINZIGE H1 & EDITORIAL COPY (buendig auf 1200px fuer Mobile & Desktop) */}
-            <div className="relative z-30 lg:col-span-5 lg:self-center lg:pb-8 lg:pr-6">
-              <p className="inline-flex items-center gap-2 rounded-full border border-[#DCE2EA] bg-white/90 px-3.5 py-1.5 text-xs font-semibold text-[#06458F] shadow-[0_1px_2px_rgba(6,69,143,0.05)] backdrop-blur-sm sm:py-1">
+            {/* LINKE SPALTE: EDITORIAL TYPOGRAFIE & PRIMARY CTA (buendig auf 1200px) */}
+            <div className="relative z-30 lg:col-span-5 lg:self-center lg:pb-6 lg:pr-6">
+              <p className="inline-flex items-center gap-2 rounded-full border border-[#DCE2EA] bg-white px-3.5 py-1.5 text-xs font-semibold text-[#06458F] shadow-[0_1px_2px_rgba(6,69,143,0.05)] sm:py-1">
                 <span className="h-2 w-2 rounded-full bg-[#F2072A]" aria-hidden="true" />
                 <span>
                   Für Marken in DACH
@@ -355,20 +372,10 @@ export default function EditorialMotionHero({
                 </span>
               </p>
 
-              <h1
-                id="motion-hero-title"
-                className="mt-4 font-display text-[40px] font-extrabold leading-[1.03] tracking-[-0.036em] text-[#202124] sm:text-5xl lg:mt-5 lg:text-[56px] lg:leading-[1.01] xl:text-[66px]"
-              >
-                Echte Creator.
-                <br />
-                Echte Views.
-                <br />
-                <span className="text-[#06458F]">Dein Budget</span>
-                <span className="text-[#F2072A]">.</span>
-              </h1>
+              <div className="mt-4 lg:mt-5">{heading}</div>
 
               <p className="mt-4 max-w-[400px] text-base leading-7 text-[#5C6470] lg:mt-5 lg:text-[17px] lg:leading-[1.6]">
-                Kurzes Briefing schreiben, Preis pro 1.000 Views festlegen. Echte Creator posten dein Produkt auf TikTok und Instagram. Bezahlt wird nur, was die Prüfung besteht.
+                Du schreibst ein kurzes Briefing und legst fest, was dir 1.000 Views wert sind. Echte Creator posten dein Produkt auf TikTok und Instagram. Du zahlst nur geprüfte Beiträge und nie mehr als dein Budget.
               </p>
 
               <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center lg:mt-7">
@@ -381,7 +388,7 @@ export default function EditorialMotionHero({
                 </Link>
                 <Link
                   href="#so-funktionierts"
-                  className="btn-press inline-flex min-h-[48px] items-center justify-center rounded-[8px] border border-[#DCE2EA] bg-white/90 px-5 text-sm font-semibold text-[#202124] backdrop-blur-sm hover:border-[#06458F] hover:text-[#06458F] sm:min-h-[52px]"
+                  className="btn-press inline-flex min-h-[48px] items-center justify-center rounded-[8px] border border-[#DCE2EA] bg-white px-5 text-sm font-semibold text-[#202124] hover:border-[#06458F] hover:text-[#06458F] sm:min-h-[52px]"
                 >
                   So läuft&apos;s
                 </Link>
@@ -395,6 +402,21 @@ export default function EditorialMotionHero({
                   <span>Du bist Creator? 0 % Gebühr, Geld pro 1.000 Views</span>
                   <ArrowRight size={14} aria-hidden="true" />
                 </Link>
+              </div>
+
+              <div className="mt-5 flex flex-wrap items-center gap-2 text-xs font-medium text-[#5C6470]">
+                <span className="inline-flex items-center gap-1 rounded-[6px] border border-[#DCE2EA] bg-[#F5F7FA] px-2.5 py-1">
+                  <Check size={12} className="text-[#06458F]" aria-hidden="true" />
+                  Kostenloses Konto
+                </span>
+                <span className="inline-flex items-center gap-1 rounded-[6px] border border-[#DCE2EA] bg-[#F5F7FA] px-2.5 py-1">
+                  <Check size={12} className="text-[#06458F]" aria-hidden="true" />
+                  Kein Abo
+                </span>
+                <span className="inline-flex items-center gap-1 rounded-[6px] border border-[#DCE2EA] bg-[#F5F7FA] px-2.5 py-1">
+                  <Check size={12} className="text-[#06458F]" aria-hidden="true" />
+                  Budget-Obergrenze
+                </span>
               </div>
             </div>
 
@@ -421,7 +443,7 @@ export default function EditorialMotionHero({
                   42.800 Views
                 </div>
               </div>
-              <div className="absolute bottom-3 left-3 rounded-[10px] border border-[#DCE2EA] bg-white/95 px-3 py-2 shadow-md backdrop-blur-sm">
+              <div className="absolute bottom-3 left-3 rounded-[10px] border border-[#DCE2EA] bg-white px-3 py-2 shadow-md">
                 <p className="text-[10px] font-semibold text-[#5C6470]">Geprüfter Satz</p>
                 <p className="font-mono text-xs font-bold text-[#06458F]">{heroRateLabel}</p>
               </div>
@@ -429,7 +451,7 @@ export default function EditorialMotionHero({
 
             {/* RECHTE SPALTE UNTEN: ORLA-SIGNATURE FAKTEN-TABELLE + LIVE BUDGET-BAR */}
             <div className="relative z-30 mt-5 lg:col-span-4 lg:col-start-9 lg:mt-0 lg:self-end">
-              <div className="rounded-[14px] border border-[#DCE2EA]/90 bg-white/90 p-5 shadow-[0_12px_36px_rgba(6,69,143,0.08)] backdrop-blur-md">
+              <div className="rounded-[14px] border border-[#DCE2EA] bg-white/95 p-5 shadow-[0_12px_36px_rgba(6,69,143,0.08)]">
                 <div className="mb-3 flex items-center justify-between gap-2">
                   <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#202124]">
                     <span
@@ -467,7 +489,7 @@ export default function EditorialMotionHero({
                 type="button"
                 onClick={toggleVideo}
                 aria-label={videoPlaying ? 'Hintergrundvideo pausieren' : 'Hintergrundvideo abspielen'}
-                className="absolute bottom-5 left-1/2 z-40 hidden h-9 w-9 -translate-x-1/2 items-center justify-center rounded-full border border-[#DCE2EA] bg-white/90 text-[#06458F] shadow-sm backdrop-blur-sm hover:border-[#06458F] lg:flex"
+                className="absolute bottom-5 left-1/2 z-40 hidden h-9 w-9 -translate-x-1/2 items-center justify-center rounded-full border border-[#DCE2EA] bg-white text-[#06458F] shadow-sm hover:border-[#06458F] lg:flex"
               >
                 {videoPlaying ? <Pause size={15} /> : <Play size={15} />}
               </button>
@@ -486,11 +508,11 @@ export default function EditorialMotionHero({
             <div className="flex items-start gap-2.5 text-xs sm:text-sm">
               <Sparkles size={16} className="mt-0.5 shrink-0 text-[#F2072A]" aria-hidden="true" />
               <p className="text-white/90">
-                <strong className="font-semibold text-white">Editorial Motion Hero Prototyp (noindex):</strong>{' '}
-                Bewege die Maus oder scrolle für den Tiefen-Parallax-Effekt. Video-Slot für ein 5-Sek.-Studio-MP4 (Pomelli / Veo / Kling) ist direkt vorbereitet.
+                <strong className="font-semibold text-white">Editorial Motion Hero Studio-Modus (noindex):</strong>{' '}
+                Video-Slot für ein 5-Sek.-Studio-MP4 (Pomelli / Veo / Kling) ist direkt vorbereitet.
               </p>
             </div>
-            <div className="flex flex-wrap items-center gap-2 shrink-0">
+            <div className="flex shrink-0 flex-wrap items-center gap-2">
               <a
                 href="/motion-hero/creator-hero-studio.png"
                 download="ugcvz-creator-studio-startframe.png"
@@ -512,7 +534,7 @@ export default function EditorialMotionHero({
                 className="inline-flex min-h-[36px] items-center gap-1.5 rounded-[8px] border border-white/25 px-3 text-xs font-semibold text-white/90 hover:border-white hover:text-white"
               >
                 <Video size={14} aria-hidden="true" />
-                Vergleich: Aktuelle Startseite
+                Zur Live-Startseite
               </Link>
             </div>
           </div>

@@ -28,6 +28,20 @@ export default async function MotionHeroPreviewPage() {
           liveCreatorCount: stats.liveCreatorCount,
           heroCampaign: stats.heroCampaign,
         }}
+        headingId="motion-hero-title"
+        heading={
+          <h1
+            id="motion-hero-title"
+            className="font-display text-[40px] font-extrabold leading-[1.03] tracking-[-0.036em] text-[#202124] sm:text-5xl lg:text-[56px] lg:leading-[1.01] xl:text-[66px]"
+          >
+            Echte Creator.
+            <br />
+            Echte Views.
+            <br />
+            <span className="text-[#06458F]">Dein Budget</span>
+            <span className="text-[#F2072A]">.</span>
+          </h1>
+        }
         showUpgradeGuideBar
       />
       <TrustElements compact />

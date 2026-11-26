@@ -115,10 +115,17 @@ export const emailShell = ({
         <td align="center" style="padding:28px 12px;">
           <table role="presentation" width="640" cellpadding="0" cellspacing="0" class="email-wrap" style="width:640px;max-width:640px;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #DCE2EA;">
             <tr>
-              <td style="height:4px;background:#06458F;font-size:0;line-height:0;">&nbsp;</td>
+              <td style="padding:0;font-size:0;line-height:0;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                  <tr>
+                    <td width="80%" style="height:4px;background:#06458F;font-size:0;line-height:0;">&nbsp;</td>
+                    <td width="20%" style="height:4px;background:#F2072A;font-size:0;line-height:0;">&nbsp;</td>
+                  </tr>
+                </table>
+              </td>
             </tr>
             <tr>
-              <td class="email-pad" style="padding:20px 42px;background:#ffffff;border-bottom:1px solid #DCE2EA;">
+              <td class="email-pad" style="padding:22px 42px;background:#ffffff;border-bottom:1px solid #DCE2EA;">
                 <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                   <tr>
                     <td style="vertical-align:middle;">
@@ -126,15 +133,17 @@ export const emailShell = ({
                         <img src="https://ugc-vz.de/brand/ugcvz-logo-header.png" alt="UGC VZ" height="32" style="display:block;height:32px;width:auto;border:0;" />
                       </a>
                     </td>
-                    <td align="right" style="vertical-align:middle;font-size:12px;font-weight:600;color:#5C6470;">${htmlEscape(headerTagline)}</td>
+                    <td align="right" style="vertical-align:middle;">
+                      <span style="display:inline-block;padding:4px 10px;border-radius:999px;background:#F5F7FA;border:1px solid #DCE2EA;font-size:11px;font-weight:700;letter-spacing:.3px;color:#06458F;">${htmlEscape(headerTagline)}</span>
+                    </td>
                   </tr>
                 </table>
               </td>
             </tr>
             <tr>
-              <td class="email-pad" style="padding:34px 42px 14px;">
-                <div style="font-size:12px;line-height:18px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:#06458F;">${htmlEscape(eyebrow)}</div>
-                <h1 style="margin:8px 0 0;font-size:30px;line-height:36px;letter-spacing:-.5px;color:#202124;">${htmlEscape(title)}</h1>
+              <td class="email-pad" style="padding:32px 42px 12px;">
+                <div style="font-size:11px;line-height:16px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;color:#D10523;">${htmlEscape(eyebrow)}</div>
+                <h1 style="margin:8px 0 0;font-size:28px;line-height:34px;font-weight:800;letter-spacing:-.5px;color:#202124;">${htmlEscape(title)}</h1>
               </td>
             </tr>
             ${children}

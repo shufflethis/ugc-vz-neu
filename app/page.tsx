@@ -1,12 +1,12 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { ArrowRight, Check } from 'lucide-react';
+import { ArrowRight, BarChart3, Check, Search, ShieldCheck, Users } from 'lucide-react';
 import SearchBox from './components/SearchBox';
 import TrustElements from './components/TrustElements';
 import HomePageSchema from './components/HomePageSchema';
 import JsonLdScript from './wissen/[slug]/JsonLdScript';
 import PauseableVideo from './components/motion/PauseableVideo';
-import BudgetBar from './components/motion/BudgetBar';
+import EditorialMotionHero from './components/home/EditorialMotionHero';
 import QuickBriefCard from './components/home/QuickBriefCard';
 import CampaignHowTabs from './components/home/CampaignHowTabs';
 import VerificationProofSection from './components/home/VerificationProofSection';
@@ -27,6 +27,37 @@ export const metadata: Metadata = {
     },
   },
 };
+
+const HOME_ADVANTAGES = [
+  {
+    icon: Search,
+    badge: 'KI-Suche',
+    title: 'Die Suche versteht dein Briefing',
+    description:
+      'Beschreibe Produkt, Zielgruppe und Format in deinen eigenen Worten. Die KI-Suche filtert in 20 Kategorien nach passenden Creator-Profilen.',
+  },
+  {
+    icon: Users,
+    badge: 'Verifizierter Pool',
+    title: 'Echte Profile mit Arbeitsproben',
+    description:
+      'Reale DACH-Creator mit verifizierten Social-Accounts, Portfolio-Links und echten Reels. Keine KI-Avatare und keine anonymen Listen.',
+  },
+  {
+    icon: ShieldCheck,
+    badge: 'Volle Kontrolle',
+    title: 'Du wählst bewusst aus',
+    description:
+      'Vergleiche Themen, Formate und Arbeitsproben direkt selbst oder starte eine offene View-Kampagne mit klaren Brief-Regeln.',
+  },
+  {
+    icon: BarChart3,
+    badge: 'Brand-Workspace',
+    title: 'Kampagne, Tracking & Reporting',
+    description:
+      'Briefing-Checkliste, geprüfte Views von TikTok und Instagram, feste Budget-Obergrenze und teilbarer Live-Report an einem Ort.',
+  },
+] as const;
 
 const HOME_FAQS: Array<{ q: string; a: string }> = [
   {
@@ -64,157 +95,32 @@ export default async function Home() {
     })),
   };
 
-  const heroCampaign = stats.heroCampaign;
-  const heroRateLabel = heroCampaign
-    ? `${formatEurCentsDe(heroCampaign.tkpEurCents)} € pro 1.000 Views`
-    : '2,00 € pro 1.000 Views';
-  const heroBudgetLabel = heroCampaign
-    ? `Budget ${heroCampaign.totalBudgetEur.toLocaleString('de-DE')} €`
-    : 'Budget 500 €';
-  const heroRemainingPct = heroCampaign ? heroCampaign.remainingPercent : 74;
-  const heroUsedPct = Math.max(0, Math.min(100, 100 - heroRemainingPct));
-
   return (
     <div className="home-page min-h-screen bg-white text-[#202124]">
       <HomePageSchema />
       <JsonLdScript data={homeFaqSchema} />
 
-      {/* ---------- 1. Hero (ugcVZ Rot-Blau CI, luftig & klar) ---------- */}
-      <section
-        aria-labelledby="home-title"
-        className="home-hero border-b border-[#DCE2EA]/80 px-5 pb-14 pt-10 sm:px-8 sm:pb-20 sm:pt-14"
-      >
-        <div className="mx-auto grid max-w-[1200px] items-center gap-10 lg:grid-cols-12 lg:gap-12">
-          {/* Linke Spalte: buendig unter dem Header-Logo, klare Botschaft & Primary CTA */}
-          <div className="max-w-[560px] lg:col-span-6">
-            <p className="inline-flex items-center gap-2 rounded-full border border-[#DCE2EA] bg-white/90 px-3.5 py-1.5 text-xs font-semibold text-[#06458F] shadow-[0_1px_2px_rgba(6,69,143,0.05)] sm:py-1 sm:text-[13px]">
-              <span className="h-2 w-2 rounded-full bg-[#F2072A]" aria-hidden="true" />
-              <span>Für Marken in Deutschland, Österreich und der Schweiz</span>
-            </p>
-
-            <h1
-              id="home-title"
-              className="mt-4 font-display text-[40px] font-extrabold leading-[44px] tracking-[-0.03em] text-[#202124] sm:text-6xl sm:leading-[1.05] lg:text-[66px] lg:leading-[72px]"
-            >
-              Echte Creator. Echte Views.{' '}
-              <span className="text-[#06458F]">Dein Budget.</span>
-            </h1>
-
-            <p className="mt-5 text-base leading-7 text-[#5C6470] sm:text-lg sm:leading-8">
-              Du schreibst ein kurzes Briefing und legst fest, was dir 1.000 Views wert sind. Creator posten dein Produkt auf TikTok und Instagram. Du zahlst nur geprüfte Beiträge und nie mehr als dein Budget.
-            </p>
-
-            <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
-              <Link
-                href="/brand?tab=signup"
-                className="btn-press inline-flex min-h-[48px] items-center justify-center gap-2 rounded-[8px] bg-[#06458F] px-7 text-sm font-semibold text-white shadow-[0_6px_20px_rgba(6,69,143,0.24)] hover:-translate-y-[1px] hover:bg-[#053673] hover:shadow-[0_10px_26px_rgba(6,69,143,0.3)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#06458F] focus-visible:ring-offset-2 sm:min-h-[52px] sm:text-base"
-              >
-                <span>Kampagne starten</span>
-                <ArrowRight size={17} aria-hidden="true" />
-              </Link>
-              <Link
-                href="#so-funktionierts"
-                className="btn-press inline-flex min-h-[48px] items-center justify-center rounded-[8px] border border-[#DCE2EA] bg-white px-6 text-sm font-semibold text-[#202124] shadow-[0_1px_2px_rgba(32,33,36,0.04)] hover:border-[#06458F] hover:text-[#06458F] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#06458F] focus-visible:ring-offset-2 sm:min-h-[52px] sm:text-base"
-              >
-                So läuft eine Kampagne
-              </Link>
-            </div>
-
-            <div className="mt-5">
-              <Link
-                href="/creator"
-                className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#06458F] underline decoration-[#06458F]/30 underline-offset-4 transition-colors hover:text-[#053673] hover:decoration-[#F2072A]"
-              >
-                <span>Du bist Creator? Hier verdienst du pro 1.000 Views</span>
-                <ArrowRight size={15} aria-hidden="true" />
-              </Link>
-            </div>
-
-            <div className="mt-7 flex flex-wrap items-center gap-2 text-xs font-medium text-[#5C6470]">
-              <span className="inline-flex items-center gap-1.5 rounded-[6px] border border-[#DCE2EA] bg-white/85 px-2.5 py-1">
-                <Check size={13} className="text-[#06458F]" aria-hidden="true" />
-                Kostenloses Konto
-              </span>
-              <span className="inline-flex items-center gap-1.5 rounded-[6px] border border-[#DCE2EA] bg-white/85 px-2.5 py-1">
-                <Check size={13} className="text-[#06458F]" aria-hidden="true" />
-                Kein Abo
-              </span>
-              <span className="inline-flex items-center gap-1.5 rounded-[6px] border border-[#DCE2EA] bg-white/85 px-2.5 py-1">
-                <Check size={13} className="text-[#06458F]" aria-hidden="true" />
-                Fester Budget-Deckel
-              </span>
-              {stats.liveCreatorCount && (
-                <span className="inline-flex items-center gap-1.5 rounded-[6px] border border-[#06458F]/20 bg-[#EBF2FA] px-2.5 py-1 font-semibold tabular-nums text-[#06458F]">
-                  <span className="h-1.5 w-1.5 rounded-full bg-[#1F9D55]" aria-hidden="true" />
-                  {stats.liveCreatorCount.toLocaleString('de-DE')} aktive Creator
-                </span>
-              )}
-            </div>
-          </div>
-
-          {/* Rechte Spalte: Hochkant-Video mit Poster-LCP & Pause-Button + Kampagnenkarte */}
-          <div className="lg:col-span-6">
-            <div className="mx-auto max-w-[468px] lg:ml-auto lg:mr-0">
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-12 sm:items-end">
-                {/* Mobil nur ein Clip (Spec 8.10 hero_video_loop), Desktop mit statischer Zweitkarte */}
-                <div className="sm:col-span-7">
-                  <PauseableVideo
-                    src="/motion/ugc-vz-brands-9x16.mp4"
-                    poster="/motion/ugc-vz-brands-9x16-poster.jpg"
-                    label="Einblick in eine UGC VZ Kampagne für Marken"
-                    aspectClassName="aspect-[9/14] sm:aspect-[9/15]"
-                    priorityPoster
-                    caption="Marken-Kampagne"
-                  />
-                </div>
-                <div className="hidden sm:col-span-5 sm:block">
-                  <div className="card-fresh overflow-hidden rounded-[16px] border border-[#DCE2EA] bg-white shadow-[0_10px_28px_rgba(6,69,143,0.10)]">
-                    {/* Statisches Posterbild der zweiten Perspektive (max. 1 aktives Video gleichzeitig) */}
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src="/motion/ugc-vz-creator-9x16-poster.jpg"
-                      alt="Vorschau Creator-Perspektive auf UGC VZ"
-                      loading="lazy"
-                      className="aspect-[9/14] w-full object-cover"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Live-Kampagnenkarte oder klar markierte Beispielansicht */}
-              <div className="card-fresh mt-4 rounded-[12px] border border-[#DCE2EA] bg-white p-4 shadow-[0_8px_24px_rgba(6,69,143,0.08)] sm:p-5">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#202124]">
-                    <span
-                      className={`h-2 w-2 rounded-full ${heroCampaign ? 'bg-[#1F9D55]' : 'bg-[#06458F]'}`}
-                      aria-hidden="true"
-                    />
-                    {heroCampaign ? heroCampaign.title : 'View-Kampagne · TikTok & Reels'}
-                  </span>
-                  <span className="rounded-full border border-[#DCE2EA] bg-[#F5F7FA] px-2.5 py-0.5 text-[11px] font-medium text-[#5C6470]">
-                    {heroCampaign ? 'Live-Kampagne' : 'Beispielansicht'}
-                  </span>
-                </div>
-
-                <div className="mt-3 flex flex-wrap items-baseline justify-between gap-2">
-                  <p className="font-mono text-sm font-bold tabular-nums text-[#06458F] sm:text-base">
-                    <span className="rounded-[6px] bg-[#EBF2FA] px-2.5 py-0.5">{heroRateLabel}</span>
-                  </p>
-                  <p className="text-xs font-medium tabular-nums text-[#5C6470] sm:text-sm">
-                    {heroBudgetLabel} · noch {heroRemainingPct} % übrig
-                  </p>
-                </div>
-
-                <BudgetBar
-                  usedPercent={heroUsedPct}
-                  label={`Verbrauchtes Budget: ${heroUsedPct} Prozent`}
-                  className="mt-3"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* ---------- 1. Editorial Motion Hero (ugcVZ Rot-Blau CI, Orla-Stil, 1x H1) ---------- */}
+      <EditorialMotionHero
+        stats={{
+          liveCreatorCount: stats.liveCreatorCount,
+          heroCampaign: stats.heroCampaign,
+        }}
+        headingId="home-title"
+        heading={
+          <h1
+            id="home-title"
+            className="font-display text-[40px] font-extrabold leading-[1.03] tracking-[-0.036em] text-[#202124] sm:text-5xl lg:text-[56px] lg:leading-[1.01] xl:text-[66px]"
+          >
+            Echte Creator.
+            <br />
+            Echte Views.
+            <br />
+            <span className="text-[#06458F]">Dein Budget</span>
+            <span className="text-[#F2072A]">.</span>
+          </h1>
+        }
+      />
 
       {/* ---------- 2. Logo-Leiste (Spec 8.2 home.logos) ---------- */}
       <TrustElements compact />
@@ -222,7 +128,7 @@ export default async function Home() {
       {/* ---------- 3. Schnell-Brief in 60 Sekunden (Spec 8.2 home.brief) ---------- */}
       <QuickBriefCard />
 
-      {/* ---------- 4. Erhaltene & verbesserte interaktive Creator-Suche (Nutzerwunsch!) ---------- */}
+      {/* ---------- 4. Interaktive KI-Creator-Suche ---------- */}
       <section
         id="search"
         aria-labelledby="home-search-title"
@@ -257,13 +163,88 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* ---------- 5. So laeuft eine Kampagne (Spec 8.2 home.how, SSR Tabs) ---------- */}
+      {/* ---------- 5. Vorteile & Marken-Produktvideo (erhaltene Inhalte + neues 16:9 CI-Video) ---------- */}
+      <section
+        aria-labelledby="home-features-title"
+        className="bg-[#F5F7FA] px-5 py-16 sm:px-8 sm:py-24"
+      >
+        <div className="mx-auto max-w-[1200px]">
+          <div className="mx-auto max-w-2xl text-center">
+            <p className="text-sm font-semibold text-[#06458F]">Warum Marken UGC VZ nutzen</p>
+            <h2
+              id="home-features-title"
+              className="mt-2 font-display text-[30px] font-bold leading-[34px] tracking-[-0.02em] text-[#202124] sm:text-[44px] sm:leading-[48px]"
+            >
+              Vom Briefing zu geprüften Views
+            </h2>
+            <p className="mt-3 text-sm leading-6 text-[#5C6470] sm:text-base sm:leading-7">
+              Ob View-Kampagne mit fester Budget-Obergrenze oder direkte Creator-Auswahl: Alles läuft strukturiert im Brand-Workspace, ohne Abo.
+            </p>
+          </div>
+
+          <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {HOME_ADVANTAGES.map((item) => {
+              const Icon = item.icon;
+              return (
+                <div
+                  key={item.title}
+                  className="card-fresh flex flex-col rounded-[14px] border border-[#DCE2EA] bg-white p-6 shadow-card"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-[#EBF2FA] text-[#06458F]">
+                      <Icon size={20} aria-hidden="true" />
+                    </span>
+                    <span className="rounded-full border border-[#DCE2EA] bg-[#F5F7FA] px-2.5 py-0.5 text-[11px] font-semibold text-[#5C6470]">
+                      {item.badge}
+                    </span>
+                  </div>
+                  <h3 className="mt-5 font-display text-lg font-bold leading-snug text-[#202124]">
+                    {item.title}
+                  </h3>
+                  <p className="mt-2 text-sm leading-6 text-[#5C6470]">{item.description}</p>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Aktuelles 16:9-Marken-Erklaervideo in neuer ugcVZ Rot-Blau-CI */}
+          <div className="mt-10 rounded-[16px] border border-[#DCE2EA] bg-white p-4 shadow-[0_10px_32px_rgba(6,69,143,0.08)] sm:p-6">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#D10523]">
+                  Produkt-Einblick in 16 Sekunden
+                </p>
+                <p className="mt-0.5 font-display text-lg font-bold text-[#202124] sm:text-xl">
+                  So findest du Creator und startest deine Kampagne
+                </p>
+              </div>
+              <Link
+                href="/brand?tab=signup"
+                className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#06458F] hover:text-[#053673]"
+              >
+                <span>Jetzt kostenlos testen</span>
+                <ArrowRight size={15} aria-hidden="true" />
+              </Link>
+            </div>
+
+            <PauseableVideo
+              src="/motion/ugc-vz-brands-16x9.mp4"
+              poster="/motion/ugc-vz-brands-16x9-poster.jpg"
+              label="Produkt-Einblick: So funktionieren Marken-Kampagnen auf UGC VZ"
+              aspectClassName="aspect-[16/9]"
+              caption="Marken-Ablauf"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* ---------- 6. So laeuft eine Kampagne (Spec 8.2 home.how, SSR Tabs) ---------- */}
       <CampaignHowTabs />
 
-      {/* ---------- 6. Beitragspruefung sichtbar machen (Spec 8.2 home.proof) ---------- */}
+      {/* ---------- 7. Beitragspruefung sichtbar machen (Spec 8.2 home.proof) ---------- */}
       <VerificationProofSection />
 
-      {/* ---------- 7. Creator-Band auf Directory Blue Navy (#062A59 + #F2072A Akzent) ---------- */}
+      {/* ---------- 8. Creator-Band auf Directory Blue Navy (#062A59 + #F2072A Akzent) ---------- */}
       <section
         aria-labelledby="home-creator-title"
         className="relative overflow-hidden border-y-2 border-[#F2072A]/80 bg-[#062A59] bg-[radial-gradient(ellipse_60%_70%_at_90%_15%,rgba(10,91,184,0.45),transparent_70%),radial-gradient(ellipse_40%_45%_at_10%_90%,rgba(242,7,42,0.16),transparent_65%)] px-5 py-16 text-white sm:px-8 sm:py-24"
@@ -349,10 +330,10 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* ---------- 8. Gesicht der Plattform: Florian Runge (Spec 8.2 home.flo) ---------- */}
+      {/* ---------- 9. Gesicht der Plattform: Florian Runge (Spec 8.2 home.flo) ---------- */}
       <FloFounderCard />
 
-      {/* ---------- 9. Beliebte Branchen (Spec 8.2 home.industries, max. 1x pro Seite) ---------- */}
+      {/* ---------- 10. Beliebte Branchen (Spec 8.2 home.industries, max. 1x pro Seite) ---------- */}
       <section
         aria-labelledby="home-niches-title"
         className="border-y border-[#DCE2EA] bg-[#F5F7FA] px-5 py-14 sm:px-8 sm:py-16"
@@ -389,7 +370,7 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* ---------- 10. Kurz gefragt (Spec 8.2 home.faq, Schema-Text = sichtbarer Text) ---------- */}
+      {/* ---------- 11. Kurz gefragt (Spec 8.2 home.faq, Schema-Text = sichtbarer Text) ---------- */}
       <section
         aria-labelledby="home-faq-title"
         className="bg-white px-5 py-16 sm:px-8 sm:py-24"
@@ -435,7 +416,7 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* ---------- 11. Abschluss-CTA (Spec 8.2 home.final_cta, Buttons in der Box) ---------- */}
+      {/* ---------- 12. Abschluss-CTA (Spec 8.2 home.final_cta, Buttons in der Box) ---------- */}
       <section aria-labelledby="home-final-cta-title" className="bg-white px-5 pb-4 sm:px-8">
         <div className="mx-auto max-w-[1200px]">
           <div className="rounded-[16px] border-t-[3px] border-[#F2072A] bg-[#06458F] bg-[radial-gradient(ellipse_55%_80%_at_50%_0%,rgba(10,91,184,0.55),transparent_75%)] px-6 py-14 text-center text-white shadow-[0_18px_48px_rgba(6,69,143,0.22)] sm:px-12 sm:py-16">

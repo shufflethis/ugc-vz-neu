@@ -60,7 +60,7 @@ const isSafeUrl = (url: string) => {
 const socialButtons = (accounts: InternalSocialAccount[]) => sortedAccounts(accounts)
   .map((account) => {
     const label = `${htmlEscape(platformName(account.platform))}${account.handle ? ` ${htmlEscape(account.handle)}` : ''} · ${htmlEscape(followerLabel(account.followers))}`;
-    const style = 'display:inline-block;margin:5px 6px 0 0;padding:8px 11px;border:1px solid #ddd2e5;border-radius:8px;background:#ffffff;color:#06458F;font-size:12px;font-weight:800;text-decoration:none;';
+    const style = 'display:inline-block;margin:5px 6px 0 0;padding:8px 11px;border:1px solid #DCE2EA;border-radius:8px;background:#ffffff;color:#06458F;font-size:12px;font-weight:800;text-decoration:none;';
     return isSafeUrl(account.url)
       ? `<a href="${htmlEscape(account.url)}" style="${style}">${label}</a>`
       : `<span style="${style}">${label}</span>`;
@@ -249,7 +249,7 @@ Rueckfragen: ${internalEmail}`;
       eyebrow: 'Interne Recherche',
       title: 'Creator-Dossiers',
       children,
-      footerNote: 'Interne Auswertung aus der UGC-VZ-Creator-Datenbank. Die enthaltenen Kontaktdaten sind ausschließlich für die Projektanbahnung bestimmt und nicht zur Weitergabe an Dritte.',
+      footerNote: 'Interne Auswertung aus der UGC VZ Creator-Datenbank. Die enthaltenen Kontaktdaten sind ausschließlich für die Projektanbahnung bestimmt und nicht zur Weitergabe an Dritte.',
     }),
     text,
   };
