@@ -17,9 +17,9 @@ import { NICHE_INDEX, nichePath } from './lib/niche-index';
 export const revalidate = 600;
 
 export const metadata: Metadata = {
-  title: 'UGC VZ: Creator-Kampagnen nach Views für Marken in DACH',
+  title: 'UGC VZ: Einzelvideos & View-Kampagnen mit echten Creatorn in DACH',
   description:
-    'Du schreibst ein kurzes Briefing und legst fest, was dir 1.000 Views wert sind. Creator posten dein Produkt auf TikTok und Instagram. Geprüfte Views, feste Budget-Obergrenze, kein Abo.',
+    'Kauf einzelne UGC-Videos (1-Off) zum Festpreis oder starte View-Kampagnen auf TikTok und Instagram. Echte DACH-Creator, feste Budget-Obergrenze, kein Abo, 0 % Gebühr für Creator.',
   alternates: {
     canonical: 'https://ugc-vz.de',
     languages: {
@@ -62,7 +62,7 @@ const HOME_ADVANTAGES = [
 const HOME_FAQS: Array<{ q: string; a: string }> = [
   {
     q: 'Was kostet mich das als Marke?',
-    a: 'Das Konto ist kostenlos, es gibt kein Abo. Du zahlst pro 1.000 geprüfte Views den Preis, den du selbst festlegst, höchstens bis zu deiner Budget-Obergrenze. Im Kampagnen-Budget sind regulär 15 % Servicegebühr enthalten.',
+    a: 'Das Konto ist kostenlos, es gibt kein Abo. Du buchst entweder einzelne UGC-Videos (1-Off) zum Festpreis oder zahlst pro 1.000 geprüfte Views bis zu deiner Budget-Obergrenze. Im Budget sind regulär 15 % Servicegebühr enthalten.',
   },
   {
     q: 'Welche Views werden bezahlt?',
@@ -70,11 +70,15 @@ const HOME_FAQS: Array<{ q: string; a: string }> = [
   },
   {
     q: 'Wie verdiene ich als Creator Geld?',
-    a: 'Du suchst dir eine Kampagne aus, postest auf deinem Profil und reichst den Link ein. Jede Kampagne zeigt vorher, was sie pro 1.000 Views zahlt. Für Creator fallen 0 % Gebühren an.',
+    a: 'Du kannst einzelne UGC-Videos (1-Off) zu deinem Festpreis verkaufen (auch ohne eigenes Posting) oder bei View-Kampagnen und monatlichen Retainern mitmachen. Für Creator fallen 0 % Gebühren an.',
   },
   {
-    q: 'Kann ich auch Videos ohne Posting kaufen?',
-    a: 'Ja. Neben View-Kampagnen kannst du Creator für Produktvideos und Ad-Creatives direkt beauftragen.',
+    q: 'Kann ich auch einzelne Videos (1-Off) ohne Posting kaufen?',
+    a: 'Ja. Im Schnell-Brief und im Brand-Workspace wählst du einfach „Einzelvideo / Fixpreis“ und „Nur Videodatei (Ads)“. Du zahlst erst nach Abnahme des fertigen Videos.',
+  },
+  {
+    q: 'Was bedeutet Monats-Retainer auf UGC VZ?',
+    a: 'Ein Retainer funktioniert wie eine dauerhafte Zusammenarbeit mit einem externen Dienstleister: Marken und Creator vereinbaren ein festes Monats-Honorar für laufende Videos (z. B. 4 Clips pro Monat), optional mit Umsatz-Provision. Das bringt Marken planbaren Content und Creatorn verlässliche laufende Einnahmen.',
   },
 ];
 

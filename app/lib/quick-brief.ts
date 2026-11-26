@@ -1,6 +1,6 @@
 export const QUICK_BRIEF_STORAGE_KEY = 'ugcvz_quick_brief_v1';
 
-export type QuickBriefPlatform = 'tiktok' | 'instagram' | 'youtube' | 'tiktok_shop';
+export type QuickBriefPlatform = 'tiktok' | 'instagram' | 'youtube' | 'tiktok_shop' | 'files_only';
 
 export type QuickBriefModel = 'tkp' | 'fixed';
 
@@ -23,7 +23,7 @@ export const QUICK_BRIEF_PLATFORMS: Array<{
   { id: 'tiktok', label: 'TikTok' },
   { id: 'instagram', label: 'Instagram Reels' },
   { id: 'youtube', label: 'YouTube Shorts' },
-  { id: 'tiktok_shop', label: 'TikTok Shop' },
+  { id: 'files_only', label: 'Nur Videodatei (Ads)' },
 ];
 
 export function saveQuickBriefDraft(draft: Omit<QuickBriefDraft, 'savedAt'>): boolean {
@@ -47,7 +47,7 @@ export function loadQuickBriefDraft(): QuickBriefDraft | null {
     if (!raw) return null;
     const parsed = JSON.parse(raw) as Partial<QuickBriefDraft>;
     if (!parsed || typeof parsed.goal !== 'string') return null;
-    const allowed = new Set<QuickBriefPlatform>(['tiktok', 'instagram', 'youtube', 'tiktok_shop']);
+    const allowed = new Set<QuickBriefPlatform>(['tiktok', 'instagram', 'youtube', 'tiktok_shop', 'files_only']);
     const platforms = Array.isArray(parsed.platforms)
       ? parsed.platforms.filter((p): p is QuickBriefPlatform => allowed.has(p as QuickBriefPlatform))
       : [];

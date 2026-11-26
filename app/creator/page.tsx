@@ -12,18 +12,18 @@ import { formatEurCentsDe, getHomepageLiveStats } from '../lib/homepage-stats';
 export const revalidate = 600;
 
 export const metadata: Metadata = {
-  title: 'Für Creator: Verdiene pro 1.000 Views',
+  title: 'Für Creator: Einzelvideos verkaufen & pro 1.000 Views verdienen',
   description:
-    'Such dir Kampagnen von Marken aus, poste auf deinem TikTok oder Instagram und verdiene pro 1.000 Views. Anmeldung kostenlos, 0 % Plattformgebühr für Creator.',
+    'Verkaufe einzelne UGC-Videos (1-Off) zum eigenen Festpreis, verdiene bei View-Kampagnen auf TikTok und Instagram oder sichere dir monatliche Retainer. Anmeldung kostenlos, 0 % Plattformgebühr.',
   keywords:
-    'UGC Creator werden, Geld verdienen mit Views, TikTok Creator Kampagnen, Instagram Reels Creator, UGC Creator Deutschland',
+    'UGC Creator werden, UGC Videos verkaufen, Geld verdienen mit Views, TikTok Creator Kampagnen, Instagram Reels Creator, UGC Creator Deutschland',
   alternates: {
     canonical: 'https://ugc-vz.de/creator',
   },
   openGraph: {
-    title: 'Poste für Marken. Verdiene pro 1.000 Views. | UGC VZ',
+    title: 'Verkaufe Einzelvideos. Verdiene pro 1.000 Views. | UGC VZ',
     description:
-      'Such dir Kampagnen aus, poste auf TikTok oder Instagram und bekomm Geld für deine Views. 0 % Gebühr für Creator.',
+      '1-Off UGC-Videos zum Festpreis (auch ohne eigenes Posting), View-Kampagnen und Retainer. 0 % Gebühr für Creator.',
     url: 'https://ugc-vz.de/creator',
     siteName: 'UGC VZ',
     locale: 'de_DE',
@@ -34,19 +34,23 @@ export const metadata: Metadata = {
 const CREATOR_FAQS: Array<{ q: string; a: string }> = [
   {
     q: 'Kostet mich die Anmeldung oder Teilnahme etwas?',
-    a: 'Nein. Dein Creator-Konto ist kostenlos und für Creator fallen 0 % Plattformgebühren an. Der angezeigte Satz pro 1.000 Views gehört komplett dir.',
+    a: 'Nein. Dein Creator-Konto ist kostenlos und für Creator fallen 0 % Plattformgebühren an. Dein Video-Honorar und dein Satz pro 1.000 Views gehören komplett dir.',
+  },
+  {
+    q: 'Kann ich auch einzelne UGC-Videos (1-Off) ohne eigenes Posting verkaufen?',
+    a: 'Ja. Viele Marken buchen einzelne Produktvideos und Ad-Creatives zum festen Video-Honorar (z. B. 150 bis 400 €), ohne dass du auf deinem eigenen Profil posten musst.',
   },
   {
     q: 'Wie sehe ich, was ich verdienen kann?',
-    a: 'Jede Kampagne zeigt vorher den festen Betrag pro 1.000 geprüfte Views, die Briefing-Checkliste und das verbleibende Budget. Du entscheidest pro Kampagne frei.',
+    a: 'Jede Kampagne zeigt vorher den Festpreis pro Video oder den Satz pro 1.000 geprüfte Views, die Briefing-Checkliste und das Budget. Du entscheidest pro Auftrag frei.',
+  },
+  {
+    q: 'Was ist ein Monats-Retainer?',
+    a: 'Bei einem Retainer arbeitest du wie ein fester externer Dienstleister dauerhaft mit einer Marke zusammen: Du lieferst jeden Monat eine vereinbarte Anzahl Clips (z. B. 4 Videos) und bekommst dafür ein planbares monatliches Fixum, oft plus Produkt-Credit und Provision. So hast du laufende Einnahmen statt immer wieder neuer Einzelsuche.',
   },
   {
     q: 'Brauche ich viele Follower?',
-    a: 'Nein. Bei View-Kampagnen zählen echte Aufrufe deiner Beiträge, nicht deine Follower-Zahl. Auch kleine Accounts mit starken Ideen können sofort mitmachen.',
-  },
-  {
-    q: 'Wann wird mein Beitrag gezählt?',
-    a: 'Nach dem Posten reichst du deinen Link im Konto ein. Erfüllt dein Video den Brief und bleibt bis Kampagnenende online, zählen deine Views in vollen 1.000er-Schritten.',
+    a: 'Nein. Bei 1-Off UGC-Videos und Retainern zählt die Videoqualität für Marken-Ads, und bei View-Kampagnen zählen echte Aufrufe deiner Clips, nicht deine Follower-Zahl.',
   },
 ];
 
@@ -102,11 +106,11 @@ export default async function CreatorPage() {
             id="creator-hero-title"
             className="mt-2 font-display text-[38px] font-bold leading-[42px] tracking-[-0.02em] text-[#202124] sm:text-6xl sm:leading-[1.06]"
           >
-            Poste für Marken. Verdiene pro 1.000 Views.
+            Verkaufe Einzelvideos. Verdiene pro 1.000 Views.
           </h1>
 
           <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-[#5C6470] sm:text-lg">
-            Such dir Kampagnen aus, die zu dir passen, poste auf deinem TikTok oder Instagram und bekomm Geld für deine Reichweite. Den Satz siehst du, bevor du mitmachst.
+            Nimm einzelne UGC-Aufträge (1-Off Videos zum Festpreis, auch ohne eigenes Posting) an, verdiene bei View-Kampagnen auf TikTok und Instagram oder sichere dir monatliche Retainer.
           </p>
 
           {/* Grosse Zahl NUR aus Live-Kampagne, sonst ehrlicher Satz ohne Zahl */}
@@ -139,7 +143,7 @@ export default async function CreatorPage() {
           </div>
 
           <ul className="mt-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs font-medium text-[#5C6470] sm:text-sm">
-            {['Anmeldung kostenlos', 'Du entscheidest pro Kampagne', 'Satz vorher sichtbar', '0 % Plattformgebühr'].map(
+            {['1-Off Einzelvideos zum Festpreis', 'View-Kampagnen & Retainer', 'Konditionen vorher sichtbar', '0 % Plattformgebühr'].map(
               (item) => (
                 <li key={item} className="inline-flex items-center gap-1.5">
                   <Check size={14} className="text-[#1F9D55]" aria-hidden="true" />
@@ -179,13 +183,47 @@ export default async function CreatorPage() {
       <section id="so-funktionierts" className="scroll-mt-20 bg-[#F5F7FA] px-5 py-16 sm:px-8">
         <div className="mx-auto max-w-[1200px]">
           <h2 className="font-display text-2xl font-bold tracking-[-0.02em] sm:text-3xl">
-            So verdienst du mit UGC VZ
+            Drei Wege, mit UGC VZ Geld zu verdienen
+          </h2>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-[#5C6470]">
+            Du entscheidest bei jedem Auftrag selbst, wie du arbeiten willst. Immer bei 0 % Plattformgebühr für Creator.
+          </p>
+          <div className="mt-6 grid gap-5 md:grid-cols-3">
+            {[
+              [
+                'Einzelvideos (1-Off)',
+                'Festpreis pro Video',
+                'Verkaufe einzelne Produktvideos und Ad-Creatives zu deinem festen Honorar, auch komplett ohne Posting auf deinem eigenen Kanal.',
+              ],
+              [
+                'View-Kampagnen',
+                'Pro 1.000 geprüfte Views',
+                'Poste auf deinem TikTok oder Instagram und verdiene direkt an deinen Aufrufen. Der Satz pro 1.000 Views steht vorher fest.',
+              ],
+              [
+                'Monats-Retainer',
+                'Dauerhafte Einnahmen',
+                'Arbeite wie ein fester externer Dienstleister langfristig für eine Marke: festes Monats-Honorar für z. B. 4 Clips im Monat, oft plus Provision.',
+              ],
+            ].map(([title, badge, copy]) => (
+              <div key={title} className="rounded-[20px] border border-[#DCE2EA] bg-white p-6 shadow-card">
+                <span className="inline-block rounded-full bg-[#EBF2FA] px-3 py-1 text-xs font-semibold text-[#06458F]">
+                  {badge}
+                </span>
+                <h3 className="mt-3 font-display text-xl font-bold text-[#202124]">{title}</h3>
+                <p className="mt-2 text-sm leading-6 text-[#5C6470]">{copy}</p>
+              </div>
+            ))}
+          </div>
+
+          <h2 className="mt-14 font-display text-2xl font-bold tracking-[-0.02em] sm:text-3xl">
+            So startest du in 3 Schritten
           </h2>
           <div className="mt-7 grid gap-5 md:grid-cols-3">
             {[
-              ['1. Profil anlegen', 'Mit E-Mail und TikTok- oder Instagram-Name bist du in zwei Minuten dabei. 0 % Gebühren.'],
-              ['2. Kampagne aussuchen', 'Du siehst vorher den Satz pro 1.000 Views, die kurze Checkliste und das restliche Budget.'],
-              ['3. Posten und abrechnen', 'Link im Konto einreichen. Nach der Prüfung zählen deine Views bis zum Kampagnenende.'],
+              ['1. Profil anlegen', 'Mit E-Mail, Social-Handle und deinem Wunsch-Honorar für Einzelvideos bist du in zwei Minuten dabei. 0 % Gebühren.'],
+              ['2. Aufträge & Kampagnen wählen', 'Du siehst vorher Festpreis pro Video, View-Satz pro 1.000 Views oder Retainer-Paket inkl. Checkliste.'],
+              ['3. Liefern und 100 % kassieren', 'Video oder Beitrags-Link im Konto einreichen. Nach Freigabe bekommst du dein volles Honorar ohne Abzug.'],
             ].map(([title, copy]) => (
               <div key={title} className="rounded-[20px] border border-[#DCE2EA] bg-white p-6 shadow-card">
                 <h3 className="font-display text-xl font-bold text-[#202124]">{title}</h3>

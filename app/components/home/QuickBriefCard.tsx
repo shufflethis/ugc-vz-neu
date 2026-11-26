@@ -56,9 +56,10 @@ export default function QuickBriefCard() {
   );
   const feePercent = Math.round(calc.feeRate * 100);
 
-  // Spec 8.2: Rechnung = Budget / Preis x 1.000 (TKP) oder Anzahl Videos im Paket (Fixpreis).
+  // Spec 8.2: Rechnung = Budget / Preis x 1.000 (TKP) oder Anzahl Videos im Paket bzw. 1-Off (Fixpreis).
   const headlineViews = Math.max(0, Math.round((parsedBudget / parsedPrice) * 1000));
-  const headlineVideos = Math.max(1, Math.floor((calc.creatorPoolCents / 100) / parsedVideoPrice));
+  const headlineVideos = Math.max(1, Math.floor(((calc.creatorPoolCents / 100) + 1) / parsedVideoPrice));
+  const oneOffBudgetFor = (count: number) => Math.max(50, Math.ceil((parsedVideoPrice * count) / (1 - calc.feeRate)));
 
   const togglePlatform = (platform: QuickBriefPlatform) => {
     setError('');
@@ -150,7 +151,7 @@ export default function QuickBriefCard() {
                 type="button"
                 onClick={() => {
                   setModel('fixed');
-                  setBudgetCapInput('1000');
+                  setBudgetCapInput(String(Math.max(50, Math.ceil(parsedVideoPrice / (1 - calc.feeRate)))));
                   setExpandedAll(true);
                   trackUGCEvents.quickBriefMode('fixed');
                 }}
@@ -160,7 +161,7 @@ export default function QuickBriefCard() {
                     : 'text-[#5C6470] hover:text-[#202124]'
                 }`}
               >
-                Fixpreis pro Video
+                Einzelvideo / Fixpreis
               </button>
             </div>
           </div>
@@ -239,9 +240,15 @@ export default function QuickBriefCard() {
                   <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#06458F] font-mono text-xs font-bold text-white">
                     2
                   </span>
-                  <p className="text-sm font-semibold text-[#202124]">Wo soll gepostet werden?</p>
+                  <p className="text-sm font-semibold text-[#202124]">
+                    {model === 'fixed' ? 'Posting oder nur Videodatei?' : 'Wo soll gepostet werden?'}
+                  </p>
                 </div>
-                <p className="mt-1.5 text-xs text-[#5C6470]">Pflichtfeld: mindestens eine Plattform wählen.</p>
+                <p className="mt-1.5 text-xs text-[#5C6470]">
+                  {model === 'fixed'
+                    ? 'Für 1-Off Ad-Creatives einfach „Nur Videodatei (Ads)“ wählen.'
+                    : 'Pflichtfeld: mindestens eine Plattform wählen.'}
+                </p>
                 <div className="mt-3.5 grid grid-cols-2 gap-2" role="group" aria-label="Plattformen wählen">
                   {QUICK_BRIEF_PLATFORMS.map((platform) => {
                     const selected = platforms.includes(platform.id);
@@ -364,23 +371,50 @@ export default function QuickBriefCard() {
                   Im Kampagnen-Budget sind 15 Prozent Servicegebühr enthalten, Creator zahlen 0 Prozent.
                 </p>
                 <div className="mt-3 flex flex-wrap gap-1.5">
-                  {[500, 1000, 2500].map((preset) => (
-                    <button
-                      key={preset}
-                      type="button"
-                      onClick={() => {
-                        setBudgetCapInput(String(preset));
-                        setExpandedAll(true);
-                      }}
-                      className={`rounded-full border px-2.5 py-1 text-xs font-medium tabular-nums transition-colors ${
-                        Number(budgetCapInput) === preset
-                          ? 'border-[#06458F] bg-[#06458F] text-white'
-                          : 'border-[#DCE2EA] bg-white text-[#5C6470] hover:border-[#06458F]'
-                      }`}
-                    >
-                      {preset.toLocaleString('de-DE')} €
-                    </button>
-                  ))}
+                  {model === 'fixed' ? (
+                    [
+                      { count: 1, label: '1 Video (1-Off)' },
+                      { count: 3, label: '3 Videos' },
+                      { count: 5, label: '5 Videos' },
+                    ].map((preset) => {
+                      const targetBudget = oneOffBudgetFor(preset.count);
+                      return (
+                        <button
+                          key={preset.count}
+                          type="button"
+                          onClick={() => {
+                            setBudgetCapInput(String(targetBudget));
+                            setExpandedAll(true);
+                          }}
+                          className={`rounded-full border px-2.5 py-1 text-xs font-medium tabular-nums transition-colors ${
+                            Number(budgetCapInput) === targetBudget
+                              ? 'border-[#06458F] bg-[#06458F] text-white'
+                              : 'border-[#DCE2EA] bg-white text-[#5C6470] hover:border-[#06458F]'
+                          }`}
+                        >
+                          {preset.label} · {targetBudget.toLocaleString('de-DE')} €
+                        </button>
+                      );
+                    })
+                  ) : (
+                    [500, 1000, 2500].map((preset) => (
+                      <button
+                        key={preset}
+                        type="button"
+                        onClick={() => {
+                          setBudgetCapInput(String(preset));
+                          setExpandedAll(true);
+                        }}
+                        className={`rounded-full border px-2.5 py-1 text-xs font-medium tabular-nums transition-colors ${
+                          Number(budgetCapInput) === preset
+                            ? 'border-[#06458F] bg-[#06458F] text-white'
+                            : 'border-[#DCE2EA] bg-white text-[#5C6470] hover:border-[#06458F]'
+                        }`}
+                      >
+                        {preset.toLocaleString('de-DE')} €
+                      </button>
+                    ))
+                  )}
                 </div>
                 <label htmlFor="qb-affiliate" className="mt-3 flex cursor-pointer items-center gap-2 text-xs font-medium text-[#5C6470]">
                   <input
@@ -409,7 +443,9 @@ export default function QuickBriefCard() {
                   <span className="inline-block rounded-[8px] bg-[#EBF2FA] px-2.5 py-1 font-mono tabular-nums text-[#06458F]">
                     {model === 'tkp'
                       ? `Bis zu ${headlineViews.toLocaleString('de-DE')} bezahlte Views.`
-                      : `Ca. ${headlineVideos} freigegebene Videos à ${Math.round(parsedVideoPrice)} €.`}
+                      : headlineVideos === 1
+                        ? `1 Einzelvideo (1-Off) à ${Math.round(parsedVideoPrice)} €.`
+                        : `Ca. ${headlineVideos} freigegebene Videos à ${Math.round(parsedVideoPrice)} €.`}
                   </span>{' '}
                   <span>
                     Mehr als {Math.round(parsedBudget).toLocaleString('de-DE')} € zahlst du nicht.

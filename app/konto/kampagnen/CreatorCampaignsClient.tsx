@@ -149,7 +149,7 @@ export default function CreatorCampaignsClient({
             <p className="text-xs font-bold uppercase tracking-[0.15em] text-[#06458F]">Creator-Workspace</p>
             <h1 className="mt-1 text-3xl font-bold sm:text-4xl">Brand-Kampagnen &amp; Ausschreibungen</h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-[#5C6470]">
-              Verdiene mit <strong>Pay-per-View (TKP)</strong>, <strong>Fixpreis pro Video</strong> oder <strong>Affiliate-Kickbacks</strong>. Immer <strong>0 % Gebühr</strong> für dich und direkte Auszahlung über dein UGC VZ Konto.
+              Verdiene mit <strong>1-Off Einzelvideos (Festpreis)</strong>, <strong>Pay-per-View (TKP)</strong>, <strong>Affiliate-Kickbacks</strong> oder einem <strong>Monats-Retainer</strong> (dauerhafte, planbare Einnahmen wie ein fester externer Dienstleister). Immer <strong>0 % Gebühr</strong> für dich und direkte Auszahlung über dein UGC VZ Konto.
             </p>
           </div>
           <Link

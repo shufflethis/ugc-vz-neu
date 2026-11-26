@@ -89,18 +89,22 @@ export default function PreisePage() {
                   v: 'Kostenlos, kein Abo',
                 },
                 {
+                  t: 'Einzelvideo (1-Off)',
+                  v: '1 oder mehrere fertige UGC-Videos zum Festpreis (auch ohne Posting als reine Ad-Datei), Auszahlung erst nach Abnahme',
+                },
+                {
                   t: 'View-Kampagne',
-                  v: 'Dein Preis pro 1.000 geprüfte Views, höchstens dein Budget',
+                  v: 'Dein Preis pro 1.000 geprüfte Views, höchstens bis zu deiner festen Budget-Obergrenze',
                 },
                 {
                   t: 'Servicegebühr',
                   v: promo.active
                     ? 'Aktionssatz 10 % bis Mo 30.11., 23:59 Uhr (regulär 15 % fest, schon im Budget enthalten)'
-                    : '15 % fest, schon in deinem Budget enthalten',
+                    : '15 % fest, schon in deinem Budget enthalten (Sonderbranchen individuell)',
                 },
                 {
-                  t: 'Creator-Produktion',
-                  v: 'Preis direkt mit dem Creator, Richtwerte im Rechner',
+                  t: 'Monats-Retainer',
+                  v: 'Dauerhafte Zusammenarbeit wie mit einem externen Dienstleister: festes Monats-Honorar für laufende Clips (z. B. 4 Videos/Monat), optional plus Affiliate-Provision',
                 },
               ].map((row) => (
                 <div key={row.t} className="grid gap-1 py-4 sm:grid-cols-[180px_1fr] sm:gap-4">
@@ -131,7 +135,7 @@ export default function PreisePage() {
             <p className="mt-3 font-mono text-5xl font-bold tabular-nums text-[#F2072A]">0 %</p>
             <h2 className="mt-2 text-2xl font-bold text-white">Der Satz gehört dir. Wir ziehen nichts ab.</h2>
             <p className="mt-3 text-sm leading-6 text-[#F5F7FA]/80">
-              Anmeldung und Teilnahme sind für Creator kostenlos. Wenn bei einer Kampagne 2,00 € pro 1.000 Views stehen, kommen genau 2,00 € bei dir an.
+              Anmeldung und Teilnahme sind für Creator kostenlos. Ob 1-Off Einzelvideo (z. B. 250 €), View-Satz pro 1.000 Views oder dauerhafter Monats-Retainer wie ein externer Dienstleister: 100 % deines Honorars kommen bei dir an.
             </p>
             <div className="mt-6">
               <Link

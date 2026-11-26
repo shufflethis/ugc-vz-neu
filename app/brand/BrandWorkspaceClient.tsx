@@ -568,8 +568,23 @@ function BrandDashboard({
     setLoadedFromQuickBrief(true);
   }, []);
 
-  const applyPreset = (preset: 'tkp_cap' | 'fixed_ugc' | 'fixed_affiliate' | 'retainer_core' | 'affiliate_only') => {
-    if (preset === 'tkp_cap') {
+  const applyPreset = (
+    preset: 'one_off_video' | 'tkp_cap' | 'fixed_ugc' | 'fixed_affiliate' | 'retainer_core' | 'affiliate_only',
+  ) => {
+    if (preset === 'one_off_video') {
+      setCompensationModel('fixed');
+      setTkpEur('');
+      setBudgetPerVideoEur('200');
+      setTotalBudgetEur('235');
+      setAffiliateEnabled(false);
+      setDeliverables('1x 30s UGC-Einzelvideo (9:16) inkl. Rohdatei & 2 Hooks');
+      setUsageRights('12 Monate Paid Ads & Organisch (kein Creator-Posting nötig)');
+      setDeadline('Lieferung innerhalb von 7 Tagen');
+      setPlatforms(['files_only', 'meta_ads']);
+      setRequiresProductChoice(false);
+      setProductChoicePrompt('');
+      setDiscountCode('');
+    } else if (preset === 'tkp_cap') {
       setCompensationModel('tkp');
       setTkpEur('2.00');
       setBudgetPerVideoEur('');
@@ -853,8 +868,13 @@ function BrandDashboard({
             {/* 1-Klick Kampagnen-Vorlagen */}
             <div className="space-y-2">
               <span className={labelClass}>1-Klick-Vorlage wählen (optional)</span>
-              <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-5">
+              <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
                 {[
+                  {
+                    id: 'one_off_video' as const,
+                    name: '1-Off Einzelvideo (Festpreis)',
+                    sub: '1 fertiges Video (z. B. 200 €) · auch für Ads',
+                  },
                   {
                     id: 'tkp_cap' as const,
                     name: 'Pay-per-View (TKP)',
@@ -862,13 +882,13 @@ function BrandDashboard({
                   },
                   {
                     id: 'fixed_ugc' as const,
-                    name: 'Pay-per-Video (Fixpreis)',
-                    sub: 'z. B. 250 €/Video · Budget-Sicherung',
+                    name: 'UGC-Videopaket (Fixpreis)',
+                    sub: 'z. B. 4x 250 €/Video · Budget-Sicherung',
                   },
                   {
                     id: 'retainer_core' as const,
-                    name: 'Core-Creator Retainer',
-                    sub: 'z. B. 1.000 €/Monat + 20 % Provision',
+                    name: 'Monats-Retainer (Stamm-Creator)',
+                    sub: 'Wie ein externer Dienstleister: z. B. 4 Clips/Monat + %',
                   },
                   {
                     id: 'fixed_affiliate' as const,
@@ -928,7 +948,7 @@ function BrandDashboard({
                 >
                   <option value="tkp">Pay-per-View (TKP)</option>
                   <option value="fixed">Pay-per-Video (Fixpreis · Budget-Sicherung)</option>
-                  <option value="retainer">Core-Creator Retainer (Monats-Fixum + %)</option>
+                  <option value="retainer">Monats-Retainer (dauerhaft wie externer Dienstleister)</option>
                   <option value="hybrid">Hybrid (Fixpreis + TKP-Bonus)</option>
                   <option value="affiliate">Affiliate / Kickback (% oder € / Sale)</option>
                   <option value="barter">Produkt / Seeding</option>

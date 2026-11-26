@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { ArrowRight, Calendar, Check, Film, TrendingUp } from 'lucide-react';
+import { ArrowRight, Calendar, Check, Film, Repeat, TrendingUp } from 'lucide-react';
 import BreadcrumbSchema from '../components/BreadcrumbSchema';
 import JsonLdScript from '../wissen/[slug]/JsonLdScript';
 import TrustElements from '../components/TrustElements';
@@ -130,10 +130,10 @@ export default function BrandsPage() {
               id="brands-hero-title"
               className="mt-2 font-display text-[38px] font-bold leading-[42px] tracking-[-0.02em] text-[#202124] sm:text-5xl sm:leading-[1.08] lg:text-[60px] lg:leading-[66px]"
             >
-              Creator-Kampagnen, die du nach echten Views bezahlst.
+              UGC-Einzelvideos und Kampagnen nach echten Views.
             </h1>
             <p className="mt-5 text-base leading-7 text-[#5C6470] sm:text-lg">
-              Du legst fest, was dir 1.000 Views wert sind und wie viel du maximal ausgibst. Creator posten, wir prüfen, du zahlst nur, was zählt.
+              Kauf einzelne UGC-Videos (1-Off) zum Festpreis für deine Ads oder zahle pro 1.000 geprüfte Views mit fester Budget-Obergrenze. Echte DACH-Creator, kein Abo.
             </p>
 
             <ul className="mt-6 space-y-3 text-sm font-medium text-[#202124] sm:text-base">
@@ -206,11 +206,11 @@ export default function BrandsPage() {
               id="brands-ways-title"
               className="mt-1 font-display text-[30px] font-bold leading-[34px] tracking-[-0.02em] text-[#202124] sm:text-[44px] sm:leading-[48px]"
             >
-              Zwei Wege, ein Konto
+              Drei Modelle, ein Konto
             </h2>
           </div>
 
-          <div className="mt-10 grid gap-6 md:grid-cols-2">
+          <div className="mt-10 grid gap-6 lg:grid-cols-3">
             {/* Weg 1: Reichweite nach Views */}
             <Link
               href="/brand?tab=signup"
@@ -279,14 +279,52 @@ export default function BrandsPage() {
                 </div>
 
                 <h3 className="mt-6 font-display text-2xl font-bold text-[#202124]">
-                  Videos für deine Kanäle und Ads
+                  Einzelvideos (1-Off) &amp; Ad-Pakete
                 </h3>
                 <p className="mt-2.5 text-sm leading-6 text-[#5C6470] sm:text-base">
-                  Du beauftragst Creator direkt für Produktvideos und Ad-Creatives, mit klaren Nutzungsrechten. Auch mit Produktversand.
+                  Kauf ein einzelnes Produktvideo oder ein kleines Paket zum Festpreis, auch als reine Videodatei für Ads ohne Creator-Posting. Mit klaren Nutzungsrechten.
                 </p>
               </div>
               <span className="mt-6 inline-flex items-center gap-1.5 text-sm font-semibold text-[#202124] group-hover:text-[#06458F]">
-                <span>Produktion planen</span>
+                <span>Einzelvideo anfragen</span>
+                <ArrowRight size={15} aria-hidden="true" />
+              </span>
+            </Link>
+
+            {/* Weg 3: Core-Creator Monats-Retainer */}
+            <Link
+              href="/brand?tab=signup"
+              className="group flex flex-col justify-between rounded-[20px] border border-[#DCE2EA] bg-[#F5F7FA] p-7 transition-colors hover:border-[#06458F]"
+            >
+              <div>
+                <div className="flex items-center justify-between gap-3">
+                  <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#06458F] text-white">
+                    <Repeat size={20} aria-hidden="true" />
+                  </span>
+                  <span className="rounded-full bg-[#EBF2FA] px-3 py-1 font-mono text-xs font-bold text-[#06458F]">
+                    Monats-Fixum + optional %
+                  </span>
+                </div>
+
+                {/* Kompakte Retainer-Vorschau */}
+                <div className="mt-5 grid grid-cols-3 gap-2 rounded-2xl border border-[#DCE2EA] bg-white p-3">
+                  {['Monat 1 · 4 Clips', 'Monat 2 · 4 Clips', 'Monat 3 · 4 Clips'].map((item) => (
+                    <div key={item} className="rounded-xl bg-[#F5F7FA] px-2 py-3 text-center">
+                      <span className="block text-[11px] font-semibold text-[#202124]">{item}</span>
+                      <span className="mt-1 inline-block text-[10px] text-[#06458F]">Laufend</span>
+                    </div>
+                  ))}
+                </div>
+
+                <h3 className="mt-6 font-display text-2xl font-bold text-[#202124]">
+                  Monats-Retainer mit Stamm-Creatorn
+                </h3>
+                <p className="mt-2.5 text-sm leading-6 text-[#5C6470] sm:text-base">
+                  Wie ein fester externer Dienstleister auf Monatsbasis: feste Creator liefern jeden Monat planbar neue Clips zum monatlichen Fixum, optional kombiniert mit Umsatz-Provision.
+                </p>
+              </div>
+              <span className="mt-6 inline-flex items-center gap-1.5 text-sm font-semibold text-[#202124] group-hover:text-[#06458F]">
+                <span>Retainer einrichten</span>
                 <ArrowRight size={15} aria-hidden="true" />
               </span>
             </Link>

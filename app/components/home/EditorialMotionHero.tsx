@@ -48,10 +48,10 @@ const POMELLI_PROMPT =
   'Seamless studio editorial motion loop on pure solid white #FFFFFF cyclorama background. The young German woman gently shifts her weight, turns her shoulders slightly by 15 degrees toward camera with a natural relaxed smile, softly raises her matte black smartphone as if framing a short video, subtle natural hair movement. Soft diffused studio daylight, locked tripod camera, zero camera shake, pure #FFFFFF white background stays completely clean and uniform without shadows or flickering, hyper-realistic 4K editorial look, 5 seconds.';
 
 const EDITORIAL_SPECS = [
-  { label: 'Abrechnung', value: 'Pro 1.000 geprüfte Views' },
+  { label: 'Modelle', value: 'Einzelvideo (1-Off) & pro 1.000 Views' },
   { label: 'Budget-Schutz', value: 'Feste Obergrenze, kein Abo' },
-  { label: 'Creator-Gebühr', value: '0 % (100 % vom View-Satz)' },
-  { label: 'Plattformen', value: 'TikTok, Instagram Reels & Shorts' },
+  { label: 'Creator-Gebühr', value: '0 % (100 % Honorar & View-Satz)' },
+  { label: 'Formate', value: 'TikTok, Reels, Shorts & Ad-Dateien' },
 ] as const;
 
 function formatEurCentsDe(cents: number): string {
@@ -375,7 +375,7 @@ export default function EditorialMotionHero({
               <div className="mt-4 lg:mt-5">{heading}</div>
 
               <p className="mt-4 max-w-[400px] text-base leading-7 text-[#5C6470] lg:mt-5 lg:text-[17px] lg:leading-[1.6]">
-                Du schreibst ein kurzes Briefing und legst fest, was dir 1.000 Views wert sind. Echte Creator posten dein Produkt auf TikTok und Instagram. Du zahlst nur geprüfte Beiträge und nie mehr als dein Budget.
+                Kauf einzelne UGC-Videos zum Festpreis (auch ohne Posting für Ads) oder starte View-Kampagnen auf TikTok und Instagram. Echte DACH-Creator, feste Budget-Obergrenze, kein Abo.
               </p>
 
               <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center lg:mt-7">
@@ -399,7 +399,7 @@ export default function EditorialMotionHero({
                   href="/creator"
                   className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#06458F] underline decoration-[#06458F]/30 underline-offset-4 transition-colors hover:text-[#053673] hover:decoration-[#F2072A]"
                 >
-                  <span>Du bist Creator? 0 % Gebühr, Geld pro 1.000 Views</span>
+                  <span>Du bist Creator? 0 % Gebühr: Einzelvideos verkaufen &amp; Geld pro Views</span>
                   <ArrowRight size={14} aria-hidden="true" />
                 </Link>
               </div>
