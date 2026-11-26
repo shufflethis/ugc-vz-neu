@@ -90,14 +90,54 @@ const STATUS_COLORS = [
 ];
 
 const DOWNLOADS = [
-  { label: 'Primärlogo Rot / Blau (PNG)', file: '/brand/ugcvz-logo-red-blue.png', meta: 'Transparent · mit Claim · Master', dark: false },
-  { label: 'Header-Logo kompakt (PNG)', file: '/brand/ugcvz-logo-header.png', meta: 'Transparent · ohne Claim', dark: false },
-  { label: 'Negativ-Logo Weiß / Rot (PNG)', file: '/brand/ugcvz-logo-white.png', meta: 'Transparent · auf Dunkelblau', dark: true },
-  { label: 'Alternative Rot / Schwarz (PNG)', file: '/brand/ugcvz-logo-red-black.png', meta: 'Transparent · Geschäftskommunikation', dark: false },
-  { label: 'Bildmarke Stern & Creator (PNG)', file: '/brand/ugcvz-mark.png', meta: '512 × 512 px · transparent', dark: false },
-  { label: 'Social Avatar (PNG)', file: '/brand/ugcvz-social-avatar-1080.png', meta: '1080 × 1080 px · Profilbild', dark: false },
-  { label: 'Open Graph Card (PNG)', file: '/brand/ugcvz-og-1200x630.png', meta: '1200 × 630 px · Social Preview', dark: false },
-  { label: 'App-Icon / Favicon (PNG)', file: '/apple-touch-icon.png', meta: '180 × 180 px · iOS & Web', dark: false },
+  {
+    label: 'Logo mit Schrift (PNG)',
+    file: '/brand/ugcvz-logo-mit-schrift-2400.png',
+    meta: '2400 × 840 px · freigestellt · ohne Claim',
+    dark: false,
+  },
+  {
+    label: 'Bildmarke ohne Schrift (PNG)',
+    file: '/brand/ugcvz-logo-ohne-schrift-2048.png',
+    meta: '2048 × 2048 px · freigestellt · nur Stern',
+    dark: false,
+  },
+  {
+    label: 'Primärlogo mit Claim (PNG)',
+    file: '/brand/ugcvz-logo-mit-schrift-claim-2400.png',
+    meta: '2400 × 840 px · freigestellt · High-Res',
+    dark: false,
+  },
+  {
+    label: 'LinkedIn & Social Logo (PNG)',
+    file: '/brand/ugcvz-linkedin-logo-1080.png',
+    meta: '1080 × 1080 px · Weiß · mit Schrift',
+    dark: false,
+  },
+  {
+    label: 'Negativ-Logo Weiß / Rot (PNG)',
+    file: '/brand/ugcvz-logo-white.png',
+    meta: '900 × 296 px · freigestellt · Dunkelblau',
+    dark: true,
+  },
+  {
+    label: 'Alternative Rot / Schwarz (PNG)',
+    file: '/brand/ugcvz-logo-red-black.png',
+    meta: '1633 × 647 px · freigestellt · Business',
+    dark: false,
+  },
+  {
+    label: 'Social Avatar Bildmarke (PNG)',
+    file: '/brand/ugcvz-social-avatar-1080.png',
+    meta: '1080 × 1080 px · Weiß · Profilbild',
+    dark: false,
+  },
+  {
+    label: 'Open Graph Card (PNG)',
+    file: '/brand/ugcvz-og-1200x630.png',
+    meta: '1200 × 630 px · Social Preview',
+    dark: false,
+  },
 ];
 
 const NEW_PLATFORM_FEATURES = [
@@ -607,7 +647,7 @@ export default function BrandKitPage() {
               Logo- &amp; Asset-Downloads
             </h2>
             <p className="text-sm leading-6 text-[#5C6470] lg:col-span-5">
-              Alle freigestellten ugcVZ Logos, die Stern-Bildmarke, Social-Avatar und Open-Graph-Card direkt zum Herunterladen.
+              Alle hochskalierten, freigestellten ugcVZ PNG-Logos (mit und ohne Schrift), Social-Formate und die Open-Graph-Card direkt zum Herunterladen.
             </p>
           </div>
 
