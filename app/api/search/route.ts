@@ -666,11 +666,21 @@ export async function POST(req: Request) {
       }
 
       // Deterministic + Hybrid RRF fallback (used when no LLM rerank ran or for tail beyond top N)
+      // When the LLM reranker ran on top candidates, do NOT promote un-reranked tail profiles solely
+      // on raw vector similarity into primary creators.
       const strongSemanticExact =
-        item.hybridPromoted && item.vectorSimilarity >= SEMANTIC_EXACT_SIMILARITY;
+        !rerankVerdicts &&
+        item.hybridPromoted &&
+        item.vectorSimilarity >= SEMANTIC_EXACT_SIMILARITY;
       const isPrimaryMatch =
         Boolean(item.exactCasting) &&
         (!evaluation.hasThematicRequirement || evaluation.hasThematicMatch || strongSemanticExact);
+
+      // If the LLM reranker already evaluated the top candidates, demote un-reranked tail items to alternatives
+      // when we already have reranker-confirmed matches, preventing unverified low-rank profiles from leaking in.
+      if (rerankVerdicts && !isPrimaryMatch) {
+        continue;
+      }
 
       const isAlternative = Boolean(relatedCastingMatch) || !isPrimaryMatch;
       const relatedPriority = relatedCastingMatch

@@ -104,10 +104,10 @@ export function resolveChatModels(
 
   if (override) return [override];
   if (task === 'query_analysis') {
-    return ['google/gemini-2.5-flash-lite', 'deepseek/deepseek-v4-flash'];
+    return ['deepseek/deepseek-v4-flash', 'google/gemini-2.5-flash'];
   }
   if (task === 'rerank') {
-    return ['google/gemini-2.5-flash-lite', 'google/gemini-2.5-flash'];
+    return ['google/gemini-2.5-flash', 'deepseek/deepseek-v4-flash'];
   }
   return ['google/gemini-2.5-flash'];
 }

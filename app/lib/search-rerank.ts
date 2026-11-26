@@ -57,11 +57,11 @@ const RerankResponseSchema = z.object({
 
 /**
  * Thresholds for semantic promotion:
- * A creator without an exact deterministic keyword match can still be promoted into hybrid
- * candidates when their embedding cosine similarity or Postgres FTS rank is genuinely strong.
+ * Calibrated for multilingual embedding models like baai/bge-m3 where baseline cosine
+ * similarity across German creator bios sits around 0.40-0.52.
  */
-export const SEMANTIC_EXACT_SIMILARITY = 0.48;
-export const SEMANTIC_CANDIDATE_SIMILARITY = 0.36;
+export const SEMANTIC_EXACT_SIMILARITY = 0.64;
+export const SEMANTIC_CANDIDATE_SIMILARITY = 0.54;
 export const FTS_PROMOTION_THRESHOLD = 0.04;
 
 /**
