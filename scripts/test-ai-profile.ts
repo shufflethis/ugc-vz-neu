@@ -7,6 +7,7 @@ import { CREATOR_SESSION_COOKIE, signSession } from '../app/lib/creator-session'
 import {
   AiProfileDraftSchema,
   isSafeExternalUrl,
+  purgeExpiredAiRawData,
   setSocialAnalyzerForTests,
   setVoiceRefinerForTests,
 } from '../app/lib/creator-social-analyzer';
@@ -16,6 +17,8 @@ import { GET as getAiProfile } from '../app/api/creator/ai-profile/route';
 import { POST as analyzeAiProfile } from '../app/api/creator/ai-profile/analyze/route';
 import { POST as voiceRefine } from '../app/api/creator/ai-profile/voice/route';
 import { POST as approveAiProfile } from '../app/api/creator/ai-profile/approve/route';
+import { POST as withdrawAiProfile } from '../app/api/creator/ai-profile/withdraw/route';
+import { POST as saveCategories } from '../app/api/creator/categories/route';
 import { POST as searchCreators } from '../app/api/search/route';
 
 async function execMigration(db: PGlite, file: string) {
@@ -84,7 +87,8 @@ async function main() {
       '016_avatar_casting_review',
       '020_hybrid_search_embeddings',
       '021_creator_ai_profiles',
-      '021_creator_ai_profiles', // idempotency check
+      '023_creator_taxonomy_and_consent',
+      '023_creator_taxonomy_and_consent', // idempotency check
     ]) {
       await execMigration(db, m);
     }
@@ -144,19 +148,29 @@ async function main() {
     const searchBefore = await searchBeforeRes.json();
     assert.equal(searchBefore.creators.length, 0, 'Before AI summary approval, Marco should not yet match automotive');
 
-    // 3. Creator triggers AI analysis -> creates draft_ready (NOT auto-approved!)
+    // 3a. Spec 8.6 Opt-in gate: analyzing WITHOUT explicit consent must be rejected (403)!
+    const noConsentRes = await analyzeAiProfile(
+      new NextRequest('https://ugc-vz.de/api/creator/ai-profile/analyze', {
+        method: 'POST',
+        headers: { origin: 'https://ugc-vz.de', cookie: cookieHeader },
+        body: JSON.stringify({}),
+      }),
+    );
+    assert.equal(noConsentRes.status, 403, 'AI analysis without explicit opt-in consent must be blocked');
+
+    // 3b. Creator grants explicit opt-in consent -> triggers AI analysis -> creates draft_ready (NOT auto-approved!)
     setSocialAnalyzerForTests(async () => ({
       draft_summary:
         'Authentischer Creator aus München. Auf seinen verlinkten Kanälen zeigt er praxisnahe Videos rund um Autopflege, Werkstatt-Projekte und DIY-Werkzeug.',
       inferred_niches: ['Autopflege', 'Werkstatt', 'DIY-Werkzeug'],
       visual_signals: [
-        { signal: 'Garage & Fahrzeug sichtbar', category: 'automotive', evidence: 'TikTok-Thumbnails zeigen Fahrzeugpflege' },
+        { signal: 'Garage & Fahrzeug sichtbar', category: 'auto_mobilitaet', evidence: 'TikTok-Thumbnails zeigen Fahrzeugpflege' },
       ],
       content_style: {
-        formats: ['Produktdemo', 'Hands-on-Test'],
+        formats: ['tutorial', 'talking_head'],
         tone: 'sachlich, praxisnah',
         setting: 'Garage & Outdoor',
-        productionQuality: 'Tageslicht, klare Nahaufnahmen',
+        productionQuality: 'good',
       },
     }));
 
@@ -164,12 +178,28 @@ async function main() {
       new NextRequest('https://ugc-vz.de/api/creator/ai-profile/analyze', {
         method: 'POST',
         headers: { origin: 'https://ugc-vz.de', cookie: cookieHeader },
+        body: JSON.stringify({ consent: true }),
       }),
     );
     assert.equal(analyzeRes.status, 200, await analyzeRes.clone().text());
     const analyzeJson = await analyzeRes.json();
     assert.equal(analyzeJson.aiProfile.status, 'draft_ready');
+    assert.ok(analyzeJson.aiProfile.consentAt, 'Consent timestamp must be recorded');
+    assert.ok(analyzeJson.aiProfile.rawExpiresAt, '30-day raw retention expiry must be set');
     assert.equal(analyzeJson.aiProfile.visualSignals.length, 1);
+
+    // 3c. 20-category picker validation (max 3 categories, 1 primary)
+    const tooManyCats = await saveCategories(
+      new NextRequest('https://ugc-vz.de/api/creator/categories', {
+        method: 'POST',
+        headers: { origin: 'https://ugc-vz.de', cookie: cookieHeader },
+        body: JSON.stringify({
+          primaryCategory: 'auto_mobilitaet',
+          secondaryCategories: ['handwerk_diy', 'tech_gadgets', 'gaming'],
+        }),
+      }),
+    );
+    assert.equal(tooManyCats.status, 400, 'More than 3 categories must be rejected');
 
     // Human-in-the-loop invariant: unapproved draft_ready MUST NOT leak into live search yet!
     const searchWhileDraftRes = await searchCreators(
@@ -271,7 +301,7 @@ async function main() {
       'Voice-added detail ("BMW E36 Restaurierung") must be immediately searchable after approval',
     );
 
-    // GET /api/creator/ai-profile reflects approved state
+    // GET /api/creator/ai-profile reflects approved state + 90-day refresh schedule
     const getRes = await getAiProfile(
       new NextRequest('https://ugc-vz.de/api/creator/ai-profile', {
         headers: { cookie: cookieHeader },
@@ -280,8 +310,53 @@ async function main() {
     assert.equal(getRes.status, 200);
     const getJson = await getRes.json();
     assert.equal(getJson.aiProfile.status, 'approved');
+    assert.ok(getJson.aiProfile.nextRefreshAt, 'Approved AI profile must schedule 90-day refresh');
 
-    console.log('OK: Phase 3 AI social analyzer, SSRF guard, auth/size limits, iOS voice refinement, approval & live search E2E verified.');
+    // 8. 30-day raw retention cleanup purges expired visual signals/snapshots
+    await db.query(
+      `UPDATE creator_ai_profiles SET raw_expires_at = now() - interval '1 day' WHERE creator_id = $1`,
+      [marco.id],
+    );
+    const purgedCount = await purgeExpiredAiRawData(client);
+    assert.equal(purgedCount, 1, 'Expired raw AI data (>30 days) must be purged');
+    const afterPurge = await db.query<{ visual_signals: unknown[]; source_snapshot: Record<string, unknown> }>(
+      'SELECT visual_signals, source_snapshot FROM creator_ai_profiles WHERE creator_id = $1',
+      [marco.id],
+    );
+    assert.equal(afterPurge.rows[0].visual_signals.length, 0);
+
+    // 9. Instant withdrawal (Spec 8.6): deletes AI summary, niches, raw data, embedding & removes AI text from search immediately!
+    const withdrawRes = await withdrawAiProfile(
+      new NextRequest('https://ugc-vz.de/api/creator/ai-profile/withdraw', {
+        method: 'POST',
+        headers: { origin: 'https://ugc-vz.de', cookie: cookieHeader },
+      }),
+    );
+    assert.equal(withdrawRes.status, 200, await withdrawRes.clone().text());
+    const withdrawJson = await withdrawRes.json();
+    assert.equal(withdrawJson.withdrawn, true);
+    assert.equal(withdrawJson.aiProfile.status, 'withdrawn');
+    assert.equal(withdrawJson.aiProfile.approvedSummary, '');
+    assert.equal(withdrawJson.aiProfile.consentAt, null);
+
+    // Verify embedding is cleared and withdrawn AI text no longer matches BMW E36 in search!
+    const idxAfterWithdraw = await db.query<{ embedding_values: unknown; document_text: string }>(
+      'SELECT embedding_values, document_text FROM creator_search_index WHERE creator_id = $1',
+      [marco.id],
+    );
+    assert.equal(idxAfterWithdraw.rows[0].embedding_values, null, 'Withdrawal must immediately clear AI embedding');
+    assert.equal(idxAfterWithdraw.rows[0].document_text.includes('BMW E36'), false);
+
+    const searchAfterWithdrawRes = await searchCreators(
+      new Request('https://ugc-vz.de/api/search', {
+        method: 'POST',
+        body: JSON.stringify({ query: 'Creator für BMW E36 Restaurierung' }),
+      }),
+    );
+    const searchAfterWithdraw = await searchAfterWithdrawRes.json();
+    assert.equal(searchAfterWithdraw.creators.length, 0, 'Withdrawn AI summary must immediately stop matching in search');
+
+    console.log('OK: Phase 3 + Spec 8.6 AI social analyzer, opt-in gate, SSRF guard, iOS voice refinement, approval, 30d purge & instant withdrawal verified.');
   } finally {
     setSocialAnalyzerForTests(null);
     setVoiceRefinerForTests(null);

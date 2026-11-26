@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import Link from 'next/link';
 import '../styles/search.css';
 import styles from '../styles/search.module.css';
 import { toast } from 'react-toastify';
@@ -9,6 +10,7 @@ import NoResults from '../../components/NoResults';
 import CreatorSelectionPopup from './CreatorSelectionPopup';
 import CreatorProfileDialog from './CreatorProfileDialog';
 import { humanizePriceText, type SearchCreator } from '../lib/creator-public';
+import { CREATOR_STYLE_OPTIONS, CREATOR_TAXONOMY } from '../lib/creator-taxonomy';
 import { NICHE_INDEX } from '../lib/niche-index';
 import { castingLabel } from '../lib/casting';
 import CastingChips from './CastingChips';
@@ -30,7 +32,7 @@ import {
 
 // Import custom hooks
 import { useDeviceDetection } from '../hooks/useDeviceDetection';
-import { useSearch, type SearchAnalysis } from '../hooks/useSearch';
+import { useSearch, type SearchAnalysis, type StructuredSearchFilters } from '../hooks/useSearch';
 import { useVoiceRecognition } from '../hooks/useVoiceRecognition';
 
 // WebMCP-Anbindung: Events, ueber die der Agent-Layer diese UI steuert
@@ -80,12 +82,26 @@ export default function SearchBox({ initialQuery = '', showFeatured = false, dem
     showNoResults,
     showingAlternatives,
     searchError,
+    totalCount,
+    lowMatchCount,
+    detectedCategoryLabel,
+    activeFilters,
     performSearch,
     removedFilters,
     toggleCreatorSelection,
+    trackSearchClick,
+    trackSearchOutreach,
     resetSearch,
     clearSelection
   } = useSearch();
+
+  const updateFilter = (patch: Partial<StructuredSearchFilters>) => {
+    const nextFilters = { ...activeFilters, ...patch };
+    const effectiveQuery = submittedQuery || searchQuery.trim();
+    if (effectiveQuery) {
+      void performSearch(effectiveQuery, removedFilters, nextFilters);
+    }
+  };
 
   const searchBrief = removedFilters.length
     ? submittedQuery + ' (Aufgehobene Filter: ' + removedFilters.map(filter => castingLabel(filter)).join(', ') + ')'
@@ -360,6 +376,7 @@ export default function SearchBox({ initialQuery = '', showFeatured = false, dem
       }
 
       // Track successful contact form submission
+      trackSearchOutreach();
       trackUGCEvents.contactForm('creator_selection');
       trackUGCEvents.requestSuccess('creator_selection', selectedCreators.length);
       // Track individual creator contacts
@@ -529,7 +546,88 @@ export default function SearchBox({ initialQuery = '', showFeatured = false, dem
             </div>
 
             <CastingChips filters={analysis?.castingFilters || []}
-              remove={filter => performSearch(submittedQuery, [...removedFilters, filter])} />
+              remove={filter => performSearch(submittedQuery, [...removedFilters, filter], activeFilters)} />
+
+            {/* Strukturierte Filter-Chips nach Spec 8.6 */}
+            <div className="mt-4 flex flex-wrap items-center gap-2" aria-label="Suchfilter">
+              <select
+                aria-label="Kategorie filtern"
+                value={activeFilters.category || ''}
+                onChange={(e) => updateFilter({ category: e.target.value || undefined })}
+                className="min-h-[38px] rounded-full border border-[#E4E1D8] bg-white px-3.5 text-xs font-medium text-[#121212] outline-none focus:border-[#6C2BD9]"
+              >
+                <option value="">Alle 20 Kategorien</option>
+                {CREATOR_TAXONOMY.map((cat) => (
+                  <option key={cat.id} value={cat.id}>{cat.label}</option>
+                ))}
+              </select>
+
+              <select
+                aria-label="Plattform filtern"
+                value={activeFilters.platform || ''}
+                onChange={(e) => updateFilter({ platform: e.target.value || undefined })}
+                className="min-h-[38px] rounded-full border border-[#E4E1D8] bg-white px-3.5 text-xs font-medium text-[#121212] outline-none focus:border-[#6C2BD9]"
+              >
+                <option value="">Alle Plattformen</option>
+                <option value="tiktok">TikTok</option>
+                <option value="instagram">Instagram</option>
+                <option value="youtube">YouTube</option>
+              </select>
+
+              <select
+                aria-label="Format filtern"
+                value={activeFilters.format || ''}
+                onChange={(e) => updateFilter({ format: e.target.value || undefined })}
+                className="min-h-[38px] rounded-full border border-[#E4E1D8] bg-white px-3.5 text-xs font-medium text-[#121212] outline-none focus:border-[#6C2BD9]"
+              >
+                <option value="">Alle Formate</option>
+                {CREATOR_STYLE_OPTIONS.map((style) => (
+                  <option key={style.id} value={style.id}>{style.label}</option>
+                ))}
+              </select>
+
+              <input
+                type="text"
+                aria-label="Stadt oder Region filtern"
+                placeholder="Stadt (z. B. Berlin)"
+                defaultValue={activeFilters.city || ''}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    updateFilter({ city: e.currentTarget.value.trim() || undefined });
+                  }
+                }}
+                onBlur={(e) => {
+                  const val = e.currentTarget.value.trim() || undefined;
+                  if (val !== activeFilters.city) updateFilter({ city: val });
+                }}
+                className="min-h-[38px] w-36 rounded-full border border-[#E4E1D8] bg-white px-3.5 text-xs text-[#121212] placeholder-[#5C5A55] outline-none focus:border-[#6C2BD9]"
+              />
+
+              <button
+                type="button"
+                aria-pressed={Boolean(activeFilters.verifiedOnly)}
+                onClick={() => updateFilter({ verifiedOnly: !activeFilters.verifiedOnly })}
+                className={`min-h-[38px] rounded-full border px-3.5 text-xs font-semibold transition-colors ${
+                  activeFilters.verifiedOnly
+                    ? 'border-[#121212] bg-[#121212] text-[#F7F6F2]'
+                    : 'border-[#E4E1D8] bg-white text-[#121212] hover:border-[#121212]'
+                }`}
+              >
+                Nur mit Nachweis
+              </button>
+
+              {(activeFilters.category || activeFilters.platform || activeFilters.format || activeFilters.city || activeFilters.verifiedOnly) && (
+                <button
+                  type="button"
+                  onClick={() => performSearch(submittedQuery, removedFilters, {})}
+                  className="min-h-[38px] px-2 text-xs font-semibold text-[#6C2BD9] underline underline-offset-2"
+                >
+                  Filter zurücksetzen
+                </button>
+              )}
+            </div>
+
             {showNoResults && !!analysis?.castingFilters?.length &&
               <p role="status">Kein Profil erfüllt alle gewählten Kriterien. Du kannst oben einen Filter entfernen.</p>}
 
@@ -568,10 +666,20 @@ export default function SearchBox({ initialQuery = '', showFeatured = false, dem
                   </div>
                   <div className="min-w-0 space-y-2 text-left">
                     <CastingEvidenceList evidence={creator.evidence} />
+                    {creator.categories && creator.categories.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5">
+                        {creator.categories.slice(0, 3).map((catLabel) => (
+                          <span key={catLabel} className="rounded-full bg-[#F7F6F2] px-2.5 py-0.5 text-[11px] font-semibold text-[#121212]">
+                            {catLabel}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                     {creator.matchReason && (
-                      <p className="rounded-lg bg-geo-violet/10 px-2.5 py-1.5 text-xs font-medium leading-4 text-geo-violet">
+                      <div className="rounded-lg bg-[#EFE8FD] px-2.5 py-1.5 text-xs leading-4 text-[#121212]">
+                        <span className="font-semibold text-[#6C2BD9]">Warum passt das? </span>
                         {creator.matchReason}
-                      </p>
+                      </div>
                     )}
                     {creator.topics && <p className="line-clamp-2 break-words text-sm">{creator.topics}</p>}
                     {creator.preferredContent && <p className="line-clamp-2 break-words text-sm">{creator.preferredContent}</p>}
@@ -617,12 +725,31 @@ export default function SearchBox({ initialQuery = '', showFeatured = false, dem
                     })()}
                   </div>
                   <div className="mt-auto grid gap-2 pt-4">
-                    <button type="button" onClick={() => { setProfileCreator(creator); trackUGCEvents.creatorView(creator.id, 'profile'); }} aria-label={`Profil von ${creator.name} ansehen`} className="rounded-xl border border-hairline bg-white px-3 py-3 text-sm font-semibold text-ink hover:border-geo-violet focus-visible:ring-2 focus-visible:ring-geo-violet">Profil & Arbeitsproben ↗</button>
+                    <button type="button" onClick={() => { setProfileCreator(creator); trackSearchClick(creator.id); trackUGCEvents.creatorView(creator.id, 'profile'); }} aria-label={`Profil von ${creator.name} ansehen`} className="rounded-xl border border-hairline bg-white px-3 py-3 text-sm font-semibold text-ink hover:border-geo-violet focus-visible:ring-2 focus-visible:ring-geo-violet">Profil & Arbeitsproben ↗</button>
                     <button type="button" aria-pressed={selectedCreators.includes(creator.id)} aria-label={`${creator.name} ${selectedCreators.includes(creator.id) ? 'aus Auswahl entfernen' : 'zur Auswahl hinzufügen'}`} onClick={() => handleSelectCreator(creator.id)} className={`rounded-xl px-3 py-3 text-sm font-semibold focus-visible:ring-2 focus-visible:ring-geo-violet focus-visible:ring-offset-2 ${selectedCreators.includes(creator.id) ? 'bg-[#edf5e5] text-[#385523]' : 'bg-geo-violet text-white hover:bg-[#7531ae]'}`}>{selectedCreators.includes(creator.id) ? '✓ In deiner Auswahl' : '+ Zur Auswahl'}</button>
                   </div>
                 </div>
               ))}
             </div>
+
+            {searchSubmitted && lowMatchCount && creators.length > 0 && (
+              <div className="mt-6 flex flex-col items-start justify-between gap-4 rounded-2xl border border-[#E4E1D8] bg-[#F7F6F2] p-5 text-left sm:flex-row sm:items-center">
+                <div>
+                  <p className="text-sm font-bold text-[#121212]">
+                    Für {detectedCategoryLabel || submittedQuery} haben wir gerade {totalCount} passende Creator.
+                  </p>
+                  <p className="mt-1 text-xs leading-5 text-[#5C5A55]">
+                    Starte eine Kampagne, dann melden sich passende Creator bei dir.
+                  </p>
+                </div>
+                <Link
+                  href="/brand?tab=signup"
+                  className="inline-flex min-h-[44px] shrink-0 items-center justify-center rounded-xl bg-[#121212] px-5 text-sm font-semibold text-[#F7F6F2] transition-opacity hover:opacity-90"
+                >
+                  Kampagne starten
+                </Link>
+              </div>
+            )}
 
             {/* Modern Creator Selection Popup */}
             <CreatorSelectionPopup
@@ -641,7 +768,13 @@ export default function SearchBox({ initialQuery = '', showFeatured = false, dem
         )}
 
         {/* No results message */}
-        {showNoResults && <NoResults query={castingBrief} />}
+        {showNoResults && (
+          <NoResults
+            query={castingBrief}
+            categoryLabel={detectedCategoryLabel}
+            matchCount={totalCount}
+          />
+        )}
         {showFeatured && !searchSubmitted && featuredLoading && <div className="mt-7 border-t border-hairline pt-6" role="status" aria-label="Creator-Vorschau wird geladen"><h2 className={styles.resultsHeader}>Ein Einblick ins Verzeichnis</h2><p className="mb-5 mt-2 text-xs leading-5 text-ink-soft sm:text-sm">Lerne erste Creator kennen. Für Vorschläge zu deinem Produkt nutze die Suche oben.</p><div className={`${styles.creatorsGrid} ${styles.featuredGrid}`}>{[1, 2, 3].map(index => <div key={index} className={`${styles.creatorCard} min-h-[380px] bg-surface motion-safe:animate-pulse`} />)}</div></div>}
       </div>
       {profileCreator && <CreatorProfileDialog key={profileCreator.id} creator={profileCreator} selected={selectedCreators.includes(profileCreator.id)} onClose={() => setProfileCreator(null)} onSelect={() => handleSelectCreator(profileCreator.id)} />}

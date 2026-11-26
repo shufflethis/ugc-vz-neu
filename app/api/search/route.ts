@@ -47,6 +47,15 @@ import { getDatabase, isDatabaseConfigured } from '@/app/lib/database';
 import { isValidInternalSearchToken } from '@/app/lib/internal-search-token';
 import { logSearch } from '@/app/lib/search-log';
 import { isUsableCustomImageUrl } from '@/app/lib/social-avatar';
+import {
+  CATEGORY_ID_SET,
+  classifyCreatorProfileCategories,
+  detectCategoriesFromQuery,
+  detectStylesInText,
+  getCategoryLabel,
+  type CreatorCategoryId,
+} from '@/app/lib/creator-taxonomy';
+import { diversifyAndRotateCandidates } from '@/app/lib/search-diversify';
 
 type ProcessedCreator = {
   id: string;
@@ -61,6 +70,10 @@ type ProcessedCreator = {
   city: string;
   topics: string;
   preferredContent: string;
+  primaryCategory: CreatorCategoryId | null;
+  categoryIds: CreatorCategoryId[];
+  categories: string[];
+  verifiedSocial: boolean;
   gender: string | undefined;
   score: number;
   relevanceScore: number;
@@ -72,7 +85,16 @@ type ProcessedCreator = {
 };
 
 type CachedSearchPool = {
-  records: SearchableCreatorProfile[];
+  records: Array<
+    SearchableCreatorProfile & {
+      primaryCategory: CreatorCategoryId | null;
+      categoryIds: CreatorCategoryId[];
+      categoryLabels: string[];
+      specialistBonus: number;
+      isGeneralist: boolean;
+      detectedStyles: string[];
+    }
+  >;
   embeddings: Map<string, number[]>;
 };
 
@@ -158,7 +180,7 @@ function consumeSearchRateLimit(ip: string): { allowed: boolean; retryAfter: num
 
 const fetchNeonCreatorPool = async (withWorkSamples = false): Promise<CachedSearchPool> => {
   const sql = getDatabase();
-  const [rows, indexedData] = await Promise.all([
+  const [rows, indexedData, taxonomyRows] = await Promise.all([
     sql.query(`
       SELECT
         public_id, display_name, stage_name, birth_year, gender, city, height_cm,
@@ -172,10 +194,24 @@ const fetchNeonCreatorPool = async (withWorkSamples = false): Promise<CachedSear
       ORDER BY profile_quality_score DESC, total_reach DESC, display_name ASC
     `),
     loadIndexedSearchData(sql),
+    sql
+      .query(
+        `SELECT public_id, primary_category, secondary_categories
+         FROM creator_profiles
+         WHERE status = 'active' AND primary_category IS NOT NULL`,
+      )
+      .catch(() => [] as any[]),
   ]);
+  const taxonomyByPublicId = new Map<string, { primary: string | null; secondary: string[] }>();
+  for (const t of taxonomyRows as any[]) {
+    taxonomyByPublicId.set(String(t.public_id), {
+      primary: t.primary_category ? String(t.primary_category) : null,
+      secondary: Array.isArray(t.secondary_categories) ? t.secondary_categories.map(String) : [],
+    });
+  }
   const currentYear = new Date().getFullYear();
 
-  const records: SearchableCreatorProfile[] = rows.map((row: any) => {
+  const records = rows.map((row: any) => {
     const id = String(row.public_id);
     const fullName = String(row.display_name || '').trim();
     const stageName = String(row.stage_name || '').trim();
@@ -260,6 +296,21 @@ const fetchNeonCreatorPool = async (withWorkSamples = false): Promise<CachedSear
       socialCount: networksList.length,
     }).level;
 
+    const storedTax = taxonomyByPublicId.get(id);
+    const classified = classifyCreatorProfileCategories({
+      primaryCategory: storedTax?.primary,
+      secondaryCategories: storedTax?.secondary,
+      topics: row.topics,
+      industries: row.industries,
+      specialTraits: row.special_traits,
+      preferredContent: formatsText,
+      petContext,
+      childrenContext,
+      aiSummary: aiProfile?.summary,
+      aiNiches: aiProfile?.niches,
+    });
+    const detectedStyles = detectStylesInText(`${formatsText} ${aiProfile?.summary || ''}`);
+
     return {
       id,
       fullName,
@@ -304,6 +355,12 @@ const fetchNeonCreatorPool = async (withWorkSamples = false): Promise<CachedSear
       finalImage,
       hasCustomImage,
       verificationLevel,
+      primaryCategory: classified.primary,
+      categoryIds: classified.categories.map((c) => c.id),
+      categoryLabels: classified.categories.map((c) => c.label),
+      specialistBonus: classified.specialistBonus,
+      isGeneralist: classified.isGeneralist,
+      detectedStyles,
     };
   });
 
@@ -477,13 +534,36 @@ export async function POST(req: Request) {
     let droppedLowScore = 0;
     let droppedError = 0;
 
+    type EnrichedProfile = CachedSearchPool['records'][number];
     type EvaluatedEntry = {
-      profile: SearchableCreatorProfile;
+      profile: EnrichedProfile;
       exactCasting: CastingEvidence[] | null;
       relatedCastingMatch: { priority: number; evidence: CastingEvidence[] } | null;
       evidence: CastingEvidence[];
       evaluation: CreatorRelevanceEvaluation;
     };
+
+    const explicitCategory =
+      typeof reqBody.category === 'string' && CATEGORY_ID_SET.has(reqBody.category.trim())
+        ? (reqBody.category.trim() as CreatorCategoryId)
+        : null;
+    const detectedQueryCategories = detectCategoriesFromQuery(query);
+    const primaryQueryCategory: CreatorCategoryId | null =
+      explicitCategory ||
+      (detectedQueryCategories[0] && detectedQueryCategories[0].confidence >= 0.7
+        ? detectedQueryCategories[0].id
+        : null);
+    const primaryQueryCategoryLabel = primaryQueryCategory ? getCategoryLabel(primaryQueryCategory) : null;
+
+    const platformFilter = typeof reqBody.platform === 'string' ? reqBody.platform.trim().toLowerCase() : '';
+    const formatFilter = typeof reqBody.format === 'string' ? reqBody.format.trim().toLowerCase() : '';
+    const verifiedOnly = reqBody.verifiedOnly === true;
+    const minReachFilter = typeof reqBody.minReach === 'number' && Number.isFinite(reqBody.minReach) ? reqBody.minReach : null;
+    const maxReachFilter = typeof reqBody.maxReach === 'number' && Number.isFinite(reqBody.maxReach) ? reqBody.maxReach : null;
+    const sessionSeed =
+      typeof reqBody.sessionSeed === 'string' && reqBody.sessionSeed.trim()
+        ? reqBody.sessionSeed.trim().slice(0, 64)
+        : req.headers.get('x-search-session') || 'default-session';
 
     const castingPassed: EvaluatedEntry[] = [];
 
@@ -560,14 +640,42 @@ export async function POST(req: Request) {
 
     for (const entry of castingPassed) {
       const hybrid = hybridById.get(entry.profile.id)!;
-      const keep = !entry.evaluation.hardExcluded || hybrid.hybridPromoted;
+      const profile = entry.profile;
+      const hasPrimaryCategoryMatch = Boolean(primaryQueryCategory && profile.primaryCategory === primaryQueryCategory);
+      const hasSecondaryCategoryMatch = Boolean(
+        primaryQueryCategory && !hasPrimaryCategoryMatch && profile.categoryIds.includes(primaryQueryCategory),
+      );
+
+      // Spec 8.6 Step 2 ("Kategorie hart wenn confidence >= 0.7"):
+      // Profile ohne die erkannte Zielkategorie (und ohne starken semantischen Match)
+      // duerfen niemals als Primaertreffer durchrutschen; nur explizite Nebengebiet-/Related-Matches
+      // bleiben fuer `alternatives` erhalten.
+      const hasCategoryOrSemanticMatch =
+        !primaryQueryCategory ||
+        hasPrimaryCategoryMatch ||
+        hasSecondaryCategoryMatch ||
+        (hybrid.hybridPromoted && hybrid.vectorSimilarity >= SEMANTIC_EXACT_SIMILARITY);
+      if (!hasCategoryOrSemanticMatch && !entry.evaluation.hasRelatedThematicMatch) {
+        droppedRelevanceFilter += 1;
+        continue;
+      }
+
+      const categoryPromoted = hasPrimaryCategoryMatch || hasSecondaryCategoryMatch;
+      const keep = !entry.evaluation.hardExcluded || hybrid.hybridPromoted || categoryPromoted;
       if (!keep) {
         droppedRelevanceFilter += 1;
         continue;
       }
 
+      const categoryBoost = hasPrimaryCategoryMatch
+        ? 60 + profile.specialistBonus
+        : hasSecondaryCategoryMatch
+          ? 24 + Math.max(0, profile.specialistBonus)
+          : 0;
+
       const prelimScore =
         entry.evaluation.totalScore +
+        categoryBoost +
         Math.round(hybrid.rrfScore * 3_500) +
         (hybrid.vectorSimilarity > 0 ? Math.round(hybrid.vectorSimilarity * 120) : 0);
 
@@ -576,14 +684,14 @@ export async function POST(req: Request) {
         ftsRank: hybrid.ftsRank,
         vectorSimilarity: hybrid.vectorSimilarity,
         rrfScore: hybrid.rrfScore,
-        hybridPromoted: hybrid.hybridPromoted,
+        hybridPromoted: hybrid.hybridPromoted || categoryPromoted,
         prelimScore,
       });
     }
 
     candidatesForRanking.sort((a, b) => b.prelimScore - a.prelimScore);
 
-    // Pre-filter agent hard constraints (city, topics, verification level) BEFORE rerank & 24-cap
+    // Pre-filter hard constraints (category, platform, city, format, reach, verification) BEFORE rerank & 24-cap
     const cityFilter = typeof reqBody.city === 'string' ? reqBody.city.trim().toLowerCase() : '';
     const topicFilter: string[] = Array.isArray(reqBody.topics)
       ? reqBody.topics.filter((t: unknown) => typeof t === 'string' && t.trim()).map((t: string) => t.trim().toLowerCase())
@@ -591,13 +699,31 @@ export async function POST(req: Request) {
     const minVerificationLevel =
       typeof reqBody.humanVerificationLevelMin === 'number' && Number.isFinite(reqBody.humanVerificationLevelMin)
         ? reqBody.humanVerificationLevelMin
-        : undefined;
+        : verifiedOnly
+          ? 1
+          : undefined;
 
     const agentFiltered = candidatesForRanking.filter(({ profile }) => {
+      if (explicitCategory && !profile.categoryIds.includes(explicitCategory)) return false;
+      if (platformFilter) {
+        const pMap = profile.platforms as Record<string, boolean>;
+        if (platformFilter in pMap && !pMap[platformFilter]) return false;
+      }
+      if (formatFilter && !profile.detectedStyles.includes(formatFilter) && !profile.formatsText.toLowerCase().includes(formatFilter)) {
+        return false;
+      }
+      if (minReachFilter !== null && profile.totalReach < minReachFilter) return false;
+      if (maxReachFilter !== null && profile.totalReach > maxReachFilter) return false;
       if (cityFilter && !profile.locationLower.includes(cityFilter)) return false;
       if (
         topicFilter.length &&
-        !topicFilter.some((t) => profile.topicSearchText.includes(t) || profile.topicsText.toLowerCase().includes(t))
+        !topicFilter.some(
+          (t) =>
+            profile.topicSearchText.includes(t) ||
+            profile.topicsText.toLowerCase().includes(t) ||
+            profile.categoryIds.includes(t as CreatorCategoryId) ||
+            profile.categoryLabels.some((l) => l.toLowerCase().includes(t)),
+        )
       ) {
         return false;
       }
@@ -618,11 +744,30 @@ export async function POST(req: Request) {
       });
     }
 
+    const buildExplainReason = (
+      profile: EnrichedProfile,
+      fallbackReason?: string,
+    ): string | undefined => {
+      if (fallbackReason) return fallbackReason;
+      if (primaryQueryCategory && profile.primaryCategory === primaryQueryCategory) {
+        return `Hauptthema ${getCategoryLabel(primaryQueryCategory)}`;
+      }
+      if (primaryQueryCategory && profile.categoryIds.includes(primaryQueryCategory)) {
+        return `Thema ${getCategoryLabel(primaryQueryCategory)}`;
+      }
+      if (profile.primaryCategory) {
+        return `Hauptthema ${getCategoryLabel(profile.primaryCategory)}`;
+      }
+      return undefined;
+    };
+
     const validCreators: ProcessedCreator[] = [];
 
     for (const item of agentFiltered) {
       const { profile, evaluation, relatedCastingMatch, evidence } = item;
       const verdict = rerankVerdicts?.get(profile.id);
+      const hasPrimaryCat = Boolean(primaryQueryCategory && profile.primaryCategory === primaryQueryCategory);
+      const hasSecondaryCat = Boolean(primaryQueryCategory && !hasPrimaryCat && profile.categoryIds.includes(primaryQueryCategory));
 
       if (verdict) {
         if (verdict.fit === 'reject') {
@@ -635,7 +780,14 @@ export async function POST(req: Request) {
           : isAlternative
             ? 1
             : 0;
-        const score = verdict.score * 10 + Math.round(evaluation.qualityScore);
+        const score =
+          verdict.score * 10 +
+          Math.round(evaluation.qualityScore) +
+          (hasPrimaryCat ? 35 + profile.specialistBonus : hasSecondaryCat ? 15 : 0);
+        const explain = buildExplainReason(
+          profile,
+          verdict.reason || (isAlternative ? evaluation.relatedReason : evaluation.matchReason),
+        );
         validCreators.push({
           id: profile.id,
           name: profile.firstName,
@@ -649,13 +801,13 @@ export async function POST(req: Request) {
           city: profile.location,
           topics: profile.topicsText,
           preferredContent: profile.formatsText,
+          primaryCategory: profile.primaryCategory,
+          categoryIds: profile.categoryIds,
+          categories: profile.categoryLabels,
+          verifiedSocial: profile.verificationLevel >= 1,
           gender: profile.gender,
           ...(evidence.length ? { evidence } : {}),
-          ...(verdict.reason
-            ? { matchReason: verdict.reason }
-            : isAlternative
-              ? (evaluation.relatedReason ? { matchReason: evaluation.relatedReason } : {})
-              : (evaluation.matchReason ? { matchReason: evaluation.matchReason } : {})),
+          ...(explain ? { matchReason: explain } : {}),
           relatedPriority,
           score,
           relevanceScore: verdict.score * 10,
@@ -665,19 +817,21 @@ export async function POST(req: Request) {
         continue;
       }
 
-      // Deterministic + Hybrid RRF fallback (used when no LLM rerank ran or for tail beyond top N)
-      // When the LLM reranker ran on top candidates, do NOT promote un-reranked tail profiles solely
-      // on raw vector similarity into primary creators.
       const strongSemanticExact =
         !rerankVerdicts &&
         item.hybridPromoted &&
         item.vectorSimilarity >= SEMANTIC_EXACT_SIMILARITY;
+      const passesCategoryGate =
+        !primaryQueryCategory || hasPrimaryCat || hasSecondaryCat || strongSemanticExact;
       const isPrimaryMatch =
         Boolean(item.exactCasting) &&
-        (!evaluation.hasThematicRequirement || evaluation.hasThematicMatch || strongSemanticExact);
+        passesCategoryGate &&
+        (!evaluation.hasThematicRequirement ||
+          evaluation.hasThematicMatch ||
+          strongSemanticExact ||
+          hasPrimaryCat ||
+          (hasSecondaryCat && !profile.isGeneralist));
 
-      // If the LLM reranker already evaluated the top candidates, demote un-reranked tail items to alternatives
-      // when we already have reranker-confirmed matches, preventing unverified low-rank profiles from leaking in.
       if (rerankVerdicts && !isPrimaryMatch) {
         continue;
       }
@@ -694,6 +848,10 @@ export async function POST(req: Request) {
           ? 'Semantisch passendes Profil zur Anfrage'
           : 'Thematisch verwandtes Profil'
         : undefined;
+      const explain = buildExplainReason(
+        profile,
+        isAlternative ? evaluation.relatedReason || semanticReason : evaluation.matchReason || semanticReason,
+      );
 
       validCreators.push({
         id: profile.id,
@@ -708,11 +866,13 @@ export async function POST(req: Request) {
         city: profile.location,
         topics: profile.topicsText,
         preferredContent: profile.formatsText,
+        primaryCategory: profile.primaryCategory,
+        categoryIds: profile.categoryIds,
+        categories: profile.categoryLabels,
+        verifiedSocial: profile.verificationLevel >= 1,
         gender: profile.gender,
         ...(evidence.length ? { evidence } : {}),
-        ...(isAlternative
-          ? (evaluation.relatedReason || semanticReason ? { matchReason: evaluation.relatedReason || semanticReason } : {})
-          : (evaluation.matchReason || semanticReason ? { matchReason: evaluation.matchReason || semanticReason } : {})),
+        ...(explain ? { matchReason: explain } : {}),
         relatedPriority,
         score: item.prelimScore,
         relevanceScore: evaluation.relevanceScore + Math.round(item.rrfScore * 3_500),
@@ -729,7 +889,11 @@ export async function POST(req: Request) {
       return b.totalReach - a.totalReach;
     });
 
-    const matchedCreators = validCreators.filter((creator) => creator.relatedPriority === 0);
+    const rawMatchedCreators = validCreators.filter((creator) => creator.relatedPriority === 0);
+    const matchedCreators = diversifyAndRotateCandidates(rawMatchedCreators, {
+      sessionSeed,
+      limit: 24,
+    });
     const alternatives = validCreators.filter((creator) => creator.relatedPriority > 0);
     const publicCard = ({
       hasCustomImage,
@@ -739,21 +903,31 @@ export async function POST(req: Request) {
       relatedPriority,
       verificationLevel,
       topicSearchText,
+      categoryIds,
       ...rest
     }: ProcessedCreator) => rest;
     const finalCreators = matchedCreators.slice(0, 24).map(publicCard);
     const processingTime = Date.now() - startedAt;
 
     console.log(
-      `[${requestId}] Search done in ${processingTime}ms: matched=${matchedCreators.length}/${searchRecords.length} alt=${alternatives.length} returned=${finalCreators.length} hybrid=${Boolean(queryEmbedding || ftsRanks.size)} reranked=${Boolean(rerankVerdicts)}`,
+      `[${requestId}] Search done in ${processingTime}ms: matched=${rawMatchedCreators.length}/${searchRecords.length} alt=${alternatives.length} returned=${finalCreators.length} cat=${primaryQueryCategory || 'none'} hybrid=${Boolean(queryEmbedding || ftsRanks.size)} reranked=${Boolean(rerankVerdicts)}`,
     );
 
-    await logSearch(query, matchedCreators.length, req.headers.get('x-search-source') === 'agent' ? 'agent' : 'web');
+    const searchLogId = await logSearch(
+      query,
+      rawMatchedCreators.length,
+      req.headers.get('x-search-source') === 'agent' ? 'agent' : 'web',
+      primaryQueryCategory,
+    );
 
     return NextResponse.json({
       success: true,
       creators: finalCreators,
-      totalCount: matchedCreators.length,
+      totalCount: rawMatchedCreators.length,
+      lowMatchCount: rawMatchedCreators.length < 3,
+      detectedCategory: primaryQueryCategory,
+      detectedCategoryLabel: primaryQueryCategoryLabel,
+      searchLogId,
       alternatives: alternatives.slice(0, 6).map(publicCard),
       pool: {
         size: searchRecords.length,

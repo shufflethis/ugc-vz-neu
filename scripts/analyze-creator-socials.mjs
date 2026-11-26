@@ -12,7 +12,7 @@ import dotenv from 'dotenv';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { isAiProviderConfigured, resolveAiProvider } from '../app/lib/ai-provider.ts';
-import { runCreatorAiAnalysis } from '../app/lib/creator-social-analyzer.ts';
+import { purgeExpiredAiRawData, runCreatorAiAnalysis } from '../app/lib/creator-social-analyzer.ts';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 if (!process.env.DATABASE_URL) dotenv.config({ path: path.join(repoRoot, '.env.local') });
@@ -40,17 +40,25 @@ const USE_GEONODE = args['use-geonode'] === true || args['use-geonode'] === 'tru
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function main() {
+  const purged = await purgeExpiredAiRawData(sql);
+  if (purged > 0) {
+    console.log(`[${new Date().toISOString()}] Rohdaten-Cleanup (>30 Tage): ${purged} Profile bereinigt.`);
+  }
+
+  // Spec 8.6: Batch-Worker wertet nur Profile mit expliziter Einwilligung (consent_at IS NOT NULL) aus.
   const candidates = await sql.query(
     `SELECT p.id, p.public_id, p.display_name, ai.status, ai.fail_count
      FROM creator_profiles p
-     LEFT JOIN creator_ai_profiles ai ON ai.creator_id = p.id
+     JOIN creator_ai_profiles ai ON ai.creator_id = p.id
      WHERE p.status = 'active'
+       AND ai.consent_at IS NOT NULL
+       AND ai.status <> 'withdrawn'
        AND (
          ($2::text IS NOT NULL AND p.public_id = $2)
          OR (
            $2::text IS NULL AND (
-             ai.creator_id IS NULL
-             OR ai.status = 'pending'
+             ai.status = 'pending'
+             OR (ai.status = 'approved' AND ai.next_refresh_at IS NOT NULL AND ai.next_refresh_at <= now())
              OR (
                ai.status = 'failed'
                AND ai.fail_count < 5

@@ -12,6 +12,9 @@ export interface SearchCreator {
   city?: string;
   topics?: string;
   preferredContent?: string;
+  primaryCategory?: string | null;
+  categories?: string[];
+  verifiedSocial?: boolean;
   evidence?: import('./casting').CastingEvidence[];
   matchReason?: string;
 }

@@ -15,6 +15,7 @@
     "test:casting": "node --import tsx scripts/test-casting.ts",
     "test:search-relevance": "node --import tsx scripts/test-search-relevance.ts",
     "test:hybrid-search": "node --import tsx scripts/test-hybrid-search.ts",
+    "test:search-benchmark": "node --import tsx scripts/test-search-benchmark.ts",
     "test:ai-profile": "node --import tsx scripts/test-ai-profile.ts",
     "test:auth-flows": "node --import tsx scripts/test-auth-flows.ts",
     "test:platform-pricing": "node --import tsx scripts/test-platform-pricing.ts",

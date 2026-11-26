@@ -1,8 +1,15 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Check, Mic, RefreshCw, Sparkles, Square, Wand2, X } from 'lucide-react';
+import Link from 'next/link';
+import { Check, Mic, RefreshCw, Sparkles, Square, Trash2, Wand2, X } from 'lucide-react';
 import type { CreatorAiProfileRecord } from '../lib/creator-social-analyzer';
+import {
+  CREATOR_TAXONOMY,
+  MAX_CATEGORIES_PER_CREATOR,
+  getCategoryLabel,
+  type CreatorCategoryId,
+} from '../lib/creator-taxonomy';
 
 const MAX_RECORDING_SECONDS = 60;
 
@@ -38,6 +45,7 @@ export default function AiProfileReviewCard({
   const [summaryText, setSummaryText] = useState(
     initialAiProfile?.draftSummary || initialAiProfile?.approvedSummary || '',
   );
+  const [previousSummary, setPreviousSummary] = useState('');
   const [niches, setNiches] = useState<string[]>(
     initialAiProfile?.inferredNiches?.length
       ? initialAiProfile.inferredNiches
@@ -48,9 +56,21 @@ export default function AiProfileReviewCard({
   const [transcript, setTranscript] = useState(initialAiProfile?.creatorVoiceTranscript || '');
   const [changesNote, setChangesNote] = useState('');
 
+  // Explizite Opt-in-Checkbox (Spec 8.6: NICHT vorausgewaehlt!)
+  const [consentChecked, setConsentChecked] = useState(false);
+  const [manualMode, setManualMode] = useState(false);
+
+  // 20er-Kategorien-Taxonomie (max. 3, 1 Pflicht-Hauptkategorie)
+  const [primaryCategory, setPrimaryCategory] = useState<CreatorCategoryId | ''>('');
+  const [secondaryCategories, setSecondaryCategories] = useState<CreatorCategoryId[]>([]);
+  const [suggestedCategories, setSuggestedCategories] = useState<Array<{ id: CreatorCategoryId; label: string; isPrimary: boolean }>>([]);
+  const [categoriesConfirmed, setCategoriesConfirmed] = useState(false);
+  const [savingCategories, setSavingCategories] = useState(false);
+
   const [analyzing, setAnalyzing] = useState(false);
   const [refining, setRefining] = useState(false);
   const [approving, setApproving] = useState(false);
+  const [withdrawing, setWithdrawing] = useState(false);
   const [recording, setRecording] = useState(false);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
   const [canRecordAudio, setCanRecordAudio] = useState(false);
@@ -64,6 +84,10 @@ export default function AiProfileReviewCard({
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const cancelFlagRef = useRef(false);
 
+  const hasConsent = Boolean(aiProfile?.consentAt && aiProfile.status !== 'withdrawn');
+  const hasDraftOrApproved = Boolean(summaryText.trim()) || aiProfile?.status === 'draft_ready' || aiProfile?.status === 'approved';
+  const showOptInCard = !hasConsent && !hasDraftOrApproved && !manualMode;
+
   useEffect(() => {
     setCanRecordAudio(
       typeof window !== 'undefined' &&
@@ -74,6 +98,31 @@ export default function AiProfileReviewCard({
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
       streamRef.current?.getTracks().forEach((track) => track.stop());
+    };
+  }, []);
+
+  // Lade gespeicherte oder vorgeschlagene 20er-Kategorien
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/api/creator/categories', { cache: 'no-store' })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (cancelled || !data?.success) return;
+        if (data.primaryCategory) {
+          setPrimaryCategory(data.primaryCategory);
+          setSecondaryCategories(Array.isArray(data.secondaryCategories) ? data.secondaryCategories : []);
+          setCategoriesConfirmed(Boolean(data.confirmedAt));
+        } else if (Array.isArray(data.suggestedCategories) && data.suggestedCategories.length > 0) {
+          setSuggestedCategories(data.suggestedCategories);
+          const first = data.suggestedCategories[0]?.id;
+          const rest = data.suggestedCategories.slice(1, MAX_CATEGORIES_PER_CREATOR).map((c: any) => c.id);
+          if (first) setPrimaryCategory(first);
+          setSecondaryCategories(rest);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
     };
   }, []);
 
@@ -90,18 +139,76 @@ export default function AiProfileReviewCard({
     recorderRef.current = null;
   };
 
-  const handleAnalyze = async () => {
-    setAnalyzing(true);
+  const handleToggleCategory = (id: CreatorCategoryId) => {
+    if (primaryCategory === id) {
+      // Promote first secondary to primary or clear
+      const [nextPrimary, ...rest] = secondaryCategories;
+      setPrimaryCategory(nextPrimary || '');
+      setSecondaryCategories(rest);
+      return;
+    }
+    if (secondaryCategories.includes(id)) {
+      setSecondaryCategories((prev) => prev.filter((item) => item !== id));
+      return;
+    }
+    if (!primaryCategory) {
+      setPrimaryCategory(id);
+      return;
+    }
+    if (1 + secondaryCategories.length >= MAX_CATEGORIES_PER_CREATOR) {
+      setErrorMessage(`Du kannst höchstens ${MAX_CATEGORIES_PER_CREATOR} Kategorien wählen (1 Hauptkategorie + max. 2 weitere).`);
+      return;
+    }
+    setErrorMessage('');
+    setSecondaryCategories((prev) => [...prev, id]);
+  };
+
+  const handleSaveCategories = async () => {
+    if (!primaryCategory) {
+      setErrorMessage('Bitte wähle mindestens eine Hauptkategorie aus.');
+      return;
+    }
+    setSavingCategories(true);
     setErrorMessage('');
     setStatusMessage('');
+    try {
+      const response = await fetch('/api/creator/categories', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ primaryCategory, secondaryCategories }),
+      });
+      const result = await response.json();
+      if (!response.ok || !result.success) throw new Error(result.error || 'Kategorien konnten nicht gespeichert werden.');
+      setCategoriesConfirmed(true);
+      setSuggestedCategories([]);
+      setStatusMessage(result.message || 'Kategorien gespeichert.');
+    } catch (err) {
+      setErrorMessage(err instanceof Error ? err.message : 'Kategorien konnten nicht gespeichert werden.');
+    } finally {
+      setSavingCategories(false);
+    }
+  };
+
+  const handleAnalyze = async (withExplicitConsent = false) => {
+    if (!hasConsent && !withExplicitConsent) {
+      setErrorMessage('Bitte setze zuerst das Häkchen zur Einwilligung.');
+      return;
+    }
+    setAnalyzing(true);
+    setErrorMessage('');
+    setStatusMessage('Wir schauen uns gerade deine Videos an. Das kann ein paar Minuten dauern. Du kannst die Seite schließen, wir schicken dir eine Mail.');
     try {
       const response = await fetch('/api/creator/ai-profile/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ consent: withExplicitConsent || hasConsent }),
       });
       const result = await response.json();
       if (!response.ok || !result.success) {
-        throw new Error(result.error || 'Analyse konnte nicht durchgeführt werden.');
+        throw new Error(
+          result.error ||
+            'Wir kommen gerade nicht an deine Videos. Ist dein Profil öffentlich? Versuch es später noch mal oder schreib deinen Text selbst.',
+        );
       }
       if (result.aiProfile) {
         setAiProfile(result.aiProfile);
@@ -112,9 +219,14 @@ export default function AiProfileReviewCard({
             : result.aiProfile.approvedNiches || [],
         );
       }
-      setStatusMessage(result.message || 'Entwurf erstellt. Prüfe den Text und gib ihn unten frei.');
+      setStatusMessage(result.message || 'So würden wir dich beschreiben. Stimmt das?');
     } catch (err) {
-      setErrorMessage(err instanceof Error ? err.message : 'Analyse fehlgeschlagen.');
+      setStatusMessage('');
+      setErrorMessage(
+        err instanceof Error
+          ? err.message
+          : 'Wir kommen gerade nicht an deine Videos. Ist dein Profil öffentlich? Versuch es später noch mal oder schreib deinen Text selbst.',
+      );
     } finally {
       setAnalyzing(false);
     }
@@ -125,6 +237,7 @@ export default function AiProfileReviewCard({
     setErrorMessage('');
     setStatusMessage('');
     setChangesNote('');
+    const snapshotBefore = summaryText;
     try {
       let response: Response;
       if (payload.audioBlob) {
@@ -157,14 +270,20 @@ export default function AiProfileReviewCard({
       if (!response.ok || !result.success) {
         throw new Error(result.error || 'Ergänzung konnte nicht verarbeitet werden.');
       }
-      if (typeof result.updatedSummary === 'string') setSummaryText(result.updatedSummary);
+      if (typeof result.updatedSummary === 'string') {
+        if (snapshotBefore && snapshotBefore !== result.updatedSummary) {
+          setPreviousSummary(snapshotBefore);
+        }
+        setSummaryText(result.updatedSummary);
+      }
       if (Array.isArray(result.updatedNiches)) setNiches(result.updatedNiches);
       if (typeof result.transcript === 'string' && result.transcript) setTranscript(result.transcript);
-      if (typeof result.changesSummary === 'string' && result.changesSummary) setChangesNote(result.changesSummary);
+      if (typeof result.changesSummary === 'string') setChangesNote(result.changesSummary);
+      if (result.aiProfile) setAiProfile(result.aiProfile);
       setInstructionText('');
-      setStatusMessage('Entwurf aktualisiert. Prüfe den Text kurz und klicke dann auf „Für die Suche freigeben“.');
+      setStatusMessage('Entwurf aktualisiert. Prüfe vorher und nachher und gib ihn unten frei.');
     } catch (err) {
-      setErrorMessage(err instanceof Error ? err.message : 'Verarbeitung fehlgeschlagen.');
+      setErrorMessage(err instanceof Error ? err.message : 'Ergänzung fehlgeschlagen.');
     } finally {
       setRefining(false);
     }
@@ -174,10 +293,9 @@ export default function AiProfileReviewCard({
     setErrorMessage('');
     setStatusMessage('');
     if (!canRecordAudio) {
-      setErrorMessage('Dein Browser unterstützt keine direkte Audioaufnahme. Nutze einfach das Textfeld darunter.');
+      setErrorMessage('Dein Browser unterstützt keine Sprachaufnahme. Nutze einfach das Textfeld darunter.');
       return;
     }
-
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
@@ -195,11 +313,12 @@ export default function AiProfileReviewCard({
       recorder.onstop = () => {
         stopRecordingTimer();
         setRecording(false);
-        const recordedMime = recorder.mimeType || mimeType || 'audio/webm';
-        const blob = new Blob(chunksRef.current, { type: recordedMime });
+        const canceled = cancelFlagRef.current;
+        const blobType = recorder.mimeType || mimeType || 'audio/webm';
+        const blob = new Blob(chunksRef.current, { type: blobType });
         chunksRef.current = [];
         cleanupStream();
-        if (!cancelFlagRef.current && blob.size > 0) {
+        if (!canceled && blob.size > 0) {
           void submitVoiceOrText({ audioBlob: blob });
         }
       };
@@ -211,23 +330,20 @@ export default function AiProfileReviewCard({
         setRecordingSeconds((prev) => {
           const next = prev + 1;
           if (next >= MAX_RECORDING_SECONDS) {
-            if (recorderRef.current && recorderRef.current.state === 'recording') {
-              recorderRef.current.stop();
-            }
+            recorder.stop();
           }
           return next;
         });
-      }, 1_000);
+      }, 1000);
     } catch {
       cleanupStream();
-      setRecording(false);
-      setErrorMessage('Kein Mikrofon-Zugriff möglich. Bitte erlaube das Mikrofon im Browser oder tippe deine Ergänzung unten ein.');
+      setErrorMessage('Mikrofon-Zugriff wurde abgelehnt oder ist nicht verfügbar. Tippe deine Ergänzung einfach als Text ein.');
     }
   };
 
   const stopVoiceRecording = (cancel = false) => {
     cancelFlagRef.current = cancel;
-    if (recorderRef.current && recorderRef.current.state === 'recording') {
+    if (recorderRef.current && recorderRef.current.state !== 'inactive') {
       recorderRef.current.stop();
     } else {
       stopRecordingTimer();
@@ -260,6 +376,7 @@ export default function AiProfileReviewCard({
         body: JSON.stringify({
           summary: summaryText,
           niches,
+          ...(primaryCategory ? { primaryCategory, secondaryCategories } : {}),
         }),
       });
       const result = await response.json();
@@ -267,7 +384,9 @@ export default function AiProfileReviewCard({
         throw new Error(result.error || 'Freigabe fehlgeschlagen.');
       }
       if (result.aiProfile) setAiProfile(result.aiProfile);
-      setStatusMessage(result.message || 'Profilzusammenfassung freigegeben und in der Suche aktiv.');
+      if (primaryCategory) setCategoriesConfirmed(true);
+      setPreviousSummary('');
+      setStatusMessage(result.message || 'Fertig. Deine Profilzusammenfassung ist jetzt freigegeben.');
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : 'Freigabe fehlgeschlagen.');
     } finally {
@@ -275,242 +394,375 @@ export default function AiProfileReviewCard({
     }
   };
 
-  const statusBadge =
-    aiProfile?.status === 'approved'
-      ? { label: 'Freigegeben & aktiv in der Suche', className: 'bg-[#edf5e5] text-[#2e4d1b] border-[#b7d89c]' }
-      : aiProfile?.status === 'draft_ready'
-        ? { label: 'Entwurf bereit zur Prüfung', className: 'bg-geo-violet/10 text-geo-violet border-geo-violet/30' }
-        : aiProfile?.status === 'analyzing' || aiProfile?.status === 'pending'
-          ? { label: 'Analyse vorgemerkt', className: 'bg-amber-50 text-amber-900 border-amber-200' }
-          : { label: 'Noch nicht erstellt', className: 'bg-surface text-ink-soft border-hairline' };
+  const handleWithdraw = async () => {
+    setWithdrawing(true);
+    setErrorMessage('');
+    setStatusMessage('');
+    try {
+      const response = await fetch('/api/creator/ai-profile/withdraw', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || 'Widerruf fehlgeschlagen.');
+      }
+      setAiProfile(result.aiProfile || null);
+      setSummaryText('');
+      setPreviousSummary('');
+      setNiches([]);
+      setTranscript('');
+      setChangesNote('');
+      setConsentChecked(false);
+      setManualMode(false);
+      setStatusMessage(result.message || 'Einwilligung widerrufen. KI-Text und Rohdaten wurden sofort gelöscht.');
+    } catch (err) {
+      setErrorMessage(err instanceof Error ? err.message : 'Widerruf fehlgeschlagen.');
+    } finally {
+      setWithdrawing(false);
+    }
+  };
+
+  const selectedCategoryIds = primaryCategory ? [primaryCategory, ...secondaryCategories] : [];
 
   return (
     <section
       id="ai-profile"
-      className="mb-8 rounded-3xl border border-geo-violet/30 bg-white p-6 sm:p-8 shadow-[0_20px_60px_rgba(91,70,240,0.08)]"
+      className="mb-8 space-y-6 rounded-[20px] border border-[#E4E1D8] bg-white p-6 shadow-[0_1px_2px_rgba(18,18,18,.06),0_8px_24px_rgba(18,18,18,.06)] sm:p-8"
     >
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <p className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.15em] text-geo-violet">
-            <Sparkles size={14} /> KI-Profil-Steckbrief für die Suche
-          </p>
-          <h2 className="mt-1 text-2xl font-bold text-ink">
-            Wofür dich Brands wirklich finden sollen
-          </h2>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-ink-soft">
-            Unsere KI wertet deine verlinkten Kanäle, Bilder und Profilangaben aus und erstellt einen konkreten Steckbrief.
-            Du kannst ihn hier jederzeit lesen, per Sprachnachricht oder Text korrigieren und erst nach deiner Freigabe für die Brand-Suche aktivieren.
-          </p>
-        </div>
-        <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${statusBadge.className}`}>
-          {statusBadge.label}
-        </span>
-      </div>
-
-      <div className="mt-5 flex flex-wrap items-center gap-3">
-        <button
-          type="button"
-          onClick={handleAnalyze}
-          disabled={analyzing || recording || refining}
-          className="inline-flex items-center gap-2 rounded-xl border border-geo-violet/40 bg-geo-violet/5 px-4 py-2.5 text-sm font-semibold text-geo-violet transition hover:bg-geo-violet/10 disabled:opacity-50"
-        >
-          <RefreshCw size={15} className={analyzing ? 'animate-spin' : ''} />
-          {analyzing
-            ? 'Kanäle werden analysiert …'
-            : summaryText
-              ? 'Kanäle neu analysieren'
-              : 'Jetzt Kanäle automatisch analysieren'}
-        </button>
-
-        {aiProfile?.sourceSnapshot?.imagesAnalyzed ? (
-          <span className="text-xs text-ink-soft">
-            Zuletzt ausgewertet: {aiProfile.sourceSnapshot.channelsChecked?.length || 0} Kanal-Quellen · {aiProfile.sourceSnapshot.imagesAnalyzed} Bilder
-          </span>
-        ) : null}
-      </div>
-
-      {/* Visual signals detected from channels */}
-      {aiProfile?.visualSignals && aiProfile.visualSignals.length > 0 && (
-        <div className="mt-5 rounded-2xl border border-hairline bg-surface p-4">
-          <p className="text-xs font-bold uppercase tracking-wider text-ink-soft">
-            Erkannte Kanal- &amp; Bildsignale
-          </p>
-          <div className="mt-2.5 flex flex-wrap gap-2">
-            {aiProfile.visualSignals.map((sig, idx) => (
-              <span
-                key={`${sig.signal}-${idx}`}
-                title={sig.evidence}
-                className="rounded-xl border border-hairline bg-white px-3 py-1.5 text-xs text-ink"
-              >
-                <strong className="font-semibold">{sig.signal}</strong>
-                {sig.evidence ? <span className="text-ink-soft"> · {sig.evidence}</span> : null}
-              </span>
-            ))}
+      {/* 20er-Kategorien-Auswahl (Spec 8.6: max 3, 1 Hauptkategorie) */}
+      <div className="rounded-2xl border border-[#E4E1D8] bg-[#F7F6F2] p-5">
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <div>
+            <p className="text-sm font-bold text-[#121212]">
+              Deine Kategorien (max. {MAX_CATEGORIES_PER_CREATOR}, erste ist Hauptkategorie)
+            </p>
+            <p className="mt-1 text-xs leading-5 text-[#5C5A55]">
+              {!categoriesConfirmed && suggestedCategories.length > 0
+                ? 'Wir haben deine bisherigen Themen auf unsere festen Kategorien zugeordnet. Prüfe sie kurz und bestätige deine Auswahl.'
+                : 'Marken filtern nach diesen 20 festen Kategorien. Wähle zuerst deine wichtigste Hauptkategorie.'}
+            </p>
           </div>
-        </div>
-      )}
-
-      {/* Voice & Text refinement bar (MediaRecorder — works on iOS Safari, Android & Desktop) */}
-      <div className="mt-6 rounded-2xl border border-hairline bg-surface/70 p-4 sm:p-5">
-        <p className="text-sm font-semibold text-ink">
-          Per Sprache oder Kurznachricht ergänzen &amp; korrigieren
-        </p>
-        <p className="mt-1 text-xs leading-5 text-ink-soft">
-          Beispiel: „Ergänze bitte, dass ich an meinem BMW E36 schraube, einen Golden Retriever habe und lieber Tech- als Beauty-Videos mache.“
-        </p>
-
-        <div className="mt-3 flex flex-wrap items-center gap-3">
-          {!recording ? (
-            <button
-              type="button"
-              onClick={startVoiceRecording}
-              disabled={refining || analyzing}
-              className="inline-flex items-center gap-2 rounded-xl bg-ink px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-geo-violet disabled:opacity-50"
-            >
-              <Mic size={16} /> Sprachnachricht aufnehmen (max. 60s)
-            </button>
-          ) : (
-            <div className="flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                onClick={() => stopVoiceRecording(false)}
-                className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-red-700"
-              >
-                <Square size={14} /> Aufnahme stoppen &amp; übernehmen ({formatTimer(recordingSeconds)} / 01:00)
-              </button>
-              <button
-                type="button"
-                onClick={() => stopVoiceRecording(true)}
-                className="inline-flex items-center gap-1 rounded-xl border border-hairline bg-white px-3 py-2.5 text-xs font-semibold text-ink-soft hover:bg-surface"
-              >
-                <X size={14} /> Abbrechen
-              </button>
-            </div>
-          )}
-          {refining && (
-            <span className="text-xs font-medium text-geo-violet">
-              KI arbeitet deine Ergänzung ein …
+          {categoriesConfirmed && (
+            <span className="rounded-full bg-[#C8F04B] px-2.5 py-0.5 text-xs font-bold text-[#121212]">
+              Bestätigt
             </span>
           )}
         </div>
 
-        <div className="mt-3 flex flex-col gap-2 sm:flex-row">
-          <input
-            type="text"
-            value={instructionText}
-            onChange={(e) => setInstructionText(e.target.value)}
-            maxLength={1000}
-            disabled={refining || recording}
-            placeholder="Oder tippe hier kurz deine Ergänzung / Korrektur ein …"
-            className="flex-1 rounded-xl border border-hairline bg-white px-4 py-2.5 text-sm text-ink outline-none focus:border-geo-violet focus:ring-4 focus:ring-geo-violet/10"
-          />
-          <button
-            type="button"
-            disabled={!instructionText.trim() || refining || recording}
-            onClick={() => void submitVoiceOrText({ instruction: instructionText.trim() })}
-            className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-hairline bg-white px-4 py-2.5 text-sm font-semibold text-ink transition hover:border-geo-violet hover:text-geo-violet disabled:opacity-50"
-          >
-            <Wand2 size={15} /> Mit KI einarbeiten
-          </button>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {CREATOR_TAXONOMY.map((cat) => {
+            const isPrimary = primaryCategory === cat.id;
+            const isSecondary = secondaryCategories.includes(cat.id);
+            const active = isPrimary || isSecondary;
+            return (
+              <button
+                key={cat.id}
+                type="button"
+                aria-pressed={active}
+                onClick={() => handleToggleCategory(cat.id)}
+                className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${
+                  isPrimary
+                    ? 'border-[#121212] bg-[#121212] text-[#F7F6F2]'
+                    : isSecondary
+                      ? 'border-[#6C2BD9] bg-[#EFE8FD] text-[#121212]'
+                      : 'border-[#E4E1D8] bg-white text-[#121212] hover:border-[#121212]'
+                }`}
+              >
+                {cat.label}
+                {isPrimary ? ' (Hauptthema)' : ''}
+              </button>
+            );
+          })}
         </div>
 
-        {transcript && (
-          <p className="mt-3 rounded-xl bg-white px-3 py-2 text-xs leading-5 text-ink-soft">
-            <strong className="text-ink">Letzte Ergänzung:</strong> „{transcript}“
-            {changesNote ? <span className="block mt-1 text-geo-violet">{changesNote}</span> : null}
-          </p>
-        )}
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+          <span className="text-xs text-[#5C5A55]">
+            Ausgewählt ({selectedCategoryIds.length}/{MAX_CATEGORIES_PER_CREATOR}):{' '}
+            <strong className="text-[#121212]">
+              {selectedCategoryIds.length ? selectedCategoryIds.map(getCategoryLabel).join(', ') : 'noch keine'}
+            </strong>
+          </span>
+          <button
+            type="button"
+            disabled={!primaryCategory || savingCategories}
+            onClick={handleSaveCategories}
+            className="inline-flex min-h-[40px] items-center rounded-xl bg-[#121212] px-4 text-xs font-semibold text-[#F7F6F2] transition-opacity hover:opacity-90 disabled:opacity-50"
+          >
+            {savingCategories ? 'Wird gespeichert ...' : 'Kategorien bestätigen'}
+          </button>
+        </div>
       </div>
 
-      {/* Editable summary + niche chips */}
-      <div className="mt-6 space-y-4">
-        <label className="block">
-          <span className="mb-2 block text-sm font-semibold text-ink">
-            Deine Profilzusammenfassung (direkt bearbeitbar)
-          </span>
-          <textarea
-            value={summaryText}
-            onChange={(e) => setSummaryText(e.target.value)}
-            rows={5}
-            maxLength={1500}
-            placeholder="Klicke oben auf „Jetzt Kanäle automatisch analysieren“ oder beschreibe per Sprache/Text kurz, welche Themen, Produkte, Settings und Stärken dich auszeichnen …"
-            className="w-full rounded-xl border border-hairline bg-white px-4 py-3 text-sm leading-6 text-ink outline-none transition focus:border-geo-violet focus:ring-4 focus:ring-geo-violet/10"
-          />
-        </label>
-
-        <div>
-          <span className="mb-2 block text-sm font-semibold text-ink">
-            Erkannte &amp; bestätigte Nischen-Tags
-          </span>
-          <div className="flex flex-wrap gap-2">
-            {niches.map((niche) => (
-              <span
-                key={niche}
-                className="inline-flex items-center gap-1.5 rounded-full border border-geo-violet/30 bg-geo-violet/5 px-3 py-1 text-xs font-semibold text-geo-violet"
-              >
-                {niche}
-                <button
-                  type="button"
-                  aria-label={`${niche} entfernen`}
-                  onClick={() => handleRemoveNiche(niche)}
-                  className="rounded-full p-0.5 hover:bg-geo-violet/15"
-                >
-                  <X size={12} />
-                </button>
-              </span>
-            ))}
+      {/* Schritt 1: Explizites Opt-in (Checkbox NICHT vorausgewaehlt) */}
+      {showOptInCard ? (
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 text-xs font-semibold text-[#6C2BD9]">
+            <Sparkles size={15} aria-hidden="true" />
+            <span>KI-Profiltext (optional)</span>
           </div>
-          <div className="mt-2.5 flex gap-2">
+          <h2 className="text-2xl font-bold tracking-tight text-[#121212]">
+            Soll unsere KI dein Profil schreiben?
+          </h2>
+          <p className="max-w-2xl text-sm leading-6 text-[#5C5A55]">
+            Wir schauen uns deine letzten öffentlichen Videos an und machen daraus einen kurzen Profiltext. Du liest ihn, änderst, was nicht passt, und gibst ihn frei. Erst dann sehen Marken ihn.
+          </p>
+
+          <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-[#E4E1D8] bg-[#F7F6F2] p-4">
             <input
-              type="text"
-              value={newNicheInput}
-              onChange={(e) => setNewNicheInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  handleAddNiche();
-                }
+              type="checkbox"
+              checked={consentChecked}
+              onChange={(e) => {
+                setConsentChecked(e.target.checked);
+                if (errorMessage) setErrorMessage('');
               }}
-              maxLength={60}
-              placeholder="Nische hinzufügen (z. B. Autopflege, Oldtimer, Camping) …"
-              className="flex-1 rounded-xl border border-hairline bg-white px-3.5 py-2 text-sm text-ink outline-none focus:border-geo-violet"
+              className="mt-0.5 h-4 w-4 shrink-0 rounded border-[#E4E1D8] accent-[#121212]"
             />
+            <span className="text-xs leading-5 text-[#121212]">
+              Ja, UGC VZ darf meine öffentlich verlinkten Videos und Profilangaben automatisiert auswerten und einen Entwurf für mein Profil erstellen. Keine Gesichtserkennung, keine Schätzung sensibler Merkmale.
+            </span>
+          </label>
+
+          <div className="flex flex-wrap items-center gap-3">
             <button
               type="button"
-              onClick={handleAddNiche}
-              className="rounded-xl border border-hairline bg-surface px-4 py-2 text-xs font-semibold text-ink hover:border-geo-violet"
+              disabled={!consentChecked || analyzing}
+              onClick={() => void handleAnalyze(true)}
+              className="inline-flex min-h-[48px] items-center gap-2 rounded-xl bg-[#121212] px-5 text-sm font-semibold text-[#F7F6F2] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              + Hinzufügen
+              {analyzing ? 'Videos werden analysiert ...' : 'Ja, mach mal'}
+            </button>
+            <button
+              type="button"
+              onClick={() => setManualMode(true)}
+              className="inline-flex min-h-[48px] items-center rounded-xl border border-[#E4E1D8] bg-white px-5 text-sm font-semibold text-[#121212] transition-colors hover:border-[#121212]"
+            >
+              Lieber selbst schreiben
+            </button>
+          </div>
+
+          <p className="text-xs leading-5 text-[#5C5A55]">
+            Wir nutzen nur deine öffentlichen Inhalte. Du kannst das jederzeit in den Einstellungen widerrufen. Mehr in der{' '}
+            <Link href="/datenschutz" className="font-semibold text-[#121212] underline underline-offset-2">
+              Datenschutzerklärung
+            </Link>.
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-5">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#6C2BD9]">
+                <Sparkles size={14} aria-hidden="true" />
+                <span>Von KI vorgeschlagen, von dir geprüft</span>
+              </p>
+              <h2 className="mt-1 text-2xl font-bold tracking-tight text-[#121212]">
+                So würden wir dich beschreiben. Stimmt das?
+              </h2>
+            </div>
+            <span
+              className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                aiProfile?.status === 'approved'
+                  ? 'bg-[#C8F04B] text-[#121212]'
+                  : 'bg-[#EFE8FD] text-[#6C2BD9]'
+              }`}
+            >
+              {aiProfile?.status === 'approved' ? 'Freigegeben & aktiv in der Suche' : 'Entwurf (noch nicht öffentlich)'}
+            </span>
+          </div>
+
+          {hasConsent && (
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                onClick={() => void handleAnalyze(true)}
+                disabled={analyzing || recording || refining}
+                className="inline-flex min-h-[40px] items-center gap-2 rounded-xl border border-[#E4E1D8] bg-[#F7F6F2] px-4 text-xs font-semibold text-[#121212] transition-colors hover:border-[#121212] disabled:opacity-50"
+              >
+                <RefreshCw size={14} className={analyzing ? 'animate-spin' : ''} aria-hidden="true" />
+                {analyzing ? 'Videos werden analysiert ...' : 'Kanäle neu analysieren'}
+              </button>
+              <button
+                type="button"
+                onClick={() => void handleWithdraw()}
+                disabled={withdrawing || analyzing || approving}
+                className="inline-flex min-h-[40px] items-center gap-1.5 rounded-xl border border-[#D93025]/30 bg-white px-4 text-xs font-semibold text-[#D93025] transition-colors hover:bg-[#FEF2F2] disabled:opacity-50"
+              >
+                <Trash2 size={14} aria-hidden="true" />
+                {withdrawing ? 'Wird gelöscht ...' : 'Einwilligung widerrufen & KI-Daten löschen'}
+              </button>
+            </div>
+          )}
+
+          {/* Vorher / Nachher Diff nach Sprach- oder Text-Aenderung */}
+          {previousSummary && previousSummary !== summaryText && (
+            <div className="grid gap-3 rounded-2xl border border-[#E4E1D8] bg-[#F7F6F2] p-4 sm:grid-cols-2">
+              <div>
+                <p className="text-xs font-semibold text-[#5C5A55]">Vorher</p>
+                <p className="mt-1 text-xs leading-5 text-[#5C5A55] line-through">{previousSummary}</p>
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-[#1F9D55]">Nachher (Entwurf)</p>
+                <p className="mt-1 text-xs leading-5 text-[#121212]">{summaryText}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Sprachnachricht & Text-Korrektur */}
+          <div className="rounded-2xl border border-[#E4E1D8] bg-[#F7F6F2] p-4 sm:p-5">
+            <p className="text-sm font-semibold text-[#121212]">Per Sprachnachricht ergänzen oder Text ändern</p>
+            <p className="mt-1 text-xs leading-5 text-[#5C5A55]">
+              Sag einfach, was fehlt. Zum Beispiel: „Ich mache auch viel mit Autos und Werkzeug.“
+            </p>
+
+            <div className="mt-3 flex flex-wrap items-center gap-3">
+              {!recording ? (
+                <button
+                  type="button"
+                  onClick={startVoiceRecording}
+                  disabled={refining || analyzing}
+                  className="inline-flex min-h-[44px] items-center gap-2 rounded-xl bg-[#121212] px-4 text-sm font-semibold text-[#F7F6F2] transition-opacity hover:opacity-90 disabled:opacity-50"
+                >
+                  <Mic size={16} aria-hidden="true" /> Per Sprachnachricht ergänzen
+                </button>
+              ) : (
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => stopVoiceRecording(false)}
+                    className="inline-flex min-h-[44px] items-center gap-2 rounded-xl bg-[#D93025] px-4 text-sm font-semibold text-white"
+                  >
+                    <Square size={14} aria-hidden="true" /> Stoppen & übernehmen ({formatTimer(recordingSeconds)})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => stopVoiceRecording(true)}
+                    className="inline-flex min-h-[44px] items-center gap-1 rounded-xl border border-[#E4E1D8] bg-white px-3 text-xs font-semibold text-[#5C5A55]"
+                  >
+                    <X size={14} aria-hidden="true" /> Abbrechen
+                  </button>
+                </div>
+              )}
+              {refining && <span className="text-xs font-medium text-[#6C2BD9]">Änderung wird eingearbeitet ...</span>}
+            </div>
+
+            <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+              <input
+                type="text"
+                value={instructionText}
+                onChange={(e) => setInstructionText(e.target.value)}
+                maxLength={1000}
+                disabled={refining || recording}
+                placeholder="Oder tippe hier, was ergänzt oder geändert werden soll ..."
+                className="min-h-[44px] flex-1 rounded-xl border border-[#E4E1D8] bg-white px-4 text-sm text-[#121212] outline-none focus:border-[#6C2BD9]"
+              />
+              <button
+                type="button"
+                disabled={!instructionText.trim() || refining || recording}
+                onClick={() => void submitVoiceOrText({ instruction: instructionText.trim() })}
+                className="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl border border-[#E4E1D8] bg-white px-4 text-sm font-semibold text-[#121212] transition-colors hover:border-[#121212] disabled:opacity-50"
+              >
+                <Wand2 size={15} aria-hidden="true" /> Text ändern
+              </button>
+            </div>
+
+            {transcript && (
+              <p className="mt-3 rounded-xl bg-white px-3 py-2 text-xs leading-5 text-[#5C5A55]">
+                <strong className="text-[#121212]">Letzte Ergänzung:</strong> „{transcript}“
+                {changesNote ? <span className="mt-1 block text-[#6C2BD9]">{changesNote}</span> : null}
+              </p>
+            )}
+          </div>
+
+          {/* Bearbeitbarer Profiltext + Tags */}
+          <div className="space-y-4">
+            <label className="block">
+              <span className="mb-1.5 block text-sm font-semibold text-[#121212]">
+                Dein Profiltext (60 bis 90 Wörter empfohlen, direkt bearbeitbar)
+              </span>
+              <textarea
+                value={summaryText}
+                onChange={(e) => setSummaryText(e.target.value)}
+                rows={4}
+                maxLength={1500}
+                placeholder="Beschreibe kurz deine Schwerpunkte, Formate und Produkte, für die du Content drehst ..."
+                className="w-full rounded-xl border border-[#E4E1D8] bg-white px-4 py-3 text-sm leading-6 text-[#121212] outline-none focus:border-[#6C2BD9] focus:ring-4 focus:ring-[#6C2BD9]/15"
+              />
+            </label>
+
+            <div>
+              <span className="mb-2 block text-sm font-semibold text-[#121212]">Schlagwörter & Unterthemen</span>
+              <div className="flex flex-wrap gap-2">
+                {niches.map((niche) => (
+                  <span
+                    key={niche}
+                    className="inline-flex items-center gap-1.5 rounded-full bg-[#EFE8FD] px-3 py-1 text-xs font-semibold text-[#121212]"
+                  >
+                    {niche}
+                    <button
+                      type="button"
+                      aria-label={`${niche} entfernen`}
+                      onClick={() => handleRemoveNiche(niche)}
+                      className="rounded-full p-0.5 hover:bg-[#6C2BD9]/15"
+                    >
+                      <X size={12} aria-hidden="true" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+              <div className="mt-2.5 flex gap-2">
+                <input
+                  type="text"
+                  value={newNicheInput}
+                  onChange={(e) => setNewNicheInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddNiche();
+                    }
+                  }}
+                  maxLength={60}
+                  placeholder="Schlagwort hinzufügen (z. B. Autopflege, Camping) ..."
+                  className="min-h-[42px] flex-1 rounded-xl border border-[#E4E1D8] bg-white px-3.5 text-sm text-[#121212] outline-none focus:border-[#6C2BD9]"
+                />
+                <button
+                  type="button"
+                  onClick={handleAddNiche}
+                  className="min-h-[42px] rounded-xl border border-[#E4E1D8] bg-[#F7F6F2] px-4 text-xs font-semibold text-[#121212] hover:border-[#121212]"
+                >
+                  Hinzufügen
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-between gap-4 border-t border-[#E4E1D8] pt-5">
+            <p className="text-xs leading-5 text-[#5C5A55]">
+              Nichts geht ohne deine Freigabe online. Du kannst Text und Einwilligung jederzeit ändern oder löschen.
+            </p>
+            <button
+              type="button"
+              onClick={handleApprove}
+              disabled={approving || summaryText.trim().length < 20}
+              className="inline-flex min-h-[48px] items-center gap-2 rounded-xl bg-[#121212] px-6 text-sm font-semibold text-[#F7F6F2] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <Check size={16} aria-hidden="true" />
+              {approving ? 'Wird freigegeben ...' : 'Passt, freigeben'}
             </button>
           </div>
         </div>
-      </div>
+      )}
 
       {errorMessage && (
-        <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">
+        <div className="rounded-xl border border-[#D93025]/25 bg-[#FEF2F2] px-4 py-3 text-sm text-[#B42318]" role="alert">
           {errorMessage}
         </div>
       )}
       {statusMessage && (
-        <div className="mt-4 rounded-xl border border-geo-green/60 bg-geo-green/15 px-4 py-3 text-sm text-ink" role="status">
+        <div className="rounded-xl border border-[#1F9D55]/30 bg-[#edf5e5] px-4 py-3 text-sm text-[#121212]" role="status">
           {statusMessage}
         </div>
       )}
-
-      <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-hairline pt-5">
-        <p className="text-xs leading-5 text-ink-soft">
-          Nur deine freigegebene Fassung wird in der Brand-Suche genutzt. Du kannst sie jederzeit anpassen.
-        </p>
-        <button
-          type="button"
-          onClick={handleApprove}
-          disabled={approving || summaryText.trim().length < 20}
-          className="inline-flex items-center gap-2 rounded-xl bg-geo-violet px-5 py-3 text-sm font-semibold text-white transition hover:bg-geo-violet-soft disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          <Check size={16} />
-          {approving ? 'Wird freigegeben …' : 'Für die Suche übernehmen & freigeben'}
-        </button>
-      </div>
     </section>
   );
 }

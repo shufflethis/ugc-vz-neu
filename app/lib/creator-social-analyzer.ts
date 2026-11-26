@@ -8,10 +8,24 @@ import {
   resolveChatModels,
   transcribeAudioWithOpenAI,
 } from './ai-provider';
-import { sanitizePublicSearchSnippet, type SqlClient } from './search-index';
+import { sanitizePublicSearchSnippet, upsertCreatorSearchIndex, type SqlClient } from './search-index';
 import { extractSocialHandles } from './social-avatar';
 
-export type AiProfileStatus = 'pending' | 'analyzing' | 'draft_ready' | 'approved' | 'failed';
+export type AiProfileStatus =
+  | 'pending'
+  | 'analyzing'
+  | 'draft_ready'
+  | 'approved'
+  | 'rejected'
+  | 'withdrawn'
+  | 'failed';
+
+export class AiConsentRequiredError extends Error {
+  constructor(message = 'Für die KI-Profilanalyse ist zuerst deine ausdrückliche Einwilligung erforderlich.') {
+    super(message);
+    this.name = 'AiConsentRequiredError';
+  }
+}
 
 export type VisualSignal = {
   signal: string;
@@ -41,6 +55,10 @@ export type CreatorAiProfileRecord = {
     model?: string;
   };
   creatorVoiceTranscript: string;
+  consentAt: string | null;
+  withdrawnAt: string | null;
+  nextRefreshAt: string | null;
+  rawExpiresAt: string | null;
   analyzedAt: string | null;
   approvedAt: string | null;
   lastError: string | null;
@@ -509,22 +527,24 @@ Deine Aufgabe: Fasse ein Creator-Profil + öffentliche Kanal-Infos + Bilder so z
 
 Antworte AUSSCHLIESSLICH mit validem JSON in diesem Format:
 {
-  "draft_summary": "4-5 sachliche, konkrete Sätze auf Deutsch in der 3. Person oder neutralem Steckbrief-Stil (ohne Werbefloskeln). Nenne echte Nischen, konkrete Themen/Subthemen, typische Settings/Kontexte (z. B. Auto/Werkstatt, Küche, Haustier, Familie, Outdoor, Homeoffice) und Content-Formate.",
+  "draft_summary": "60 bis 90 Wörter auf Deutsch, sachlich und konkret (ohne Werbefloskeln, ohne Gedankenstriche). Nenne echte Nischen, konkrete Themen/Subthemen, typische Settings (z. B. Auto/Werkstatt, Küche, Haustier, Familie, Outdoor, Homeoffice) und Content-Formate.",
   "inferred_niches": ["Konkrete Nische 1", "Subnische 2", "..."],
   "visual_signals": [
-    { "signal": "Konkretes Merkmal (z. B. Fahrzeug/Garage sichtbar)", "category": "automotive", "evidence": "Kurzbeleg aus Bild/Bio/Profil" }
+    { "signal": "Konkretes Merkmal (z. B. Fahrzeug/Garage sichtbar)", "category": "auto_mobilitaet", "evidence": "Kurzbeleg aus Bild/Bio/Profil" }
   ],
   "content_style": {
-    "formats": ["Produktdemo", "Talking-Head"],
+    "formats": ["talking_head", "tutorial", "unboxing"],
     "tone": "z. B. ruhig, erklärend, humorvoll",
     "setting": "z. B. Alltag zu Hause, Outdoor, Werkstatt",
-    "productionQuality": "z. B. natürliches Tageslicht, Smartphone-UGC"
+    "productionQuality": "basic | good | high"
   }
 }
 
-STRENGE ANTI-HALLUZINATIONS-REGELN:
+STRENGE ANTI-HALLUZINATIONS- UND DATENSCHUTZ-REGELN (Spec 8.6):
 - Nenne NUR Fakten, Nischen und visuelle Signale, die in den bereitgestellten Texten oder Bildern tatsächlich vorkommen!
 - Erfinde NIEMALS Hobbys, Autos, Haustiere, Kinder, Berufe oder Marken.
+- VERBOTEN: Keine Gesichtserkennung! Schätze NIEMALS Alter, ethnische Herkunft, Gesundheit, Religion, politische Meinung oder andere sensible Merkmale!
+- Werte NIEMALS Kommentare oder Daten Dritter aus.
 - Wenn die Datenlage dünn ist, bleibe bewusst knapp und faktisch bei den bekannten Profilangaben.
 - Übernimm NIEMALS E-Mail-Adressen, Telefonnummern oder private Wohnadressen.`,
           },
@@ -681,16 +701,31 @@ export async function loadCreatorAiProfile(
   creatorId: string,
 ): Promise<CreatorAiProfileRecord | null> {
   try {
-    const rows = await sql.query(
-      `SELECT
-         status, draft_summary, approved_summary, inferred_niches, approved_niches,
-         visual_signals, content_style, source_snapshot, creator_voice_transcript,
-         analyzed_at, approved_at, last_error
-       FROM creator_ai_profiles
-       WHERE creator_id = $1
-       LIMIT 1`,
-      [creatorId],
-    );
+    let rows: any[];
+    try {
+      rows = await sql.query(
+        `SELECT
+           status, draft_summary, approved_summary, inferred_niches, approved_niches,
+           visual_signals, content_style, source_snapshot, creator_voice_transcript,
+           consent_at, withdrawn_at, next_refresh_at, raw_expires_at,
+           analyzed_at, approved_at, last_error
+         FROM creator_ai_profiles
+         WHERE creator_id = $1
+         LIMIT 1`,
+        [creatorId],
+      );
+    } catch {
+      rows = await sql.query(
+        `SELECT
+           status, draft_summary, approved_summary, inferred_niches, approved_niches,
+           visual_signals, content_style, source_snapshot, creator_voice_transcript,
+           analyzed_at, approved_at, last_error
+         FROM creator_ai_profiles
+         WHERE creator_id = $1
+         LIMIT 1`,
+        [creatorId],
+      );
+    }
     const row = rows[0];
     if (!row) return null;
     return {
@@ -710,6 +745,10 @@ export async function loadCreatorAiProfile(
         : { formats: [], tone: '', setting: '', productionQuality: '' },
       sourceSnapshot: row.source_snapshot && typeof row.source_snapshot === 'object' ? row.source_snapshot : {},
       creatorVoiceTranscript: String(row.creator_voice_transcript || ''),
+      consentAt: row.consent_at ? new Date(row.consent_at).toISOString() : null,
+      withdrawnAt: row.withdrawn_at ? new Date(row.withdrawn_at).toISOString() : null,
+      nextRefreshAt: row.next_refresh_at ? new Date(row.next_refresh_at).toISOString() : null,
+      rawExpiresAt: row.raw_expires_at ? new Date(row.raw_expires_at).toISOString() : null,
       analyzedAt: row.analyzed_at ? new Date(row.analyzed_at).toISOString() : null,
       approvedAt: row.approved_at ? new Date(row.approved_at).toISOString() : null,
       lastError: row.last_error ? String(row.last_error) : null,
@@ -720,33 +759,151 @@ export async function loadCreatorAiProfile(
   }
 }
 
+export async function recordCreatorAiConsent(sql: SqlClient, creatorId: string): Promise<void> {
+  try {
+    await sql.query(
+      `INSERT INTO creator_ai_profiles (creator_id, status, consent_at, withdrawn_at, updated_at)
+       VALUES ($1, 'pending', now(), NULL, now())
+       ON CONFLICT (creator_id) DO UPDATE SET
+         consent_at = COALESCE(creator_ai_profiles.consent_at, now()),
+         withdrawn_at = NULL,
+         status = CASE
+           WHEN creator_ai_profiles.status IN ('withdrawn', 'rejected') THEN 'pending'
+           ELSE creator_ai_profiles.status
+         END,
+         updated_at = now()`,
+      [creatorId],
+    );
+  } catch (err: any) {
+    if (err?.code === '42703') {
+      await queueCreatorAiAnalysis(sql, creatorId);
+      return;
+    }
+    throw err;
+  }
+}
+
 /**
- * Queues a creator profile for asynchronous AI channel analysis.
+ * Sofortiger Widerruf nach Spec 8.6:
+ * Loescht KI-Zusammenfassung, Rohdaten, Visual-Signale und KI-Embedding sofort
+ * und baut den Suchindex rein aus den eigenen Creator-Angaben neu auf.
+ */
+export async function withdrawCreatorAiProfile(
+  sql: SqlClient,
+  creatorId: string,
+): Promise<{ withdrawn: boolean; searchIndexRebuilt: boolean }> {
+  try {
+    await sql.query(
+      `INSERT INTO creator_ai_profiles (
+         creator_id, status, draft_summary, approved_summary,
+         inferred_niches, approved_niches, visual_signals, content_style,
+         source_snapshot, source_hash, creator_voice_transcript,
+         consent_at, withdrawn_at, approved_at, next_refresh_at, raw_expires_at,
+         last_error, updated_at
+       ) VALUES (
+         $1, 'withdrawn', NULL, NULL,
+         '{}'::text[], '{}'::text[], '[]'::jsonb, '{}'::jsonb,
+         '{}'::jsonb, NULL, NULL,
+         NULL, now(), NULL, NULL, NULL,
+         NULL, now()
+       )
+       ON CONFLICT (creator_id) DO UPDATE SET
+         status = 'withdrawn',
+         draft_summary = NULL,
+         approved_summary = NULL,
+         inferred_niches = '{}'::text[],
+         approved_niches = '{}'::text[],
+         visual_signals = '[]'::jsonb,
+         content_style = '{}'::jsonb,
+         source_snapshot = '{}'::jsonb,
+         source_hash = NULL,
+         creator_voice_transcript = NULL,
+         consent_at = NULL,
+         withdrawn_at = now(),
+         approved_at = NULL,
+         next_refresh_at = NULL,
+         raw_expires_at = NULL,
+         last_error = NULL,
+         updated_at = now()`,
+      [creatorId],
+    );
+  } catch (err: any) {
+    // Fallback fuer Umgebungen vor Migration 023
+    if (err?.code !== '42703' && err?.code !== '23514') throw err;
+    await sql.query(
+      `DELETE FROM creator_ai_profiles WHERE creator_id = $1`,
+      [creatorId],
+    );
+  }
+
+  // Embedding sofort loeschen und Suchindex nur noch aus eigenen Angaben neu aufbauen
+  try {
+    await sql.query(
+      `UPDATE creator_search_index
+       SET embedding_values = NULL, document_hash = '', updated_at = now()
+       WHERE creator_id = $1`,
+      [creatorId],
+    );
+  } catch {
+    // creator_search_index optional
+  }
+
+  const rebuilt = await upsertCreatorSearchIndex(sql, creatorId, { skipEmbedding: true })
+    .then((r) => r.updated)
+    .catch(() => false);
+
+  return { withdrawn: true, searchIndexRebuilt: rebuilt };
+}
+
+/** Loescht abgelaufene Rohdaten (Standbilder/Signale/Transkripte > 30 Tage) nach Spec 8.6. */
+export async function purgeExpiredAiRawData(sql: SqlClient): Promise<number> {
+  try {
+    const rows = await sql.query(
+      `UPDATE creator_ai_profiles
+       SET visual_signals = '[]'::jsonb,
+           source_snapshot = '{}'::jsonb,
+           creator_voice_transcript = NULL,
+           raw_expires_at = NULL,
+           updated_at = now()
+       WHERE raw_expires_at IS NOT NULL
+         AND raw_expires_at <= now()
+       RETURNING creator_id`,
+    );
+    return rows.length;
+  } catch {
+    return 0;
+  }
+}
+
+/**
+ * Queues a creator profile for asynchronous AI channel analysis ONLY if consent was already granted.
  * Deliberately preserves any existing approved_summary so search quality never regresses during re-analysis.
  */
 export async function queueCreatorAiAnalysis(sql: SqlClient, creatorId: string): Promise<void> {
   try {
     await sql.query(
-      `INSERT INTO creator_ai_profiles (creator_id, status, updated_at)
-       VALUES ($1, 'pending', now())
-       ON CONFLICT (creator_id) DO UPDATE SET
-         status = CASE
-           WHEN creator_ai_profiles.status = 'approved' THEN 'approved'
-           ELSE 'pending'
-         END,
-         updated_at = now()`,
+      `UPDATE creator_ai_profiles
+       SET status = CASE WHEN status = 'approved' THEN 'approved' ELSE 'pending' END,
+           updated_at = now()
+       WHERE creator_id = $1 AND consent_at IS NOT NULL AND status <> 'withdrawn'`,
       [creatorId],
     );
   } catch {
-    // Best-effort: never block registration or profile saves if migration 021 isn't applied yet.
+    // Best-effort: never block registration or profile saves if migration isn't applied yet.
   }
 }
 
 export async function runCreatorAiAnalysis(
   sql: SqlClient,
   creatorId: string,
-  options: { allowGeonode?: boolean; skipNetwork?: boolean; model?: string } = {},
+  options: { allowGeonode?: boolean; skipNetwork?: boolean; model?: string; requireConsent?: boolean } = {},
 ): Promise<CreatorAiProfileRecord> {
+  if (options.requireConsent !== false) {
+    const existingAi = await loadCreatorAiProfile(sql, creatorId);
+    if (!existingAi?.consentAt || existingAi.status === 'withdrawn') {
+      throw new AiConsentRequiredError();
+    }
+  }
   const rows = await sql.query(
     `SELECT
        p.id, p.public_id, p.display_name, p.stage_name, p.city, p.gender,
@@ -842,42 +999,84 @@ export async function runCreatorAiAnalysis(
       model: options.model || DEFAULT_ANALYZER_MODEL,
     };
 
-    await sql.query(
-      `INSERT INTO creator_ai_profiles (
-         creator_id, status, draft_summary, inferred_niches, visual_signals,
-         content_style, source_snapshot, source_hash, analyzed_at,
-         last_attempt_at, fail_count, last_error, updated_at
-       ) VALUES (
-         $1, 'draft_ready', $2, $3::text[], $4::jsonb,
-         $5::jsonb, $6::jsonb, $7, now(),
-         now(), 0, NULL, now()
-       )
-       ON CONFLICT (creator_id) DO UPDATE SET
-         status = CASE
-           WHEN creator_ai_profiles.status = 'approved' THEN 'approved'
-           ELSE 'draft_ready'
-         END,
-         draft_summary = EXCLUDED.draft_summary,
-         inferred_niches = EXCLUDED.inferred_niches,
-         visual_signals = EXCLUDED.visual_signals,
-         content_style = EXCLUDED.content_style,
-         source_snapshot = EXCLUDED.source_snapshot,
-         source_hash = EXCLUDED.source_hash,
-         analyzed_at = now(),
-         last_attempt_at = now(),
-         fail_count = 0,
-         last_error = NULL,
-         updated_at = now()`,
-      [
-        creatorId,
-        draft.draft_summary,
-        draft.inferred_niches,
-        JSON.stringify(draft.visual_signals),
-        JSON.stringify(draft.content_style),
-        JSON.stringify(sourceSnapshot),
-        sourceHash,
-      ],
-    );
+    try {
+      await sql.query(
+        `INSERT INTO creator_ai_profiles (
+           creator_id, status, draft_summary, inferred_niches, visual_signals,
+           content_style, source_snapshot, source_hash, analyzed_at,
+           raw_expires_at, next_refresh_at, last_attempt_at, fail_count, last_error, updated_at
+         ) VALUES (
+           $1, 'draft_ready', $2, $3::text[], $4::jsonb,
+           $5::jsonb, $6::jsonb, $7, now(),
+           now() + interval '30 days', now() + interval '90 days', now(), 0, NULL, now()
+         )
+         ON CONFLICT (creator_id) DO UPDATE SET
+           status = CASE
+             WHEN creator_ai_profiles.status = 'approved' THEN 'approved'
+             ELSE 'draft_ready'
+           END,
+           draft_summary = EXCLUDED.draft_summary,
+           inferred_niches = EXCLUDED.inferred_niches,
+           visual_signals = EXCLUDED.visual_signals,
+           content_style = EXCLUDED.content_style,
+           source_snapshot = EXCLUDED.source_snapshot,
+           source_hash = EXCLUDED.source_hash,
+           analyzed_at = now(),
+           raw_expires_at = now() + interval '30 days',
+           next_refresh_at = now() + interval '90 days',
+           last_attempt_at = now(),
+           fail_count = 0,
+           last_error = NULL,
+           updated_at = now()`,
+        [
+          creatorId,
+          draft.draft_summary,
+          draft.inferred_niches,
+          JSON.stringify(draft.visual_signals),
+          JSON.stringify(draft.content_style),
+          JSON.stringify(sourceSnapshot),
+          sourceHash,
+        ],
+      );
+    } catch (err: any) {
+      if (err?.code !== '42703') throw err;
+      await sql.query(
+        `INSERT INTO creator_ai_profiles (
+           creator_id, status, draft_summary, inferred_niches, visual_signals,
+           content_style, source_snapshot, source_hash, analyzed_at,
+           last_attempt_at, fail_count, last_error, updated_at
+         ) VALUES (
+           $1, 'draft_ready', $2, $3::text[], $4::jsonb,
+           $5::jsonb, $6::jsonb, $7, now(),
+           now(), 0, NULL, now()
+         )
+         ON CONFLICT (creator_id) DO UPDATE SET
+           status = CASE
+             WHEN creator_ai_profiles.status = 'approved' THEN 'approved'
+             ELSE 'draft_ready'
+           END,
+           draft_summary = EXCLUDED.draft_summary,
+           inferred_niches = EXCLUDED.inferred_niches,
+           visual_signals = EXCLUDED.visual_signals,
+           content_style = EXCLUDED.content_style,
+           source_snapshot = EXCLUDED.source_snapshot,
+           source_hash = EXCLUDED.source_hash,
+           analyzed_at = now(),
+           last_attempt_at = now(),
+           fail_count = 0,
+           last_error = NULL,
+           updated_at = now()`,
+        [
+          creatorId,
+          draft.draft_summary,
+          draft.inferred_niches,
+          JSON.stringify(draft.visual_signals),
+          JSON.stringify(draft.content_style),
+          JSON.stringify(sourceSnapshot),
+          sourceHash,
+        ],
+      );
+    }
 
     return (await loadCreatorAiProfile(sql, creatorId))!;
   } catch (error) {

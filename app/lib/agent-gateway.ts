@@ -2,6 +2,7 @@ import crypto from 'node:crypto';
 import { getDatabase, isDatabaseConfigured } from '@/app/lib/database';
 import { getInternalSearchToken } from '@/app/lib/internal-search-token';
 import { deriveVerificationLevel, VERIFICATION_LEVELS } from './agent-verification';
+import { CREATOR_STYLE_OPTIONS, CREATOR_TAXONOMY } from './creator-taxonomy';
 
 const CREATOR_PUBLIC_ID_RE = /^UGC-[A-F0-9]{10}$/;
 
@@ -65,6 +66,8 @@ type PublicCreatorResult = {
   networks: string[];
   priceRange: string;
   city: string;
+  categories?: string[];
+  matchReason?: string;
   humanVerification: { level: 0 | 1; name: string };
 };
 
@@ -103,6 +106,12 @@ export async function searchCreators(params: SearchCreatorsParams, ctx: SearchCr
     networks: creator.networks || [],
     priceRange: creator.priceRange || '',
     city: '',
+    ...(Array.isArray(creator.categories) && creator.categories.length
+      ? { categories: creator.categories.map(String) }
+      : {}),
+    ...(typeof creator.matchReason === 'string' && creator.matchReason
+      ? { matchReason: creator.matchReason }
+      : {}),
     humanVerification: { level: 0, name: VERIFICATION_LEVELS[0].name },
     __topics: '',
   }));
@@ -521,30 +530,32 @@ export async function getVocab() {
 
   const sql = getDatabase();
   const rows = await sql.query(
-    `SELECT topics, industries, city FROM creator_profiles WHERE status = 'active'`,
+    `SELECT city FROM creator_profiles WHERE status = 'active'`,
   );
 
-  const topicCounts = new Map<string, number>();
-  const industryCounts = new Map<string, number>();
   const cityCounts = new Map<string, number>();
 
   for (const row of rows as any[]) {
-    for (const topic of splitFreeText(row.topics)) {
-      topicCounts.set(topic, (topicCounts.get(topic) || 0) + 1);
-    }
-    for (const industry of splitFreeText(row.industries)) {
-      industryCounts.set(industry, (industryCounts.get(industry) || 0) + 1);
-    }
     const city = String(row.city || '').trim();
-    if (city) cityCounts.set(city, (cityCounts.get(city) || 0) + 1);
+    if (city && city.length >= 2 && city.length <= 50 && !/^(?:etc\.?|noch keine|\.{2,})$/i.test(city)) {
+      cityCounts.set(city, (cityCounts.get(city) || 0) + 1);
+    }
   }
 
+  const categories = CREATOR_TAXONOMY.map((cat) => ({
+    id: cat.id,
+    label: cat.label,
+    synonyms: cat.synonyms.slice(0, 12),
+  }));
+
   const data = {
-    topics: topN(topicCounts, 50),
-    industries: topN(industryCounts, 50),
+    categories,
+    topics: CREATOR_TAXONOMY.map((cat) => cat.label),
+    industries: CREATOR_TAXONOMY.map((cat) => cat.label),
+    styles: CREATOR_STYLE_OPTIONS.map((style) => ({ id: style.id, label: style.label })),
     cities: topN(cityCounts, 100),
     humanVerificationLevels: VERIFICATION_LEVELS,
-    pricing: 'kostenlos fuer Brands, Honorar direkt mit dem Creator vereinbart',
+    pricing: 'Konto kostenlos, kein Abo. 15 % Servicegebühr im Marken-Budget enthalten, 0 % für Creator. Details: https://ugc-vz.de/preise',
   };
 
   vocabCache = { data, expiresAt: now + VOCAB_TTL_MS };

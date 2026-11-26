@@ -2,7 +2,7 @@ import crypto from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { getDatabase, isDatabaseConfigured } from '@/app/lib/database';
 import { isAiProviderConfigured } from '@/app/lib/ai-provider';
-import { runCreatorAiAnalysis } from '@/app/lib/creator-social-analyzer';
+import { purgeExpiredAiRawData, runCreatorAiAnalysis } from '@/app/lib/creator-social-analyzer';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -31,14 +31,19 @@ async function handleCron(request: NextRequest) {
 
   try {
     const sql = getDatabase();
+    const purgedRawCount = await purgeExpiredAiRawData(sql);
+
+    // Nur Profile mit expliziter Einwilligung (consent_at IS NOT NULL) und ohne Widerruf auswerten!
     const candidates = await sql.query(
       `SELECT p.id, p.public_id
        FROM creator_profiles p
-       LEFT JOIN creator_ai_profiles ai ON ai.creator_id = p.id
+       JOIN creator_ai_profiles ai ON ai.creator_id = p.id
        WHERE p.status = 'active'
+         AND ai.consent_at IS NOT NULL
+         AND ai.status <> 'withdrawn'
          AND (
-           ai.creator_id IS NULL
-           OR ai.status = 'pending'
+           ai.status = 'pending'
+           OR (ai.status = 'approved' AND ai.next_refresh_at IS NOT NULL AND ai.next_refresh_at <= now())
            OR (
              ai.status = 'failed'
              AND ai.fail_count < 4
@@ -53,7 +58,7 @@ async function handleCron(request: NextRequest) {
     const processed: Array<{ publicId: string; ok: boolean; error?: string }> = [];
     for (const row of candidates) {
       try {
-        await runCreatorAiAnalysis(sql, row.id, { allowGeonode: false });
+        await runCreatorAiAnalysis(sql, row.id, { allowGeonode: false, requireConsent: true });
         processed.push({ publicId: String(row.public_id), ok: true });
       } catch (err) {
         processed.push({
@@ -66,6 +71,7 @@ async function handleCron(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
+      purgedRawCount,
       processedCount: processed.length,
       processed,
     });
