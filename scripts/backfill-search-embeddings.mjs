@@ -7,9 +7,9 @@ import { neon } from '@neondatabase/serverless';
 import dotenv from 'dotenv';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { resolveAiProvider, resolveEmbeddingModel } from '../app/lib/ai-provider.ts';
 import {
   buildCreatorSearchDocument,
-  DEFAULT_EMBEDDING_MODEL,
   embedTexts,
   hashSearchDocument,
 } from '../app/lib/search-index.ts';
@@ -36,7 +36,8 @@ const LIMIT = Number(args.limit) > 0 ? Number(args.limit) : 200;
 const BATCH_SIZE = Number(args['batch-size']) > 0 ? Math.min(Number(args['batch-size']), 50) : 20;
 const FORCE = args.force === true || args.force === 'true';
 const PUBLIC_ID = typeof args['public-id'] === 'string' ? args['public-id'] : null;
-const MODEL = process.env.SEARCH_EMBEDDING_MODEL || DEFAULT_EMBEDDING_MODEL;
+const RESOLVED_AI = resolveAiProvider();
+const MODEL = RESOLVED_AI ? resolveEmbeddingModel(RESOLVED_AI) : 'openai/text-embedding-3-small';
 
 async function main() {
   const rows = await sql.query(
@@ -128,7 +129,7 @@ async function main() {
 
   for (let i = 0; i < pending.length; i += BATCH_SIZE) {
     const batch = pending.slice(i, i + BATCH_SIZE);
-    const vectors = process.env.OPENROUTER_API_KEY
+    const vectors = RESOLVED_AI
       ? await embedTexts(batch.map((b) => b.documentText), { model: MODEL, timeoutMs: 20_000 })
       : batch.map(() => null);
 

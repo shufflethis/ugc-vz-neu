@@ -272,9 +272,10 @@ export const TOPIC_RULES: Record<string, TopicRule> = {
       'e-auto', 'e-autos', 'elektroauto', 'elektroautos', 'automotive',
       'automobil', 'automobile', 'mobilität', 'mobilitaet', 'e-mobilität',
       'tuning', 'motorsport', 'oldtimer', 'youngtimer', 'werkstatt',
-      'schrauber', 'fahrzeug', 'fahrzeuge', 'fahrzeugpflege', 'autopflege',
+      'schrauber', 'schrauben', 'fahrzeug', 'fahrzeuge', 'fahrzeugpflege', 'autopflege',
       'autohaus', 'autovermietung', 'gebrauchtwagen', 'neuwagen', 'sportwagen',
-      'motorrad', 'motorräder', 'biker', 'cabrio', 'wohnmobil', 'campervan',
+      'motorrad', 'motorräder', 'biker', 'enduro', 'offroad', 'motocross', 'elektro-cross',
+      'cabrio', 'wohnmobil', 'campervan', 'camper-ausbau', 'vanlife',
       'dashcam', 'felgen', 'reifen', 'wallbox', 'ladestation', 'führerschein',
       'carsharing', 'detailing', 'kfz-versicherung', 'kfz-pflege',
       'bmw', 'audi', 'mercedes', 'porsche', 'volkswagen', 'vw', 'tesla',
@@ -284,7 +285,7 @@ export const TOPIC_RULES: Record<string, TopicRule> = {
       'autopfleg', 'autohaus', 'autoteil', 'autowerk', 'autowäsch', 'autowaesch',
       'gebrauchtwagen', 'neuwagen', 'sportwagen', 'elektroauto', 'e-auto',
       'oldtimer', 'youngtimer', 'tuning', 'wohnmobil', 'carsharing', 'wallbox',
-      'werkstatt', 'schrauber',
+      'werkstatt', 'schrauber', 'enduro', 'offroad', 'motocross', 'camper-ausbau',
     ],
     // Match German "Auto..." compounds like Auto-Creator, Autoliebe, Autofahren,
     // while strictly excluding non-car words (automatisch, autonom, autor, autogramm, autark).
@@ -810,6 +811,68 @@ export function evaluateCreatorRelevance(
     relevanceScore += Math.min(matchedKeywords.length * 65, 260) + Math.round(kwRatio * 50);
   }
 
+  // Focus & Specialization adjustment:
+  // Strongly favor niche specialists whose primary topics/AI summary match the query over
+  // broad 12+ buzzword "Bauchladen" profiles (e.g. "Hauptgebiet: Beauty/Fashion ... Nebengebiet: Auto").
+  let isWeakSecondaryOnly = false;
+  if (hasThematicRequirement && hasThematicMatch) {
+    const primaryTopicsLower = (profile.topicsText.split('·')[0] || '').toLowerCase();
+    const aiConfirmedText = [profile.aiSummary || '', (profile.aiNiches || []).join(' ')].join(' ').toLowerCase();
+    const secondarySplit = primaryTopicsLower.split(/\bnebengebiet(?:e)?\s*:/i);
+    const mainAreaText = secondarySplit[0] || '';
+    const hasExplicitSecondarySection = secondarySplit.length > 1;
+
+    const matchesText = (text: string) =>
+      matchedTopics.some((t) => textMatchesTopic(text, t)) ||
+      matchedKeywords.some((kw) => textMatchesKeyword(text, kw));
+
+    const matchedInMainArea = matchesText(mainAreaText);
+    const matchedInAiSummary = aiConfirmedText ? matchesText(aiConfirmedText) : false;
+
+    // Count how many distinct non-lifestyle topic buckets the creator claims overall
+    const claimedBuckets = detectTopicsInText(profile.topicSearchText).filter((t) => t !== 'lifestyle').length;
+    const topicListCount = primaryTopicsLower
+      .split(/[,;\n/]+/)
+      .map((s) => s.trim())
+      .filter((s) => s.length >= 2).length;
+
+    if (matchedInAiSummary) {
+      relevanceScore += 60;
+    }
+
+    if (hasExplicitSecondarySection && !matchedInMainArea && !matchedInAiSummary) {
+      // Explicitly listed only under "Nebengebiete:" (e.g., Hauptgebiet Beauty/Fashion, Nebengebiet Automotive)
+      relevanceScore -= 95;
+      isWeakSecondaryOnly = true;
+    } else if (primaryTopicsLower && !matchedInMainArea && !matchedInAiSummary) {
+      // Mentioned only in special_traits / equipment (e.g., "ich habe ein eigenes Auto") or pet/child context
+      const matchedInDedicatedContext =
+        (analysis.topics.includes('family') && Boolean(profile.childrenContext) && matchesText(profile.childrenContext.toLowerCase())) ||
+        (analysis.topics.includes('pets') && Boolean(profile.petContext) && matchesText(profile.petContext.toLowerCase()));
+      if (!matchedInDedicatedContext) {
+        relevanceScore -= 65;
+      }
+    } else if (matchedInMainArea) {
+      // Check prominence: did the requested niche appear early in the creator's primary topics?
+      const firstThird = mainAreaText.slice(0, Math.max(45, Math.ceil(mainAreaText.length * 0.4)));
+      const isProminent = matchesText(firstThird);
+
+      if (claimedBuckets <= 4 && topicListCount <= 6) {
+        relevanceScore += 60;
+      } else if (claimedBuckets <= 6 && topicListCount <= 9) {
+        relevanceScore += 25;
+      } else if ((claimedBuckets >= 7 || topicListCount >= 10) && !isProminent && !matchedInAiSummary) {
+        // Broad 10+ topic list where the requested topic is buried near the end
+        relevanceScore -= 75;
+        isWeakSecondaryOnly = true;
+      }
+
+      if (isProminent) {
+        relevanceScore += 45;
+      }
+    }
+  }
+
   if (hasNonGenderCastingEvidence) {
     relevanceScore += 140;
   }
@@ -925,22 +988,26 @@ export function evaluateCreatorRelevance(
     };
   }
 
-  if (hasThematicRequirement && !hasThematicMatch) {
+  if (hasThematicRequirement && (!hasThematicMatch || isWeakSecondaryOnly)) {
+    const fallbackAsRelated = isWeakSecondaryOnly || hasRelatedThematicMatch;
+    const relatedLabel = isWeakSecondaryOnly
+      ? `Nebengebiet / breites Profil: ${matchedTopics.map(getTopicLabel).join(', ') || matchedKeywords.slice(0, 2).join(', ')}`
+      : hasRelatedThematicMatch
+        ? `Verwandter Bereich: ${matchedRelatedTopics.map(getTopicLabel).join(', ')}`
+        : undefined;
     return {
       matchedTopics,
       matchedKeywords,
       matchedRelatedTopics,
       hasThematicRequirement,
-      hasThematicMatch,
-      hasRelatedThematicMatch,
+      hasThematicMatch: false,
+      hasRelatedThematicMatch: fallbackAsRelated,
       relevanceScore,
       qualityScore,
       totalScore,
-      hardExcluded: !hasRelatedThematicMatch,
-      exclusionReason: hasRelatedThematicMatch ? undefined : 'relevance',
-      relatedReason: hasRelatedThematicMatch
-        ? `Verwandter Bereich: ${matchedRelatedTopics.map(getTopicLabel).join(', ')}`
-        : undefined,
+      hardExcluded: !fallbackAsRelated,
+      exclusionReason: fallbackAsRelated ? undefined : 'relevance',
+      relatedReason: relatedLabel,
     };
   }
 
@@ -955,6 +1022,9 @@ export function evaluateCreatorRelevance(
   }
   if (analysis.location && profile.locationLower.includes(analysis.location.toLowerCase())) {
     matchParts.push(`Region ${profile.location}`);
+  }
+  if (isWeakSecondaryOnly) {
+    matchParts.push('Nebengebiet / breites Profil');
   }
 
   return {

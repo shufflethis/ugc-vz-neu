@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { PGlite } from '@electric-sql/pglite';
 import { POST } from '../app/api/search/route';
 import { getDatabase } from '../app/lib/database';
+import { resolveAiProvider, resolveEmbeddingModel } from '../app/lib/ai-provider';
 import {
   analyzeQueryDeterministically,
   calculateTotalReach,
@@ -65,6 +66,16 @@ async function runUnitChecks() {
   const hierQuery = analyzeQueryDeterministically('Hier suche ich jemanden für Foto Content');
   assert.equal(hierQuery.topics.includes('pets'), false, '"hier" must not trigger pets');
   assert.equal(hierQuery.topics.includes('food'), false, '"foto" must not trigger food');
+
+  // 5. Dual AI provider resolution (OpenRouter sk-or- vs OpenAI sk-proj-)
+  const openRouterProv = resolveAiProvider('sk-or-v1-test123');
+  assert.equal(openRouterProv?.provider, 'openrouter');
+  assert.equal(resolveEmbeddingModel(openRouterProv!), 'openai/text-embedding-3-small');
+
+  const openAiProv = resolveAiProvider('sk-proj-test123');
+  assert.equal(openAiProv?.provider, 'openai');
+  assert.equal(openAiProv?.baseUrl, 'https://api.openai.com/v1');
+  assert.equal(resolveEmbeddingModel(openAiProv!), 'text-embedding-3-small');
 }
 
 async function runIntegrationChecks() {
@@ -114,6 +125,9 @@ async function runIntegrationChecks() {
         (gen_random_uuid(), 'UGC-AUTO000002', 'Jonas Mobil', 'Männlich', 1989, 'Köln',
          'E-Auto, Wallbox, Mobilität, Gebrauchtwagen', 'Automotive', 'Talking-Head, Testbericht', '350 €', 'YouTube: 12k', 12000,
          null, null, 70, 'active'),
+        (gen_random_uuid(), 'UGC-BAUCHLADEN1', 'Jana Multi', 'Weiblich', 1995, 'Berlin',
+         'Hauptgebiet: Fashion, Beauty, Skincare, Haircare, Makeup, Schmuck, Schuhe. Nebengebiete: Lifestyle, Fitness, Food, Automotive, Wellness', 'Fashion, Beauty', 'Reels, Unboxing', '250 €', 'Instagram: 200k', 200000,
+         null, null, 98, 'active'),
         (gen_random_uuid(), 'UGC-TRAVEL0001', 'Lukas Vanlife', 'Männlich', 1993, 'Hamburg',
          'Camping, Outdoor, Roadtrip', 'Reisen', 'Vlog, B-Roll', '200 €', 'Instagram: 15k', 15000,
          null, null, 75, 'active'),
@@ -155,18 +169,22 @@ async function runIntegrationChecks() {
       return res.json();
     }
 
-    // TEST 1: "Auto Creator" MUST return ONLY real Auto creators, ZERO Beauty/Skincare girls!
+    // TEST 1: "Auto Creator" MUST return ONLY dedicated Auto specialists in primary creators;
+    // pure Beauty/Skincare girls are excluded, and a Beauty creator who only lists Automotive under "Nebengebiete"
+    // is routed to alternatives (not primary creators!).
     const autoResult = await search({ query: 'Ich suche einen Auto Creator oder jemand der dazu passt' });
     const autoIds = autoResult.creators.map((c: any) => c.id);
-    assert.equal(autoIds.length, 2, `Expected 2 auto creators, got ${JSON.stringify(autoIds)}`);
+    assert.equal(autoIds.length, 2, `Expected 2 focused auto creators, got ${JSON.stringify(autoIds)}`);
     assert.ok(autoIds.includes('UGC-AUTO000001'));
     assert.ok(autoIds.includes('UGC-AUTO000002'));
     assert.equal(autoIds.includes('UGC-BEAUTY0001'), false, 'Carina Glow (Skincare) MUST NOT appear in Auto search');
     assert.equal(autoIds.includes('UGC-BEAUTY0002'), false, 'Carolin Style (Beauty) MUST NOT appear in Auto search');
-    // Alternatives may include adjacent Travel/Vanlife, NEVER Beauty!
+    assert.equal(autoIds.includes('UGC-BAUCHLADEN1'), false, 'Nebengebiet-Beauty creator must NOT pollute primary Auto creators');
+    // Alternatives may include adjacent Travel/Vanlife or Nebengebiet, NEVER pure Beauty!
     const autoAltIds = autoResult.alternatives.map((c: any) => c.id);
     assert.equal(autoAltIds.includes('UGC-BEAUTY0001'), false, 'Beauty must not leak into Auto alternatives');
     assert.equal(autoAltIds.includes('UGC-BEAUTY0002'), false, 'Beauty must not leak into Auto alternatives');
+    assert.equal(autoAltIds.includes('UGC-BAUCHLADEN1'), true, 'Nebengebiet Automotive creator should appear cleanly in alternatives');
 
     // TEST 2: "Mama mit Kleinkind" uses children_context + female filter (excludes Tom!)
     const mamaResult = await search({ query: 'Ich suche Mamas zwischen 30 und 45 mit Kindern für Alltagsvideos' });

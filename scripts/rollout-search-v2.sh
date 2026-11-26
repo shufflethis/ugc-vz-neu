@@ -81,6 +81,14 @@ npm run db:backfill-embeddings -- --limit="$BACKFILL_LIMIT" --batch-size="$BATCH
 echo ""
 echo "[4/6] Starte ersten Smoke-Lauf des KI-Social-Profilers (limit=$ANALYZE_LIMIT)..."
 if [ "$ANALYZE_LIMIT" -gt 0 ]; then
+  # Setze eventuelle alte 401-Fehlversuche auf pending zurueck, damit sie direkt neu laufen.
+  "$NODE_BIN" -e '
+const { neon } = require("@neondatabase/serverless");
+(async () => {
+  const sql = neon(process.env.DATABASE_URL_UNPOOLED || process.env.DATABASE_URL);
+  await sql.query("UPDATE creator_ai_profiles SET status = '\''pending'\'', fail_count = 0, last_error = NULL WHERE status = '\''failed'\'' AND last_error LIKE '\''%401%'\''");
+})();
+'
   "$REPO_DIR/scripts/analyze-creator-socials.sh" --limit="$ANALYZE_LIMIT"
 else
   echo "  Uebersprungen (--analyze-limit=0)."

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { buildAiHeaders, buildChatRequestBody, resolveAiProvider, resolveChatModels } from './ai-provider';
 import { cosineSimilarity, sanitizePublicSearchSnippet } from './search-index';
 import type { CreatorRelevanceEvaluation, QueryAnalysis, SearchableCreatorProfile } from './search-scoring';
 
@@ -172,11 +173,6 @@ export function buildRerankPayload(profile: SearchableCreatorProfile): RerankCan
   };
 }
 
-const OPENROUTER_RERANK_MODELS = [
-  process.env.SEARCH_RERANK_MODEL || 'deepseek/deepseek-v4-flash-0731',
-  'deepseek/deepseek-v4-flash',
-];
-
 export async function rerankCandidatesWithLLM(input: {
   query: string;
   analysis: QueryAnalysis;
@@ -202,30 +198,26 @@ export async function rerankCandidatesWithLLM(input: {
     }
   }
 
-  const apiKey = process.env.OPENROUTER_API_KEY;
-  if (!apiKey) return null;
+  const resolved = resolveAiProvider();
+  if (!resolved) return null;
 
   const timeoutMs = input.timeoutMs ?? 8_000;
   const allowedIds = new Set(input.candidates.map((c) => c.id));
+  const models = resolveChatModels(resolved, 'rerank', process.env.SEARCH_RERANK_MODEL);
 
-  for (const model of [...new Set(OPENROUTER_RERANK_MODELS)]) {
+  for (const model of models) {
     try {
-      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      const response = await fetch(`${resolved.baseUrl}/chat/completions`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${apiKey}`,
-          'HTTP-Referer': 'https://ugc-vz.de',
-          'X-Title': 'UGC VZ Creator Search Rerank',
-          'X-Request-ID': input.requestId,
-        },
-        body: JSON.stringify({
-          model,
-          messages: [
-            {
-              role: 'system',
-              content: `Du bist ein strenger Casting-Kurator für ein deutschsprachiges UGC-Creator-Verzeichnis.
-Bewerte für JEDEN gelieferten Creator-Kandidaten ehrlich, wie gut das Profil zur Suchanfrage passt.
+        headers: buildAiHeaders(resolved, { title: 'UGC VZ Creator Search Rerank', requestId: input.requestId }),
+        body: JSON.stringify(
+          buildChatRequestBody(resolved, {
+            model,
+            messages: [
+              {
+                role: 'system',
+                content: `Du bist ein strenger Casting-Kurator für ein deutschsprachiges UGC-Creator-Verzeichnis.
+Bewerte für JEDEN gelieferten Creator-Kandidaten ehrlich, wie gut der echte SCHWERPUNKT des Profils zur Suchanfrage passt.
 
 Antworte NUR mit validem JSON:
 {
@@ -235,37 +227,38 @@ Antworte NUR mit validem JSON:
 }
 
 Strenge Regeln:
-- "exact" (score 65-100): Profil belegt die gesuchte Nische / das Thema / den Kontext direkt (auch über Synonyme wie KFZ/Tuning/Werkstatt für Auto).
-- "related" (score 35-64): Verwandtes Umfeld (z. B. Camping/Outdoor/Technik bei Auto), aber kein direkter Treffer.
-- "reject" (score 0-34): Thema passt NICHT (z. B. Beauty/Skincare/Fashion bei Auto-Suche, oder nur generisches Lifestyle ohne Bezug). Lieber ablehnen als unpassende Profile durchlassen!
+- "exact" (score 70-100): Die gesuchte Nische/Branche ist ein ECHTER Schwerpunkt des Creators (steht weit vorne in den Themen, wenige fokussierte Themen, oder klar im Kanal-Steckbrief belegt; Synonyme wie KFZ/Tuning/Werkstatt/Enduro/Vanlife für Auto zählen voll).
+- "related" (score 35-64): Verwandtes Umfeld ODER ein breites Bauchladen-Profil (10+ Themen mit z. B. Beauty/Fashion als Hauptgebiet), das die gesuchte Nische nur ganz hinten oder ausdrücklich unter "Nebengebiete" miterwähnt (oder nur erwähnt "habe ein eigenes Auto/Führerschein").
+- "reject" (score 0-34): Thema passt NICHT (z. B. reines Beauty/Skincare/Fashion bei Auto-Suche). Lieber streng auf "related" oder "reject" stufen als unpassende Profile auf Platz 1 zu lassen!
 - ANTI-HALLUZINATION: "reason" darf AUSSCHLIESSLICH Fakten aus dem gelieferten profileSnippet nennen. Erfinde nichts hinzu.
 - Gib für jede übergebene id genau einen Eintrag zurück.`,
-            },
-            {
-              role: 'user',
-              content: JSON.stringify({
-                query: input.query,
-                constraints: {
-                  gender: input.analysis.gender,
-                  topics: input.analysis.topics,
-                  location: input.analysis.location,
-                  ageRange: input.analysis.ageRange,
-                  priceRange: input.analysis.priceRange,
-                  platforms: input.analysis.platforms,
-                },
-                candidates: input.candidates,
-              }),
-            },
-          ],
-          temperature: 0.1,
-          max_tokens: 1_200,
-          reasoning: { enabled: false },
-        }),
+              },
+              {
+                role: 'user',
+                content: JSON.stringify({
+                  query: input.query,
+                  constraints: {
+                    gender: input.analysis.gender,
+                    topics: input.analysis.topics,
+                    location: input.analysis.location,
+                    ageRange: input.analysis.ageRange,
+                    priceRange: input.analysis.priceRange,
+                    platforms: input.analysis.platforms,
+                  },
+                  candidates: input.candidates,
+                }),
+              },
+            ],
+            temperature: 0.1,
+            maxTokens: 1_400,
+            expectJson: true,
+          }),
+        ),
         signal: AbortSignal.timeout(timeoutMs),
       });
 
       if (!response.ok) {
-        throw new Error(`OpenRouter rerank HTTP ${response.status}`);
+        throw new Error(`${resolved.provider} rerank HTTP ${response.status}`);
       }
 
       const data = await response.json();

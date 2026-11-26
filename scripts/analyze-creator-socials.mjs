@@ -11,6 +11,7 @@ import { neon } from '@neondatabase/serverless';
 import dotenv from 'dotenv';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { isAiProviderConfigured, resolveAiProvider } from '../app/lib/ai-provider.ts';
 import { runCreatorAiAnalysis } from '../app/lib/creator-social-analyzer.ts';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -21,7 +22,8 @@ const connectionString =
   process.env.POSTGRES_URL_NON_POOLING ||
   process.env.DATABASE_URL;
 if (!connectionString) throw new Error('Keine Neon-Datenbankverbindung gefunden.');
-if (!process.env.OPENROUTER_API_KEY) throw new Error('OPENROUTER_API_KEY fehlt.');
+if (!isAiProviderConfigured()) throw new Error('OPENROUTER_API_KEY oder OPENAI_API_KEY fehlt.');
+const providerInfo = resolveAiProvider();
 
 const sql = neon(connectionString);
 
@@ -63,7 +65,7 @@ async function main() {
   );
 
   console.log(
-    `[${new Date().toISOString()}] KI-Social-Profiler: ${candidates.length} Kandidaten (limit=${LIMIT}, geonode=${USE_GEONODE})`,
+    `[${new Date().toISOString()}] KI-Social-Profiler: ${candidates.length} Kandidaten (provider=${providerInfo?.provider}, limit=${LIMIT}, geonode=${USE_GEONODE})`,
   );
 
   let ok = 0;

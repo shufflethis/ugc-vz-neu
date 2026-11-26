@@ -1,6 +1,13 @@
 import crypto from 'node:crypto';
 import * as cheerio from 'cheerio';
 import { z } from 'zod';
+import {
+  buildAiHeaders,
+  buildChatRequestBody,
+  resolveAiProvider,
+  resolveChatModels,
+  transcribeAudioWithOpenAI,
+} from './ai-provider';
 import { sanitizePublicSearchSnippet, type SqlClient } from './search-index';
 import { extractSocialHandles } from './social-avatar';
 
@@ -459,12 +466,12 @@ export async function generateAiProfileDraft(input: {
     return AiProfileDraftSchema.parse(raw);
   }
 
-  const apiKey = process.env.OPENROUTER_API_KEY;
-  if (!apiKey) {
-    throw new Error('OPENROUTER_API_KEY ist nicht konfiguriert.');
+  const resolved = resolveAiProvider();
+  if (!resolved) {
+    throw new Error('OPENROUTER_API_KEY oder OPENAI_API_KEY ist nicht konfiguriert.');
   }
 
-  const model = input.model || DEFAULT_ANALYZER_MODEL;
+  const [model] = resolveChatModels(resolved, 'vision_analyzer', input.model || process.env.CREATOR_ANALYZER_MODEL);
   const userContent: Array<{ type: 'text'; text: string } | { type: 'image_url'; image_url: { url: string } }> = [
     {
       type: 'text',
@@ -488,20 +495,16 @@ ${input.channels.length ? JSON.stringify(input.channels.map((c) => ({
     userContent.push({ type: 'image_url', image_url: { url: dataUrl } });
   }
 
-  const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+  const response = await fetch(`${resolved.baseUrl}/chat/completions`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
-      'HTTP-Referer': 'https://ugc-vz.de',
-      'X-Title': 'UGC VZ Creator Social Analyzer',
-    },
-    body: JSON.stringify({
-      model,
-      messages: [
-        {
-          role: 'system',
-          content: `Du bist ein sachlicher UGC-Casting-Analyst für ugc-vz.de.
+    headers: buildAiHeaders(resolved, { title: 'UGC VZ Creator Social Analyzer' }),
+    body: JSON.stringify(
+      buildChatRequestBody(resolved, {
+        model,
+        messages: [
+          {
+            role: 'system',
+            content: `Du bist ein sachlicher UGC-Casting-Analyst für ugc-vz.de.
 Deine Aufgabe: Fasse ein Creator-Profil + öffentliche Kanal-Infos + Bilder so zusammen, dass Marken den Creator für passende Produkte/Nischen präzise finden — und der Creator selbst den Text im Konto gegenlesen und ergänzen kann.
 
 Antworte AUSSCHLIESSLICH mit validem JSON in diesem Format:
@@ -524,17 +527,19 @@ STRENGE ANTI-HALLUZINATIONS-REGELN:
 - Erfinde NIEMALS Hobbys, Autos, Haustiere, Kinder, Berufe oder Marken.
 - Wenn die Datenlage dünn ist, bleibe bewusst knapp und faktisch bei den bekannten Profilangaben.
 - Übernimm NIEMALS E-Mail-Adressen, Telefonnummern oder private Wohnadressen.`,
-        },
-        { role: 'user', content: userContent },
-      ],
-      temperature: 0.2,
-      max_tokens: 900,
-    }),
+          },
+          { role: 'user', content: userContent },
+        ],
+        temperature: 0.2,
+        maxTokens: 900,
+        expectJson: true,
+      }),
+    ),
     signal: AbortSignal.timeout(22_000),
   });
 
   if (!response.ok) {
-    throw new Error(`OpenRouter analyzer HTTP ${response.status}`);
+    throw new Error(`${resolved.provider} analyzer HTTP ${response.status}`);
   }
 
   const data = await response.json();
@@ -577,12 +582,21 @@ export async function refineAiProfileWithVoiceOrText(input: {
     return VoiceRefineSchema.parse(raw);
   }
 
-  const apiKey = process.env.OPENROUTER_API_KEY;
-  if (!apiKey) {
-    throw new Error('OPENROUTER_API_KEY ist nicht konfiguriert.');
+  const resolved = resolveAiProvider();
+  if (!resolved) {
+    throw new Error('OPENROUTER_API_KEY oder OPENAI_API_KEY ist nicht konfiguriert.');
   }
 
-  const model = input.model || DEFAULT_ANALYZER_MODEL;
+  const [model] = resolveChatModels(resolved, 'voice_refine', input.model || process.env.CREATOR_ANALYZER_MODEL);
+  let effectiveInstruction = input.instructionText;
+  let whisperTranscript: string | null = null;
+
+  // OpenAI provider uses Whisper (/audio/transcriptions) + chat completion for reliable German audio refinement.
+  if (input.audio && resolved.provider === 'openai') {
+    whisperTranscript = await transcribeAudioWithOpenAI(resolved, input.audio, 20_000);
+    effectiveInstruction = [effectiveInstruction, whisperTranscript].filter(Boolean).join('\n');
+  }
+
   const userContent: Array<any> = [
     {
       type: 'text',
@@ -592,11 +606,11 @@ ${input.currentSummary || '(noch leer)'}
 Aktuelle Nischen-Tags:
 ${input.currentNiches.length ? input.currentNiches.join(', ') : '(noch keine)'}
 
-${input.instructionText ? `Text-Ergänzung / Korrektur des Creators:\n"${input.instructionText}"` : 'Höre dir die angehängte deutsche Sprachnachricht des Creators an, transkribiere sie wörtlich und arbeite alle Ergänzungen und Korrekturen sauber in die Profilzusammenfassung und die Nischen-Tags ein.'}`,
+${effectiveInstruction ? `Ergänzung / Korrektur des Creators:\n"${effectiveInstruction}"` : 'Höre dir die angehängte deutsche Sprachnachricht des Creators an, transkribiere sie wörtlich und arbeite alle Ergänzungen und Korrekturen sauber in die Profilzusammenfassung und die Nischen-Tags ein.'}`,
     },
   ];
 
-  if (input.audio) {
+  if (input.audio && resolved.provider === 'openrouter') {
     userContent.push({
       type: 'input_audio',
       input_audio: {
@@ -606,20 +620,16 @@ ${input.instructionText ? `Text-Ergänzung / Korrektur des Creators:\n"${input.i
     });
   }
 
-  const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+  const response = await fetch(`${resolved.baseUrl}/chat/completions`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
-      'HTTP-Referer': 'https://ugc-vz.de',
-      'X-Title': 'UGC VZ Creator Voice Profile Refinement',
-    },
-    body: JSON.stringify({
-      model,
-      messages: [
-        {
-          role: 'system',
-          content: `Du hilfst einem UGC-Creator dabei, seine öffentliche Profilzusammenfassung für Marken zu verbessern.
+    headers: buildAiHeaders(resolved, { title: 'UGC VZ Creator Voice Profile Refinement' }),
+    body: JSON.stringify(
+      buildChatRequestBody(resolved, {
+        model,
+        messages: [
+          {
+            role: 'system',
+            content: `Du hilfst einem UGC-Creator dabei, seine öffentliche Profilzusammenfassung für Marken zu verbessern.
 Arbeite die gesprochene oder geschriebene Rückmeldung des Creators exakt ein:
 - Übernimm konkrete neue Details (z. B. Fahrzeugmodell, Haustier, Hobbys, Beruf, Dialekt, Equipment, spezielle Nischen).
 - Streiche Dinge, die der Creator ausdrücklich korrigiert oder verneint.
@@ -633,17 +643,19 @@ Antworte NUR mit validem JSON:
   "updatedNiches": ["Nische 1", "Nische 2", "..."],
   "changesSummary": "1 kurzer Satz, was ergänzt oder korrigiert wurde"
 }`,
-        },
-        { role: 'user', content: userContent },
-      ],
-      temperature: 0.2,
-      max_tokens: 900,
-    }),
+          },
+          { role: 'user', content: userContent },
+        ],
+        temperature: 0.2,
+        maxTokens: 900,
+        expectJson: true,
+      }),
+    ),
     signal: AbortSignal.timeout(24_000),
   });
 
   if (!response.ok) {
-    throw new Error(`OpenRouter voice refinement HTTP ${response.status}`);
+    throw new Error(`${resolved.provider} voice refinement HTTP ${response.status}`);
   }
 
   const data = await response.json();
@@ -656,7 +668,7 @@ Antworte NUR mit validem JSON:
 
   const parsed = VoiceRefineSchema.parse(JSON.parse(jsonMatch[0]));
   return {
-    transcript: sanitizePublicSearchSnippet(parsed.transcript, 2_500),
+    transcript: sanitizePublicSearchSnippet(whisperTranscript || parsed.transcript, 2_500),
     updatedSummary: sanitizePublicSearchSnippet(parsed.updatedSummary, 1_500),
     updatedNiches: [...new Set(parsed.updatedNiches.map((n) => sanitizePublicSearchSnippet(n, 60)).filter(Boolean))],
     changesSummary: sanitizePublicSearchSnippet(parsed.changesSummary, 300),

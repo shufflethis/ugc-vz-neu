@@ -23,6 +23,13 @@ import {
   type SearchableCreatorProfile,
 } from '@/app/lib/search-scoring';
 import {
+  buildAiHeaders,
+  buildChatRequestBody,
+  isAiProviderConfigured,
+  resolveAiProvider,
+  resolveChatModels,
+} from '@/app/lib/ai-provider';
+import {
   embedSingleText,
   loadIndexedSearchData,
   queryFullTextRanks,
@@ -397,11 +404,11 @@ export async function POST(req: Request) {
     const fullyUnderstood = requestedFilters.length > 0 && directorySearchWords(query).length === 0;
 
     let initialAnalysis: QueryAnalysis;
-    if (!fullyUnderstood && process.env.OPENROUTER_API_KEY) {
+    if (!fullyUnderstood && isAiProviderConfigured()) {
       try {
         initialAnalysis = await analyzeQueryWithOpenRouter(query, requestId);
       } catch (openRouterError) {
-        console.warn(`[${requestId}] OpenRouter failed, using deterministic fallback:`, openRouterError instanceof Error ? openRouterError.message : openRouterError);
+        console.warn(`[${requestId}] LLM query analysis failed, using deterministic fallback:`, openRouterError instanceof Error ? openRouterError.message : openRouterError);
         initialAnalysis = analyzeQueryDeterministically(query);
       }
     } else {
@@ -783,31 +790,27 @@ export async function POST(req: Request) {
   }
 }
 
-const OPENROUTER_ANALYSIS_MODELS = [
-  'deepseek/deepseek-v4-flash-0731',
-  'deepseek/deepseek-v4-flash',
-];
-
 async function analyzeQueryWithOpenRouter(query: string, requestId: string): Promise<QueryAnalysis> {
-  let lastError: unknown;
+  const resolved = resolveAiProvider();
+  if (!resolved) {
+    throw new Error('AI provider key is not configured');
+  }
 
-  for (const model of OPENROUTER_ANALYSIS_MODELS) {
+  let lastError: unknown;
+  const models = resolveChatModels(resolved, 'query_analysis');
+
+  for (const model of models) {
     try {
-      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      const response = await fetch(`${resolved.baseUrl}/chat/completions`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
-          'HTTP-Referer': 'https://ugc-vz.de',
-          'X-Title': 'UGC VZ Creator Search',
-          'X-Request-ID': requestId,
-        },
-        body: JSON.stringify({
-          model,
-          messages: [
-            {
-              role: 'system',
-              content: `Du bist ein Experte für Creator-Suche. Analysiere die Suchanfrage und extrahiere strukturierte Informationen.
+        headers: buildAiHeaders(resolved, { title: 'UGC VZ Creator Search', requestId }),
+        body: JSON.stringify(
+          buildChatRequestBody(resolved, {
+            model,
+            messages: [
+              {
+                role: 'system',
+                content: `Du bist ein Experte für Creator-Suche. Analysiere die Suchanfrage und extrahiere strukturierte Informationen.
 
 Antworte NUR mit einem JSON-Objekt in diesem exakten Format (keine zusätzlichen Erklärungen):
 {
@@ -831,21 +834,22 @@ Regeln:
 - Extrahiere Alter des Creators (nicht der Kinder): "ab 30" = {"min":30,"max":null}, "unter 25" = {"min":null,"max":25}
 - Extrahiere Orte: "Berlin", "Hamburg", "NRW", "Wien"
 - Extrahiere Budget/Preis in Euro: "bis 500 Euro" = {"min":null,"max":500}`,
-            },
-            {
-              role: 'user',
-              content: `Analysiere diese Creator-Suchanfrage: "${query}"`,
-            },
-          ],
-          temperature: 0.2,
-          max_tokens: 300,
-          reasoning: { enabled: false },
-        }),
+              },
+              {
+                role: 'user',
+                content: `Analysiere diese Creator-Suchanfrage: "${query}"`,
+              },
+            ],
+            temperature: 0.2,
+            maxTokens: 300,
+            expectJson: true,
+          }),
+        ),
         signal: AbortSignal.timeout(12_000),
       });
 
       if (!response.ok) {
-        throw new Error(`OpenRouter API failed with status ${response.status}`);
+        throw new Error(`${resolved.provider} API failed with status ${response.status}`);
       }
 
       const data = await response.json();

@@ -1,4 +1,5 @@
 import crypto from 'node:crypto';
+import { buildAiHeaders, resolveAiProvider, resolveEmbeddingModel } from './ai-provider';
 
 export type SqlClient = { query: (query: string, params?: unknown[]) => Promise<any[]> };
 
@@ -157,21 +158,16 @@ export async function embedTexts(
     return raw.map((vec) => (vec && vec.length ? normalizeVector(vec) : null));
   }
 
-  const apiKey = options.apiKey || process.env.OPENROUTER_API_KEY;
-  if (!apiKey) return texts.map(() => null);
+  const resolved = resolveAiProvider(options.apiKey);
+  if (!resolved) return texts.map(() => null);
 
-  const model = options.model || DEFAULT_EMBEDDING_MODEL;
+  const model = resolveEmbeddingModel(resolved, options.model);
   const timeoutMs = options.timeoutMs ?? 8_000;
 
   try {
-    const response = await fetch('https://openrouter.ai/api/v1/embeddings', {
+    const response = await fetch(`${resolved.baseUrl}/embeddings`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`,
-        'HTTP-Referer': 'https://ugc-vz.de',
-        'X-Title': 'UGC VZ Hybrid Search Embeddings',
-      },
+      headers: buildAiHeaders(resolved, { title: 'UGC VZ Hybrid Search Embeddings' }),
       body: JSON.stringify({
         model,
         input: texts.map((t) => t.slice(0, 6_000)),
@@ -180,7 +176,7 @@ export async function embedTexts(
     });
 
     if (!response.ok) {
-      console.warn(`OpenRouter embeddings failed with status ${response.status}`);
+      console.warn(`${resolved.provider} embeddings failed with status ${response.status}`);
       return texts.map(() => null);
     }
 

@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { getDatabase, isDatabaseConfigured } from '@/app/lib/database';
+import { isAiProviderConfigured } from '@/app/lib/ai-provider';
 import { runCreatorAiAnalysis } from '@/app/lib/creator-social-analyzer';
 
 export const runtime = 'nodejs';
@@ -21,8 +22,8 @@ async function handleCron(request: NextRequest) {
   if (!isAuthorizedCron(request)) {
     return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
   }
-  if (!isDatabaseConfigured() || !process.env.OPENROUTER_API_KEY) {
-    return NextResponse.json({ success: false, error: 'Database or OPENROUTER_API_KEY not configured' }, { status: 503 });
+  if (!isDatabaseConfigured() || !isAiProviderConfigured()) {
+    return NextResponse.json({ success: false, error: 'Database or AI API key not configured' }, { status: 503 });
   }
 
   const limitParam = Number(request.nextUrl.searchParams.get('limit') || 3);
