@@ -29,7 +29,7 @@ export const ugcVzAgentCard = {
   protocolVersion: '1.0',
   name: 'UGC VZ Creator Matching Agent',
   description:
-    'Findet passende UGC Creator in Deutschland fuer Brand-, Agentur- und E-Commerce-Kampagnen. Agenten koennen Creator-Vorschlaege abrufen, einzelne Profile nachschlagen und eine kostenlose Brand-Anfrage mit ausgewaehlten Creatorn ausloesen.',
+    'Findet passende UGC Creator im DACH-Raum (DE, AT, CH) fuer View-Kampagnen mit fester Budget-Obergrenze sowie Creator-Produktionen. Agenten koennen Creator-Vorschlaege abrufen, einzelne Profile nachschlagen und Brand-Anfragen ausloesen.',
   url: `${baseUrl}/a2a`,
   preferredTransport: 'JSONRPC',
   // Geordnete Liste, erster Eintrag bevorzugt (v1.0-Proto-Konvention).
@@ -128,7 +128,7 @@ export const ugcVzAgentCard = {
       id: 'outreach_request',
       name: 'Creator-Auswahl anfragen',
       description:
-        'Erstellt eine kostenlose Brand-Anfrage fuer bewusst ausgewaehlte Creator. Kontaktinfos werden an die angegebene Brand-E-Mail gesendet, soweit im Profil vorhanden. Alter Methodenname ugc.submit_creator_request bleibt als Alias funktionsfaehig. Status danach ueber tasks/get abrufbar.',
+        'Erstellt eine Brand-Anfrage fuer bewusst ausgewaehlte Creator (erfordert Brand-Konto bzw. gueltige Brand-Daten). Alter Methodenname ugc.submit_creator_request bleibt als Alias funktionsfaehig. Status danach ueber tasks/get abrufbar.',
       tags: ['ugc', 'brand-lead', 'creator-contact-request'],
       examples: [
         'Sende eine Anfrage fuer Creator UGC-AB12CD34EF und UGC-11223344FF an marketing@example.com',

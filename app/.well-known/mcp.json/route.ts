@@ -12,10 +12,10 @@ const BASE = 'https://ugc-vz.de';
 
 const manifest = {
   name: 'ugc-vz',
-  displayName: 'UGC VZ Creator-Verzeichnis',
+  displayName: 'UGC VZ Creator-Plattform',
   description: [
-    'Kostenloses Verzeichnis realer UGC-Creator (DACH) mit Portfolio- und Social-Nachweisen.',
-    'Suche, Profilabruf und Kontaktanfragen fuer Brands - ohne API-Key, ohne Provision.',
+    'Plattform für Creator-Kampagnen im DACH-Raum (DE, AT, CH) mit Portfolio- und Social-Nachweisen.',
+    'Marken starten View-Kampagnen mit fester Budget-Obergrenze (15 % Servicegebühr im Budget enthalten, 0 % für Creator) oder fragen passende Profile gezielt an.',
   ].join(' '),
   version: AGENT_LAYER_VERSION,
   endpoint: `${BASE}/api/mcp`,

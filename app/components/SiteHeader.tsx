@@ -7,8 +7,8 @@ import { usePathname } from 'next/navigation';
 // Globaler Header (layout.tsx) nach Brand Kit: Wortmarke als SVG, sticky mit Blur.
 // Mobile-Menü per <details> mit Auto-Close bei Navigation, Escape und Außen-Klick.
 const NAV = [
-  { href: '/brands', label: 'Für Brands' },
-  { href: '/brands/ugc-creator-preise', label: 'Preise & Rechner' },
+  { href: '/brands', label: 'Für Marken' },
+  { href: '/preise', label: 'Preise' },
   { href: '/creator', label: 'Für Creator' },
   { href: '/wissen', label: 'Wissen' },
   { href: '/brand', label: 'Brand-Login' },

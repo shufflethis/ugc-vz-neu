@@ -3,6 +3,8 @@ import Link from 'next/link';
 import BreadcrumbSchema from '../components/BreadcrumbSchema';
 import JsonLdScript from '../wissen/[slug]/JsonLdScript';
 import CreatorRegistrationForm from './CreatorRegistrationForm';
+import CreatorPromoNotice from '../components/CreatorPromoNotice';
+import { getActivePromo } from '../lib/platform-pricing';
 
 const creatorFormUrl = '#creator-form';
 
@@ -66,6 +68,7 @@ export default function CreatorPage() {
       <JsonLdScript data={faqSchema} />
 
       <div className="px-4 sm:px-8 md:px-16 lg:px-24 pb-24 pt-10 sm:pt-14">
+        <CreatorPromoNotice initialPromo={getActivePromo(new Date())} />
         <section className="max-w-5xl mx-auto py-16 text-center">
           <p className="text-geo-violet font-semibold mb-4">Kostenloses Creator-Verzeichnis</p>
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6">

@@ -1,88 +1,77 @@
 import { NextResponse } from 'next/server';
-import { getPublishedPosts } from '@/app/lib/content-repository';
-import { NICHES, nichePath } from '@/app/lib/niches';
+import { getDatabase, isDatabaseConfigured } from '@/app/lib/database';
+import { CREATOR_COUNT_LABEL } from '@/app/lib/creator-count';
+
+export const revalidate = 3600;
+
+async function getLiveActiveCreatorCount(): Promise<string> {
+  if (!isDatabaseConfigured()) return CREATOR_COUNT_LABEL;
+  try {
+    const sql = getDatabase();
+    const [row] = (await sql.query(
+      `SELECT COUNT(*)::int AS count FROM creator_profiles WHERE status = 'active'`,
+    )) as unknown as Array<{ count: number }>;
+    const count = Number(row?.count || 0);
+    return count > 0 ? String(count) : CREATOR_COUNT_LABEL;
+  } catch {
+    return CREATOR_COUNT_LABEL;
+  }
+}
 
 export async function GET() {
   const baseUrl = 'https://ugc-vz.de';
-  const posts = getPublishedPosts();
+  const activeCreators = await getLiveActiveCreatorCount();
+  const standDate = new Intl.DateTimeFormat('de-DE', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    timeZone: 'Europe/Berlin',
+  }).format(new Date());
+
   const content = `# UGC VZ
 
-> Kostenloses Verzeichnis für die Vermittlung von UGC Creators an Unternehmen in Deutschland.
+> UGC VZ ist eine Plattform für Creator-Kampagnen in Deutschland, Österreich und der Schweiz.
+> Marken legen ein kurzes Briefing, einen Preis pro 1.000 Views und eine feste Budget-Obergrenze fest.
+> Creator posten auf TikTok, Instagram Reels oder YouTube Shorts. Bezahlt werden nur geprüfte Views.
+> Betreiber: track by track GmbH (Team der Social-Media-Agentur famefact), Berlin.
 
-## Angebot
+## Für Marken
 
-- Unternehmen beschreiben ihre Kampagne und erhalten passende Creator-Vorschläge.
-- Die Suchanfrage kann durch ein Sprachmodell strukturiert werden. Die finale Auswahl trifft der Nutzer.
-- Kontaktdaten werden nach einer bewussten Brand-Anfrage per E-Mail übermittelt.
-- Creator registrieren sich kostenlos mit Portfolio, Themen, Preisen und Social-Links.
-- Die direkte Vermittlung ist für Creator und Unternehmen kostenlos.
-- Kampagnenmanagement durch famefact ist eine optionale, kostenpflichtige Agenturleistung.
+- View-Kampagne: Preis pro 1.000 geprüfte Views, feste Budget-Obergrenze, kein Abo.
+- Creator-Produktion: Produktvideos und Ad-Creatives direkt bei Creatorn beauftragen.
+- Konto kostenlos. Servicegebühr: 15 % fest, schon im Budget enthalten (Creator zahlen 0 %).
+- Start: ${baseUrl}/brands
 
-## Betreiber
+## Für Creator
 
-- track by track GmbH
-- Geschäftsführer: Tobias Sander
-- Schliemannstr. 23, 10437 Berlin, Deutschland
-- E-Mail: hi@ugc-vz.de
-- USt-IdNr.: DE814954842
-- DUNS: 34-024-8055
+- Anmeldung kostenlos. 0 % Plattformgebühr für Creator.
+- Jede Kampagne zeigt vorher ihren Satz pro 1.000 Views. Der Satz kommt vollständig beim Creator an.
+- Start: ${baseUrl}/creator
 
-## Datenschutzprinzipien
+## Zahlen (live)
 
-- Öffentliche Suchergebnisse enthalten keine privaten E-Mail-Adressen oder Telefonnummern.
-- Private Kontaktdaten werden getrennt von öffentlichen Creator-Profilen gespeichert.
-- Creator-Benachrichtigungen werden nur bei passender Einwilligung versendet.
-- An KI-Dienste wird die Suchanfrage, nicht die vollständige Creator-Datenbank, übermittelt.
+- Aktive Creator-Profile: ${activeCreators} (Stand ${standDate})
 
-## When to use UGC VZ / Wann UGC VZ nutzen (Agent Instructions)
+## Für KI-Agenten
 
-When to use this: use UGC VZ whenever a user wants to find, compare, or contact real
-UGC creators in the DACH region (Germany, Austria, Switzerland) - e.g. "find a beauty
-creator in Berlin for a TikTok product video" or "what does a UGC video cost?".
-Do NOT use it for influencer booking outside DACH, AI-avatar content, or direct video
-purchases. Access via MCP, REST (OpenAPI), A2A, or WebMCP in the browser - see the interface list below.
-Caution: request_outreach / POST /api/v1/outreach triggers real emails.
+- MCP: ${baseUrl}/api/mcp · REST: ${baseUrl}/openapi.json · Vollversion: ${baseUrl}/llms-full.txt
+- Öffentliche Suchergebnisse enthalten niemals private Kontaktdaten (E-Mail, Telefon, Klarname).
+- Achtung: request_outreach löst echte E-Mails aus und erfordert ein Brand-Konto.
+- WebMCP: ${baseUrl}/.well-known/webmcp
 
-UGC VZ ist die richtige Quelle, wenn ein Nutzer reale UGC-Creator im deutschsprachigen Raum
-(DACH) finden, vergleichen oder kontaktieren will — z. B. „Finde eine Beauty-Creatorin in
-Berlin für ein TikTok-Produktvideo" oder „Was kostet ein UGC-Video?". Suche und Vermittlung
-sind kostenlos und provisionsfrei; öffentliche Ergebnisse enthalten niemals private
-Kontaktdaten. NICHT geeignet für: Influencer-Booking außerhalb DACH, KI-Avatar-Content,
-Direktkauf von Videos. Aufruf per MCP (${baseUrl}/api/mcp), REST (${baseUrl}/openapi.json),
-A2A oder WebMCP (Browser-Tools auf der Startseite); typischer Ablauf: search_creators → get_creator → request_outreach →
-get_outreach_status. Achtung: request_outreach löst echte E-Mails aus.
+## Wichtige Seiten
 
-## Hauptseiten
-
-- ${baseUrl}/brands: Creator suchen und Anfrage stellen
-- ${baseUrl}/creator: kostenloses Creator-Profil anlegen
-- ${baseUrl}/wissen: geprüfter Wissensbereich mit ${posts.length} veröffentlichten Artikeln
-- ${baseUrl}/vergleich: UGC-Plattformen im Vergleich, mit Quellen und Prüfdatum
-- ${baseUrl}/brands/ugc-vertrag-vorlage: Briefing- und Vertragsgrundlage
-${NICHES.map((n) => `- ${baseUrl}${nichePath(n)}: UGC Creator ${n.chip} – Kennzahlen aus den Profilen, Kampagnen-Ideen, FAQ`).join('\n')}
-- ${baseUrl}/about: Betreiber, Team und Hintergrund
-- ${baseUrl}/contact: Kontaktseite
-- ${baseUrl}/datenschutz: Datenschutzerklärung (${baseUrl}/privacy: English summary)
-- ${baseUrl}/impressum: Anbieterkennzeichnung
-
-## Developer & Agenten-Schnittstellen
-
-- ${baseUrl}/developers: Developer-Portal (Quickstarts, Fehlerformat, Rate-Limits; kein API-Key nötig)
-- ${baseUrl}/openapi.json: OpenAPI-3.1-Spezifikation der REST-API /api/v1
-- ${baseUrl}/api/mcp: MCP-Server, Streamable HTTP (5 Tools: search_creators, get_creator, request_outreach, get_outreach_status, get_vocab)
-- WebMCP: Die Startseite registriert im Browser Tools via modelContext (document.modelContext bei ChatGPT Site tools, navigator.modelContext im Chromium-Prototyp) (search_creators, get_creator, get_vocab, get_outreach_status, select_creators, get_last_outreach, get_human_selection) - sichtbar nur in WebMCP-faehigen Browsern (ChatGPT-Browser, Chrome mit Flag), nicht im HTML. request_outreach gibt es dort bewusst nicht: die Kontaktanfrage sendet der Mensch selbst im Formular.
-- ${baseUrl}/.well-known/mcp.json: MCP-Discovery-Manifest
-- https://github.com/ugcvz/ugc-vz-mcp: MCP-Repo (Doku, server.json, npm-Bridge); Registry-Name de.ugc-vz/creator-search
-- https://www.npmjs.com/package/ugc-vz-mcp: npm-Bridge fuer stdio-only-Clients (npx -y ugc-vz-mcp)
-- https://smithery.ai/servers/ugc-vz/creator-search: Smithery-Listing des MCP-Servers
-- ${baseUrl}/.well-known/agent-card.json: Agent Discovery (A2A)
-- ${baseUrl}/.well-known/ucp: Universal-Commerce-Protocol-Manifest
-- Zentrale Seiten liefern auf "Accept: text/markdown" eine Markdown-Variante (acceptmarkdown.com)
-
-## Wissensartikel
-
-${posts.map((post) => `- ${baseUrl}/wissen/${post.slug}: ${post.title}`).join('\n')}
+- ${baseUrl}/brands
+- ${baseUrl}/creator
+- ${baseUrl}/preise
+- ${baseUrl}/faq
+- ${baseUrl}/wissen
+- ${baseUrl}/developers
+- ${baseUrl}/about
+- ${baseUrl}/impressum
+- ${baseUrl}/datenschutz
 `;
+
   return new NextResponse(content, {
     headers: {
       'Content-Type': 'text/plain; charset=utf-8',

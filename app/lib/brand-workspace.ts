@@ -2,6 +2,7 @@ import crypto from 'node:crypto';
 import type { getDatabase } from '@/app/lib/database';
 import { BRAND_LOGIN_TTL_MINUTES } from '@/app/lib/brand-login-email';
 import { humanizePriceText, safePortfolioUrl } from '@/app/lib/creator-public';
+import { getActivePromo } from '@/app/lib/platform-pricing';
 
 type DatabaseClient = ReturnType<typeof getDatabase>;
 
@@ -574,42 +575,68 @@ export async function createBrandCampaign(
   const requiredHashtags = cleanText(input.requiredHashtags, 240);
   const publicId = generateCampaignPublicId();
   const reportShareToken = crypto.randomBytes(18).toString('base64url');
+  const promo = getActivePromo(new Date());
 
-  const [campaign] = (await sql.query(
-    `INSERT INTO brand_campaigns (
-       public_id, brand_id, title, brand_display_name, description, niche, platforms,
-       deliverables, compensation_model, budget_per_video_eur, total_budget_eur,
-       tkp_eur_cents, requires_product_choice, product_choice_prompt, discount_code,
-       briefing_checklist, required_mention, required_hashtags, report_share_token,
-       usage_rights, deadline, visibility, status, source_lead_public_id
-     ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,'active',$23)
-     RETURNING id, public_id`,
-    [
-      publicId,
-      brand.id,
-      title,
-      brandDisplayName,
-      description,
-      niche,
-      platforms,
-      deliverables,
-      compensationModel,
-      toPositiveIntOrNull(input.budgetPerVideoEur, 50_000),
-      toPositiveIntOrNull(input.totalBudgetEur, 1_000_000),
-      toPositiveIntOrNull(input.tkpEurCents, 50_000),
-      requiresProductChoice,
-      productChoicePrompt,
-      discountCode,
-      briefingChecklist,
-      requiredMention,
-      requiredHashtags,
-      reportShareToken,
-      cleanText(input.usageRights, 160),
-      cleanText(input.deadline, 120),
-      visibility,
-      input.sourceLeadPublicId ? cleanText(input.sourceLeadPublicId, 40) : null,
-    ],
-  )) as unknown as Array<any>;
+  const baseParams = [
+    publicId,
+    brand.id,
+    title,
+    brandDisplayName,
+    description,
+    niche,
+    platforms,
+    deliverables,
+    compensationModel,
+    toPositiveIntOrNull(input.budgetPerVideoEur, 50_000),
+    toPositiveIntOrNull(input.totalBudgetEur, 1_000_000),
+    toPositiveIntOrNull(input.tkpEurCents, 50_000),
+    requiresProductChoice,
+    productChoicePrompt,
+    discountCode,
+    briefingChecklist,
+    requiredMention,
+    requiredHashtags,
+    reportShareToken,
+    cleanText(input.usageRights, 160),
+    cleanText(input.deadline, 120),
+    visibility,
+    input.sourceLeadPublicId ? cleanText(input.sourceLeadPublicId, 40) : null,
+  ];
+
+  let campaign: any;
+  try {
+    const [row] = (await sql.query(
+      `INSERT INTO brand_campaigns (
+         public_id, brand_id, title, brand_display_name, description, niche, platforms,
+         deliverables, compensation_model, budget_per_video_eur, total_budget_eur,
+         tkp_eur_cents, requires_product_choice, product_choice_prompt, discount_code,
+         briefing_checklist, required_mention, required_hashtags, report_share_token,
+         usage_rights, deadline, visibility, status, source_lead_public_id,
+         platform_fee_bps, fee_promo_code, creator_fee_bps
+       ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,'active',$23,$24,$25,$26)
+       RETURNING id, public_id`,
+      [...baseParams, promo.rateBps, promo.code, promo.creatorFeeBps],
+    )) as unknown as Array<any>;
+    campaign = row;
+  } catch (err: any) {
+    // Graceful fallback wenn Migration 022 in einer Umgebung noch nicht eingespielt ist.
+    const message = String(err?.message || '');
+    if (err?.code !== '42703' && !message.includes('platform_fee_bps')) {
+      throw err;
+    }
+    const [row] = (await sql.query(
+      `INSERT INTO brand_campaigns (
+         public_id, brand_id, title, brand_display_name, description, niche, platforms,
+         deliverables, compensation_model, budget_per_video_eur, total_budget_eur,
+         tkp_eur_cents, requires_product_choice, product_choice_prompt, discount_code,
+         briefing_checklist, required_mention, required_hashtags, report_share_token,
+         usage_rights, deadline, visibility, status, source_lead_public_id
+       ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,'active',$23)
+       RETURNING id, public_id`,
+      baseParams,
+    )) as unknown as Array<any>;
+    campaign = row;
+  }
 
   const validCreatorPublicIds = [...new Set((input.creatorPublicIds || [])
     .map((id) => cleanText(id, 40))

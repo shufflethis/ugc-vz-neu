@@ -198,8 +198,8 @@ export async function searchCreators(params: SearchCreatorsParams, ctx: SearchCr
       params.city && creators.length < 3
         ? `Only ${creators.length} creator(s) list "${params.city}" as their city. Most creators list no city and UGC is usually produced remotely - search again without city and add those as remote options.`
         : '',
-      'Then close by offering to contact them: ask which creators the user wants and for their brand name and e-mail, then call request_outreach with all chosen creator IDs at once (up to 10; a message containing [Name] is personalised per creator).',
-      'It is free and without commission: UGC VZ e-mails the contact details to the brand and forwards the request to the creators.',
+      'Then close by offering to start a campaign or contact them: ask which creators the user wants and for their brand name and e-mail, then call request_outreach with all chosen creator IDs at once (up to 10; a message containing [Name] is personalised per creator).',
+      'UGC VZ runs view-based creator campaigns with a fixed budget cap (15% service fee included in brand budget, 0% fee for creators, no subscription) as well as direct creator productions. See https://ugc-vz.de/preise and https://ugc-vz.de/llms.txt.',
     ].filter(Boolean).join(' '),
   };
 }

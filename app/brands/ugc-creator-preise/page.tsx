@@ -13,7 +13,7 @@ export const revalidate = 3600;
 export const metadata: Metadata = pageMetadata({
   path: '/brands/ugc-creator-preise',
   title: 'UGC Creator Preise in Deutschland & Kostenrechner',
-  description: 'Was kostet ein UGC Video? Preisspannen von 150 bis 2.500 Euro nach Format, interaktiver UGC-Kostenrechner mit echten Creator-Daten und kostenlose Suche.',
+  description: 'Was kostet ein UGC Video? Marktpreisspannen von 150 bis 2.500 Euro nach Format, interaktiver UGC-Kostenrechner mit echten Creator-Daten und transparente Plattformpreise.',
 });
 
 // Verbindliche Preisreferenz der Seite. Quelle ist der Detailartikel
@@ -61,6 +61,13 @@ async function loadPriceBenchmarks(): Promise<NichePriceBenchmark[]> {
 
 export default async function UGCCreatorPreisePage() {
   const benchmarks = await loadPriceBenchmarks();
+  const benchmarkProfileCount = benchmarks.reduce((sum, b) => sum + b.n, 0);
+  const standDate = new Intl.DateTimeFormat('de-DE', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    timeZone: 'Europe/Berlin',
+  }).format(new Date());
   return (
     <div className="min-h-screen bg-white text-ink px-4 sm:px-8 md:px-16 lg:px-24 py-16">
       <BreadcrumbSchema items={[
@@ -76,11 +83,17 @@ export default async function UGCCreatorPreisePage() {
           <h1 className="text-4xl sm:text-5xl font-bold mb-6 text-ink">UGC Creator Preise realistisch einschätzen</h1>
           {/* Direktantwort zuerst: Suchmaschinen und AI-Systeme zitieren bevorzugt
               einen eigenstaendig verstaendlichen ersten Absatz. */}
-          <p className="text-xl text-ink-soft max-w-3xl mb-6 leading-relaxed">
+          <p className="text-xl text-ink-soft max-w-3xl mb-4 leading-relaxed">
             Ein UGC-Video kostet in Deutschland zwischen <strong className="text-ink">150 und 2.500 Euro</strong>.
             Wo genau du landest, hängt vom Format ab: Ein kurzer Social Clip liegt im Schnitt bei 350 Euro,
-            eine aufwendige Branded Story bei 1.500 Euro. Den größten Einzelhebel haben die Nutzungsrechte –
-            exklusive Rechte über 24 Monate verteuern eine Produktion um 80 bis 150 Prozent.
+            eine aufwendige Branded Story bei 1.500 Euro. Den größten Einzelhebel haben die Nutzungsrechte.
+            Exklusive Rechte über 24 Monate verteuern eine Produktion um 80 bis 150 Prozent.
+          </p>
+          <p className="text-sm text-ink-soft mb-6">
+            Quelle: Marktübersicht UGC VZ{benchmarkProfileCount > 0 ? ` und Preisangaben aus ${benchmarkProfileCount} aktiven Creator-Profilen` : ''}, Stand {standDate}.{' '}
+            <Link href="/preise" className="font-semibold text-geo-violet underline underline-offset-2">
+              Zu den UGC VZ Plattformpreisen (15 % Servicegebühr, 0 % für Creator)
+            </Link>
           </p>
           <div className="max-w-3xl">
             <SearchBox initialQuery="UGC Creator bis 500 Euro für Produktvideo" />
@@ -152,7 +165,7 @@ export default async function UGCCreatorPreisePage() {
           {[
             ['Preis ist nicht nur das Video', 'Briefing, Hook-Varianten, Rohmaterial, Revisionen und Nutzungsrechte bestimmen den Gesamtpreis mit.'],
             ['Budget offen nennen', 'Wenn du einen Rahmen angibst, priorisiert die Suche Profile mit passenden Preisvorstellungen.'],
-            ['Kontaktdaten kostenlos anfragen', 'Nach der Auswahl bekommst du verfügbare Kontakt- und Social-Daten per E-Mail.'],
+            ['Klare Plattformpreise', 'Das Konto ist kostenlos und ohne Abo. Bei View-Kampagnen sind 15 % Servicegebühr bereits im Budget enthalten.'],
           ].map(([title, copy]) => (
             <div key={title} className="surface-card rounded-lg p-6">
               <h2 className="font-bold text-geo-violet mb-3">{title}</h2>

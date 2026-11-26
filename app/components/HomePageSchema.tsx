@@ -1,178 +1,148 @@
-
-
 /**
  * Homepage Schema.org structured data
- * Includes Organization, Person, WebSite, and Service schemas
+ * Includes Organization, Person, WebSite, and Service schemas (DE, AT, CH)
  */
 export default function HomePageSchema() {
   const organizationSchema = {
-    "@context": "https://schema.org",
-    "@type": "Organization",
-    "@id": "https://ugc-vz.de/#organization",
-    "name": "Track by Track GmbH",
-    "alternateName": "UGC-VZ",
-    "url": "https://ugc-vz.de",
-    "logo": "https://ugc-vz.de/ugc-vz-logo.webp",
-    "description": "UGC-VZ ist eine kostenlose UGC Plattform der track by track GmbH für Creator Matching, Creator Registrierung und User Generated Content in Deutschland.",
-    "foundingDate": "2020",
-    "founder": {
-      "@type": "Person",
-      "@id": "https://ugc-vz.de/#tobias-sander"
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    '@id': 'https://ugc-vz.de/#organization',
+    name: 'UGC VZ',
+    legalName: 'track by track GmbH',
+    parentOrganization: {
+      '@type': 'Organization',
+      name: 'famefact',
+      url: 'https://famefact.com',
     },
-    "address": {
-      "@type": "PostalAddress",
-      "streetAddress": "Schliemannstr. 23",
-      "postalCode": "10437",
-      "addressLocality": "Berlin",
-      "addressCountry": "DE"
+    url: 'https://ugc-vz.de',
+    logo: 'https://ugc-vz.de/ugc-vz-logo.webp',
+    description:
+      'UGC VZ ist eine Plattform für Creator-Kampagnen in Deutschland, Österreich und der Schweiz. Marken zahlen nach geprüften Views mit fester Budget-Obergrenze.',
+    foundingDate: '2020',
+    founder: {
+      '@type': 'Person',
+      '@id': 'https://ugc-vz.de/#tobias-sander',
     },
-    "contactPoint": {
-      "@type": "ContactPoint",
-      "telephone": "+49-30-403665451",
-      "contactType": "customer service",
-      "email": "hi@ugc-vz.de",
-      "availableLanguage": ["German", "English"]
+    address: {
+      '@type': 'PostalAddress',
+      streetAddress: 'Schliemannstr. 23',
+      postalCode: '10437',
+      addressLocality: 'Berlin',
+      addressCountry: 'DE',
     },
-    "sameAs": [
-      "https://famefact.com",
-      "https://www.linkedin.com/company/track-by-track-gmbh",
-      "https://www.linkedin.com/in/tobias-famefact/",
-      "https://x.com/UGC_VZ",
-      "https://www.instagram.com/UGC_VZ/",
-      "https://www.youtube.com/@ugcvz",
-      "https://github.com/ugcvz"
+    contactPoint: {
+      '@type': 'ContactPoint',
+      telephone: '+49-30-403665451',
+      contactType: 'customer service',
+      email: 'hi@ugc-vz.de',
+      availableLanguage: ['German', 'English'],
+    },
+    sameAs: [
+      'https://famefact.com',
+      'https://www.linkedin.com/company/track-by-track-gmbh',
+      'https://www.linkedin.com/in/tobias-famefact/',
+      'https://x.com/UGC_VZ',
+      'https://www.instagram.com/UGC_VZ/',
+      'https://www.youtube.com/@ugcvz',
+      'https://github.com/ugcvz',
     ],
-    "taxID": "DE814954842",
-    "duns": "34-024-8055",
-    "legalName": "Track by Track GmbH",
-    "vatID": "DE814954842",
-    "areaServed": {
-      "@type": "Country",
-      "name": "Germany"
-    },
-    "knowsAbout": [
-      "User Generated Content",
-      "UGC Marketing",
-      "Creator Economy",
-      "Video Marketing",
-      "Influencer Marketing",
-      "Social Media Strategy",
-      "TikTok Marketing",
-      "Instagram Marketing",
-      "Content Creator Management"
+    taxID: 'DE814954842',
+    duns: '34-024-8055',
+    vatID: 'DE814954842',
+    areaServed: ['DE', 'AT', 'CH'],
+    knowsAbout: [
+      'User Generated Content',
+      'UGC Marketing',
+      'Creator Economy',
+      'Video Marketing',
+      'Influencer Marketing',
+      'Social Media Strategy',
+      'TikTok Marketing',
+      'Instagram Marketing',
+      'View-Kampagnen',
     ],
-    "slogan": "Authentisches Marketing durch Creator-Content"
+    slogan: 'Echte Creator. Echte Views. Dein Budget.',
   };
 
   const personSchema = {
-    "@context": "https://schema.org",
-    "@type": "Person",
-    "@id": "https://ugc-vz.de/#tobias-sander",
-    "name": "Tobias Sander",
-    "givenName": "Tobias",
-    "familyName": "Sander",
-    "jobTitle": "Geschäftsführer & Gründer",
-    "description": "Tobias Sander ist Gründer und Geschäftsführer der Track by Track GmbH und führender Experte für User Generated Content Marketing und Creator Economy Strategien in Deutschland.",
-    "url": "https://ugc-vz.de/about",
-    "sameAs": [
-      "https://www.linkedin.com/in/tobias-famefact/"
-    ],
-    "worksFor": {
-      "@type": "Organization",
-      "@id": "https://ugc-vz.de/#organization"
+    '@context': 'https://schema.org',
+    '@type': 'Person',
+    '@id': 'https://ugc-vz.de/#tobias-sander',
+    name: 'Tobias Sander',
+    givenName: 'Tobias',
+    familyName: 'Sander',
+    jobTitle: 'Geschäftsführer & Gründer',
+    description:
+      'Tobias Sander ist Gründer und Geschäftsführer der track by track GmbH (famefact) und Experte für Creator-Kampagnen und Social Media Marketing im DACH-Raum.',
+    url: 'https://ugc-vz.de/about',
+    sameAs: ['https://www.linkedin.com/in/tobias-famefact/'],
+    worksFor: {
+      '@type': 'Organization',
+      '@id': 'https://ugc-vz.de/#organization',
     },
-    "address": {
-      "@type": "PostalAddress",
-      "addressLocality": "Berlin",
-      "addressCountry": "DE"
+    address: {
+      '@type': 'PostalAddress',
+      addressLocality: 'Berlin',
+      addressCountry: 'DE',
     },
-    "knowsAbout": [
-      "User Generated Content",
-      "Creator Economy",
-      "Video Marketing Strategy",
-      "Influencer Marketing",
-      "Social Media Marketing",
-      "Content Strategy",
-      "Brand Building",
-      "Digital Marketing",
-      "E-Commerce Marketing",
-      "UGC-Marketing",
-      "Creator-Plattformen",
-      "Video-Content-Strategie",
-      "Performance Marketing",
-      "Social Commerce"
-    ]
   };
 
   const serviceSchema = {
-    "@context": "https://schema.org",
-    "@type": "Service",
-    "name": "UGC Creator Matching",
-    "description": "Kostenlose Vermittlung und Suche von UGC Creators für Unternehmen in Deutschland sowie kostenlose Registrierung für Creator.",
-    "provider": {
-      "@type": "Organization",
-      "@id": "https://ugc-vz.de/#organization"
+    '@context': 'https://schema.org',
+    '@type': 'Service',
+    name: 'UGC VZ Creator-Kampagnen',
+    description:
+      'Creator-Kampagnen nach geprüften Views mit fester Budget-Obergrenze sowie direkte Creator-Produktionen für Marken in Deutschland, Österreich und der Schweiz.',
+    provider: {
+      '@type': 'Organization',
+      '@id': 'https://ugc-vz.de/#organization',
     },
-    "serviceType": "Creator Matching Platform",
-    "areaServed": {
-      "@type": "Country",
-      "name": "Germany"
-    },
-    "hasOfferCatalog": {
-      "@type": "OfferCatalog",
-      "name": "UGC Marketing Services",
-      "itemListElement": [
+    serviceType: 'Creator Campaign Platform',
+    areaServed: ['DE', 'AT', 'CH'],
+    hasOfferCatalog: {
+      '@type': 'OfferCatalog',
+      name: 'UGC VZ Kampagnenmodelle',
+      itemListElement: [
         {
-          "@type": "Offer",
-          "itemOffered": {
-            "@type": "Service",
-            "name": "UGC Creator finden",
-            "description": "Kostenlose Suche nach passenden Content Creators für Marken, Kampagnen und Produktvideos"
-          }
+          '@type': 'Offer',
+          itemOffered: {
+            '@type': 'Service',
+            name: 'View-Kampagne',
+            description:
+              'Creator posten auf TikTok, Instagram Reels oder YouTube Shorts. Marken zahlen pro 1.000 geprüfte Views mit fester Budget-Obergrenze. 15 % Servicegebühr im Budget enthalten, 0 % für Creator.',
+          },
         },
         {
-          "@type": "Offer",
-          "itemOffered": {
-            "@type": "Service",
-            "name": "UGC Creator Anmeldung",
-            "description": "Kostenlose Profil- und Portfolio-Anmeldung für UGC Creators"
-          }
+          '@type': 'Offer',
+          itemOffered: {
+            '@type': 'Service',
+            name: 'Creator-Produktion',
+            description:
+              'Produktvideos und Ad-Creatives direkt bei passenden Creatorn im DACH-Raum beauftragen, mit klaren Nutzungsrechten.',
+          },
         },
-        {
-          "@type": "Offer",
-          "itemOffered": {
-            "@type": "Service",
-            "name": "Optionaler Agentur-Support",
-            "description": "Optionale strategische Unterstützung für größere UGC Kampagnen"
-          }
-        }
-      ]
+      ],
     },
-    "offers": {
-      "@type": "Offer",
-      "price": "0",
-      "priceCurrency": "EUR",
-      "availability": "https://schema.org/InStock"
-    }
   };
 
   const webSiteSchema = {
-    "@context": "https://schema.org",
-    "@type": "WebSite",
-    "@id": "https://ugc-vz.de/#website",
-    "url": "https://ugc-vz.de",
-    "name": "UGC-VZ - Track by Track GmbH",
-    "description": "Kostenlose UGC Plattform für Creator-Suche, Creator-Anmeldung und User Generated Content Wissen in Deutschland",
-    "publisher": {
-      "@type": "Organization",
-      "@id": "https://ugc-vz.de/#organization"
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    '@id': 'https://ugc-vz.de/#website',
+    url: 'https://ugc-vz.de',
+    name: 'UGC VZ',
+    description:
+      'Plattform für Creator-Kampagnen nach geprüften Views mit fester Budget-Obergrenze für Marken und Creator in Deutschland, Österreich und der Schweiz.',
+    publisher: {
+      '@type': 'Organization',
+      '@id': 'https://ugc-vz.de/#organization',
     },
-    "potentialAction": {
-      "@type": "SearchAction",
-      "target": "https://ugc-vz.de/brands?query={search_term_string}",
-      "query-input": "required name=search_term_string"
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: 'https://ugc-vz.de/brands/ugc-creator-finden?query={search_term_string}',
+      'query-input': 'required name=search_term_string',
     },
-    "inLanguage": "de-DE"
+    inLanguage: 'de-DE',
   };
 
   return (

@@ -4,23 +4,25 @@ import { GeistMono } from 'geist/font/mono'
 import "./globals.css";
 import Footer from "@/src/components/FooterNew";
 import SiteHeader from "./components/SiteHeader";
+import PromoBanner from "./components/PromoBanner";
 import WebMcpAgentLayer from "./components/WebMcpAgentLayer";
 import PublicOnly from './components/PublicOnly';
 import SiteAnalytics from './components/SiteAnalytics';
+import { getActivePromo } from './lib/platform-pricing';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://ugc-vz.de"),
   title: {
-    default: "UGC VZ - UGC Creator finden und kostenlos anmelden",
+    default: "UGC VZ: Creator-Kampagnen nach Views für Marken in DACH",
     template: "%s | UGC VZ",
   },
-  description: "UGC VZ verbindet Brands und UGC Creator in Deutschland. Unternehmen finden passende Creator kostenlos, Creator melden sich gratis mit Portfolio an.",
+  description: "Creator-Kampagnen, die Marken nach geprüften Views bezahlen, mit fester Budget-Obergrenze. Kein Abo, 15 % Servicegebühr im Budget enthalten, 0 % für Creator.",
   applicationName: "UGC VZ",
   category: "Marketing",
-  keywords: "UGC Creator, UGC Creator finden, UGC Creator anmelden, UGC Plattform Deutschland, User Generated Content, Creator Vermittlung, UGC Agentur, Content Creator, UGC Marketing",
-  authors: [{ name: "UGC VZ - track by track GmbH" }],
+  keywords: "UGC VZ, Creator Kampagnen, Pay per View UGC, UGC Creator Deutschland, User Generated Content, Creator Plattform DACH, TikTok Kampagnen, Instagram Reels Creator",
+  authors: [{ name: "UGC VZ, track by track GmbH" }],
   creator: "track by track GmbH",
   publisher: "track by track GmbH",
   formatDetection: {
@@ -29,8 +31,8 @@ export const metadata: Metadata = {
     telephone: false,
   },
   openGraph: {
-    title: "UGC VZ - UGC Creator finden und kostenlos anmelden",
-    description: "Kostenlose UGC Plattform für Brands und Creator in Deutschland: Creator suchen, Kampagne beschreiben oder als Creator mit Portfolio anmelden.",
+    title: "UGC VZ: Creator-Kampagnen nach Views für Marken in DACH",
+    description: "Du legst Preis pro 1.000 Views und Budget-Obergrenze fest. Creator posten auf TikTok und Instagram. Bezahlt werden nur geprüfte Views.",
     url: "https://ugc-vz.de",
     siteName: "UGC VZ",
     locale: "de_DE",
@@ -40,14 +42,14 @@ export const metadata: Metadata = {
         url: "https://ugc-vz.de/og-image.png",
         width: 1200,
         height: 630,
-        alt: "UGC VZ - Creator Vermittlung",
+        alt: "UGC VZ: Creator-Kampagnen nach Views",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "UGC VZ - UGC Creator finden und kostenlos anmelden",
-    description: "Kostenlose UGC Plattform für Brands und Creator in Deutschland.",
+    title: "UGC VZ: Creator-Kampagnen nach Views für Marken in DACH",
+    description: "Creator-Kampagnen nach geprüften Views mit fester Budget-Obergrenze. Kein Abo, 0 % Gebühr für Creator.",
     images: ["https://ugc-vz.de/og-image.png"],
     creator: "@Ugc_Vz",
   },
@@ -80,7 +82,10 @@ export default function RootLayout({
         <link rel="manifest" href="/site.webmanifest" />
       </head>
       <body className="flex flex-col min-h-screen">
-        <PublicOnly><SiteHeader /></PublicOnly>
+        <PublicOnly>
+          <PromoBanner initialPromo={getActivePromo(new Date())} />
+          <SiteHeader />
+        </PublicOnly>
         <main className="relative isolate flex-grow">
           {/* Logo-Glow hinter jedem Seitenkopf (Brand Kit); Seiten mit eigener Flaeche decken ihn ab */}
           <div aria-hidden="true" className="page-glow pointer-events-none absolute inset-x-0 top-0 -z-10 h-[560px] overflow-hidden" />

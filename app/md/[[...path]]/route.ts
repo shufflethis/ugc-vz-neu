@@ -19,30 +19,31 @@ turndown.remove(['script', 'style', 'iframe']);
 // Konvertierte Artikel pro Deploy cachen - Inhalte sind build-statisch.
 const markdownCache = new Map<string, string>();
 
-const FOOTER = `\n\n---\n\nUGC VZ - kostenloses UGC-Creator-Verzeichnis (DACH) der track by track GmbH.\nKontakt: hi@ugc-vz.de - Uebersicht: ${BASE}/llms.txt - API: ${BASE}/developers`;
+const FOOTER = `\n\n---\n\nUGC VZ · Plattform für Creator-Kampagnen nach Views (DACH) der track by track GmbH.\nKontakt: hi@ugc-vz.de · Übersicht: ${BASE}/llms.txt · Preise: ${BASE}/preise · API: ${BASE}/developers`;
 
 const STATIC_PAGES: Record<string, () => string> = {
-  '': () => `# UGC VZ - UGC Creator finden
+  '': () => `# UGC VZ: Creator-Kampagnen nach Views für Marken in DACH
 
-Kostenloses Verzeichnis fuer die Vermittlung realer UGC-Creator an Unternehmen in Deutschland, Oesterreich und der Schweiz.
+UGC VZ ist eine Plattform für Creator-Kampagnen in Deutschland, Österreich und der Schweiz. Marken legen Briefing, Preis pro 1.000 Views und eine feste Budget-Obergrenze fest. Creator posten auf TikTok, Instagram Reels oder YouTube Shorts. Bezahlt werden nur geprüfte Views.
 
-## So funktioniert es
+## Für Marken
 
-1. Brand beschreibt die Kampagne unter ${BASE}/brands (Freitext-Suche, KI-gestuetzt strukturiert).
-2. UGC VZ zeigt passende Creator-Profile mit Reichweite, Themen, Preisen und Portfolio.
-3. Nach bewusster Auswahl erhaelt die Brand die Kontaktdaten per E-Mail. Keine Provision.
+1. Brief, Plattform, Preis pro 1.000 Views und Budget-Obergrenze festlegen (${BASE}/brands).
+2. Creator posten auf ihren Profilen und reichen den Link ein.
+3. Gezählt werden nur geprüfte Beiträge. 15 % Servicegebühr sind im Budget enthalten, kein Abo (${BASE}/preise).
 
-## Fuer Creator
+## Für Creator
 
-Kostenloses Profil mit Portfolio, Themen, Preisen und Social-Links: ${BASE}/creator
+Anmeldung kostenlos, 0 % Gebühr für Creator. Jede Kampagne zeigt vorher ihren Satz pro 1.000 Views: ${BASE}/creator
 
-## Fuer KI-Agenten
+## Für KI-Agenten
 
 - MCP-Server: ${BASE}/api/mcp (Manifest: ${BASE}/.well-known/mcp.json)
+- WebMCP: ${BASE}/.well-known/webmcp
 - REST-API: ${BASE}/openapi.json
 - A2A: ${BASE}/.well-known/agent-card.json
 - Developer-Portal: ${BASE}/developers
-- Inhaltsverzeichnis: ${BASE}/llms.txt`,
+- Übersicht: ${BASE}/llms.txt · Vollversion: ${BASE}/llms-full.txt`,
 
   developers: () => `# UGC VZ Developer-Portal
 
@@ -57,33 +58,42 @@ Alle Schnittstellen sind oeffentlich und ohne API-Key nutzbar. Details: ${BASE}/
 
 Wichtig: POST /api/v1/outreach loest ECHTE E-Mails aus - kein Test-Endpunkt.`,
 
-  brands: () => `# UGC Creator finden und beauftragen
+  brands: () => `# UGC VZ für Marken
 
-Kampagne in einem Satz beschreiben, passende UGC-Creator aus dem DACH-Raum erhalten, Kontaktdaten nach bewusster Auswahl per E-Mail. Kostenlos, ohne Provision.
+Creator-Kampagnen nach geprüften Views mit fester Budget-Obergrenze in Deutschland, Österreich und der Schweiz. Kein Abo, 15 % Servicegebühr im Budget enthalten, 0 % Gebühr für Creator.
 
-Suche starten: ${BASE}/brands
-Preisorientierung: ${BASE}/brands/ugc-creator-preise
-Vertrags-/Briefing-Vorlage: ${BASE}/brands/ugc-vertrag-vorlage`,
+Für Marken: ${BASE}/brands
+Preise & Budget-Rechner: ${BASE}/preise
+Marktpreise für UGC-Videos: ${BASE}/brands/ugc-creator-preise
+Vertrags- und Briefing-Vorlage: ${BASE}/brands/ugc-vertrag-vorlage`,
 
-  creator: () => `# Als UGC-Creator anmelden
+  creator: () => `# UGC VZ für Creator
 
-Kostenloses Profil im UGC-VZ-Verzeichnis: Portfolio, Themen, Preise, Social-Links. Brands finden dich ueber die Suche; Kontakt kommt per E-Mail-Anfrage. Keine Provision, keine Exklusivitaet.
+Poste für Marken und verdiene pro 1.000 Views. Anmeldung kostenlos, 0 % Gebühr für Creator. Jede Kampagne zeigt vorher ihren Satz pro 1.000 Views.
 
 Anmeldung: ${BASE}/creator
-Profil bearbeiten: ${BASE}/konto`,
+Creator-Konto: ${BASE}/konto`,
+
+  preise: () => `# Was kostet UGC VZ?
+
+Konto kostenlos, kein Abo, keine Einrichtungsgebühr.
+15 % Servicegebühr für Marken, schon in der Budget-Obergrenze enthalten.
+0 % Gebühr für Creator: der Satz pro 1.000 Views kommt vollständig an.
+
+Preise & Rechner: ${BASE}/preise`,
 
   vergleich: () => `# UGC-Plattformen im Vergleich
 
-Redaktioneller Vergleich von UGC-Plattformen im DACH-Raum mit Quellen und Pruefdatum: ${BASE}/vergleich
+Redaktioneller Vergleich von UGC-Plattformen im DACH-Raum mit Quellen und Prüfdatum: ${BASE}/vergleich
 
-Einzelvergleiche u. a.: Speekly, Influee, stylink, Boksi - jeweils unter ${BASE}/vergleich/<slug>.`,
+Einzelvergleiche u. a.: Speekly, Influee, stylink, Boksi jeweils unter ${BASE}/vergleich/<slug>.`,
 
-  about: () => `# Ueber UGC VZ
+  about: () => `# Über UGC VZ
 
-UGC VZ ist ein Produkt der track by track GmbH (Berlin), Schwester der Social-Media-Agentur famefact. Das Verzeichnis vermittelt reale UGC-Creator kostenlos und provisionsfrei an Brands.
+UGC VZ ist ein Produkt der track by track GmbH (Berlin), Team der Social-Media-Agentur famefact. Die Plattform verbindet Marken und Creator im DACH-Raum für View-Kampagnen mit fester Budget-Obergrenze und direkte Creator-Produktionen.
 
-Betreiber: track by track GmbH, Schliemannstr. 23, 10437 Berlin - hi@ugc-vz.de
-Details: ${BASE}/about - Impressum: ${BASE}/impressum`,
+Betreiber: track by track GmbH, Schliemannstr. 23, 10437 Berlin · hi@ugc-vz.de
+Details: ${BASE}/about · Impressum: ${BASE}/impressum`,
 
   contact: () => `# Kontakt
 
