@@ -6,7 +6,8 @@ import { getActivePromo } from '@/app/lib/platform-pricing';
 
 type DatabaseClient = ReturnType<typeof getDatabase>;
 
-export type CompensationModel = 'fixed' | 'tkp' | 'hybrid' | 'barter';
+export type CompensationModel = 'fixed' | 'tkp' | 'hybrid' | 'affiliate' | 'barter';
+export type AffiliateType = 'percent' | 'fixed_per_sale';
 export type CampaignVisibility = 'invite_only' | 'open';
 export type CampaignStatus = 'draft' | 'active' | 'paused' | 'completed';
 export type ApplicationStatus = 'invited' | 'applied' | 'shortlisted' | 'selected' | 'delivered' | 'approved' | 'declined';
@@ -34,6 +35,11 @@ export interface CampaignSummary {
   budgetPerVideoEur: number | null;
   totalBudgetEur: number | null;
   tkpEurCents: number | null;
+  affiliateEnabled?: boolean;
+  affiliateType?: AffiliateType;
+  affiliateRateBps?: number | null;
+  affiliateFixedCents?: number | null;
+  affiliateTargetUrl?: string;
   requiresProductChoice: boolean;
   productChoicePrompt: string;
   discountCode: string;
@@ -83,6 +89,8 @@ export interface CampaignApplicationView {
   targetPlatforms: string[];
   productChoice: string;
   brandNote: string;
+  affiliateCode?: string | null;
+  affiliateClicks?: number;
   updatedAt: string;
 }
 
@@ -171,6 +179,13 @@ export interface CreatorCampaignItem {
   budgetPerVideoEur: number | null;
   totalBudgetEur: number | null;
   tkpEurCents: number | null;
+  affiliateEnabled?: boolean;
+  affiliateType?: AffiliateType;
+  affiliateRateBps?: number | null;
+  affiliateFixedCents?: number | null;
+  affiliateTargetUrl?: string;
+  affiliateCode?: string | null;
+  affiliateClicks?: number;
   requiresProductChoice: boolean;
   productChoicePrompt: string;
   discountCode: string;
@@ -540,6 +555,11 @@ export async function createBrandCampaign(
     budgetPerVideoEur?: number | null;
     totalBudgetEur?: number | null;
     tkpEurCents?: number | null;
+    affiliateEnabled?: boolean;
+    affiliateType?: AffiliateType;
+    affiliateRateBps?: number | null;
+    affiliateFixedCents?: number | null;
+    affiliateTargetUrl?: string;
     requiresProductChoice?: boolean;
     productChoicePrompt?: string;
     discountCode?: string;
@@ -560,9 +580,19 @@ export async function createBrandCampaign(
   const allowedPlatforms = new Set(['tiktok', 'instagram', 'youtube', 'tiktok_shop', 'meta_ads', 'files_only']);
   const platforms = [...new Set((input.platforms || []).map((p) => p.toLowerCase().trim()).filter((p) => allowedPlatforms.has(p)))];
   const deliverables = cleanText(input.deliverables, 240);
-  const compensationModel: CompensationModel = ['fixed', 'tkp', 'hybrid', 'barter'].includes(String(input.compensationModel))
+  const compensationModel: CompensationModel = ['fixed', 'tkp', 'hybrid', 'affiliate', 'barter'].includes(String(input.compensationModel))
     ? (input.compensationModel as CompensationModel)
     : 'fixed';
+  const affiliateEnabled = compensationModel === 'affiliate' || Boolean(input.affiliateEnabled);
+  const affiliateType: AffiliateType = input.affiliateType === 'fixed_per_sale' ? 'fixed_per_sale' : 'percent';
+  const affiliateRateBps = affiliateEnabled && affiliateType === 'percent'
+    ? (toPositiveIntOrNull(input.affiliateRateBps, 8000) ?? 1000)
+    : null;
+  const affiliateFixedCents = affiliateEnabled && affiliateType === 'fixed_per_sale'
+    ? (toPositiveIntOrNull(input.affiliateFixedCents, 500_000) ?? 1500)
+    : null;
+  const affiliateTargetUrl = cleanText(input.affiliateTargetUrl, 400);
+  const affiliateWebhookSecret = affiliateEnabled ? `aff_${crypto.randomBytes(18).toString('hex')}` : '';
   const visibility: CampaignVisibility = input.visibility === 'invite_only' ? 'invite_only' : 'open';
   const requiresProductChoice = Boolean(input.requiresProductChoice);
   const productChoicePrompt = cleanText(input.productChoicePrompt, 240);
@@ -612,16 +642,29 @@ export async function createBrandCampaign(
          tkp_eur_cents, requires_product_choice, product_choice_prompt, discount_code,
          briefing_checklist, required_mention, required_hashtags, report_share_token,
          usage_rights, deadline, visibility, status, source_lead_public_id,
-         platform_fee_bps, fee_promo_code, creator_fee_bps
-       ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,'active',$23,$24,$25,$26)
+         platform_fee_bps, fee_promo_code, creator_fee_bps,
+         affiliate_enabled, affiliate_type, affiliate_rate_bps, affiliate_fixed_cents,
+         affiliate_target_url, affiliate_webhook_secret
+       ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,'active',$23,$24,$25,$26,$27,$28,$29,$30,$31,$32)
        RETURNING id, public_id`,
-      [...baseParams, promo.rateBps, promo.code, promo.creatorFeeBps],
+      [
+        ...baseParams,
+        promo.rateBps,
+        promo.code,
+        promo.creatorFeeBps,
+        affiliateEnabled,
+        affiliateType,
+        affiliateRateBps,
+        affiliateFixedCents,
+        affiliateTargetUrl,
+        affiliateWebhookSecret,
+      ],
     )) as unknown as Array<any>;
     campaign = row;
   } catch (err: any) {
-    // Graceful fallback wenn Migration 022 in einer Umgebung noch nicht eingespielt ist.
+    // Graceful fallback wenn Migration 022/026 in einer Umgebung noch nicht eingespielt ist.
     const message = String(err?.message || '');
-    if (err?.code !== '42703' && !message.includes('platform_fee_bps')) {
+    if (err?.code !== '42703' && !message.includes('platform_fee_bps') && !message.includes('affiliate_enabled')) {
       throw err;
     }
     const [row] = (await sql.query(
@@ -689,48 +732,97 @@ const computeBudgetCapState = (
 };
 
 export async function listBrandCampaigns(sql: DatabaseClient, brandId: string): Promise<CampaignSummary[]> {
-  const rows = (await sql.query(
-    `SELECT
-       c.id, c.public_id, c.title, c.brand_display_name, c.niche, c.platforms,
-       c.deliverables, c.compensation_model, c.budget_per_video_eur, c.total_budget_eur,
-       c.tkp_eur_cents, c.requires_product_choice, c.product_choice_prompt, c.discount_code,
-       c.briefing_checklist, c.required_mention, c.required_hashtags, c.report_share_token,
-       c.usage_rights, c.deadline, c.visibility, c.status, c.created_at,
-       COALESCE(app.invited_count, 0)::int AS invited_count,
-       COALESCE(app.applied_count, 0)::int AS applied_count,
-       COALESCE(app.selected_count, 0)::int AS selected_count,
-       COALESCE(sub.submission_count, 0)::int AS submission_count,
-       COALESCE(sub.approved_count, 0)::int AS approved_count,
-       COALESCE(sub.total_views, 0)::int AS total_views,
-       COALESCE(sub.total_likes, 0)::int AS total_likes,
-       COALESCE(sub.total_comments, 0)::int AS total_comments,
-       COALESCE(sub.total_shares, 0)::int AS total_shares,
-       COALESCE(sub.total_spend_cents, 0)::int AS total_spend_cents
-     FROM brand_campaigns c
-     LEFT JOIN LATERAL (
-       SELECT
-         COUNT(*) FILTER (WHERE a.source = 'invited') AS invited_count,
-         COUNT(*) FILTER (WHERE a.source = 'applied' OR a.status = 'applied') AS applied_count,
-         COUNT(*) FILTER (WHERE a.status IN ('selected', 'delivered', 'approved')) AS selected_count
-       FROM brand_campaign_applications a
-       WHERE a.campaign_id = c.id
-     ) app ON true
-     LEFT JOIN LATERAL (
-       SELECT
-         COUNT(*) AS submission_count,
-         COUNT(*) FILTER (WHERE s.status = 'approved') AS approved_count,
-         COALESCE(SUM(s.views), 0) AS total_views,
-         COALESCE(SUM(s.likes), 0) AS total_likes,
-         COALESCE(SUM(s.comments), 0) AS total_comments,
-         COALESCE(SUM(s.shares), 0) AS total_shares,
-         COALESCE(SUM(s.spend_eur_cents), 0) AS total_spend_cents
-       FROM brand_campaign_submissions s
-       WHERE s.campaign_id = c.id
-     ) sub ON true
-     WHERE c.brand_id = $1
-     ORDER BY c.created_at DESC`,
-    [brandId],
-  )) as unknown as Array<any>;
+  let rows: Array<any>;
+  try {
+    rows = (await sql.query(
+      `SELECT
+         c.id, c.public_id, c.title, c.brand_display_name, c.niche, c.platforms,
+         c.deliverables, c.compensation_model, c.budget_per_video_eur, c.total_budget_eur,
+         c.tkp_eur_cents, c.affiliate_enabled, c.affiliate_type, c.affiliate_rate_bps,
+         c.affiliate_fixed_cents, c.affiliate_target_url,
+         c.requires_product_choice, c.product_choice_prompt, c.discount_code,
+         c.briefing_checklist, c.required_mention, c.required_hashtags, c.report_share_token,
+         c.usage_rights, c.deadline, c.visibility, c.status, c.created_at,
+         COALESCE(app.invited_count, 0)::int AS invited_count,
+         COALESCE(app.applied_count, 0)::int AS applied_count,
+         COALESCE(app.selected_count, 0)::int AS selected_count,
+         COALESCE(sub.submission_count, 0)::int AS submission_count,
+         COALESCE(sub.approved_count, 0)::int AS approved_count,
+         COALESCE(sub.total_views, 0)::int AS total_views,
+         COALESCE(sub.total_likes, 0)::int AS total_likes,
+         COALESCE(sub.total_comments, 0)::int AS total_comments,
+         COALESCE(sub.total_shares, 0)::int AS total_shares,
+         COALESCE(sub.total_spend_cents, 0)::int AS total_spend_cents
+       FROM brand_campaigns c
+       LEFT JOIN LATERAL (
+         SELECT
+           COUNT(*) FILTER (WHERE a.source = 'invited') AS invited_count,
+           COUNT(*) FILTER (WHERE a.source = 'applied' OR a.status = 'applied') AS applied_count,
+           COUNT(*) FILTER (WHERE a.status IN ('selected', 'delivered', 'approved')) AS selected_count
+         FROM brand_campaign_applications a
+         WHERE a.campaign_id = c.id
+       ) app ON true
+       LEFT JOIN LATERAL (
+         SELECT
+           COUNT(*) AS submission_count,
+           COUNT(*) FILTER (WHERE s.status = 'approved') AS approved_count,
+           COALESCE(SUM(s.views), 0) AS total_views,
+           COALESCE(SUM(s.likes), 0) AS total_likes,
+           COALESCE(SUM(s.comments), 0) AS total_comments,
+           COALESCE(SUM(s.shares), 0) AS total_shares,
+           COALESCE(SUM(s.spend_eur_cents), 0) AS total_spend_cents
+         FROM brand_campaign_submissions s
+         WHERE s.campaign_id = c.id
+       ) sub ON true
+       WHERE c.brand_id = $1
+       ORDER BY c.created_at DESC`,
+      [brandId],
+    )) as unknown as Array<any>;
+  } catch (err: any) {
+    if (err?.code !== '42703') throw err;
+    rows = (await sql.query(
+      `SELECT
+         c.id, c.public_id, c.title, c.brand_display_name, c.niche, c.platforms,
+         c.deliverables, c.compensation_model, c.budget_per_video_eur, c.total_budget_eur,
+         c.tkp_eur_cents, c.requires_product_choice, c.product_choice_prompt, c.discount_code,
+         c.briefing_checklist, c.required_mention, c.required_hashtags, c.report_share_token,
+         c.usage_rights, c.deadline, c.visibility, c.status, c.created_at,
+         COALESCE(app.invited_count, 0)::int AS invited_count,
+         COALESCE(app.applied_count, 0)::int AS applied_count,
+         COALESCE(app.selected_count, 0)::int AS selected_count,
+         COALESCE(sub.submission_count, 0)::int AS submission_count,
+         COALESCE(sub.approved_count, 0)::int AS approved_count,
+         COALESCE(sub.total_views, 0)::int AS total_views,
+         COALESCE(sub.total_likes, 0)::int AS total_likes,
+         COALESCE(sub.total_comments, 0)::int AS total_comments,
+         COALESCE(sub.total_shares, 0)::int AS total_shares,
+         COALESCE(sub.total_spend_cents, 0)::int AS total_spend_cents
+       FROM brand_campaigns c
+       LEFT JOIN LATERAL (
+         SELECT
+           COUNT(*) FILTER (WHERE a.source = 'invited') AS invited_count,
+           COUNT(*) FILTER (WHERE a.source = 'applied' OR a.status = 'applied') AS applied_count,
+           COUNT(*) FILTER (WHERE a.status IN ('selected', 'delivered', 'approved')) AS selected_count
+         FROM brand_campaign_applications a
+         WHERE a.campaign_id = c.id
+       ) app ON true
+       LEFT JOIN LATERAL (
+         SELECT
+           COUNT(*) AS submission_count,
+           COUNT(*) FILTER (WHERE s.status = 'approved') AS approved_count,
+           COALESCE(SUM(s.views), 0) AS total_views,
+           COALESCE(SUM(s.likes), 0) AS total_likes,
+           COALESCE(SUM(s.comments), 0) AS total_comments,
+           COALESCE(SUM(s.shares), 0) AS total_shares,
+           COALESCE(SUM(s.spend_eur_cents), 0) AS total_spend_cents
+         FROM brand_campaign_submissions s
+         WHERE s.campaign_id = c.id
+       ) sub ON true
+       WHERE c.brand_id = $1
+       ORDER BY c.created_at DESC`,
+      [brandId],
+    )) as unknown as Array<any>;
+  }
 
   return rows.map((row) => {
     const compensationModel = row.compensation_model as CompensationModel;
@@ -751,6 +843,13 @@ export async function listBrandCampaigns(sql: DatabaseClient, brandId: string): 
       budgetPerVideoEur: row.budget_per_video_eur === null ? null : Number(row.budget_per_video_eur),
       totalBudgetEur,
       tkpEurCents,
+      affiliateEnabled: Boolean(row.affiliate_enabled),
+      affiliateType: (row.affiliate_type === 'fixed_per_sale' ? 'fixed_per_sale' : 'percent') as AffiliateType,
+      affiliateRateBps: row.affiliate_rate_bps === null || row.affiliate_rate_bps === undefined ? null : Number(row.affiliate_rate_bps),
+      affiliateFixedCents: row.affiliate_fixed_cents === null || row.affiliate_fixed_cents === undefined ? null : Number(row.affiliate_fixed_cents),
+      affiliateTargetUrl: String(row.affiliate_target_url || ''),
+      affiliateCode: row.affiliate_code ? String(row.affiliate_code) : null,
+      affiliateClicks: Number(row.affiliate_clicks || 0),
       requiresProductChoice: Boolean(row.requires_product_choice),
       productChoicePrompt: String(row.product_choice_prompt || ''),
       discountCode: String(row.discount_code || ''),
@@ -941,51 +1040,102 @@ export async function getBrandCampaignDetail(
   )) as unknown as Array<any>;
   if (!campRow) return null;
 
-  const appRows = (await sql.query(
-    `SELECT
-       a.id, a.source, a.status, a.creator_pitch, a.proposed_fee_eur,
-       a.availability_note, a.target_platforms, a.product_choice, a.brand_note, a.updated_at,
-       p.public_id AS creator_public_id, p.display_name, p.city, p.topics, p.rate_text,
-       CASE
-         WHEN c.project_notifications_enabled AND c.notification_paused_at IS NULL
-              AND a.status IN ('applied', 'shortlisted', 'selected', 'delivered', 'approved')
-         THEN c.email
-         ELSE NULL
-       END AS contact_email,
-       COALESCE(pf.links, '[]'::json) AS portfolio_links,
-       COALESCE(sc.accounts, '[]'::json) AS social_accounts
-     FROM brand_campaign_applications a
-     JOIN creator_profiles p ON p.id = a.creator_id
-     LEFT JOIN creator_private_contacts c ON c.creator_id = p.id
-     LEFT JOIN LATERAL (
-       SELECT json_agg(f.url ORDER BY f.created_at DESC) AS links
-       FROM creator_portfolio_items f
-       WHERE f.creator_id = p.id
-     ) pf ON true
-     LEFT JOIN LATERAL (
-       SELECT json_agg(json_build_object(
-         'platform', s.platform,
-         'handle', COALESCE(s.canonical_handle, s.handle, ''),
-         'url', s.url,
-         'verifiedAt', s.verified_at
-       ) ORDER BY s.verified_at DESC NULLS LAST, s.is_primary DESC) AS accounts
-       FROM creator_social_accounts s
-       WHERE s.creator_id = p.id
-     ) sc ON true
-     WHERE a.campaign_id = $1
-     ORDER BY
-       CASE a.status
-         WHEN 'delivered' THEN 1
-         WHEN 'selected' THEN 2
-         WHEN 'applied' THEN 3
-         WHEN 'shortlisted' THEN 4
-         WHEN 'invited' THEN 5
-         WHEN 'approved' THEN 6
-         ELSE 7
-       END,
-       a.updated_at DESC`,
-    [campRow.id],
-  )) as unknown as Array<any>;
+  let appRows: Array<any>;
+  try {
+    appRows = (await sql.query(
+      `SELECT
+         a.id, a.source, a.status, a.creator_pitch, a.proposed_fee_eur,
+         a.availability_note, a.target_platforms, a.product_choice, a.brand_note,
+         a.affiliate_code, a.affiliate_clicks, a.updated_at,
+         p.public_id AS creator_public_id, p.display_name, p.city, p.topics, p.rate_text,
+         CASE
+           WHEN c.project_notifications_enabled AND c.notification_paused_at IS NULL
+                AND a.status IN ('applied', 'shortlisted', 'selected', 'delivered', 'approved')
+           THEN c.email
+           ELSE NULL
+         END AS contact_email,
+         COALESCE(pf.links, '[]'::json) AS portfolio_links,
+         COALESCE(sc.accounts, '[]'::json) AS social_accounts
+       FROM brand_campaign_applications a
+       JOIN creator_profiles p ON p.id = a.creator_id
+       LEFT JOIN creator_private_contacts c ON c.creator_id = p.id
+       LEFT JOIN LATERAL (
+         SELECT json_agg(f.url ORDER BY f.created_at DESC) AS links
+         FROM creator_portfolio_items f
+         WHERE f.creator_id = p.id
+       ) pf ON true
+       LEFT JOIN LATERAL (
+         SELECT json_agg(json_build_object(
+           'platform', s.platform,
+           'handle', COALESCE(s.canonical_handle, s.handle, ''),
+           'url', s.url,
+           'verifiedAt', s.verified_at
+         ) ORDER BY s.verified_at DESC NULLS LAST, s.is_primary DESC) AS accounts
+         FROM creator_social_accounts s
+         WHERE s.creator_id = p.id
+       ) sc ON true
+       WHERE a.campaign_id = $1
+       ORDER BY
+         CASE a.status
+           WHEN 'delivered' THEN 1
+           WHEN 'selected' THEN 2
+           WHEN 'applied' THEN 3
+           WHEN 'shortlisted' THEN 4
+           WHEN 'invited' THEN 5
+           WHEN 'approved' THEN 6
+           ELSE 7
+         END,
+         a.updated_at DESC`,
+      [campRow.id],
+    )) as unknown as Array<any>;
+  } catch (err: any) {
+    if (err?.code !== '42703') throw err;
+    appRows = (await sql.query(
+      `SELECT
+         a.id, a.source, a.status, a.creator_pitch, a.proposed_fee_eur,
+         a.availability_note, a.target_platforms, a.product_choice, a.brand_note, a.updated_at,
+         p.public_id AS creator_public_id, p.display_name, p.city, p.topics, p.rate_text,
+         CASE
+           WHEN c.project_notifications_enabled AND c.notification_paused_at IS NULL
+                AND a.status IN ('applied', 'shortlisted', 'selected', 'delivered', 'approved')
+           THEN c.email
+           ELSE NULL
+         END AS contact_email,
+         COALESCE(pf.links, '[]'::json) AS portfolio_links,
+         COALESCE(sc.accounts, '[]'::json) AS social_accounts
+       FROM brand_campaign_applications a
+       JOIN creator_profiles p ON p.id = a.creator_id
+       LEFT JOIN creator_private_contacts c ON c.creator_id = p.id
+       LEFT JOIN LATERAL (
+         SELECT json_agg(f.url ORDER BY f.created_at DESC) AS links
+         FROM creator_portfolio_items f
+         WHERE f.creator_id = p.id
+       ) pf ON true
+       LEFT JOIN LATERAL (
+         SELECT json_agg(json_build_object(
+           'platform', s.platform,
+           'handle', COALESCE(s.canonical_handle, s.handle, ''),
+           'url', s.url,
+           'verifiedAt', s.verified_at
+         ) ORDER BY s.verified_at DESC NULLS LAST, s.is_primary DESC) AS accounts
+         FROM creator_social_accounts s
+         WHERE s.creator_id = p.id
+       ) sc ON true
+       WHERE a.campaign_id = $1
+       ORDER BY
+         CASE a.status
+           WHEN 'delivered' THEN 1
+           WHEN 'selected' THEN 2
+           WHEN 'applied' THEN 3
+           WHEN 'shortlisted' THEN 4
+           WHEN 'invited' THEN 5
+           WHEN 'approved' THEN 6
+           ELSE 7
+         END,
+         a.updated_at DESC`,
+      [campRow.id],
+    )) as unknown as Array<any>;
+  }
 
   const applications: CampaignApplicationView[] = appRows.map((row) => {
     const rawLinks = Array.isArray(row.portfolio_links) ? row.portfolio_links : [];
@@ -1015,6 +1165,8 @@ export async function getBrandCampaignDetail(
       targetPlatforms: Array.isArray(row.target_platforms) ? row.target_platforms.map(String) : [],
       productChoice: String(row.product_choice || ''),
       brandNote: String(row.brand_note || ''),
+      affiliateCode: row.affiliate_code ? String(row.affiliate_code) : null,
+      affiliateClicks: Number(row.affiliate_clicks || 0),
       updatedAt: new Date(row.updated_at).toISOString(),
     };
   });
@@ -1104,6 +1256,11 @@ export async function getBrandCampaignDetail(
       budgetPerVideoEur: campRow.budget_per_video_eur === null ? null : Number(campRow.budget_per_video_eur),
       totalBudgetEur,
       tkpEurCents,
+      affiliateEnabled: Boolean(campRow.affiliate_enabled),
+      affiliateType: (campRow.affiliate_type === 'fixed_per_sale' ? 'fixed_per_sale' : 'percent') as AffiliateType,
+      affiliateRateBps: campRow.affiliate_rate_bps === null || campRow.affiliate_rate_bps === undefined ? null : Number(campRow.affiliate_rate_bps),
+      affiliateFixedCents: campRow.affiliate_fixed_cents === null || campRow.affiliate_fixed_cents === undefined ? null : Number(campRow.affiliate_fixed_cents),
+      affiliateTargetUrl: String(campRow.affiliate_target_url || ''),
       requiresProductChoice: Boolean(campRow.requires_product_choice),
       productChoicePrompt: String(campRow.product_choice_prompt || ''),
       discountCode: String(campRow.discount_code || ''),
@@ -1194,71 +1351,147 @@ export async function listCreatorCampaigns(
   sql: DatabaseClient,
   creatorId: string,
 ): Promise<{ myCampaigns: CreatorCampaignItem[]; openCampaigns: CreatorCampaignItem[] }> {
-  const myRows = (await sql.query(
-    `SELECT
-       a.id AS application_id, a.source, a.status AS app_status, a.creator_pitch,
-       a.proposed_fee_eur, a.availability_note, a.target_platforms, a.product_choice,
-       c.public_id, c.title, c.brand_display_name, c.description, c.niche, c.platforms,
-       c.deliverables, c.compensation_model, c.budget_per_video_eur, c.total_budget_eur,
-       c.tkp_eur_cents, c.requires_product_choice, c.product_choice_prompt, c.discount_code,
-       c.briefing_checklist, c.required_mention, c.required_hashtags,
-       c.usage_rights, c.deadline,
-       COALESCE(agg.total_views, 0)::int AS camp_views,
-       COALESCE(agg.total_spend_cents, 0)::int AS camp_spend_cents,
-       COALESCE(subs.items, '[]'::json) AS submissions
-     FROM brand_campaign_applications a
-     JOIN brand_campaigns c ON c.id = a.campaign_id
-     LEFT JOIN LATERAL (
-       SELECT COALESCE(SUM(s.views), 0) AS total_views, COALESCE(SUM(s.spend_eur_cents), 0) AS total_spend_cents
-       FROM brand_campaign_submissions s
-       WHERE s.campaign_id = c.id
-     ) agg ON true
-     LEFT JOIN LATERAL (
-       SELECT json_agg(json_build_object(
-         'id', s.id,
-         'platform', s.platform,
-         'contentUrl', s.content_url,
-         'title', s.title,
-         'status', s.status,
-         'views', s.views,
-         'likes', s.likes,
-         'comments', s.comments,
-         'shares', s.shares,
-         'createdAt', s.created_at
-       ) ORDER BY s.created_at DESC) AS items
-       FROM brand_campaign_submissions s
-       WHERE s.application_id = a.id
-     ) subs ON true
-     WHERE a.creator_id = $1 AND c.status IN ('active', 'paused', 'completed')
-     ORDER BY a.updated_at DESC`,
-    [creatorId],
-  )) as unknown as Array<any>;
+  let myRows: Array<any>;
+  let openRows: Array<any>;
+  try {
+    myRows = (await sql.query(
+      `SELECT
+         a.id AS application_id, a.source, a.status AS app_status, a.creator_pitch,
+         a.proposed_fee_eur, a.availability_note, a.target_platforms, a.product_choice,
+         a.affiliate_code, a.affiliate_clicks,
+         c.public_id, c.title, c.brand_display_name, c.description, c.niche, c.platforms,
+         c.deliverables, c.compensation_model, c.budget_per_video_eur, c.total_budget_eur,
+         c.tkp_eur_cents, c.affiliate_enabled, c.affiliate_type, c.affiliate_rate_bps,
+         c.affiliate_fixed_cents, c.affiliate_target_url,
+         c.requires_product_choice, c.product_choice_prompt, c.discount_code,
+         c.briefing_checklist, c.required_mention, c.required_hashtags,
+         c.usage_rights, c.deadline,
+         COALESCE(agg.total_views, 0)::int AS camp_views,
+         COALESCE(agg.total_spend_cents, 0)::int AS camp_spend_cents,
+         COALESCE(subs.items, '[]'::json) AS submissions
+       FROM brand_campaign_applications a
+       JOIN brand_campaigns c ON c.id = a.campaign_id
+       LEFT JOIN LATERAL (
+         SELECT COALESCE(SUM(s.views), 0) AS total_views, COALESCE(SUM(s.spend_eur_cents), 0) AS total_spend_cents
+         FROM brand_campaign_submissions s
+         WHERE s.campaign_id = c.id
+       ) agg ON true
+       LEFT JOIN LATERAL (
+         SELECT json_agg(json_build_object(
+           'id', s.id,
+           'platform', s.platform,
+           'contentUrl', s.content_url,
+           'title', s.title,
+           'status', s.status,
+           'views', s.views,
+           'likes', s.likes,
+           'comments', s.comments,
+           'shares', s.shares,
+           'createdAt', s.created_at
+         ) ORDER BY s.created_at DESC) AS items
+         FROM brand_campaign_submissions s
+         WHERE s.application_id = a.id
+       ) subs ON true
+       WHERE a.creator_id = $1 AND c.status IN ('active', 'paused', 'completed')
+       ORDER BY a.updated_at DESC`,
+      [creatorId],
+    )) as unknown as Array<any>;
 
-  const openRows = (await sql.query(
-    `SELECT
-       c.public_id, c.title, c.brand_display_name, c.description, c.niche, c.platforms,
-       c.deliverables, c.compensation_model, c.budget_per_video_eur, c.total_budget_eur,
-       c.tkp_eur_cents, c.requires_product_choice, c.product_choice_prompt, c.discount_code,
-       c.briefing_checklist, c.required_mention, c.required_hashtags,
-       c.usage_rights, c.deadline,
-       COALESCE(agg.total_views, 0)::int AS camp_views,
-       COALESCE(agg.total_spend_cents, 0)::int AS camp_spend_cents
-     FROM brand_campaigns c
-     LEFT JOIN LATERAL (
-       SELECT COALESCE(SUM(s.views), 0) AS total_views, COALESCE(SUM(s.spend_eur_cents), 0) AS total_spend_cents
-       FROM brand_campaign_submissions s
-       WHERE s.campaign_id = c.id
-     ) agg ON true
-     WHERE c.status = 'active'
-       AND c.visibility = 'open'
-       AND NOT EXISTS (
-         SELECT 1 FROM brand_campaign_applications a
-         WHERE a.campaign_id = c.id AND a.creator_id = $1
-       )
-     ORDER BY c.created_at DESC
-     LIMIT 30`,
-    [creatorId],
-  )) as unknown as Array<any>;
+    openRows = (await sql.query(
+      `SELECT
+         c.public_id, c.title, c.brand_display_name, c.description, c.niche, c.platforms,
+         c.deliverables, c.compensation_model, c.budget_per_video_eur, c.total_budget_eur,
+         c.tkp_eur_cents, c.affiliate_enabled, c.affiliate_type, c.affiliate_rate_bps,
+         c.affiliate_fixed_cents, c.affiliate_target_url,
+         c.requires_product_choice, c.product_choice_prompt, c.discount_code,
+         c.briefing_checklist, c.required_mention, c.required_hashtags,
+         c.usage_rights, c.deadline,
+         COALESCE(agg.total_views, 0)::int AS camp_views,
+         COALESCE(agg.total_spend_cents, 0)::int AS camp_spend_cents
+       FROM brand_campaigns c
+       LEFT JOIN LATERAL (
+         SELECT COALESCE(SUM(s.views), 0) AS total_views, COALESCE(SUM(s.spend_eur_cents), 0) AS total_spend_cents
+         FROM brand_campaign_submissions s
+         WHERE s.campaign_id = c.id
+       ) agg ON true
+       WHERE c.status = 'active'
+         AND c.visibility = 'open'
+         AND NOT EXISTS (
+           SELECT 1 FROM brand_campaign_applications a
+           WHERE a.campaign_id = c.id AND a.creator_id = $1
+         )
+       ORDER BY c.created_at DESC
+       LIMIT 30`,
+      [creatorId],
+    )) as unknown as Array<any>;
+  } catch (err: any) {
+    if (err?.code !== '42703') throw err;
+    myRows = (await sql.query(
+      `SELECT
+         a.id AS application_id, a.source, a.status AS app_status, a.creator_pitch,
+         a.proposed_fee_eur, a.availability_note, a.target_platforms, a.product_choice,
+         c.public_id, c.title, c.brand_display_name, c.description, c.niche, c.platforms,
+         c.deliverables, c.compensation_model, c.budget_per_video_eur, c.total_budget_eur,
+         c.tkp_eur_cents, c.requires_product_choice, c.product_choice_prompt, c.discount_code,
+         c.briefing_checklist, c.required_mention, c.required_hashtags,
+         c.usage_rights, c.deadline,
+         COALESCE(agg.total_views, 0)::int AS camp_views,
+         COALESCE(agg.total_spend_cents, 0)::int AS camp_spend_cents,
+         COALESCE(subs.items, '[]'::json) AS submissions
+       FROM brand_campaign_applications a
+       JOIN brand_campaigns c ON c.id = a.campaign_id
+       LEFT JOIN LATERAL (
+         SELECT COALESCE(SUM(s.views), 0) AS total_views, COALESCE(SUM(s.spend_eur_cents), 0) AS total_spend_cents
+         FROM brand_campaign_submissions s
+         WHERE s.campaign_id = c.id
+       ) agg ON true
+       LEFT JOIN LATERAL (
+         SELECT json_agg(json_build_object(
+           'id', s.id,
+           'platform', s.platform,
+           'contentUrl', s.content_url,
+           'title', s.title,
+           'status', s.status,
+           'views', s.views,
+           'likes', s.likes,
+           'comments', s.comments,
+           'shares', s.shares,
+           'createdAt', s.created_at
+         ) ORDER BY s.created_at DESC) AS items
+         FROM brand_campaign_submissions s
+         WHERE s.application_id = a.id
+       ) subs ON true
+       WHERE a.creator_id = $1 AND c.status IN ('active', 'paused', 'completed')
+       ORDER BY a.updated_at DESC`,
+      [creatorId],
+    )) as unknown as Array<any>;
+
+    openRows = (await sql.query(
+      `SELECT
+         c.public_id, c.title, c.brand_display_name, c.description, c.niche, c.platforms,
+         c.deliverables, c.compensation_model, c.budget_per_video_eur, c.total_budget_eur,
+         c.tkp_eur_cents, c.requires_product_choice, c.product_choice_prompt, c.discount_code,
+         c.briefing_checklist, c.required_mention, c.required_hashtags,
+         c.usage_rights, c.deadline,
+         COALESCE(agg.total_views, 0)::int AS camp_views,
+         COALESCE(agg.total_spend_cents, 0)::int AS camp_spend_cents
+       FROM brand_campaigns c
+       LEFT JOIN LATERAL (
+         SELECT COALESCE(SUM(s.views), 0) AS total_views, COALESCE(SUM(s.spend_eur_cents), 0) AS total_spend_cents
+         FROM brand_campaign_submissions s
+         WHERE s.campaign_id = c.id
+       ) agg ON true
+       WHERE c.status = 'active'
+         AND c.visibility = 'open'
+         AND NOT EXISTS (
+           SELECT 1 FROM brand_campaign_applications a
+           WHERE a.campaign_id = c.id AND a.creator_id = $1
+         )
+       ORDER BY c.created_at DESC
+       LIMIT 30`,
+      [creatorId],
+    )) as unknown as Array<any>;
+  }
 
   const mapBase = (row: any) => {
     const compensationModel = row.compensation_model as CompensationModel;
@@ -1283,6 +1516,13 @@ export async function listCreatorCampaigns(
       budgetPerVideoEur: row.budget_per_video_eur === null ? null : Number(row.budget_per_video_eur),
       totalBudgetEur,
       tkpEurCents,
+      affiliateEnabled: Boolean(row.affiliate_enabled),
+      affiliateType: (row.affiliate_type === 'fixed_per_sale' ? 'fixed_per_sale' : 'percent') as AffiliateType,
+      affiliateRateBps: row.affiliate_rate_bps === null || row.affiliate_rate_bps === undefined ? null : Number(row.affiliate_rate_bps),
+      affiliateFixedCents: row.affiliate_fixed_cents === null || row.affiliate_fixed_cents === undefined ? null : Number(row.affiliate_fixed_cents),
+      affiliateTargetUrl: String(row.affiliate_target_url || ''),
+      affiliateCode: row.affiliate_code ? String(row.affiliate_code) : null,
+      affiliateClicks: Number(row.affiliate_clicks || 0),
       requiresProductChoice: Boolean(row.requires_product_choice),
       productChoicePrompt: String(row.product_choice_prompt || ''),
       discountCode: String(row.discount_code || ''),

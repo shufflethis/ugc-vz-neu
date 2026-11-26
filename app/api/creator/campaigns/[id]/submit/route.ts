@@ -4,6 +4,10 @@ import { CREATOR_SESSION_COOKIE, verifySession } from '@/app/lib/creator-session
 import { isTrustedSameOrigin } from '@/app/lib/brand-session';
 import { safePortfolioUrl } from '@/app/lib/creator-public';
 import { cleanText, detectSubmissionPlatform, toPositiveIntOrNull } from '@/app/lib/brand-workspace';
+import {
+  buildBrandSubmissionNotification,
+  sendCampaignNotificationEmail,
+} from '@/app/lib/campaign-notification-email';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -28,9 +32,14 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
 
   const sql = getDatabase();
   const [app] = (await sql.query(
-    `SELECT a.id, a.campaign_id, a.status, a.proposed_fee_eur, c.compensation_model, c.tkp_eur_cents
+    `SELECT a.id, a.campaign_id, a.status, a.proposed_fee_eur,
+            c.public_id, c.title AS campaign_title, c.compensation_model, c.tkp_eur_cents, c.budget_per_video_eur,
+            b.email AS brand_email, b.contact_name AS brand_contact_name,
+            COALESCE(NULLIF(p.display_name, ''), 'Creator') AS creator_name
      FROM brand_campaign_applications a
      JOIN brand_campaigns c ON c.id = a.campaign_id
+     JOIN brand_accounts b ON b.id = c.brand_id
+     JOIN creator_profiles p ON p.id = a.creator_id
      WHERE c.public_id = $1 AND a.creator_id = $2
      LIMIT 1`,
     [cleanText(params.id, 30), creatorId],
@@ -55,7 +64,9 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       ? Math.round((views / 1000) * tkpCents)
       : app.proposed_fee_eur
         ? Number(app.proposed_fee_eur) * 100
-        : 0;
+        : app.budget_per_video_eur
+          ? Number(app.budget_per_video_eur) * 100
+          : 0;
 
   const [created] = (await sql.query(
     `INSERT INTO brand_campaign_submissions (
@@ -76,6 +87,27 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     `UPDATE brand_campaign_applications SET status = 'delivered', updated_at = now() WHERE id = $1 AND status = 'selected'`,
     [app.id],
   );
+
+  if (app.brand_email) {
+    try {
+      const mail = buildBrandSubmissionNotification({
+        brandContactName: String(app.brand_contact_name || 'Team'),
+        campaignPublicId: String(app.public_id),
+        campaignTitle: String(app.campaign_title),
+        creatorName: String(app.creator_name || 'Creator'),
+        submissionTitle: title,
+        platform,
+      });
+      await sendCampaignNotificationEmail({
+        to: String(app.brand_email),
+        ...mail,
+        category: 'brand_new_submission',
+        audience: 'brand',
+      });
+    } catch {
+      // non-fatal
+    }
+  }
 
   return NextResponse.json({ success: true, submission: created }, { status: 201 });
 }

@@ -2,6 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDatabase, isDatabaseConfigured } from '@/app/lib/database';
 import { BRAND_SESSION_COOKIE, isTrustedSameOrigin, verifyBrandSession } from '@/app/lib/brand-session';
 import { cleanText, toPositiveIntOrNull, type SubmissionStatus } from '@/app/lib/brand-workspace';
+import { settleFixedVideoSubmission } from '@/app/lib/payments-ledger';
+import {
+  buildCreatorPayoutApprovedNotification,
+  buildCreatorRevisionNotification,
+  sendCampaignNotificationEmail,
+} from '@/app/lib/campaign-notification-email';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -26,10 +32,17 @@ export async function PATCH(
 
   const sql = getDatabase();
   const [existing] = (await sql.query(
-    `SELECT s.id, s.application_id, s.status, s.views, s.likes, s.comments, s.shares, s.spend_eur_cents,
-            s.review_note, s.checklist_passed, c.compensation_model, c.tkp_eur_cents
+    `SELECT s.id, s.campaign_id, s.application_id, s.creator_id, s.status,
+            s.views, s.likes, s.comments, s.shares, s.spend_eur_cents,
+            s.review_note, s.checklist_passed,
+            c.title AS campaign_title, c.brand_display_name, c.compensation_model,
+            c.tkp_eur_cents, c.budget_per_video_eur,
+            COALESCE(NULLIF(p.display_name, ''), 'Creator') AS creator_name,
+            pc.email AS creator_email
      FROM brand_campaign_submissions s
      JOIN brand_campaigns c ON c.id = s.campaign_id
+     JOIN creator_profiles p ON p.id = s.creator_id
+     LEFT JOIN creator_private_contacts pc ON pc.creator_id = p.id
      WHERE c.brand_id = $1 AND c.public_id = $2 AND s.id = $3
      LIMIT 1`,
     [brandId, cleanText(params.id, 30), cleanText(params.subId, 60)],
@@ -57,6 +70,12 @@ export async function PATCH(
     spendEurCents = Math.max(0, Math.min(100_000_000, Math.round((Number(body.spendEur) || 0) * 100)));
   } else if (existing.compensation_model === 'tkp' && tkpCents > 0 && views !== Number(existing.views)) {
     spendEurCents = Math.min(100_000_000, autoTkpCents);
+  } else if (
+    (existing.compensation_model === 'fixed' || existing.compensation_model === 'hybrid')
+    && spendEurCents === 0
+    && existing.budget_per_video_eur
+  ) {
+    spendEurCents = Number(existing.budget_per_video_eur) * 100;
   }
 
   const metricsChanged =
@@ -71,6 +90,37 @@ export async function PATCH(
     : nextStatus === 'approved'
       ? true
       : Boolean(existing.checklist_passed);
+
+  // Pay-per-Video Escrow-Settlement bei Freigabe einer Fixpreis-/Hybrid-Einreichung
+  let settlement: { settledNow: boolean; grantedCreatorCents: number; fundingSource: string } | null = null;
+  let settlementWarning: string | null = null;
+  if (
+    nextStatus === 'approved'
+    && (existing.compensation_model === 'fixed' || existing.compensation_model === 'hybrid')
+    && spendEurCents > 0
+  ) {
+    try {
+      const res = await settleFixedVideoSubmission(sql, {
+        brandId,
+        campaignId: String(existing.campaign_id),
+        submissionId: String(existing.id),
+        creatorId: String(existing.creator_id),
+        fixedAmountCents: spendEurCents,
+        reviewNote,
+      });
+      settlement = {
+        settledNow: res.settledNow,
+        grantedCreatorCents: res.grantedCreatorCents,
+        fundingSource: res.fundingSource,
+      };
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Budget-Freigabe ausstehend.';
+      if (body.releasePayout === true) {
+        return NextResponse.json({ success: false, error: msg }, { status: 400 });
+      }
+      settlementWarning = msg;
+    }
+  }
 
   await sql.query(
     `UPDATE brand_campaign_submissions
@@ -96,8 +146,42 @@ export async function PATCH(
     );
   }
 
+  // CI-Status-E-Mails an den Creator (Freigabe mit Guthaben ODER Korrektur-Hinweis)
+  if (existing.creator_email) {
+    if (settlement?.settledNow && settlement.grantedCreatorCents > 0) {
+      const mail = buildCreatorPayoutApprovedNotification({
+        creatorName: String(existing.creator_name || 'Creator'),
+        brandName: String(existing.brand_display_name || 'Brand'),
+        campaignTitle: String(existing.campaign_title),
+        creditedCents: settlement.grantedCreatorCents,
+        reasonLabel: 'Video freigegeben · Fixpreis gutgeschrieben',
+      });
+      await sendCampaignNotificationEmail({
+        to: String(existing.creator_email),
+        ...mail,
+        category: 'fixed_video_approved_payout',
+        audience: 'creator',
+      });
+    } else if (nextStatus === 'revision_requested' && existing.status !== 'revision_requested') {
+      const mail = buildCreatorRevisionNotification({
+        creatorName: String(existing.creator_name || 'Creator'),
+        brandName: String(existing.brand_display_name || 'Brand'),
+        campaignTitle: String(existing.campaign_title),
+        reviewNote,
+      });
+      await sendCampaignNotificationEmail({
+        to: String(existing.creator_email),
+        ...mail,
+        category: 'submission_revision_requested',
+        audience: 'creator',
+      });
+    }
+  }
+
   return NextResponse.json({
     success: true,
     submission: { id: existing.id, status: nextStatus, views, likes, comments, shares, spendEurCents },
+    settlement,
+    settlementWarning,
   });
 }

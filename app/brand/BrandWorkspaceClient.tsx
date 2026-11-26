@@ -15,9 +15,10 @@ const fieldClass =
 const labelClass = 'mb-1.5 block text-sm font-medium text-[#202124]';
 
 const MODEL_LABELS: Record<CompensationModel, string> = {
-  fixed: 'Festpreis / Paket',
-  tkp: 'Reichweite nach Views',
+  fixed: 'Fixpreis pro Video',
+  tkp: 'Pay-per-View (TKP)',
   hybrid: 'Hybrid (Fix + Views)',
+  affiliate: 'Affiliate / Kickback',
   barter: 'Produkt / Seeding',
 };
 
@@ -459,6 +460,11 @@ function BrandDashboard({
   const [requiresProductChoice, setRequiresProductChoice] = useState(false);
   const [productChoicePrompt, setProductChoicePrompt] = useState('');
   const [discountCode, setDiscountCode] = useState('');
+  const [affiliateEnabled, setAffiliateEnabled] = useState(false);
+  const [affiliateType, setAffiliateType] = useState<'percent' | 'fixed_per_sale'>('percent');
+  const [affiliateRatePercent, setAffiliateRatePercent] = useState('10');
+  const [affiliateFixedEur, setAffiliateFixedEur] = useState('15');
+  const [affiliateTargetUrl, setAffiliateTargetUrl] = useState('');
   const [requiredMention, setRequiredMention] = useState('');
   const [requiredHashtags, setRequiredHashtags] = useState('');
   const [checklistText, setChecklistText] = useState(
@@ -476,21 +482,32 @@ function BrandDashboard({
     const draft = loadQuickBriefDraft();
     if (!draft) return;
     setShowCreate(true);
-    setCompensationModel('tkp');
+    const nextModel = draft.compensationModel === 'fixed' ? 'fixed' : 'tkp';
+    setCompensationModel(nextModel);
     setTitle((prev) => prev || draft.goal.slice(0, 90));
     setDescription((prev) => prev || draft.goal);
     setPlatforms(draft.platforms);
-    setTkpEur(draft.pricePerThousandEur.toFixed(2));
+    if (nextModel === 'fixed') {
+      setBudgetPerVideoEur(String(draft.budgetPerVideoEur || 200));
+      setTkpEur('');
+    } else {
+      setTkpEur(draft.pricePerThousandEur.toFixed(2));
+    }
     setTotalBudgetEur(String(draft.budgetCapEur));
+    if (draft.affiliateEnabled) {
+      setAffiliateEnabled(true);
+      setAffiliateRatePercent(String(draft.affiliatePercent || 10));
+    }
     setLoadedFromQuickBrief(true);
   }, []);
 
-  const applyPreset = (preset: 'tkp_cap' | 'product_tkp' | 'fixed_ugc') => {
+  const applyPreset = (preset: 'tkp_cap' | 'fixed_ugc' | 'fixed_affiliate' | 'affiliate_only') => {
     if (preset === 'tkp_cap') {
       setCompensationModel('tkp');
       setTkpEur('2.00');
       setBudgetPerVideoEur('');
       setTotalBudgetEur('500');
+      setAffiliateEnabled(false);
       setDeliverables('1 bis 3 authentische Short-Videos (TikTok / Reels / Shorts) inkl. Aktions-Hinweis');
       setUsageRights('Organische Creator-Posts + Repost-Rechte');
       setDeadline('Aktionszeitraum oder bis Budget-Obergrenze erreicht');
@@ -498,30 +515,49 @@ function BrandDashboard({
       setRequiresProductChoice(false);
       setProductChoicePrompt('');
       setDiscountCode('z. B. 20 % Aktionsrabatt im Shop (kein Produktversand nötig)');
-    } else if (preset === 'product_tkp') {
-      setCompensationModel('tkp');
-      setTkpEur('2.00');
-      setBudgetPerVideoEur('');
-      setTotalBudgetEur('500');
-      setDeliverables('Produkt-Showcase / Review nach Musterversand (1 bis 3 Clips)');
-      setUsageRights('Organische Posts + 6 Monate Paid Ads / TikTok Shop');
-      setDeadline('Erste Clips 10 Tage nach Produktzustellung');
-      setPlatforms(['tiktok', 'instagram', 'tiktok_shop']);
-      setRequiresProductChoice(true);
-      setProductChoicePrompt('Welches Produkt / welche Variante, Größe oder App-Option möchtest du testen?');
-      setDiscountCode('');
-    } else {
+    } else if (preset === 'fixed_ugc') {
       setCompensationModel('fixed');
       setTkpEur('');
       setBudgetPerVideoEur('250');
-      setTotalBudgetEur('1500');
-      setDeliverables('3× 30s UGC-Videos (9:16) inkl. 2 Hooks');
-      setUsageRights('12 Monate Paid Ads (Meta & TikTok)');
+      setTotalBudgetEur('1000');
+      setAffiliateEnabled(false);
+      setDeliverables('4x 30s UGC-Produktvideos (9:16) inkl. 2 Hooks');
+      setUsageRights('12 Monate Paid Ads (Meta & TikTok) + Organisch');
       setDeadline('Erste Clips innerhalb von 14 Tagen');
       setPlatforms(['tiktok', 'instagram', 'meta_ads']);
       setRequiresProductChoice(false);
       setProductChoicePrompt('');
       setDiscountCode('');
+    } else if (preset === 'fixed_affiliate') {
+      setCompensationModel('fixed');
+      setTkpEur('');
+      setBudgetPerVideoEur('150');
+      setTotalBudgetEur('900');
+      setAffiliateEnabled(true);
+      setAffiliateType('percent');
+      setAffiliateRatePercent('10');
+      setDeliverables('1 UGC-Video + persönlicher Rabattcode & Tracking-Link');
+      setUsageRights('Organische Posts + 6 Monate Repost & Paid Ads');
+      setDeadline('Erste Clips innerhalb von 14 Tagen');
+      setPlatforms(['tiktok', 'instagram', 'tiktok_shop']);
+      setRequiresProductChoice(true);
+      setProductChoicePrompt('Welches Produkt / welche Variante möchtest du testen?');
+      setDiscountCode('10 % Community-Rabatt + 10 % Creator-Kickback');
+    } else {
+      setCompensationModel('affiliate');
+      setTkpEur('');
+      setBudgetPerVideoEur('');
+      setTotalBudgetEur('1000');
+      setAffiliateEnabled(true);
+      setAffiliateType('percent');
+      setAffiliateRatePercent('15');
+      setDeliverables('Authentische Empfehlung mit individuellem Creator-Code & Tracking-Link');
+      setUsageRights('Organische Posts + Repost-Rechte');
+      setDeadline('Laufend · Abrechnung pro bestätigtem Sale');
+      setPlatforms(['tiktok', 'instagram', 'youtube']);
+      setRequiresProductChoice(false);
+      setProductChoicePrompt('');
+      setDiscountCode('Persönlicher Creator-Code (automatisch im Portal erzeugt)');
     }
   };
 
@@ -579,6 +615,17 @@ function BrandDashboard({
           budgetPerVideoEur: budgetPerVideoEur ? Number(budgetPerVideoEur) : null,
           totalBudgetEur: totalBudgetEur ? Number(totalBudgetEur) : null,
           tkpEurCents: tkpCents,
+          affiliateEnabled: compensationModel === 'affiliate' || affiliateEnabled,
+          affiliateType,
+          affiliateRateBps:
+            (compensationModel === 'affiliate' || affiliateEnabled) && affiliateType === 'percent'
+              ? Math.round((Number(affiliateRatePercent.replace(',', '.')) || 10) * 100)
+              : null,
+          affiliateFixedCents:
+            (compensationModel === 'affiliate' || affiliateEnabled) && affiliateType === 'fixed_per_sale'
+              ? Math.round((Number(affiliateFixedEur.replace(',', '.')) || 15) * 100)
+              : null,
+          affiliateTargetUrl: affiliateTargetUrl.trim(),
           requiresProductChoice,
           productChoicePrompt,
           discountCode,
@@ -673,13 +720,13 @@ function BrandDashboard({
 
         {/* Neue Kampagne anlegen */}
         {showCreate && (
-          <form onSubmit={handleCreate} className="rounded-3xl border border-geo-violet/25 bg-[#FBF8FE] p-6 sm:p-8 space-y-5">
+          <form onSubmit={handleCreate} className="space-y-5 rounded-[20px] border border-[#DCE2EA] bg-[#F5F7FA] p-6 sm:p-8">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div>
-                <h2 className="text-xl font-bold text-ink">Neue UGC-Kampagne anlegen</h2>
-                <p className="text-sm text-ink-soft">Als offene Ausschreibung für 750+ Creator im Konto oder privat nur für ausgewählte Profile.</p>
+                <h2 className="text-xl font-bold text-[#202124]">Neue UGC-Kampagne anlegen</h2>
+                <p className="text-sm text-[#5C6470]">Pay-per-View (TKP), Fixpreis pro Video (Escrow) oder Affiliate-Kickback — komplett im Portal.</p>
               </div>
-              <button type="button" onClick={refresh} className="text-xs font-semibold text-geo-violet underline">
+              <button type="button" onClick={refresh} className="text-xs font-semibold text-[#06458F] underline">
                 Ansicht aktualisieren
               </button>
             </div>
@@ -687,7 +734,7 @@ function BrandDashboard({
             {loadedFromQuickBrief && (
               <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-[#06458F]/15 bg-white px-4 py-3 text-xs text-[#202124]">
                 <p>
-                  <span className="mr-2 inline-block rounded bg-[#EBF2FA] px-2 py-0.5 font-bold">Übernommen</span>
+                  <span className="mr-2 inline-block rounded bg-[#EBF2FA] px-2 py-0.5 font-bold text-[#06458F]">Übernommen</span>
                   Dein 60-Sekunden-Brief wurde vorausgefüllt. Prüfe die Felder und starte deine Kampagne.
                 </p>
                 <button
@@ -706,32 +753,37 @@ function BrandDashboard({
             {/* 1-Klick Kampagnen-Vorlagen */}
             <div className="space-y-2">
               <span className={labelClass}>1-Klick-Vorlage wählen (optional)</span>
-              <div className="grid gap-2.5 sm:grid-cols-3">
+              <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
                 {[
                   {
                     id: 'tkp_cap' as const,
-                    name: 'Reichweite nach Views',
-                    sub: 'z. B. 2 €/1.000 Views · feste Budget-Obergrenze · ohne Versand',
-                  },
-                  {
-                    id: 'product_tkp' as const,
-                    name: 'Produkt-Test + Views',
-                    sub: 'Für alle Produkte & Services · inkl. Varianten-Auswahl',
+                    name: 'Pay-per-View (TKP)',
+                    sub: 'z. B. 2 €/1.000 Views · feste Budget-Obergrenze',
                   },
                   {
                     id: 'fixed_ugc' as const,
-                    name: 'UGC-Paket (Festpreis)',
-                    sub: 'z. B. 250 €/Video · Paid-Ads-Buyout',
+                    name: 'Pay-per-Video (Fixpreis)',
+                    sub: 'z. B. 250 €/Video · Budget-Sicherung & Freigabe',
+                  },
+                  {
+                    id: 'fixed_affiliate' as const,
+                    name: 'Fixpreis + Affiliate',
+                    sub: 'z. B. 150 €/Video + 10 % Kickback pro Sale',
+                  },
+                  {
+                    id: 'affiliate_only' as const,
+                    name: 'Affiliate / Kickback',
+                    sub: 'z. B. 15 % Provision via Creator-Code & Link',
                   },
                 ].map((preset) => (
                   <button
                     key={preset.id}
                     type="button"
                     onClick={() => applyPreset(preset.id)}
-                    className="rounded-2xl border border-hairline bg-white p-3.5 text-left transition hover:border-geo-violet hover:shadow-sm"
+                    className="rounded-[12px] border border-[#DCE2EA] bg-white p-3.5 text-left transition hover:border-[#06458F] hover:shadow-sm"
                   >
-                    <p className="text-xs font-bold text-geo-violet">{preset.name}</p>
-                    <p className="mt-1 text-xs text-ink-soft">{preset.sub}</p>
+                    <p className="text-xs font-bold text-[#06458F]">{preset.name}</p>
+                    <p className="mt-1 text-xs text-[#5C6470]">{preset.sub}</p>
                   </button>
                 ))}
               </div>
@@ -759,22 +811,51 @@ function BrandDashboard({
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <div>
                 <label htmlFor="camp-model" className={labelClass}>Vergütungsmodell</label>
-                <select id="camp-model" value={compensationModel} onChange={(e) => setCompensationModel(e.target.value as CompensationModel)} className={fieldClass}>
+                <select
+                  id="camp-model"
+                  value={compensationModel}
+                  onChange={(e) => {
+                    const next = e.target.value as CompensationModel;
+                    setCompensationModel(next);
+                    if (next === 'affiliate') setAffiliateEnabled(true);
+                  }}
+                  className={fieldClass}
+                >
                   <option value="tkp">Pay-per-View (TKP)</option>
-                  <option value="fixed">Festpreis / Paket</option>
-                  <option value="hybrid">Hybrid (Fix + TKP-Bonus)</option>
+                  <option value="fixed">Pay-per-Video (Fixpreis · Escrow)</option>
+                  <option value="hybrid">Hybrid (Fixpreis + TKP-Bonus)</option>
+                  <option value="affiliate">Affiliate / Kickback (% oder € / Sale)</option>
                   <option value="barter">Produkt / Seeding</option>
                 </select>
               </div>
-              {(compensationModel === 'tkp' || compensationModel === 'hybrid') ? (
+              {compensationModel === 'tkp' ? (
                 <div>
                   <label htmlFor="camp-tkp" className={labelClass}>TKP (€ / 1.000 Views)</label>
                   <input id="camp-tkp" type="number" min={0} step="0.10" value={tkpEur} onChange={(e) => setTkpEur(e.target.value)} placeholder="2.00" className={fieldClass} />
                 </div>
+              ) : compensationModel === 'affiliate' ? (
+                <div>
+                  <label htmlFor="camp-aff-quick" className={labelClass}>
+                    {affiliateType === 'fixed_per_sale' ? 'Kickback / Sale (€)' : 'Kickback-Provision (%)'}
+                  </label>
+                  <input
+                    id="camp-aff-quick"
+                    type="number"
+                    min={1}
+                    max={affiliateType === 'fixed_per_sale' ? 5000 : 80}
+                    value={affiliateType === 'fixed_per_sale' ? affiliateFixedEur : affiliateRatePercent}
+                    onChange={(e) =>
+                      affiliateType === 'fixed_per_sale'
+                        ? setAffiliateFixedEur(e.target.value)
+                        : setAffiliateRatePercent(e.target.value)
+                    }
+                    className={fieldClass}
+                  />
+                </div>
               ) : (
                 <div>
-                  <label htmlFor="camp-per-video" className={labelClass}>Budget / Video (€)</label>
-                  <input id="camp-per-video" type="number" min={0} value={budgetPerVideoEur} onChange={(e) => setBudgetPerVideoEur(e.target.value)} className={fieldClass} />
+                  <label htmlFor="camp-per-video" className={labelClass}>Fixpreis / Video (€)</label>
+                  <input id="camp-per-video" type="number" min={0} value={budgetPerVideoEur} onChange={(e) => setBudgetPerVideoEur(e.target.value)} placeholder="250" className={fieldClass} />
                 </div>
               )}
               <div>
@@ -820,6 +901,70 @@ function BrandDashboard({
                 <label htmlFor="camp-discount" className={labelClass}>Aktions- / Rabatt-Hinweis (optional)</label>
                 <input id="camp-discount" value={discountCode} onChange={(e) => setDiscountCode(e.target.value)} placeholder="z. B. 20 % Shop-Rabatt / Aktionscode" className={fieldClass} />
               </div>
+            </div>
+
+            {/* Affiliate / Kickback Layer (eigenstaendig oder als Bonus auf TKP / Fixpreis) */}
+            <div className="space-y-3 rounded-[14px] border border-[#DCE2EA] bg-white p-4">
+              <label className="flex cursor-pointer items-start gap-3">
+                <input
+                  type="checkbox"
+                  checked={compensationModel === 'affiliate' || affiliateEnabled}
+                  disabled={compensationModel === 'affiliate'}
+                  onChange={(e) => setAffiliateEnabled(e.target.checked)}
+                  className="mt-1 h-4 w-4 accent-[#06458F]"
+                />
+                <span className="text-sm text-[#202124]">
+                  <strong>Affiliate / Kickback aktivieren (eigener Creator-Code &amp; Tracking-Link)</strong>
+                  <span className="block text-xs text-[#5C6470]">
+                    Jeder ausgewählte Creator bekommt automatisch seinen eigenen Code und Link (ugc-vz.de/r/CODE). Bestätigte Sales werden über dein Wallet ausgezahlt (0 % Gebühr für Creator).
+                  </span>
+                </span>
+              </label>
+              {(compensationModel === 'affiliate' || affiliateEnabled) && (
+                <div className="grid gap-3 pt-1 sm:grid-cols-3">
+                  <div>
+                    <label htmlFor="camp-aff-type" className={labelClass}>Kickback-Art</label>
+                    <select
+                      id="camp-aff-type"
+                      value={affiliateType}
+                      onChange={(e) => setAffiliateType(e.target.value as 'percent' | 'fixed_per_sale')}
+                      className={fieldClass}
+                    >
+                      <option value="percent">Prozent vom Bestellwert (%)</option>
+                      <option value="fixed_per_sale">Fixbetrag pro Sale (€)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label htmlFor="camp-aff-val" className={labelClass}>
+                      {affiliateType === 'percent' ? 'Provision (%)' : 'Kickback pro Sale (€)'}
+                    </label>
+                    <input
+                      id="camp-aff-val"
+                      type="number"
+                      min={1}
+                      max={affiliateType === 'percent' ? 80 : 5000}
+                      value={affiliateType === 'percent' ? affiliateRatePercent : affiliateFixedEur}
+                      onChange={(e) =>
+                        affiliateType === 'percent'
+                          ? setAffiliateRatePercent(e.target.value)
+                          : setAffiliateFixedEur(e.target.value)
+                      }
+                      className={fieldClass}
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="camp-aff-url" className={labelClass}>Shop-Ziel-URL für Tracking-Links</label>
+                    <input
+                      id="camp-aff-url"
+                      type="url"
+                      value={affiliateTargetUrl}
+                      onChange={(e) => setAffiliateTargetUrl(e.target.value)}
+                      placeholder="https://deinshop.de/produkt"
+                      className={fieldClass}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="rounded-2xl border border-hairline bg-white p-4 space-y-3">

@@ -6,6 +6,7 @@ import { ArrowRight, Check } from 'lucide-react';
 import {
   QUICK_BRIEF_PLATFORMS,
   saveQuickBriefDraft,
+  type QuickBriefModel,
   type QuickBriefPlatform,
 } from '@/app/lib/quick-brief';
 import {
@@ -21,10 +22,13 @@ const QUICK_EXAMPLES = [
 
 export default function QuickBriefCard() {
   const router = useRouter();
+  const [model, setModel] = useState<QuickBriefModel>('tkp');
   const [goal, setGoal] = useState('');
   const [platforms, setPlatforms] = useState<QuickBriefPlatform[]>(['tiktok', 'instagram']);
   const [pricePerThousandInput, setPricePerThousandInput] = useState('2,00');
+  const [budgetPerVideoInput, setBudgetPerVideoInput] = useState('200');
   const [budgetCapInput, setBudgetCapInput] = useState('500');
+  const [affiliateBonus, setAffiliateBonus] = useState(false);
   const [expandedAll, setExpandedAll] = useState(false);
   const [error, setError] = useState('');
 
@@ -34,6 +38,11 @@ export default function QuickBriefCard() {
     const num = Number(pricePerThousandInput.replace(',', '.'));
     return Number.isFinite(num) && num > 0 ? num : 2;
   }, [pricePerThousandInput]);
+
+  const parsedVideoPrice = useMemo(() => {
+    const num = Number(budgetPerVideoInput.replace(',', '.'));
+    return Number.isFinite(num) && num >= 20 ? num : 200;
+  }, [budgetPerVideoInput]);
 
   const parsedBudget = useMemo(() => {
     const num = Number(budgetCapInput.replace(',', '.'));
@@ -46,8 +55,9 @@ export default function QuickBriefCard() {
   );
   const feePercent = Math.round(calc.feeRate * 100);
 
-  // Spec 8.2: Rechnung = Budget / Preis x 1.000, gerundet, plus transparente Aufteilung Creator-Pool & Gebuehr.
+  // Spec 8.2: Rechnung = Budget / Preis x 1.000 (TKP) oder Anzahl Videos im Paket (Fixpreis).
   const headlineViews = Math.max(0, Math.round((parsedBudget / parsedPrice) * 1000));
+  const headlineVideos = Math.max(1, Math.floor((calc.creatorPoolCents / 100) / parsedVideoPrice));
 
   const togglePlatform = (platform: QuickBriefPlatform) => {
     setError('');
@@ -66,20 +76,29 @@ export default function QuickBriefCard() {
     }
     const rawBudget = Number(budgetCapInput.replace(',', '.'));
     const rawPrice = Number(pricePerThousandInput.replace(',', '.'));
+    const rawVideo = Number(budgetPerVideoInput.replace(',', '.'));
     if (!Number.isFinite(rawBudget) || rawBudget < 50) {
       setError('Bitte gib eine Budget-Obergrenze ab 50 € an.');
       return;
     }
-    if (!Number.isFinite(rawPrice) || rawPrice < 0.5) {
+    if (model === 'tkp' && (!Number.isFinite(rawPrice) || rawPrice < 0.5)) {
       setError('Bitte gib einen Preis pro 1.000 Views ab 0,50 € an.');
+      return;
+    }
+    if (model === 'fixed' && (!Number.isFinite(rawVideo) || rawVideo < 20)) {
+      setError('Bitte gib ein Video-Honorar ab 20 € an.');
       return;
     }
 
     saveQuickBriefDraft({
       goal: goal.trim() || 'Produkt im Alltag vorstellen',
       platforms,
-      pricePerThousandEur: rawPrice,
+      compensationModel: model,
+      pricePerThousandEur: Number.isFinite(rawPrice) && rawPrice > 0 ? rawPrice : 2,
+      budgetPerVideoEur: Number.isFinite(rawVideo) && rawVideo > 0 ? Math.round(rawVideo) : 200,
       budgetCapEur: Math.round(rawBudget),
+      affiliateEnabled: affiliateBonus,
+      affiliatePercent: 10,
     });
 
     router.push('/brand?tab=signup&from=brief');
@@ -93,7 +112,7 @@ export default function QuickBriefCard() {
     >
       <div className="mx-auto max-w-[1200px]">
         <div className="rounded-[16px] border border-[#DCE2EA] bg-white p-6 shadow-[0_2px_4px_rgba(6,69,143,0.04),0_12px_32px_rgba(6,69,143,0.07)] sm:p-10">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <p className="text-sm font-medium text-[#06458F]">Unverbindlich testen</p>
               <h2
@@ -103,15 +122,38 @@ export default function QuickBriefCard() {
                 Dein Brief in 60 Sekunden
               </h2>
             </div>
-            {!stepsUnlocked && (
+            <div className="inline-grid grid-cols-2 rounded-[10px] border border-[#DCE2EA] bg-[#F5F7FA] p-1">
               <button
                 type="button"
-                onClick={() => setExpandedAll(true)}
-                className="self-start text-sm font-medium text-[#5C6470] underline underline-offset-4 hover:text-[#202124] sm:self-auto"
+                onClick={() => {
+                  setModel('tkp');
+                  setBudgetCapInput('500');
+                  setExpandedAll(true);
+                }}
+                className={`min-h-[38px] rounded-[8px] px-3.5 text-xs font-semibold transition-all sm:text-sm ${
+                  model === 'tkp'
+                    ? 'bg-[#06458F] text-white shadow-sm'
+                    : 'text-[#5C6470] hover:text-[#202124]'
+                }`}
               >
-                Alle 3 Schritte direkt bearbeiten
+                Nach Views (TKP)
               </button>
-            )}
+              <button
+                type="button"
+                onClick={() => {
+                  setModel('fixed');
+                  setBudgetCapInput('1000');
+                  setExpandedAll(true);
+                }}
+                className={`min-h-[38px] rounded-[8px] px-3.5 text-xs font-semibold transition-all sm:text-sm ${
+                  model === 'fixed'
+                    ? 'bg-[#06458F] text-white shadow-sm'
+                    : 'text-[#5C6470] hover:text-[#202124]'
+                }`}
+              >
+                Fixpreis pro Video
+              </button>
+            </div>
           </div>
 
           <form onSubmit={handleSubmit} className="mt-8">
@@ -205,22 +247,42 @@ export default function QuickBriefCard() {
                   <p className="text-sm font-semibold text-[#202124]">Dein Budget</p>
                 </div>
                 <div className="mt-3 grid grid-cols-2 gap-3">
-                  <div>
-                    <label htmlFor="qb-cpm" className="block text-xs font-medium text-[#5C6470]">
-                      Preis / 1.000 Views (€)
-                    </label>
-                    <input
-                      id="qb-cpm"
-                      type="text"
-                      inputMode="decimal"
-                      value={pricePerThousandInput}
-                      onChange={(e) => {
-                        setPricePerThousandInput(e.target.value);
-                        setExpandedAll(true);
-                      }}
-                      className="mt-1.5 min-h-[44px] w-full rounded-[12px] border border-[#DCE2EA] bg-white px-3 text-sm font-semibold tabular-nums text-[#202124] outline-none focus:border-[#06458F] focus:ring-4 focus:ring-[#06458F]/15"
-                    />
-                  </div>
+                  {model === 'tkp' ? (
+                    <div>
+                      <label htmlFor="qb-cpm" className="block text-xs font-medium text-[#5C6470]">
+                        Preis / 1.000 Views (€)
+                      </label>
+                      <input
+                        id="qb-cpm"
+                        type="text"
+                        inputMode="decimal"
+                        value={pricePerThousandInput}
+                        onChange={(e) => {
+                          setPricePerThousandInput(e.target.value);
+                          setExpandedAll(true);
+                        }}
+                        className="mt-1.5 min-h-[44px] w-full rounded-[12px] border border-[#DCE2EA] bg-white px-3 text-sm font-semibold tabular-nums text-[#202124] outline-none focus:border-[#06458F] focus:ring-4 focus:ring-[#06458F]/15"
+                      />
+                    </div>
+                  ) : (
+                    <div>
+                      <label htmlFor="qb-video-fee" className="block text-xs font-medium text-[#5C6470]">
+                        Fixpreis / Video (€)
+                      </label>
+                      <input
+                        id="qb-video-fee"
+                        type="number"
+                        min={20}
+                        step={25}
+                        value={budgetPerVideoInput}
+                        onChange={(e) => {
+                          setBudgetPerVideoInput(e.target.value);
+                          setExpandedAll(true);
+                        }}
+                        className="mt-1.5 min-h-[44px] w-full rounded-[12px] border border-[#DCE2EA] bg-white px-3 text-sm font-semibold tabular-nums text-[#202124] outline-none focus:border-[#06458F] focus:ring-4 focus:ring-[#06458F]/15"
+                      />
+                    </div>
+                  )}
                   <div>
                     <label htmlFor="qb-budget" className="block text-xs font-medium text-[#5C6470]">
                       Budget-Obergrenze (€)
@@ -258,6 +320,18 @@ export default function QuickBriefCard() {
                     </button>
                   ))}
                 </div>
+                <label className="mt-3 flex cursor-pointer items-center gap-2 text-xs font-medium text-[#5C6470]">
+                  <input
+                    type="checkbox"
+                    checked={affiliateBonus}
+                    onChange={(e) => {
+                      setAffiliateBonus(e.target.checked);
+                      setExpandedAll(true);
+                    }}
+                    className="h-3.5 w-3.5 rounded accent-[#06458F]"
+                  />
+                  <span>Zusätzlich 10 % Affiliate-Kickback pro Sale</span>
+                </label>
               </div>
             </div>
 
@@ -266,22 +340,25 @@ export default function QuickBriefCard() {
               <div className="space-y-1.5">
                 <p className="text-base font-bold leading-snug text-[#202124] sm:text-xl">
                   <span className="inline-block rounded-[8px] bg-[#EBF2FA] px-2.5 py-1 font-mono tabular-nums text-[#06458F]">
-                    Bis zu {headlineViews.toLocaleString('de-DE')} bezahlte Views.
+                    {model === 'tkp'
+                      ? `Bis zu ${headlineViews.toLocaleString('de-DE')} bezahlte Views.`
+                      : `Ca. ${headlineVideos} freigegebene Videos à ${Math.round(parsedVideoPrice)} €.`}
                   </span>{' '}
                   <span>
                     Mehr als {Math.round(parsedBudget).toLocaleString('de-DE')} € zahlst du nicht.
                   </span>
                 </p>
                 <p className="text-xs text-[#5C6470]">
-                  Rechenbeispiel, keine garantierte Reichweite. Im Budget enthalten:{' '}
+                  {model === 'tkp' ? 'Rechenbeispiel, keine garantierte Reichweite. ' : 'Budget sicher im Wallet reserviert, Freigabe erst nach Video-Abnahme. '}
+                  Im Budget enthalten:{' '}
                   <strong className="font-semibold text-[#202124]">
                     {formatEuroFromCents(calc.creatorPoolCents, { hideZeroDecimals: true })}
                   </strong>{' '}
-                  für Creator-Views und{' '}
+                  für Creator und{' '}
                   <strong className="font-semibold text-[#202124]">
                     {formatEuroFromCents(calc.feeCents, { hideZeroDecimals: true })}
                   </strong>{' '}
-                  Servicegebühr ({feePercent} %{calc.promoActive ? ' Aktionsrate' : ''}, 0 % für Creator).
+                  Servicegebühr ({feePercent} %{calc.promoActive ? ' Aktionsrate' : ''}, 0 % für Creator{affiliateBonus ? ', plus 10 % Affiliate-Kickback' : ''}).
                 </p>
               </div>
 

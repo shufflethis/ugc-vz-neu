@@ -919,3 +919,450 @@ export async function revertCreatorPayoutFailed(
   );
   return true;
 }
+
+/* ============================================================================
+ * PAY-PER-VIDEO FIXED ESCROW SETTLEMENT & AFFILIATE / KICKBACK LEDGER (Mig 026)
+ * ============================================================================ */
+
+export interface FixedVideoSettlementResult {
+  settledNow: boolean;
+  grantedCreatorCents: number;
+  grantedFeeCents: number;
+  fundingSource: 'reservation' | 'wallet' | 'already_settled';
+  remainingReservedCents: number;
+}
+
+/**
+ * Concurrency-sichere und idempotente Freigabe eines Fixpreis-Videos (Pay-per-Video / Hybrid):
+ * - Creator erhaelt 100 % von fixedAmountCents (0 % Creator-Gebuehr).
+ * - Deckung erfolgt primaer aus einer aktiven campaign_reservations (gesichertes Kampagnenbudget);
+ *   falls keine Reservierung besteht, atomar direkt aus brand_wallets.available_cents (fail-closed).
+ */
+export async function settleFixedVideoSubmission(
+  sql: SqlClient,
+  input: {
+    brandId: string;
+    campaignId: string;
+    submissionId: string;
+    creatorId: string;
+    fixedAmountCents: number;
+    platformFeeBps?: number;
+    reviewNote?: string;
+  },
+): Promise<FixedVideoSettlementResult> {
+  const safeFixedCents = Math.max(0, Math.round(input.fixedAmountCents));
+  const feeBps = Math.max(0, Math.min(5000, Math.round(input.platformFeeBps ?? 1500)));
+  if (safeFixedCents <= 0) {
+    return {
+      settledNow: false,
+      grantedCreatorCents: 0,
+      grantedFeeCents: 0,
+      fundingSource: 'already_settled',
+      remainingReservedCents: 0,
+    };
+  }
+
+  // 1. Idempotenz-Lock auf submission_id
+  const claim = await sql.query(
+    `INSERT INTO submission_settlements (
+       submission_id, campaign_id, creator_id, views_at_cutoff, counted_thousands,
+       rate_per_1000_cents, amount_cents, platform_fee_cents, status, review_note,
+       settlement_mode, fixed_amount_cents
+     ) VALUES ($1, $2, $3, 0, 0, 0, 0, 0, 'in_review', $4, 'fixed_video', $5)
+     ON CONFLICT (submission_id) DO NOTHING
+     RETURNING id`,
+    [input.submissionId, input.campaignId, input.creatorId, input.reviewNote || '', safeFixedCents],
+  );
+
+  if (claim.length === 0) {
+    const [existing] = await sql.query(
+      `SELECT amount_cents, platform_fee_cents FROM submission_settlements WHERE submission_id = $1`,
+      [input.submissionId],
+    );
+    const [resRow] = await sql.query(
+      `SELECT reserved_cents FROM campaign_reservations WHERE campaign_id = $1`,
+      [input.campaignId],
+    );
+    return {
+      settledNow: false,
+      grantedCreatorCents: Number(existing?.amount_cents || 0),
+      grantedFeeCents: Number(existing?.platform_fee_cents || 0),
+      fundingSource: 'already_settled',
+      remainingReservedCents: Number(resRow?.reserved_cents || 0),
+    };
+  }
+
+  // 2a. Versuche Deckung aus aktiver campaign_reservations (Escrow)
+  const updatedRes = await sql.query(
+    `UPDATE campaign_reservations
+     SET
+       last_delta_creator_cents = LEAST($1::bigint, GREATEST(0::bigint, creator_pool_cap_cents - released_creator_cents)),
+       last_delta_fee_cents = LEAST(
+         budget_cap_cents - (released_creator_cents + LEAST($1::bigint, GREATEST(0::bigint, creator_pool_cap_cents - released_creator_cents))),
+         COALESCE(
+           ROUND(
+             (released_creator_cents + LEAST($1::bigint, GREATEST(0::bigint, creator_pool_cap_cents - released_creator_cents)))::numeric
+             * platform_fee_bps::numeric
+             / NULLIF(10000 - platform_fee_bps, 0)
+           )::bigint,
+           0::bigint
+         )
+       ) - released_fee_cents,
+       released_creator_cents = released_creator_cents + LEAST($1::bigint, GREATEST(0::bigint, creator_pool_cap_cents - released_creator_cents)),
+       released_fee_cents = LEAST(
+         budget_cap_cents - (released_creator_cents + LEAST($1::bigint, GREATEST(0::bigint, creator_pool_cap_cents - released_creator_cents))),
+         COALESCE(
+           ROUND(
+             (released_creator_cents + LEAST($1::bigint, GREATEST(0::bigint, creator_pool_cap_cents - released_creator_cents)))::numeric
+             * platform_fee_bps::numeric
+             / NULLIF(10000 - platform_fee_bps, 0)
+           )::bigint,
+           0::bigint
+         )
+       ),
+       reserved_cents = GREATEST(
+         0::bigint,
+         budget_cap_cents
+         - (released_creator_cents + LEAST($1::bigint, GREATEST(0::bigint, creator_pool_cap_cents - released_creator_cents)))
+         - LEAST(
+             budget_cap_cents - (released_creator_cents + LEAST($1::bigint, GREATEST(0::bigint, creator_pool_cap_cents - released_creator_cents))),
+             COALESCE(
+               ROUND(
+                 (released_creator_cents + LEAST($1::bigint, GREATEST(0::bigint, creator_pool_cap_cents - released_creator_cents)))::numeric
+                 * platform_fee_bps::numeric
+                 / NULLIF(10000 - platform_fee_bps, 0)
+               )::bigint,
+               0::bigint
+             )
+           )
+       )
+     WHERE campaign_id = $2 AND status = 'active'
+       AND (creator_pool_cap_cents - released_creator_cents) >= $1::bigint
+     RETURNING brand_id, last_delta_creator_cents, last_delta_fee_cents, reserved_cents`,
+    [safeFixedCents, input.campaignId],
+  );
+
+  let grantedCreatorCents = 0;
+  let grantedFeeCents = 0;
+  let remainingReservedCents = 0;
+  let fundingSource: 'reservation' | 'wallet' = 'reservation';
+
+  if (updatedRes.length > 0) {
+    const brandId = String(updatedRes[0].brand_id);
+    grantedCreatorCents = Math.max(0, Number(updatedRes[0].last_delta_creator_cents || 0));
+    grantedFeeCents = Math.max(0, Number(updatedRes[0].last_delta_fee_cents || 0));
+    remainingReservedCents = Number(updatedRes[0].reserved_cents || 0);
+    const totalDelta = grantedCreatorCents + grantedFeeCents;
+    if (totalDelta > 0) {
+      await sql.query(
+        `UPDATE brand_wallets
+         SET reserved_cents = GREATEST(0, reserved_cents - $1), updated_at = now()
+         WHERE brand_id = $2`,
+        [totalDelta, brandId],
+      );
+    }
+  } else {
+    // 2b. Kein ausreichendes reserviertes Budget -> atomare Direktabbuchung aus brand_wallets.available_cents
+    fundingSource = 'wallet';
+    await ensureBrandWallet(sql, input.brandId);
+    const feeOnTop = Math.round((safeFixedCents * feeBps) / 10000);
+    const totalDebit = safeFixedCents + feeOnTop;
+    const debited = await sql.query(
+      `UPDATE brand_wallets
+       SET available_cents = available_cents - $1, updated_at = now()
+       WHERE brand_id = $2 AND available_cents >= $1
+       RETURNING available_cents`,
+      [totalDebit, input.brandId],
+    );
+    if (debited.length === 0) {
+      await sql.query(`DELETE FROM submission_settlements WHERE submission_id = $1`, [input.submissionId]);
+      throw new Error(
+        `Nicht genügend Guthaben im Marken-Wallet (${(totalDebit / 100).toLocaleString('de-DE', { minimumFractionDigits: 2 })} € inkl. Servicegebühr benötigt). Bitte lade zuerst dein Wallet auf.`,
+      );
+    }
+    grantedCreatorCents = safeFixedCents;
+    grantedFeeCents = feeOnTop;
+    const [resRow] = await sql.query(
+      `SELECT reserved_cents FROM campaign_reservations WHERE campaign_id = $1`,
+      [input.campaignId],
+    );
+    remainingReservedCents = Number(resRow?.reserved_cents || 0);
+  }
+
+  // 3. Finalisiere Settlement & schreibe Creator 100 % gut
+  await sql.query(
+    `UPDATE submission_settlements
+     SET amount_cents = $1, fixed_amount_cents = $1, platform_fee_cents = $2,
+         status = 'counted', settled_at = now()
+     WHERE submission_id = $3`,
+    [grantedCreatorCents, grantedFeeCents, input.submissionId],
+  );
+
+  await sql.query(
+    `INSERT INTO creator_balances (creator_id, available_cents)
+     VALUES ($1, $2)
+     ON CONFLICT (creator_id) DO UPDATE
+       SET available_cents = creator_balances.available_cents + EXCLUDED.available_cents,
+           updated_at = now()`,
+    [input.creatorId, grantedCreatorCents],
+  );
+
+  return {
+    settledNow: true,
+    grantedCreatorCents,
+    grantedFeeCents,
+    fundingSource,
+    remainingReservedCents,
+  };
+}
+
+export interface AffiliateConversionView {
+  id: string;
+  applicationId: string;
+  creatorPublicId: string;
+  creatorName: string;
+  affiliateCode: string;
+  externalOrderRef: string;
+  orderAmountCents: number;
+  commissionCents: number;
+  platformFeeCents: number;
+  status: 'pending' | 'approved' | 'rejected';
+  source: 'manual' | 'csv' | 'webhook';
+  note: string;
+  approvedAt: string | null;
+  createdAt: string;
+}
+
+/**
+ * Erzeugt idempotent einen eindeutigen Creator-Affiliate-Code (z. B. MIA-8F2A) fuer eine Bewerbung.
+ */
+export async function ensureCreatorAffiliateCode(
+  sql: SqlClient,
+  applicationId: string,
+  creatorName: string,
+): Promise<string> {
+  const [existing] = await sql.query(
+    `SELECT affiliate_code FROM brand_campaign_applications WHERE id = $1 LIMIT 1`,
+    [applicationId],
+  );
+  if (existing?.affiliate_code) return String(existing.affiliate_code);
+
+  const prefix = (creatorName || 'UGC')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z0-9]/g, '')
+    .toUpperCase()
+    .slice(0, 4) || 'UGC';
+
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const suffix = Math.random().toString(36).slice(2, 6).toUpperCase().replace(/[^A-Z0-9]/g, 'X');
+    const code = `${prefix}-${suffix}`;
+    try {
+      const rows = await sql.query(
+        `UPDATE brand_campaign_applications
+         SET affiliate_code = COALESCE(affiliate_code, $2), updated_at = now()
+         WHERE id = $1
+         RETURNING affiliate_code`,
+        [applicationId, code],
+      );
+      if (rows[0]?.affiliate_code) return String(rows[0].affiliate_code);
+    } catch {
+      // retry on unique collision
+    }
+  }
+  throw new Error('Affiliate-Code konnte nicht erzeugt werden.');
+}
+
+/**
+ * Berechnet Kickback-Provision in Cent (entweder Prozent vom Bestellwert oder Fixbetrag pro Sale).
+ */
+export function calculateAffiliateCommissionCents(input: {
+  affiliateType: 'percent' | 'fixed_per_sale';
+  affiliateRateBps: number | null;
+  affiliateFixedCents: number | null;
+  orderAmountCents: number;
+  overrideCommissionCents?: number | null;
+}): number {
+  if (input.overrideCommissionCents && input.overrideCommissionCents > 0) {
+    return Math.round(input.overrideCommissionCents);
+  }
+  if (input.affiliateType === 'fixed_per_sale') {
+    return Math.max(0, Math.round(input.affiliateFixedCents || 0));
+  }
+  const bps = Math.max(0, Math.min(8000, Math.round(input.affiliateRateBps || 0)));
+  return Math.max(0, Math.round((Math.max(0, input.orderAmountCents) * bps) / 10000));
+}
+
+/**
+ * Erfasst einen Affiliate-Sale und gibt (bei autoApprove=true) den Kickback sofort aus dem Brand-Wallet frei:
+ * - Idempotent bei gleichem (campaignId, externalOrderRef).
+ * - Creator bekommt 100 % der Provision (0 % Creator-Gebuehr); Marken-Servicegebuehr (Standard 15 %) wird im Wallet abgerechnet.
+ */
+export async function recordAndSettleAffiliateConversion(
+  sql: SqlClient,
+  input: {
+    brandId: string;
+    campaignId: string;
+    applicationId: string;
+    creatorId: string;
+    externalOrderRef?: string;
+    orderAmountCents: number;
+    commissionCents: number;
+    platformFeeBps?: number;
+    source: 'manual' | 'csv' | 'webhook';
+    note?: string;
+    autoApprove?: boolean;
+  },
+): Promise<{
+  createdNow: boolean;
+  conversionId: string;
+  status: 'pending' | 'approved';
+  commissionCents: number;
+  platformFeeCents: number;
+}> {
+  const commissionCents = Math.max(0, Math.round(input.commissionCents));
+  if (commissionCents <= 0) {
+    throw new Error('Affiliate-Provision muss größer als 0 € sein.');
+  }
+  const orderAmountCents = Math.max(0, Math.round(input.orderAmountCents || 0));
+  const feeBps = Math.max(0, Math.min(5000, Math.round(input.platformFeeBps ?? 1500)));
+  const platformFeeCents = Math.round((commissionCents * feeBps) / 10000);
+  const externalOrderRef = String(input.externalOrderRef || '').trim().slice(0, 120);
+
+  if (externalOrderRef) {
+    const dup = await sql.query(
+      `SELECT id, status, commission_cents, platform_fee_cents
+       FROM affiliate_conversions
+       WHERE campaign_id = $1 AND external_order_ref = $2
+       LIMIT 1`,
+      [input.campaignId, externalOrderRef],
+    );
+    if (dup.length > 0) {
+      return {
+        createdNow: false,
+        conversionId: String(dup[0].id),
+        status: String(dup[0].status) as 'pending' | 'approved',
+        commissionCents: Number(dup[0].commission_cents),
+        platformFeeCents: Number(dup[0].platform_fee_cents),
+      };
+    }
+  }
+
+  const shouldApprove = Boolean(input.autoApprove);
+  if (shouldApprove) {
+    // Atomarer Wallet-Check: zuerst Budget-Reservierung nutzen falls genug frei, sonst brand_wallets.available_cents
+    const totalDebit = commissionCents + platformFeeCents;
+    const resDebit = await sql.query(
+      `UPDATE campaign_reservations
+       SET
+         released_creator_cents = released_creator_cents + $1::bigint,
+         released_fee_cents = released_fee_cents + $2::bigint,
+         reserved_cents = reserved_cents - ($1::bigint + $2::bigint)
+       WHERE campaign_id = $3 AND status = 'active'
+         AND (creator_pool_cap_cents - released_creator_cents) >= $1::bigint
+         AND reserved_cents >= ($1::bigint + $2::bigint)
+       RETURNING brand_id`,
+      [commissionCents, platformFeeCents, input.campaignId],
+    );
+
+    if (resDebit.length > 0) {
+      await sql.query(
+        `UPDATE brand_wallets
+         SET reserved_cents = GREATEST(0, reserved_cents - $1), updated_at = now()
+         WHERE brand_id = $2`,
+        [totalDebit, String(resDebit[0].brand_id)],
+      );
+    } else {
+      await ensureBrandWallet(sql, input.brandId);
+      const walletDebit = await sql.query(
+        `UPDATE brand_wallets
+         SET available_cents = available_cents - $1, updated_at = now()
+         WHERE brand_id = $2 AND available_cents >= $1
+         RETURNING available_cents`,
+        [totalDebit, input.brandId],
+      );
+      if (walletDebit.length === 0) {
+        throw new Error(
+          `Nicht genügend Guthaben im Marken-Wallet für diese Affiliate-Auszahlung (${(totalDebit / 100).toLocaleString('de-DE', { minimumFractionDigits: 2 })} € benötigt).`,
+        );
+      }
+    }
+  }
+
+  const [row] = await sql.query(
+    `INSERT INTO affiliate_conversions (
+       campaign_id, application_id, creator_id, external_order_ref, order_amount_cents,
+       commission_cents, platform_fee_cents, status, source, note, approved_at
+     ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+     RETURNING id`,
+    [
+      input.campaignId,
+      input.applicationId,
+      input.creatorId,
+      externalOrderRef,
+      orderAmountCents,
+      commissionCents,
+      platformFeeCents,
+      shouldApprove ? 'approved' : 'pending',
+      input.source,
+      String(input.note || '').slice(0, 300),
+      shouldApprove ? new Date().toISOString() : null,
+    ],
+  );
+
+  if (shouldApprove) {
+    await sql.query(
+      `INSERT INTO creator_balances (creator_id, available_cents)
+       VALUES ($1, $2)
+       ON CONFLICT (creator_id) DO UPDATE
+         SET available_cents = creator_balances.available_cents + EXCLUDED.available_cents,
+             updated_at = now()`,
+      [input.creatorId, commissionCents],
+    );
+  }
+
+  return {
+    createdNow: true,
+    conversionId: String(row.id),
+    status: shouldApprove ? 'approved' : 'pending',
+    commissionCents,
+    platformFeeCents,
+  };
+}
+
+export async function listCampaignAffiliateConversions(
+  sql: SqlClient,
+  campaignId: string,
+): Promise<AffiliateConversionView[]> {
+  const rows = await sql.query(
+    `SELECT ac.id, ac.application_id, ac.external_order_ref, ac.order_amount_cents,
+            ac.commission_cents, ac.platform_fee_cents, ac.status, ac.source, ac.note,
+            ac.approved_at, ac.created_at,
+            p.public_id AS creator_public_id,
+            COALESCE(NULLIF(p.display_name, ''), 'Creator') AS creator_name,
+            COALESCE(a.affiliate_code, '') AS affiliate_code
+     FROM affiliate_conversions ac
+     JOIN creator_profiles p ON p.id = ac.creator_id
+     JOIN brand_campaign_applications a ON a.id = ac.application_id
+     WHERE ac.campaign_id = $1
+     ORDER BY ac.created_at DESC
+     LIMIT 100`,
+    [campaignId],
+  );
+  return rows.map((r: any) => ({
+    id: String(r.id),
+    applicationId: String(r.application_id),
+    creatorPublicId: String(r.creator_public_id),
+    creatorName: String(r.creator_name),
+    affiliateCode: String(r.affiliate_code || ''),
+    externalOrderRef: String(r.external_order_ref || ''),
+    orderAmountCents: Number(r.order_amount_cents || 0),
+    commissionCents: Number(r.commission_cents || 0),
+    platformFeeCents: Number(r.platform_fee_cents || 0),
+    status: String(r.status) as 'pending' | 'approved' | 'rejected',
+    source: String(r.source) as 'manual' | 'csv' | 'webhook',
+    note: String(r.note || ''),
+    approvedAt: r.approved_at ? new Date(r.approved_at).toISOString() : null,
+    createdAt: new Date(r.created_at).toISOString(),
+  }));
+}

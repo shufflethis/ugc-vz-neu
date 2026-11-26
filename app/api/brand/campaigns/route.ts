@@ -47,9 +47,11 @@ export async function POST(request: NextRequest) {
   const title = cleanText(body.title, 140);
   if (!title) return NextResponse.json({ success: false, error: 'Bitte gib einen Kampagnentitel an.' }, { status: 400 });
 
-  const compensationModel = (['fixed', 'tkp', 'hybrid', 'barter'].includes(String(body.compensationModel))
+  const compensationModel = (['fixed', 'tkp', 'hybrid', 'affiliate', 'barter'].includes(String(body.compensationModel))
     ? body.compensationModel
     : 'fixed') as CompensationModel;
+  const affiliateEnabled = compensationModel === 'affiliate' || Boolean(body.affiliateEnabled);
+  const affiliateType = body.affiliateType === 'fixed_per_sale' ? 'fixed_per_sale' : 'percent';
   const platforms = sanitizeCampaignPlatforms(body.platforms);
   const totalBudgetEur = toPositiveIntOrNull(body.totalBudgetEur, 1_000_000);
   const rulesCheck = validateCampaignBusinessRules({
@@ -76,6 +78,11 @@ export async function POST(request: NextRequest) {
     budgetPerVideoEur: toPositiveIntOrNull(body.budgetPerVideoEur, 50_000),
     totalBudgetEur,
     tkpEurCents: toPositiveIntOrNull(body.tkpEurCents, 50_000),
+    affiliateEnabled,
+    affiliateType,
+    affiliateRateBps: toPositiveIntOrNull(body.affiliateRateBps, 8000),
+    affiliateFixedCents: toPositiveIntOrNull(body.affiliateFixedCents, 500_000),
+    affiliateTargetUrl: cleanText(body.affiliateTargetUrl, 400),
     requiresProductChoice: Boolean(body.requiresProductChoice),
     productChoicePrompt: cleanText(body.productChoicePrompt, 240),
     discountCode: cleanText(body.discountCode, 160),

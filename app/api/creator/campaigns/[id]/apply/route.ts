@@ -3,6 +3,10 @@ import { getDatabase, isDatabaseConfigured } from '@/app/lib/database';
 import { CREATOR_SESSION_COOKIE, verifySession } from '@/app/lib/creator-session';
 import { isTrustedSameOrigin } from '@/app/lib/brand-session';
 import { cleanMultiline, cleanText, toPositiveIntOrNull } from '@/app/lib/brand-workspace';
+import {
+  buildBrandApplicationNotification,
+  sendCampaignNotificationEmail,
+} from '@/app/lib/campaign-notification-email';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -23,7 +27,11 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
   const sql = getDatabase();
   const publicId = cleanText(params.id, 30);
   const [campaign] = (await sql.query(
-    `SELECT id, visibility, status, requires_product_choice FROM brand_campaigns WHERE public_id = $1 LIMIT 1`,
+    `SELECT c.id, c.public_id, c.title, c.visibility, c.status, c.requires_product_choice,
+            b.email AS brand_email, b.contact_name AS brand_contact_name
+     FROM brand_campaigns c
+     JOIN brand_accounts b ON b.id = c.brand_id
+     WHERE c.public_id = $1 LIMIT 1`,
     [publicId],
   )) as unknown as Array<any>;
   if (!campaign || campaign.status !== 'active') {
@@ -87,6 +95,31 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
      RETURNING id, status`,
     [campaign.id, creatorId, pitch, proposedFeeEur, availabilityNote, targetPlatforms, productChoice],
   )) as unknown as Array<any>;
+
+  if (campaign.brand_email) {
+    try {
+      const [cr] = (await sql.query(
+        `SELECT COALESCE(NULLIF(display_name, ''), 'Creator') AS name FROM creator_profiles WHERE id = $1 LIMIT 1`,
+        [creatorId],
+      )) as unknown as Array<any>;
+      const mail = buildBrandApplicationNotification({
+        brandContactName: String(campaign.brand_contact_name || 'Team'),
+        campaignPublicId: String(campaign.public_id),
+        campaignTitle: String(campaign.title),
+        creatorName: String(cr?.name || 'Creator'),
+        proposedFeeEur,
+        pitch,
+      });
+      await sendCampaignNotificationEmail({
+        to: String(campaign.brand_email),
+        ...mail,
+        category: 'brand_new_application',
+        audience: 'brand',
+      });
+    } catch {
+      // non-fatal
+    }
+  }
 
   return NextResponse.json({ success: true, applicationId: created.id, status: created.status }, { status: 201 });
 }

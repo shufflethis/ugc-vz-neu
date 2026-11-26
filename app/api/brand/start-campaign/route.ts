@@ -3,6 +3,10 @@ import { IncomingWebhook } from '@slack/webhook';
 import { getDatabase, isDatabaseConfigured } from '@/app/lib/database';
 import { BRAND_SESSION_COOKIE, isTrustedSameOrigin, verifyBrandSession } from '@/app/lib/brand-session';
 import { buildBrandLoginEmail } from '@/app/lib/brand-login-email';
+import {
+  buildCreatorInvitedNotification,
+  sendCampaignNotificationEmail,
+} from '@/app/lib/campaign-notification-email';
 import { AUTH_ERROR_PROVIDER_UNAVAILABLE, sendTransactionalAuthEmail } from '@/app/lib/auth-delivery';
 import {
   cleanMultiline,
@@ -14,6 +18,7 @@ import {
   toPositiveIntOrNull,
   upsertBrandAccount,
   validateCampaignBusinessRules,
+  type AffiliateType,
   type CampaignVisibility,
   type CompensationModel,
 } from '@/app/lib/brand-workspace';
@@ -81,9 +86,14 @@ export async function POST(request: NextRequest) {
       : [];
 
     const visibility: CampaignVisibility = body.visibility === 'invite_only' ? 'invite_only' : 'open';
-    const compensationModel: CompensationModel = ['fixed', 'tkp', 'hybrid', 'barter'].includes(String(body.compensationModel))
+    const compensationModel: CompensationModel = ['fixed', 'tkp', 'hybrid', 'affiliate', 'barter'].includes(String(body.compensationModel))
       ? (body.compensationModel as CompensationModel)
       : 'fixed';
+    const affiliateEnabled = compensationModel === 'affiliate' || Boolean(body.affiliateEnabled);
+    const affiliateType: AffiliateType = body.affiliateType === 'fixed_per_sale' ? 'fixed_per_sale' : 'percent';
+    const affiliateRateBps = toPositiveIntOrNull(body.affiliateRateBps, 8000);
+    const affiliateFixedCents = toPositiveIntOrNull(body.affiliateFixedCents, 500_000);
+    const affiliateTargetUrl = cleanText(body.affiliateTargetUrl, 400);
     const platforms = sanitizeCampaignPlatforms(
       Array.isArray(body.platforms) ? body.platforms : ['tiktok', 'instagram'],
     );
@@ -97,17 +107,27 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: rulesCheck.error }, { status: 400 });
     }
 
+    const budgetPerVideoEur = toPositiveIntOrNull(body.budgetPerVideoEur, 50_000);
+    const tkpEurCents = toPositiveIntOrNull(body.tkpEurCents, 50_000);
+    const brandDisplayName = cleanText(body.company, 120) || brand.companyName || brand.contactName || 'Brand';
+    const deliverables = cleanText(body.deliverables, 240);
+
     const created = await createBrandCampaign(sql, brand, {
       title,
-      brandDisplayName: cleanText(body.company, 120) || brand.companyName || brand.contactName || 'Brand',
+      brandDisplayName,
       description: cleanMultiline(body.description || body.message, 3000),
       niche: cleanText(body.niche, 80),
       platforms,
-      deliverables: cleanText(body.deliverables, 240),
+      deliverables,
       compensationModel,
-      budgetPerVideoEur: toPositiveIntOrNull(body.budgetPerVideoEur, 50_000),
+      budgetPerVideoEur,
       totalBudgetEur,
-      tkpEurCents: toPositiveIntOrNull(body.tkpEurCents, 50_000),
+      tkpEurCents,
+      affiliateEnabled,
+      affiliateType,
+      affiliateRateBps,
+      affiliateFixedCents,
+      affiliateTargetUrl,
       requiresProductChoice: Boolean(body.requiresProductChoice),
       productChoicePrompt: cleanText(body.productChoicePrompt, 240),
       discountCode: cleanText(body.discountCode, 160),
@@ -116,6 +136,52 @@ export async function POST(request: NextRequest) {
       visibility,
       creatorPublicIds,
     });
+
+    // CI-Einladungs-Benachrichtigungen an alle direkt ausgewaehlten Creator (ins Portal, 0% Gebuehr)
+    if (created.invitedCount > 0 && creatorPublicIds.length > 0) {
+      const compParts: string[] = [];
+      if (tkpEurCents) compParts.push(`${(tkpEurCents / 100).toFixed(2).replace('.', ',')} € / 1.000 Views`);
+      if (budgetPerVideoEur) compParts.push(`${budgetPerVideoEur} € Fixpreis / Video`);
+      if (affiliateEnabled) {
+        compParts.push(
+          affiliateType === 'fixed_per_sale'
+            ? `${((affiliateFixedCents ?? 1500) / 100).toFixed(2).replace('.', ',')} € / Sale Affiliate`
+            : `${((affiliateRateBps ?? 1000) / 100).toFixed(0)} % Affiliate-Kickback`,
+        );
+      }
+      const compensationSummary = compParts.join(' + ') || 'Vergütung laut Briefing';
+      try {
+        const invitedRows = (await sql.query(
+          `SELECT COALESCE(NULLIF(p.display_name, ''), 'Creator') AS name, pc.email
+           FROM creator_profiles p
+           JOIN creator_private_contacts pc ON pc.creator_id = p.id
+           WHERE p.public_id = ANY($1::text[])
+             AND pc.email IS NOT NULL AND pc.email <> ''
+             AND pc.project_notifications_enabled = true
+             AND pc.notification_paused_at IS NULL`,
+          [creatorPublicIds],
+        )) as unknown as Array<any>;
+        await Promise.allSettled(
+          invitedRows.map((c) => {
+            const mail = buildCreatorInvitedNotification({
+              creatorName: String(c.name || 'Creator'),
+              brandName: brandDisplayName,
+              campaignTitle: title,
+              compensationSummary,
+              deliverables,
+            });
+            return sendCampaignNotificationEmail({
+              to: String(c.email),
+              ...mail,
+              category: 'creator_campaign_invited',
+              audience: 'creator',
+            });
+          }),
+        );
+      } catch (notifyErr) {
+        console.error('Invited creator notifications failed:', notifyErr instanceof Error ? notifyErr.message : 'unknown');
+      }
+    }
 
     const campaignPath = `/brand/kampagnen/${created.publicId}`;
 
