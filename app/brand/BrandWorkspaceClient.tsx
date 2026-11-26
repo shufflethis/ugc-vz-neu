@@ -1,9 +1,10 @@
 'use client';
 
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { CheckCircle2, LogOut, Mail, Plus, Search } from 'lucide-react';
 import type { BrandAccount, CampaignSummary, CampaignVisibility, CompensationModel } from '@/app/lib/brand-workspace';
+import { clearQuickBriefDraft, loadQuickBriefDraft } from '@/app/lib/quick-brief';
 import OtpInput from '@/app/components/auth/OtpInput';
 import ResendTimer from '@/app/components/auth/ResendTimer';
 import InlineError from '@/app/components/auth/InlineError';
@@ -56,6 +57,11 @@ function BrandLoginView({ initialTab }: { initialTab: 'login' | 'signup' }) {
   const [shakeKey, setShakeKey] = useState(0);
   const [resendKey, setResendKey] = useState(0);
   const [cooldownSec, setCooldownSec] = useState(60);
+  const [hasSavedBrief, setHasSavedBrief] = useState(false);
+
+  useEffect(() => {
+    setHasSavedBrief(Boolean(loadQuickBriefDraft()));
+  }, []);
 
   const switchMode = (nextMode: 'login' | 'signup') => {
     setMode(nextMode);
@@ -164,6 +170,12 @@ function BrandLoginView({ initialTab }: { initialTab: 'login' | 'signup' }) {
         </div>
 
         <div className="rounded-[20px] border border-[#E4E1D8] bg-white p-6 shadow-[0_1px_2px_rgba(18,18,18,.06),0_8px_24px_rgba(18,18,18,.06)] sm:p-8">
+          {hasSavedBrief && (
+            <div className="mb-5 rounded-xl border border-[#121212]/15 bg-[#F7F6F2] px-4 py-3 text-xs leading-5 text-[#121212]">
+              <span className="inline-block rounded bg-[#C8F04B] px-1.5 py-0.5 font-bold">Brief gespeichert</span>{' '}
+              Deine Angaben aus dem 60-Sekunden-Brief werden nach der Anmeldung automatisch im Kampagnen-Builder vorausgefüllt.
+            </div>
+          )}
           {!sent && (
             <div
               role="tablist"
@@ -456,6 +468,21 @@ function BrandDashboard({
   const [visibility, setVisibility] = useState<CampaignVisibility>('open');
   const [platforms, setPlatforms] = useState<string[]>(['tiktok', 'instagram', 'youtube']);
   const [description, setDescription] = useState('');
+  const [loadedFromQuickBrief, setLoadedFromQuickBrief] = useState(false);
+
+  // Uebernimmt gespeicherten 60-Sekunden-Brief aus localStorage automatisch in den Builder (Spec 8.2 home.brief).
+  useEffect(() => {
+    const draft = loadQuickBriefDraft();
+    if (!draft) return;
+    setShowCreate(true);
+    setCompensationModel('tkp');
+    setTitle((prev) => prev || draft.goal.slice(0, 90));
+    setDescription((prev) => prev || draft.goal);
+    setPlatforms(draft.platforms);
+    setTkpEur(draft.pricePerThousandEur.toFixed(2));
+    setTotalBudgetEur(String(draft.budgetCapEur));
+    setLoadedFromQuickBrief(true);
+  }, []);
 
   const applyPreset = (preset: 'tkp_cap' | 'product_tkp' | 'fixed_ugc') => {
     if (preset === 'tkp_cap') {
@@ -569,6 +596,7 @@ function BrandDashboard({
       });
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.error || 'Kampagne konnte nicht angelegt werden.');
+      clearQuickBriefDraft();
       window.location.href = `/brand/kampagnen/${data.campaign.publicId}`;
     } catch (err) {
       setCreateError(err instanceof Error ? err.message : 'Fehler beim Anlegen.');
@@ -651,6 +679,25 @@ function BrandDashboard({
                 Ansicht aktualisieren
               </button>
             </div>
+
+            {loadedFromQuickBrief && (
+              <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-[#121212]/15 bg-white px-4 py-3 text-xs text-[#121212]">
+                <p>
+                  <span className="mr-2 inline-block rounded bg-[#C8F04B] px-2 py-0.5 font-bold">Übernommen</span>
+                  Dein 60-Sekunden-Brief wurde vorausgefüllt. Prüfe die Felder und starte deine Kampagne.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    clearQuickBriefDraft();
+                    setLoadedFromQuickBrief(false);
+                  }}
+                  className="font-semibold text-[#5C5A55] underline hover:text-[#121212]"
+                >
+                  Hinweis schließen
+                </button>
+              </div>
+            )}
 
             {/* 1-Klick Kampagnen-Vorlagen */}
             <div className="space-y-2">

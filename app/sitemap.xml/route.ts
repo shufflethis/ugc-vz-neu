@@ -17,6 +17,7 @@ const staticPages = [
   '/faq',
   '/wissen',
   '/about',
+  '/alle-seiten',
   '/agb',
   '/brandkit',
   '/contact',

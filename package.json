@@ -16,6 +16,7 @@
     "test:search-relevance": "node --import tsx scripts/test-search-relevance.ts",
     "test:hybrid-search": "node --import tsx scripts/test-hybrid-search.ts",
     "test:search-benchmark": "node --import tsx scripts/test-search-benchmark.ts",
+    "test:etappe4-ui": "node --import tsx scripts/test-etappe4-ui.ts",
     "test:ai-profile": "node --import tsx scripts/test-ai-profile.ts",
     "test:auth-flows": "node --import tsx scripts/test-auth-flows.ts",
     "test:platform-pricing": "node --import tsx scripts/test-platform-pricing.ts",
@@ -42,6 +43,8 @@
     "validate:agent-layer": "node --import tsx scripts/validate-agent-layer.ts"
   },
   "dependencies": {
+    "@fontsource-variable/bricolage-grotesque": "^5.3.0",
+    "@fontsource-variable/inter": "^5.3.0",
     "@fortawesome/fontawesome-svg-core": "^6.7.2",
     "@fortawesome/free-brands-svg-icons": "^6.7.2",
     "@fortawesome/react-fontawesome": "^0.2.2",

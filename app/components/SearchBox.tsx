@@ -41,6 +41,8 @@ import { AGENT_UI_EVENTS } from './WebMcpProvider';
 interface SearchBoxProps {
   initialQuery?: string;
   showFeatured?: boolean;
+  /** Blendet die 11 Nischen-Chips aus (z. B. Startseite, wo Branchen bereits einmalig stehen). */
+  hideNicheChips?: boolean;
   /** Geschuetzte Vorschau (/demo): Anfragen werden nur simuliert, nichts wird versendet. */
   demoMode?: boolean;
 }
@@ -60,7 +62,7 @@ const understoodSummary = (analysis: SearchAnalysis | null): string => {
   ].filter(Boolean).join(' · ');
 };
 
-export default function SearchBox({ initialQuery = '', showFeatured = false, demoMode = false }: SearchBoxProps) {
+export default function SearchBox({ initialQuery = '', showFeatured = false, hideNicheChips = false, demoMode = false }: SearchBoxProps) {
   const [searchQuery, setSearchQuery] = useState(initialQuery);
   const [featuredCreators, setFeaturedCreators] = useState<SearchCreator[]>([]);
   const [featuredLoading, setFeaturedLoading] = useState(showFeatured);
@@ -405,10 +407,12 @@ export default function SearchBox({ initialQuery = '', showFeatured = false, dem
 
   return (
     <div className={styles.searchContainer}>
-      <div className="mb-4 flex w-full flex-wrap items-center gap-2" aria-label="Beispiel-Briefings">
-        <span className="mr-1 hidden text-xs text-ink-soft sm:inline">Zum Beispiel:</span>
-        {NICHE_INDEX.map(({ chip: label, query }) => <button key={label} type="button" disabled={isLoading} onClick={() => { setSearchQuery(query); searchInputRef.current?.focus(); }} className="rounded-full border border-hairline bg-surface px-1 py-2 text-[11px] font-medium text-ink transition-colors hover:border-geo-violet hover:bg-white focus-visible:ring-2 focus-visible:ring-geo-violet disabled:opacity-50 min-[375px]:px-2 sm:px-3 sm:text-sm">{label}</button>)}
-      </div>
+      {!hideNicheChips && (
+        <div className="mb-4 flex w-full flex-wrap items-center gap-2" aria-label="Beispiel-Briefings">
+          <span className="mr-1 hidden text-xs text-ink-soft sm:inline">Zum Beispiel:</span>
+          {NICHE_INDEX.map(({ chip: label, query }) => <button key={label} type="button" disabled={isLoading} onClick={() => { setSearchQuery(query); searchInputRef.current?.focus(); }} className="rounded-full border border-hairline bg-surface px-1 py-2 text-[11px] font-medium text-ink transition-colors hover:border-geo-violet hover:bg-white focus-visible:ring-2 focus-visible:ring-geo-violet disabled:opacity-50 min-[375px]:px-2 sm:px-3 sm:text-sm">{label}</button>)}
+        </div>
+      )}
       {/* Search input */}
       <div className={styles.searchInputContainer}>
         <textarea

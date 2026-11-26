@@ -3,30 +3,53 @@
 @tailwind utilities;
 
 :root {
+  /* Spec 8.3 Design Tokens */
+  --color-ink: #121212;
+  --color-paper: #F7F6F2;
+  --color-surface: #FFFFFF;
+  --color-line: #E4E1D8;
+  --color-muted: #5C5A55;
+  --color-accent: #6C2BD9;
+  --color-accent-soft: #EFE8FD;
+  --color-money: #C8F04B;
+  --color-success: #1F9D55;
+  --color-warning: #E8A317;
+  --color-error: #D93025;
+  --radius-input: 12px;
+  --radius-card: 20px;
+  --radius-pill: 999px;
+  --shadow-card: 0 1px 2px rgba(18, 18, 18, 0.06), 0 8px 24px rgba(18, 18, 18, 0.06);
+  --motion-duration: 200ms;
+  --motion-easing: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  /* Legacy aliases mapped cleanly onto Spec 8.3 tokens */
   --background: #ffffff;
-  --foreground: #171717;
-  --surface: #f7f7f5;
+  --foreground: #121212;
+  --surface: #F7F6F2;
   --surface-2: #efefec;
-  --ink: #171717;
-  --ink-soft: #5a5a5a;
-  --hairline: #e8e8e4;
-  --geo-green: #a8e06a;
-  --geo-green-deep: #6fa82e;
-  --geo-violet: #8b3fca;
+  --ink: #121212;
+  --ink-soft: #5C5A55;
+  --hairline: #E4E1D8;
+  --geo-green: #C8F04B;
+  --geo-green-deep: #1F9D55;
+  --geo-violet: #6C2BD9;
   --geo-violet-soft: #a870e0;
-  --void: #060606;
-  /* Logo-Verlauf (Brand Kit, gemessen aus ugc-vz-logo.png) */
+  --void: #121212;
+  /* Legacy vars retained for existing subpages until Etappe 5 */
   --grad-logo: linear-gradient(152deg, #0396F8 0%, #1F6FF4 25%, #3F58F2 50%, #653AED 75%, #9131EF 100%);
   --grad-main: var(--grad-logo);
-  /* Text-Variante startet dunkler (#1F6FF4 statt Cyan), damit auch kurze Woerter AA-lesbar bleiben */
-  --grad-text: linear-gradient(120deg, #1F6FF4 0%, #5B46F0 50%, #8B3FCA 100%);
-  --grad-subtle: linear-gradient(135deg, rgba(31,111,244,0.08) 0%, rgba(139,63,202,0.10) 100%);
+  --grad-text: linear-gradient(120deg, #1F6FF4 0%, #5B46F0 50%, #6C2BD9 100%);
+  --grad-subtle: linear-gradient(135deg, rgba(31,111,244,0.08) 0%, rgba(108,43,217,0.10) 100%);
 }
 
 body {
-  color: var(--ink);
-  background: var(--background);
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  color: var(--color-ink);
+  background: var(--color-surface);
+  font-family: 'Inter Variable', 'Inter', var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+}
+
+h1, h2, h3, .font-display {
+  font-family: 'Bricolage Grotesque Variable', 'Bricolage Grotesque', var(--font-geist-sans), system-ui, sans-serif;
 }
 
 /* Brand gradient text — Logo-Verlauf Blau→Violett, AA-lesbar auf Weiss */
@@ -262,6 +285,25 @@ body {
   background: var(--grad-logo); opacity: 0.08;
 }
 
+/* Spec 8.10 Button micro-interaction & Logo marquee (transform-only) */
+.btn-press {
+  transition: transform 150ms cubic-bezier(0.2, 0.8, 0.2, 1), opacity 150ms cubic-bezier(0.2, 0.8, 0.2, 1), background-color 150ms cubic-bezier(0.2, 0.8, 0.2, 1), border-color 150ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.btn-press:active {
+  transform: scale(0.98);
+}
+
+@keyframes logo-marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.logo-marquee-track {
+  animation: logo-marquee 26s linear infinite;
+}
+.logo-marquee-track:hover {
+  animation-play-state: paused;
+}
+
 /* Auth OTP error shake (transform only, respects prefers-reduced-motion) */
 @keyframes otp-shake {
   0%, 100% { transform: translateX(0); }
@@ -274,7 +316,17 @@ body {
   animation: otp-shake 280ms cubic-bezier(.2,.8,.2,1);
 }
 @media (prefers-reduced-motion: reduce) {
-  .otp-shake {
-    animation: none;
+  .otp-shake,
+  .logo-marquee-track,
+  .animate-float,
+  .animate-pulse-glow,
+  .animate-gradient-shift,
+  .reveal-up {
+    animation: none !important;
+  }
+  .btn-press,
+  .btn-press:active {
+    transform: none !important;
+    transition: none !important;
   }
 }

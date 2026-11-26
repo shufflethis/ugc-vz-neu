@@ -10,79 +10,60 @@ interface PartnerLogo {
   height: number;
 }
 
-const partnerLogos: PartnerLogo[] = [
-  {
-    name: 'Vattenfall',
-    src: '/images/partners/vattenfall-logo.png',
-    alt: 'Vattenfall Logo',
-    width: 120,
-    height: 60,
-  },
-  {
-    name: 'Casio',
-    src: '/images/partners/casio-logo.png',
-    alt: 'Casio Logo',
-    width: 120,
-    height: 60,
-  },
-  {
-    name: 'Oxford',
-    src: '/images/partners/oxford-logo.png',
-    alt: 'Oxford Logo',
-    width: 120,
-    height: 60,
-  },
-  {
-    name: 'Rewe',
-    src: '/images/partners/rewe-logo.png',
-    alt: 'Rewe Logo',
-    width: 120,
-    height: 60,
-  },
-  {
-    name: 'Autohero',
-    src: '/images/partners/autohero-logo.png',
-    alt: 'Autohero Logo',
-    width: 120,
-    height: 60,
-  },
-  {
-    name: 'Fleurop',
-    src: '/images/partners/fleurop-logo.png',
-    alt: 'Fleurop Logo',
-    width: 120,
-    height: 60,
-  },
+const PARTNER_LOGOS: PartnerLogo[] = [
+  { name: 'Vattenfall', src: '/images/partners/vattenfall-logo.png', alt: 'Vattenfall', width: 128, height: 48 },
+  { name: 'Casio', src: '/images/partners/casio-logo.png', alt: 'Casio', width: 128, height: 48 },
+  { name: 'Oxford', src: '/images/partners/oxford-logo.png', alt: 'Oxford', width: 128, height: 48 },
+  { name: 'Rewe', src: '/images/partners/rewe-logo.png', alt: 'Rewe', width: 128, height: 48 },
+  { name: 'Autohero', src: '/images/partners/autohero-logo.png', alt: 'Autohero', width: 128, height: 48 },
+  { name: 'Fleurop', src: '/images/partners/fleurop-logo.png', alt: 'Fleurop', width: 128, height: 48 },
 ];
 
 export default function TrustElements({ compact = false }: { compact?: boolean }) {
   return (
-    <section className={`${compact ? 'border-y border-hairline py-8 sm:py-10' : 'py-20 bg-surface'} px-5 sm:px-8 md:px-16 lg:px-24`}>
-      <div className="mx-auto max-w-6xl">
-        {/* Section Heading */}
-        <div className={`text-center ${compact ? 'mb-6' : 'mb-16'}`}>
-          <h2 className={compact ? 'text-xs font-medium leading-5 text-ink-soft sm:text-sm' : 'text-2xl sm:text-3xl md:text-4xl font-bold text-ink mb-8'}>
-            Folgende Partner vertrauen auf unsere{' '}
-            <span className={compact ? '' : 'gradient-text'}>Agenturarbeit</span>
-          </h2>
-        </div>
+    <section
+      aria-label="Agentur-Referenzen von famefact"
+      className={`${compact ? 'border-y border-[#E4E1D8] bg-white py-8 sm:py-10' : 'border-y border-[#E4E1D8] bg-[#F7F6F2] py-16 sm:py-20'} px-5 sm:px-8`}
+    >
+      <div className="mx-auto max-w-[1200px]">
+        <p className="mb-6 text-center text-xs font-medium text-[#5C5A55] sm:text-sm">
+          Marken, für die das Team hinter UGC VZ bei famefact arbeitet
+        </p>
 
-        {/* Partner Logos Grid */}
-        <div className={`grid ${compact ? 'grid-cols-3 gap-5 sm:grid-cols-6' : 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-8 lg:gap-12'} items-center justify-items-center`}>
-          {partnerLogos.map((logo) => (
-            <div
-              key={logo.name}
-              className={`group flex items-center justify-center w-full ${compact ? 'h-10' : 'h-20 sm:h-24 md:h-28'}`}
-            >
+        {/* Desktop: ruhige einzeilige Reihe mit mindestens 28px Hoehe */}
+        <div className="hidden items-center justify-between gap-8 sm:grid sm:grid-cols-6">
+          {PARTNER_LOGOS.map((logo) => (
+            <div key={logo.name} className="flex h-10 items-center justify-center">
               <Image
                 src={logo.src}
                 alt={logo.alt}
                 width={logo.width}
                 height={logo.height}
-                className={`${compact ? 'max-w-[100px]' : 'max-w-full'} max-h-full object-contain partner-logo`}
+                className="h-7 max-h-9 w-auto object-contain grayscale opacity-60 transition-[filter,opacity] duration-200 hover:grayscale-0 hover:opacity-100"
               />
             </div>
           ))}
+        </div>
+
+        {/* Mobil: langsamer Laufband-Loop (pausiert bei reduced-motion) */}
+        <div className="overflow-hidden sm:hidden">
+          <div className="logo-marquee-track flex w-max items-center gap-10">
+            {[...PARTNER_LOGOS, ...PARTNER_LOGOS].map((logo, idx) => (
+              <div
+                key={`${logo.name}-${idx}`}
+                aria-hidden={idx >= PARTNER_LOGOS.length}
+                className="flex h-9 shrink-0 items-center justify-center"
+              >
+                <Image
+                  src={logo.src}
+                  alt={idx < PARTNER_LOGOS.length ? logo.alt : ''}
+                  width={logo.width}
+                  height={logo.height}
+                  className="h-7 w-auto object-contain grayscale opacity-65"
+                />
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </section>

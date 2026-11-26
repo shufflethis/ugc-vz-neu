@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
+import "@fontsource-variable/bricolage-grotesque";
+import "@fontsource-variable/inter";
 import { GeistSans } from 'geist/font/sans'
 import { GeistMono } from 'geist/font/mono'
 import "./globals.css";
 import Footer from "@/src/components/FooterNew";
 import SiteHeader from "./components/SiteHeader";
 import PromoBanner from "./components/PromoBanner";
+import MotionProvider from "./components/motion/MotionProvider";
 import WebMcpAgentLayer from "./components/WebMcpAgentLayer";
 import PublicOnly from './components/PublicOnly';
 import SiteAnalytics from './components/SiteAnalytics';
@@ -78,23 +81,25 @@ export default function RootLayout({
         <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
         <link rel="shortcut icon" href="/favicon.ico" />
         <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-        <meta name="apple-mobile-web-app-title" content="UGC-VZ" />
+        <meta name="apple-mobile-web-app-title" content="UGC VZ" />
         <link rel="manifest" href="/site.webmanifest" />
       </head>
-      <body className="flex flex-col min-h-screen">
-        <PublicOnly>
-          <PromoBanner initialPromo={getActivePromo(new Date())} />
-          <SiteHeader />
-        </PublicOnly>
-        <main className="relative isolate flex-grow">
-          {/* Logo-Glow hinter jedem Seitenkopf (Brand Kit); Seiten mit eigener Flaeche decken ihn ab */}
-          <div aria-hidden="true" className="page-glow pointer-events-none absolute inset-x-0 top-0 -z-10 h-[560px] overflow-hidden" />
-          {children}
-        </main>
-        <PublicOnly><Footer />
-        <ToastContainer position="top-center" autoClose={3000} hideProgressBar={false} />
-        {/* WebMCP: Agent-Tools via navigator.modelContext (rendert nichts) */}
-        <WebMcpAgentLayer /></PublicOnly>
+      <body className="flex flex-col min-h-screen bg-white text-[#121212] antialiased">
+        <MotionProvider>
+          <PublicOnly>
+            <PromoBanner initialPromo={getActivePromo(new Date())} />
+            <SiteHeader />
+          </PublicOnly>
+          <main className="relative isolate flex-grow">
+            {children}
+          </main>
+          <PublicOnly>
+            <Footer />
+            <ToastContainer position="top-center" autoClose={3000} hideProgressBar={false} />
+            {/* WebMCP: Agent-Tools via navigator.modelContext (rendert nichts) */}
+            <WebMcpAgentLayer />
+          </PublicOnly>
+        </MotionProvider>
         <SiteAnalytics />
       </body>
     </html>

@@ -1,0 +1,312 @@
+'use client';
+
+import { FormEvent, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { ArrowRight, Check } from 'lucide-react';
+import {
+  QUICK_BRIEF_PLATFORMS,
+  saveQuickBriefDraft,
+  type QuickBriefPlatform,
+} from '@/app/lib/quick-brief';
+import {
+  calculateCampaignBudgetBreakdown,
+  formatEuroFromCents,
+} from '@/app/lib/platform-pricing';
+
+const QUICK_EXAMPLES = [
+  'Unsere Cap im Alltag, 20 % Rabatt im Shop',
+  'Kurzer Ersteindruck unserer neuen Skincare-Creme',
+  'App-Demo im Alltag: 3 Funktionen in 30 Sekunden',
+];
+
+export default function QuickBriefCard() {
+  const router = useRouter();
+  const [goal, setGoal] = useState('');
+  const [platforms, setPlatforms] = useState<QuickBriefPlatform[]>(['tiktok', 'instagram']);
+  const [pricePerThousandInput, setPricePerThousandInput] = useState('2,00');
+  const [budgetCapInput, setBudgetCapInput] = useState('500');
+  const [expandedAll, setExpandedAll] = useState(false);
+  const [error, setError] = useState('');
+
+  const stepsUnlocked = expandedAll || goal.trim().length > 0;
+
+  const parsedPrice = useMemo(() => {
+    const num = Number(pricePerThousandInput.replace(',', '.'));
+    return Number.isFinite(num) && num > 0 ? num : 2;
+  }, [pricePerThousandInput]);
+
+  const parsedBudget = useMemo(() => {
+    const num = Number(budgetCapInput.replace(',', '.'));
+    return Number.isFinite(num) && num > 0 ? num : 500;
+  }, [budgetCapInput]);
+
+  const calc = useMemo(
+    () => calculateCampaignBudgetBreakdown(parsedBudget, parsedPrice),
+    [parsedBudget, parsedPrice],
+  );
+  const feePercent = Math.round(calc.feeRate * 100);
+
+  // Spec 8.2: Rechnung = Budget / Preis x 1.000, gerundet, plus transparente Aufteilung Creator-Pool & Gebuehr.
+  const headlineViews = Math.max(0, Math.round((parsedBudget / parsedPrice) * 1000));
+
+  const togglePlatform = (platform: QuickBriefPlatform) => {
+    setError('');
+    setPlatforms((prev) =>
+      prev.includes(platform) ? prev.filter((item) => item !== platform) : [...prev, platform],
+    );
+  };
+
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    setError('');
+
+    if (platforms.length === 0) {
+      setError('Bitte wähle mindestens eine Plattform aus.');
+      return;
+    }
+    const rawBudget = Number(budgetCapInput.replace(',', '.'));
+    const rawPrice = Number(pricePerThousandInput.replace(',', '.'));
+    if (!Number.isFinite(rawBudget) || rawBudget < 50) {
+      setError('Bitte gib eine Budget-Obergrenze ab 50 € an.');
+      return;
+    }
+    if (!Number.isFinite(rawPrice) || rawPrice < 0.5) {
+      setError('Bitte gib einen Preis pro 1.000 Views ab 0,50 € an.');
+      return;
+    }
+
+    saveQuickBriefDraft({
+      goal: goal.trim() || 'Produkt im Alltag vorstellen',
+      platforms,
+      pricePerThousandEur: rawPrice,
+      budgetCapEur: Math.round(rawBudget),
+    });
+
+    router.push('/brand?tab=signup&from=brief');
+  };
+
+  return (
+    <section
+      id="schnell-brief"
+      aria-labelledby="quick-brief-title"
+      className="bg-[#F7F6F2] px-5 py-16 sm:px-8 sm:py-24"
+    >
+      <div className="mx-auto max-w-[1200px]">
+        <div className="rounded-[24px] border border-[#E4E1D8] bg-white p-6 shadow-card sm:p-10">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-sm font-medium text-[#6C2BD9]">Unverbindlich testen</p>
+              <h2
+                id="quick-brief-title"
+                className="mt-1 font-display text-[30px] font-bold leading-[34px] tracking-[-0.02em] text-[#121212] sm:text-[44px] sm:leading-[48px]"
+              >
+                Dein Brief in 60 Sekunden
+              </h2>
+            </div>
+            {!stepsUnlocked && (
+              <button
+                type="button"
+                onClick={() => setExpandedAll(true)}
+                className="self-start text-sm font-medium text-[#5C5A55] underline underline-offset-4 hover:text-[#121212] sm:self-auto"
+              >
+                Alle 3 Schritte direkt bearbeiten
+              </button>
+            )}
+          </div>
+
+          <form onSubmit={handleSubmit} className="mt-8">
+            <div className="grid gap-6 lg:grid-cols-3">
+              {/* Schritt 1 */}
+              <div className="rounded-[20px] border border-[#E4E1D8] bg-[#F7F6F2]/60 p-5">
+                <div className="flex items-center gap-2.5">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#121212] font-mono text-xs font-bold text-[#F7F6F2]">
+                    1
+                  </span>
+                  <label htmlFor="qb-goal" className="text-sm font-semibold text-[#121212]">
+                    Was sollen Creator zeigen?
+                  </label>
+                </div>
+                <textarea
+                  id="qb-goal"
+                  rows={3}
+                  value={goal}
+                  onChange={(e) => {
+                    setGoal(e.target.value);
+                    if (error) setError('');
+                  }}
+                  placeholder="z. B. unsere Cap im Alltag, 20 % Rabatt im Shop"
+                  className="mt-3 w-full resize-none rounded-[12px] border border-[#E4E1D8] bg-white px-3.5 py-3 text-sm text-[#121212] placeholder-[#5C5A55]/70 outline-none transition-colors focus:border-[#6C2BD9] focus:ring-4 focus:ring-[#6C2BD9]/15"
+                />
+                <div className="mt-2.5 flex flex-wrap gap-1.5">
+                  {QUICK_EXAMPLES.map((example) => (
+                    <button
+                      key={example}
+                      type="button"
+                      onClick={() => {
+                        setGoal(example);
+                        setExpandedAll(true);
+                      }}
+                      className="rounded-full border border-[#E4E1D8] bg-white px-2.5 py-1 text-[11px] font-medium text-[#5C5A55] transition-colors hover:border-[#121212] hover:text-[#121212]"
+                    >
+                      {example.length > 34 ? `${example.slice(0, 34)}...` : example}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Schritt 2 (immer im DOM fuer SSR & Screenshots, visuell hervorgehoben nach Schritt 1) */}
+              <div
+                onClick={() => setExpandedAll(true)}
+                className={`rounded-[20px] border border-[#E4E1D8] bg-[#F7F6F2]/60 p-5 transition-opacity duration-200 ${
+                  stepsUnlocked ? 'opacity-100' : 'opacity-75'
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#121212] font-mono text-xs font-bold text-[#F7F6F2]">
+                    2
+                  </span>
+                  <p className="text-sm font-semibold text-[#121212]">Wo soll gepostet werden?</p>
+                </div>
+                <p className="mt-1.5 text-xs text-[#5C5A55]">Pflichtfeld: mindestens eine Plattform wählen.</p>
+                <div className="mt-3.5 grid grid-cols-2 gap-2" role="group" aria-label="Plattformen wählen">
+                  {QUICK_BRIEF_PLATFORMS.map((platform) => {
+                    const selected = platforms.includes(platform.id);
+                    return (
+                      <button
+                        key={platform.id}
+                        type="button"
+                        aria-pressed={selected}
+                        onClick={() => togglePlatform(platform.id)}
+                        className={`btn-press flex min-h-[44px] items-center justify-between gap-2 rounded-[12px] border px-3 text-left text-xs font-semibold transition-colors ${
+                          selected
+                            ? 'border-[#121212] bg-[#121212] text-[#F7F6F2]'
+                            : 'border-[#E4E1D8] bg-white text-[#121212] hover:border-[#121212]'
+                        }`}
+                      >
+                        <span>{platform.label}</span>
+                        {selected && <Check size={14} aria-hidden="true" className="shrink-0 text-[#C8F04B]" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Schritt 3 */}
+              <div
+                onClick={() => setExpandedAll(true)}
+                className={`rounded-[20px] border border-[#E4E1D8] bg-[#F7F6F2]/60 p-5 transition-opacity duration-200 ${
+                  stepsUnlocked ? 'opacity-100' : 'opacity-75'
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#121212] font-mono text-xs font-bold text-[#F7F6F2]">
+                    3
+                  </span>
+                  <p className="text-sm font-semibold text-[#121212]">Dein Budget</p>
+                </div>
+                <div className="mt-3 grid grid-cols-2 gap-3">
+                  <div>
+                    <label htmlFor="qb-cpm" className="block text-xs font-medium text-[#5C5A55]">
+                      Preis / 1.000 Views (€)
+                    </label>
+                    <input
+                      id="qb-cpm"
+                      type="text"
+                      inputMode="decimal"
+                      value={pricePerThousandInput}
+                      onChange={(e) => {
+                        setPricePerThousandInput(e.target.value);
+                        setExpandedAll(true);
+                      }}
+                      className="mt-1.5 min-h-[44px] w-full rounded-[12px] border border-[#E4E1D8] bg-white px-3 text-sm font-semibold tabular-nums text-[#121212] outline-none focus:border-[#6C2BD9] focus:ring-4 focus:ring-[#6C2BD9]/15"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="qb-budget" className="block text-xs font-medium text-[#5C5A55]">
+                      Budget-Obergrenze (€)
+                    </label>
+                    <input
+                      id="qb-budget"
+                      type="number"
+                      min={50}
+                      step={50}
+                      value={budgetCapInput}
+                      onChange={(e) => {
+                        setBudgetCapInput(e.target.value);
+                        setExpandedAll(true);
+                      }}
+                      className="mt-1.5 min-h-[44px] w-full rounded-[12px] border border-[#E4E1D8] bg-white px-3 text-sm font-semibold tabular-nums text-[#121212] outline-none focus:border-[#6C2BD9] focus:ring-4 focus:ring-[#6C2BD9]/15"
+                    />
+                  </div>
+                </div>
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  {[500, 1000, 2500].map((preset) => (
+                    <button
+                      key={preset}
+                      type="button"
+                      onClick={() => {
+                        setBudgetCapInput(String(preset));
+                        setExpandedAll(true);
+                      }}
+                      className={`rounded-full border px-2.5 py-1 text-xs font-medium tabular-nums transition-colors ${
+                        Number(budgetCapInput) === preset
+                          ? 'border-[#121212] bg-[#121212] text-[#F7F6F2]'
+                          : 'border-[#E4E1D8] bg-white text-[#5C5A55] hover:border-[#121212]'
+                      }`}
+                    >
+                      {preset.toLocaleString('de-DE')} €
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Live-Ergebniszeile mit Lime-Marker */}
+            <div className="mt-6 flex flex-col items-start justify-between gap-5 rounded-[20px] border border-[#E4E1D8] bg-[#F7F6F2] p-5 lg:flex-row lg:items-center">
+              <div className="space-y-1.5">
+                <p className="text-base font-bold leading-snug text-[#121212] sm:text-xl">
+                  <span className="inline-block rounded-lg bg-[#C8F04B] px-2.5 py-1 font-mono tabular-nums text-[#121212]">
+                    Bis zu {headlineViews.toLocaleString('de-DE')} bezahlte Views.
+                  </span>{' '}
+                  <span>
+                    Mehr als {Math.round(parsedBudget).toLocaleString('de-DE')} € zahlst du nicht.
+                  </span>
+                </p>
+                <p className="text-xs text-[#5C5A55]">
+                  Rechenbeispiel, keine garantierte Reichweite. Im Budget enthalten:{' '}
+                  <strong className="font-semibold text-[#121212]">
+                    {formatEuroFromCents(calc.creatorPoolCents, { hideZeroDecimals: true })}
+                  </strong>{' '}
+                  für Creator-Views und{' '}
+                  <strong className="font-semibold text-[#121212]">
+                    {formatEuroFromCents(calc.feeCents, { hideZeroDecimals: true })}
+                  </strong>{' '}
+                  Servicegebühr ({feePercent} %{calc.promoActive ? ' Aktionsrate' : ''}, 0 % für Creator).
+                </p>
+              </div>
+
+              <div className="flex w-full flex-col items-stretch gap-1.5 lg:w-auto lg:items-end">
+                <button
+                  type="submit"
+                  className="btn-press inline-flex min-h-[52px] items-center justify-center gap-2 whitespace-nowrap rounded-full bg-[#121212] px-6 text-sm font-semibold text-[#F7F6F2] hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6C2BD9] focus-visible:ring-offset-2"
+                >
+                  <span>Brief speichern und Konto anlegen</span>
+                  <ArrowRight size={16} aria-hidden="true" />
+                </button>
+                <p className="text-center text-xs text-[#5C5A55] lg:text-right">
+                  Dauert eine Minute. Wir schicken dir einen 6-stelligen Code, kein Passwort nötig.
+                </p>
+              </div>
+            </div>
+
+            {error && (
+              <p role="alert" className="mt-3 text-sm font-medium text-[#D93025]">
+                {error}
+              </p>
+            )}
+          </form>
+        </div>
+      </div>
+    </section>
+  );
+}
